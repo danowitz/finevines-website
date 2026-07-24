@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gritautomation/finevines-website/internal/build"
 	"github.com/gritautomation/finevines-website/internal/config"
 )
 
@@ -44,8 +45,13 @@ func fatal(err error) {
 	os.Exit(1)
 }
 
-// Stubs — replaced by later tasks (16, 9, 20, 18 respectively).
+// runBuild renders data/*.json + assets/ + templates/*.tmpl into dist/ — see
+// internal/build.Run for the actual page-generation logic.
+func runBuild(cfg config.Config) error {
+	return build.Run("data", "assets", "templates", "dist", cfg.SiteBaseURL)
+}
+
+// Stubs — replaced by later tasks (16, 20, 18 respectively).
 func runEnrich(cfg config.Config) error    { return fmt.Errorf("enrich: not implemented yet") }
-func runBuild(cfg config.Config) error     { return fmt.Errorf("build: not implemented yet") }
 func runRedirects(cfg config.Config) error { return fmt.Errorf("redirects: not implemented yet") }
 func runDeploy(cfg config.Config) error    { return fmt.Errorf("deploy: not implemented yet") }

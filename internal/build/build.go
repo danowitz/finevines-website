@@ -39,6 +39,15 @@ type page struct {
 	Path        string // absolute path from the site root, e.g. "/" or "/contact/"
 }
 
+// pagePath returns this page's site-root-relative Path. Because every page
+// data type (homePage, portfolioPage, winePage, ...) embeds page rather
+// than naming it as a field, Go's method promotion gives all of them this
+// method for free — so Run can collect the exact path each page was
+// rendered with (for the sitemap) straight from the same value that page's
+// own <link rel="canonical"> used, instead of re-deriving or hand-listing
+// URLs elsewhere.
+func (p page) pagePath() string { return p.Path }
+
 // homePage adds the homepage's own derived data (its latest-news digest) on
 // top of the shared page contract.
 type homePage struct {
@@ -185,9 +194,16 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 			Path: "/about/",
 		}},
 	}
+	// paths collects every rendered page's site-root-relative Path, in
+	// render order, so sitemap.xml can be built from what Run actually
+	// produced rather than a second, independently-maintained URL list.
+	var paths []string
 	for _, p := range pages {
 		if err := renderPage(tmpl, distDir, p.rel, p.tmpl, p.data); err != nil {
 			return err
+		}
+		if pd, ok := p.data.(pathed); ok {
+			paths = append(paths, pd.pagePath())
 		}
 	}
 
@@ -208,6 +224,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 		if err := renderPage(tmpl, distDir, "wines/"+w.Slug, "wine", data); err != nil {
 			return err
 		}
+		paths = append(paths, data.pagePath())
 	}
 
 	for _, n := range s.News {
@@ -223,9 +240,22 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 		if err := renderPage(tmpl, distDir, "news/"+n.Slug, "newspost", data); err != nil {
 			return err
 		}
+		paths = append(paths, data.pagePath())
+	}
+
+	if err := writeSitemap(distDir, s.BaseURL, paths); err != nil {
+		return err
+	}
+	if err := writeRobots(distDir, s.BaseURL); err != nil {
+		return err
 	}
 	return nil
 }
+
+// pathed is implemented by every page data type via page's promoted
+// pagePath method (see page.pagePath's doc comment). Used to collect the
+// sitemap's URL list from the same values each page rendered with.
+type pathed interface{ pagePath() string }
 
 // paragraphs splits a news post's body into paragraphs on blank lines and
 // trims each. The news skill writes plain prose separated by "\n\n" — no

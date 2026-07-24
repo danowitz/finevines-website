@@ -1,9 +1,14 @@
 package build
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -195,4 +200,111 @@ func TestSearchIndex(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestSitemapListsEveryPage(t *testing.T) {
+	dist := t.TempDir()
+	Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com")
+	sm, _ := os.ReadFile(filepath.Join(dist, "sitemap.xml"))
+	for _, want := range []string{
+		"<loc>https://finevines.com/</loc>",
+		"<loc>https://finevines.com/portfolio/</loc>",
+		"<loc>https://finevines.com/wines/hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021/</loc>",
+		"<loc>https://finevines.com/news/spring-portfolio-tasting/</loc>",
+	} {
+		if !strings.Contains(string(sm), want) {
+			t.Errorf("sitemap missing %q", want)
+		}
+	}
+	if strings.Contains(string(sm), "<lastmod>") {
+		t.Error("sitemap must not contain lastmod (breaks determinism)")
+	}
+}
+
+func TestRobotsTxt(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com"); err != nil {
+		t.Fatal(err)
+	}
+	robots, err := os.ReadFile(filepath.Join(dist, "robots.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"User-agent: *",
+		"Allow: /",
+		"Sitemap: https://finevines.com/sitemap.xml",
+	} {
+		if !strings.Contains(string(robots), want) {
+			t.Errorf("robots.txt missing %q", want)
+		}
+	}
+}
+
+func TestBuildIsDeterministic(t *testing.T) {
+	a, b := t.TempDir(), t.TempDir()
+	Run("testdata", "../../assets", "../../templates", a, "https://finevines.com")
+	Run("testdata", "../../assets", "../../templates", b, "https://finevines.com")
+	if diff := treeDiff(t, a, b); diff != "" { // helper: walk both, compare bytes
+		t.Fatalf("non-deterministic build:\n%s", diff)
+	}
+}
+
+// treeDiff walks both dist trees and reports any files that differ, are
+// missing from one side, or are only present on one side. Returns "" when
+// the trees are byte-identical — the regression guard behind
+// TestBuildIsDeterministic (build.Run must be a pure function of its
+// inputs: no network, no clocks, no randomness, no unsorted map iteration).
+func treeDiff(t *testing.T, a, b string) string {
+	t.Helper()
+	hashesA := hashTree(t, a)
+	hashesB := hashTree(t, b)
+	var diffs []string
+	for rel, ha := range hashesA {
+		hb, ok := hashesB[rel]
+		if !ok {
+			diffs = append(diffs, fmt.Sprintf("only in %s: %s", a, rel))
+			continue
+		}
+		if ha != hb {
+			diffs = append(diffs, fmt.Sprintf("content differs: %s", rel))
+		}
+	}
+	for rel := range hashesB {
+		if _, ok := hashesA[rel]; !ok {
+			diffs = append(diffs, fmt.Sprintf("only in %s: %s", b, rel))
+		}
+	}
+	sort.Strings(diffs)
+	return strings.Join(diffs, "\n")
+}
+
+// hashTree walks root and returns a map of slash-separated relative
+// path -> sha256 hex digest of the file's bytes.
+func hashTree(t *testing.T, root string) map[string]string {
+	t.Helper()
+	hashes := make(map[string]string)
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		sum := sha256.Sum256(data)
+		hashes[filepath.ToSlash(rel)] = hex.EncodeToString(sum[:])
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return hashes
 }
