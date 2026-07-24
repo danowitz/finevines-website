@@ -51,8 +51,8 @@ func TestWineDetailPages(t *testing.T) {
 		`"@type": "Product"`,
 		`"@type": "Offer"`,
 		`"availability": "https://schema.org/InStock"`,
-		"<title>Hubert Lamy",           // unique title
-		`alt="Bottle of Hubert Lamy`,   // real alt text
+		"<title>Hubert Lamy",         // unique title
+		`alt="Bottle of Hubert Lamy`, // real alt text
 		`rel="canonical" href="https://finevines.com/wines/hubert-lamy-`,
 	} {
 		if !strings.Contains(html, want) {
