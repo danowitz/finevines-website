@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -163,6 +164,60 @@ func TestAuthenticateFailureIsActionable(t *testing.T) {
 	_, err := client.Roster(context.Background())
 	if err == nil {
 		t.Fatal("Roster() error = nil, want error for HTTP 401 from token endpoint")
+	}
+	if !strings.Contains(err.Error(), "JWT Bearer") {
+		t.Errorf("auth error = %q, want it to mention the JWT Bearer fallback (pinning the actionable "+
+			"guidance so a future edit can't silently regress it)", err.Error())
+	}
+}
+
+// TestRosterErrorsOnTruncatedPagination ensures a contract-violating
+// response (done:false with no nextRecordsUrl to follow) fails loudly
+// instead of silently returning a truncated roster. This pipeline decides
+// which wines are shown on the public catalog, so a silently dropped page
+// of inventory would be worse than an explicit error.
+func TestRosterErrorsOnTruncatedPagination(t *testing.T) {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/services/oauth2/token", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"access_token": "tok123",
+			"instance_url": "http://example.invalid",
+			"token_type":   "Bearer",
+		})
+	})
+
+	mux.HandleFunc("/services/data/v61.0/query", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"totalSize":      3,
+			"done":           false,
+			"nextRecordsUrl": "",
+			"records": []map[string]any{
+				{
+					"Id": "01t000000001AAA", "StockKeepingUnit": "AB1001",
+					"Producer__c": "Chateau Alpha", "Name": "Alpha Reserve",
+					"Vintage__c": "2019", "Varietal__c": "Cabernet Sauvignon",
+					"Region__c": "Napa Valley", "Appellation__c": "Oakville",
+					"Style__c": "Red", "Stock_Qty__c": 12,
+				},
+			},
+		})
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	cfg := Config{BaseURL: server.URL, ClientID: "id", ClientSecret: "secret", APIVersion: "v61.0"}
+	client := NewClient(cfg, server.Client())
+
+	_, err := client.Roster(context.Background())
+	if err == nil {
+		t.Fatal("Roster() error = nil, want error for done:false with empty nextRecordsUrl")
+	}
+	if !strings.Contains(err.Error(), "nextRecordsUrl") && !strings.Contains(err.Error(), "truncat") {
+		t.Errorf("truncation error = %q, want it to mention nextRecordsUrl or truncation", err.Error())
 	}
 }
 

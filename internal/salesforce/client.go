@@ -34,7 +34,12 @@ var _ Source = (*Client)(nil)
 // (rather than hardcoded to http.DefaultClient) so tests can point it at an
 // httptest.Server; production wiring should pass http.DefaultClient or an
 // *http.Client configured with a sane timeout.
+//
+// cfg.BaseURL has any trailing slash trimmed so a copy-pasted My Domain URL
+// like "https://finevines.my.salesforce.com/" doesn't produce a doubled
+// slash ("//services/...") once path suffixes are appended.
 func NewClient(cfg Config, hc *http.Client) *Client {
+	cfg.BaseURL = strings.TrimSuffix(cfg.BaseURL, "/")
 	return &Client{cfg: cfg, http: hc}
 }
 
@@ -96,6 +101,15 @@ func (c *Client) Roster(ctx context.Context) ([]WineRaw, error) {
 
 		next = ""
 		if !page.Done {
+			// A contract violation (done:false but no nextRecordsUrl to
+			// follow) must fail loudly rather than silently truncate the
+			// roster: this pipeline decides which wines ship to the public
+			// catalog, and dropping inventory silently is worse than
+			// erroring out.
+			if page.NextRecordsURL == "" {
+				return nil, fmt.Errorf("salesforce query: server reported done=false with no " +
+					"nextRecordsUrl (roster would be truncated)")
+			}
 			next = page.NextRecordsURL
 		}
 	}
