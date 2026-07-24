@@ -9,6 +9,7 @@ import (
 
 	"github.com/gritautomation/finevines-website/internal/build"
 	"github.com/gritautomation/finevines-website/internal/config"
+	"github.com/gritautomation/finevines-website/internal/deploy"
 	"github.com/gritautomation/finevines-website/internal/enrich"
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
@@ -97,6 +98,36 @@ func runEnrich(cfg config.Config) error {
 		"data/wines.json", "assets/img/wines", log.Printf)
 }
 
-// Stubs — replaced by later tasks (20, 18 respectively).
+// Stub — replaced by a later task (20).
 func runRedirects(cfg config.Config) error { return fmt.Errorf("redirects: not implemented yet") }
-func runDeploy(cfg config.Config) error    { return fmt.Errorf("deploy: not implemented yet") }
+
+// deployWorkers bounds concurrent uploads to Bunny.net's storage zone. See
+// deploy.Run's doc comment for why this must be a bounded pool rather than
+// one goroutine per file (spec §8: 10k files must not upload one-at-a-time).
+const deployWorkers = 16
+
+// runDeploy wires the real BunnyClient and calls deploy.Run to upload dist/
+// to Bunny.net's storage zone — only files that changed since the last
+// deploy (deploy.Plan's hash-diff) — then purge the Pull Zone's CDN cache.
+// See deploy.Run's doc comment for the manifest-saved-only-after-every-
+// upload-succeeds and purge-skipped-on-no-op-or-failure invariants: they're
+// what make a `deploy` re-run after a partial failure safe to just retry.
+func runDeploy(cfg config.Config) error {
+	requiredEnv := []struct{ name, value string }{
+		{"FINEVINES_BUNNY_STORAGE_ZONE", cfg.BunnyStorageZone},
+		{"FINEVINES_BUNNY_STORAGE_KEY", cfg.BunnyStorageKey},
+		{"FINEVINES_BUNNY_API_KEY", cfg.BunnyAPIKey},
+		{"FINEVINES_BUNNY_PULL_ZONE_ID", cfg.BunnyPullZoneID},
+	}
+	for _, req := range requiredEnv {
+		if req.value == "" {
+			return fmt.Errorf("deploy: set %s in .env (or the environment) before running deploy", req.name)
+		}
+	}
+
+	client := deploy.NewBunnyClient(
+		cfg.BunnyStorageEndpoint, cfg.BunnyStorageZone, cfg.BunnyStorageKey,
+		cfg.BunnyAPIKey, cfg.BunnyPullZoneID, http.DefaultClient)
+
+	return deploy.Run(context.Background(), client, "dist", ".bunny-manifest.json", deployWorkers, log.Printf)
+}
