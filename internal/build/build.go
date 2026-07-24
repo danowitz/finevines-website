@@ -55,6 +55,45 @@ type winePage struct {
 	Wine model.Wine
 }
 
+// facetGroup is one filter group in the portfolio sidebar: a facet key and
+// its distinct values across the current wine list, sorted for determinism.
+// Facet must exactly match one of portfolio.js's `active` map keys
+// (producer/varietal/region/vintage/style) — the template emits it as each
+// checkbox's data-facet attribute, which is how the JS groups selections.
+type facetGroup struct {
+	Facet  string
+	Label  string
+	Values []string
+}
+
+// portfolioPage carries the full wine list plus its computed facet groups
+// for the portfolio's server-rendered grid and sidebar, alongside the
+// shared page contract. The wine list here (and the search-index.json
+// written alongside it) is the SEO surface: every wine is real HTML in the
+// page, not assembled by JS — portfolio.js only hides/shows what's already
+// rendered.
+type portfolioPage struct {
+	page
+	Facets []facetGroup
+	Wines  []model.Wine
+}
+
+// indexEntry is one row of dist/search-index.json, the compact per-wine
+// record portfolio.js fetches to drive client-side filtering. Field names
+// are the JS↔Go contract (portfolio.js reads w.producer, w.varietal, etc.
+// by these exact lowercase keys) — do not rename without updating both
+// sides.
+type indexEntry struct {
+	Slug     string `json:"slug"`
+	Producer string `json:"producer"`
+	Name     string `json:"name"`
+	Vintage  string `json:"vintage"`
+	Varietal string `json:"varietal"`
+	Region   string `json:"region"`
+	Style    string `json:"style"`
+	Img      string `json:"img"`
+}
+
 func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 	s, err := loadSite(dataDir, baseURL)
 	if err != nil {
@@ -94,11 +133,26 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 				"licensed Illinois retailers, restaurants, and hospitality accounts.",
 			Path: "/contact/",
 		}},
+		{"portfolio", "portfolio", portfolioPage{
+			page: page{
+				site:  s,
+				Title: "Portfolio — Fine Vines",
+				Description: "Browse the full Fine Vines wholesale portfolio — filter by producer, varietal, " +
+					"region, vintage, or style across every wine currently in stock.",
+				Path: "/portfolio/",
+			},
+			Facets: buildFacets(s.Wines),
+			Wines:  s.Wines,
+		}},
 	}
 	for _, p := range pages {
 		if err := renderPage(tmpl, distDir, p.rel, p.tmpl, p.data); err != nil {
 			return err
 		}
+	}
+
+	if err := writeSearchIndex(distDir, s.Wines); err != nil {
+		return err
 	}
 
 	for _, w := range s.Wines {
@@ -125,6 +179,68 @@ func firstNonEmpty(s, fallback string) string {
 		return s
 	}
 	return fallback
+}
+
+// buildFacets computes, for each portfolio facet, the distinct values
+// present across wines — sorted for determinism (build's output must be
+// byte-identical for the same input; iterating a map without sorting would
+// break that). Order of the returned groups is the sidebar's display order.
+func buildFacets(wines []model.Wine) []facetGroup {
+	specs := []struct {
+		facet, label string
+		get          func(model.Wine) string
+	}{
+		{"producer", "Producer", func(w model.Wine) string { return w.Producer }},
+		{"varietal", "Varietal", func(w model.Wine) string { return w.Varietal }},
+		{"region", "Region", func(w model.Wine) string { return w.Region }},
+		{"vintage", "Vintage", func(w model.Wine) string { return w.Vintage }},
+		{"style", "Style", func(w model.Wine) string { return w.Style }},
+	}
+	groups := make([]facetGroup, len(specs))
+	for i, sp := range specs {
+		seen := make(map[string]bool)
+		var values []string
+		for _, w := range wines {
+			v := sp.get(w)
+			if v == "" || seen[v] {
+				continue
+			}
+			seen[v] = true
+			values = append(values, v)
+		}
+		sort.Strings(values)
+		groups[i] = facetGroup{Facet: sp.facet, Label: sp.label, Values: values}
+	}
+	return groups
+}
+
+// writeSearchIndex writes dist/search-index.json, the browser-fetched index
+// portfolio.js filters against. Marshaled compact (json.Marshal, not
+// MarshalIndent) since it's fetched on every /portfolio/ visit: at catalog
+// scale (~5-10k wines) that's roughly 1-2MB, which is acceptable and
+// cacheable; if the catalog grows past ~3MB, Bunny's gzip handles it without
+// changes here. Entries follow wines' existing order (loadSite's file order,
+// not re-sorted) so the index lines up 1:1 with the portfolio grid's
+// server-rendered card order.
+func writeSearchIndex(distDir string, wines []model.Wine) error {
+	entries := make([]indexEntry, len(wines))
+	for i, w := range wines {
+		entries[i] = indexEntry{
+			Slug:     w.Slug,
+			Producer: w.Producer,
+			Name:     w.Name,
+			Vintage:  w.Vintage,
+			Varietal: w.Varietal,
+			Region:   w.Region,
+			Style:    w.Style,
+			Img:      "/" + w.ImagePath,
+		}
+	}
+	data, err := json.Marshal(entries)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(distDir, "search-index.json"), data, 0o644)
 }
 
 func loadSite(dataDir, baseURL string) (*site, error) {

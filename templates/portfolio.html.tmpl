@@ -1,0 +1,79 @@
+{{/*
+  portfolio.html.tmpl — dist/portfolio/index.html: the full, crawlable wine
+  list (the SEO surface) plus the facet sidebar and search box that
+  assets/js/portfolio.js progressively enhances client-side.
+
+  Dot is a portfolioPage (build.go): the embedded `page` supplies
+  Title/Description/Path/BaseURL for head/header/footer, .Facets carries the
+  sidebar's filter groups (computed + sorted in Go), and .Wines is every
+  wine, rendered as real <li> cards — not assembled by JS.
+
+  JS↔template hook contract with assets/js/portfolio.js (must match exactly
+  on both sides):
+    - grid:            <ul class="wine-grid">, one <li data-slug="..."> per wine
+    - facet checkbox:  <input data-facet="<facet>" value="<value>"> under .facet
+    - result counter:  #portfolio-count
+    - search box:      #portfolio-search
+*/}}
+{{define "portfolio"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head" .}}
+</head>
+<body>
+{{template "header" .}}
+<main>
+  <section class="wrap">
+    <span class="eyebrow">The Portfolio</span>
+    <h1>Every Bottle, Currently in Stock</h1>
+    <p class="lede">Filter by producer, varietal, region, vintage, or style — or search the portfolio directly.
+      What's listed below reflects current wholesale availability.</p>
+
+    <div class="portfolio-layout">
+      <aside class="facets">
+        <h3>Search</h3>
+        <input type="search" id="portfolio-search" placeholder="Producer, wine, region&hellip;"
+          aria-label="Search the portfolio">
+
+        {{range .Facets}}
+        <details class="facet-group facet" open>
+          <summary>{{.Label}}</summary>
+          {{$facet := .Facet}}
+          {{range .Values}}
+          <label><input type="checkbox" data-facet="{{$facet}}" value="{{.}}"> {{.}}</label>
+          {{end}}
+        </details>
+        {{end}}
+      </aside>
+
+      <div>
+        <p id="portfolio-count">{{len .Wines}} wines</p>
+        <ul class="wine-grid" style="list-style:none;margin:0;padding:0;">
+          {{/* The <li> (not the .wine-card <a> inside it) is the element
+               portfolio.js toggles [hidden] on: it carries no display rule
+               of its own, so the browser's default `[hidden]{display:none}`
+               isn't overridden by .wine-card's `display:block`. */}}
+          {{range .Wines}}
+          <li data-slug="{{.Slug}}">
+            <a class="wine-card" href="/wines/{{.Slug}}/">
+              <div class="thumb">
+                <img src="/{{.ImagePath}}" alt="Bottle of {{.Producer}} {{.Name}} {{.Vintage}}" loading="lazy">
+              </div>
+              <div class="body">
+                <span class="producer">{{.Producer}}</span>
+                <h3>{{.Name}} {{.Vintage}}</h3>
+                <span class="meta">{{.Region}} &middot; {{.Varietal}}</span>
+              </div>
+            </a>
+          </li>
+          {{end}}
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+{{template "footer" .}}
+<script src="/assets/js/portfolio.js" defer></script>
+</body>
+</html>
+{{end}}
