@@ -11,6 +11,8 @@ import (
 	"github.com/gritautomation/finevines-website/internal/config"
 	"github.com/gritautomation/finevines-website/internal/deploy"
 	"github.com/gritautomation/finevines-website/internal/enrich"
+	"github.com/gritautomation/finevines-website/internal/model"
+	"github.com/gritautomation/finevines-website/internal/redirects"
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
 
@@ -98,8 +100,87 @@ func runEnrich(cfg config.Config) error {
 		"data/wines.json", "assets/img/wines", log.Printf)
 }
 
-// Stub — replaced by a later task (20).
-func runRedirects(cfg config.Config) error { return fmt.Errorf("redirects: not implemented yet") }
+// edgeRulesGateMax is the crawl-gate threshold (plan §"Redirect mechanism
+// decision"): a discovered redirect map of at most this many entries
+// publishes via Bunny Edge Rules (Task 20 Branch A); more than this
+// publishes via Edge Scripting middleware (Task 20 Branch B) instead,
+// since Bunny's per-zone Edge Rules count is capped.
+const edgeRulesGateMax = 20
+
+// runRedirects discovers every URL currently live on the OLD finevines.com
+// (the site this rebuild replaces — cfg.SiteBaseURL, since Fine Vines keeps
+// its domain) and maps each one to its new-site location, so launch can
+// 301 the entire old footprint and Google's existing index carries over
+// (design spec §7, plan Task 19/20).
+//
+// Only discovery + mapping + the redirects.json write happen here.
+// PUBLISHING that map to Bunny.net — Edge Rules if the count is at most
+// edgeRulesGateMax, Edge Scripting middleware otherwise — is Task 20 and is
+// not implemented yet; this function prints the gate verdict so that
+// decision is visible ahead of time, but takes no publishing action.
+func runRedirects(cfg config.Config) error {
+	oldPaths, err := redirects.Discover(context.Background(), cfg.SiteBaseURL, log.Printf)
+	if err != nil {
+		return fmt.Errorf("redirects: discover %s: %w", cfg.SiteBaseURL, err)
+	}
+
+	// A from-scratch checkout (no enrich run yet) has no data/wines.json —
+	// model.LoadWines treats that as "no wines yet" rather than an error,
+	// so redirects can still be discovered/mapped (everything wine-shaped
+	// just falls through to the portfolio landing fallback or unmatched).
+	wines, err := model.LoadWines("data/wines.json")
+	if err != nil {
+		return fmt.Errorf("redirects: load data/wines.json: %w", err)
+	}
+
+	overrides, err := redirects.LoadOverrides("redirect-overrides.json")
+	if err != nil {
+		return fmt.Errorf("redirects: load redirect-overrides.json: %w", err)
+	}
+
+	// News posts have no directory-scan loader outside build.Run's
+	// internal one (data/news/<slug>.json, one file per post) — adding one
+	// here is out of this task's scope. In its absence the news-matching
+	// tier of MapURLs simply never fires: an old news URL either matches
+	// nothing (lands in unmatched, listed below for a manual override) or,
+	// if it happens to share a /news* etc. prefix pattern, is unaffected
+	// either way since no such prefix tier exists for news. Revisit if a
+	// live crawl turns up old news URLs worth auto-matching.
+	var news []model.NewsPost
+
+	mapped, unmatched := redirects.MapURLs(oldPaths, wines, news, overrides)
+
+	if err := redirects.Save("redirects.json", mapped); err != nil {
+		return fmt.Errorf("redirects: save redirects.json: %w", err)
+	}
+
+	if len(unmatched) > 0 {
+		log.Printf("redirects: %d old URL(s) unmatched (no override, no well-known/heuristic match) — "+
+			"add manual entries to redirect-overrides.json, or accept they'll 404 to the site's custom 404 page:",
+			len(unmatched))
+		for _, p := range unmatched {
+			log.Printf("  %s", p)
+		}
+	}
+
+	if len(mapped) <= edgeRulesGateMax {
+		log.Printf("%d redirects → Edge Rules", len(mapped))
+	} else {
+		log.Printf("%d redirects → Edge Scripting", len(mapped))
+	}
+
+	// TODO(task 20): publish `mapped` to Bunny.net.
+	//   - len(mapped) <= edgeRulesGateMax: Edge Rules — POST
+	//     https://api.bunny.net/pullzone/{id}/edgerules/addOrUpdate per
+	//     old path (301, deterministic GUID per old path for idempotent
+	//     upserts on re-run).
+	//   - otherwise: generate + deploy the Edge Scripting middleware
+	//     (redirects.middleware.ts, a Record<string,string> lookup that
+	//     301s a hit and passes through a miss).
+	// See the implementation plan's Task 20 Branch A/B for the confirmed
+	// API shapes.
+	return nil
+}
 
 // deployWorkers bounds concurrent uploads to Bunny.net's storage zone. See
 // deploy.Run's doc comment for why this must be a bounded pool rather than

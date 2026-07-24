@@ -1,8 +1,11 @@
 module github.com/gritautomation/finevines-website
 
-go 1.24
+go 1.25.0
 
-require github.com/anthropics/anthropic-sdk-go v1.60.0
+require (
+	github.com/anthropics/anthropic-sdk-go v1.60.0
+	golang.org/x/net v0.57.0
+)
 
 require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect

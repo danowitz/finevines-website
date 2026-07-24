@@ -1,0 +1,267 @@
+package redirects
+
+import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"reflect"
+	"testing"
+
+	"github.com/gritautomation/finevines-website/internal/model"
+)
+
+// fixtureWines/fixtureNews back every MapURLs test — a small, realistic
+// slice rather than one wine per test, so each test only asserts what it
+// cares about.
+func fixtureWines() []model.Wine {
+	return []model.Wine{
+		{SKU: "AB1234", Slug: "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021"},
+		{SKU: "CD5678", Slug: "chateau-something-cabernet-sauvignon-2019"},
+	}
+}
+
+func fixtureNews() []model.NewsPost {
+	return []model.NewsPost{
+		{Slug: "spring-2026-tasting-event"},
+	}
+}
+
+func TestMapURLs_OverrideWinsOverWellKnownAndHeuristic(t *testing.T) {
+	overrides := map[string]string{
+		// This path would otherwise well-known-match "/about/" — the
+		// override must win anyway.
+		"/about-us.html": "/manual-about-target/",
+		// This path would otherwise heuristic-match the Hubert Lamy wine —
+		// the override must win anyway.
+		"/products/hubert-lamy-saint-aubin.html": "/manual-wine-target/",
+	}
+
+	mapped, unmatched := MapURLs(
+		[]string{"/about-us.html", "/products/hubert-lamy-saint-aubin.html"},
+		fixtureWines(), fixtureNews(), overrides,
+	)
+
+	want := map[string]string{
+		"/about-us.html":                         "/manual-about-target/",
+		"/products/hubert-lamy-saint-aubin.html": "/manual-wine-target/",
+	}
+	if !reflect.DeepEqual(mapped, want) {
+		t.Errorf("mapped = %#v, want %#v", mapped, want)
+	}
+	if len(unmatched) != 0 {
+		t.Errorf("unmatched = %#v, want empty", unmatched)
+	}
+}
+
+func TestMapURLs_WellKnownRootPages(t *testing.T) {
+	cases := []struct {
+		old  string
+		want string
+	}{
+		{"/", "/"},
+		{"/about.html", "/about/"},
+		{"/About-Us.html", "/about/"}, // case-insensitive prefix match
+		{"/contact", "/contact/"},
+		{"/contact.html", "/contact/"},
+	}
+
+	var oldPaths []string
+	for _, c := range cases {
+		oldPaths = append(oldPaths, c.old)
+	}
+
+	mapped, unmatched := MapURLs(oldPaths, fixtureWines(), fixtureNews(), nil)
+
+	for _, c := range cases {
+		if got := mapped[c.old]; got != c.want {
+			t.Errorf("mapped[%q] = %q, want %q", c.old, got, c.want)
+		}
+	}
+	if len(unmatched) != 0 {
+		t.Errorf("unmatched = %#v, want empty", unmatched)
+	}
+}
+
+// TestMapURLs_WineHeuristicMatchesBySlugSubstring is the brief's named
+// scenario: a `/products/<slug-ish-name>.html` old URL maps to the wine
+// whose slug contains that name, even though the old URL doesn't carry the
+// wine's full slug (vintage, appellation, etc.).
+func TestMapURLs_WineHeuristicMatchesBySlugSubstring(t *testing.T) {
+	mapped, unmatched := MapURLs(
+		[]string{"/products/hubert-lamy-saint-aubin.html"},
+		fixtureWines(), fixtureNews(), nil,
+	)
+
+	want := "/wines/hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021/"
+	if got := mapped["/products/hubert-lamy-saint-aubin.html"]; got != want {
+		t.Errorf("mapped[...] = %q, want %q", got, want)
+	}
+	if len(unmatched) != 0 {
+		t.Errorf("unmatched = %#v, want empty", unmatched)
+	}
+}
+
+func TestMapURLs_NewsHeuristicMatchesBySlugSubstring(t *testing.T) {
+	mapped, unmatched := MapURLs(
+		[]string{"/news/spring-2026-tasting.html"},
+		fixtureWines(), fixtureNews(), nil,
+	)
+
+	want := "/news/spring-2026-tasting-event/"
+	if got := mapped["/news/spring-2026-tasting.html"]; got != want {
+		t.Errorf("mapped[...] = %q, want %q", got, want)
+	}
+	if len(unmatched) != 0 {
+		t.Errorf("unmatched = %#v, want empty", unmatched)
+	}
+}
+
+// TestMapURLs_ProductPrefixFallsBackToPortfolioWhenNoWineMatches proves the
+// /products*|/portfolio*|/wines* "landing fallback" tier only kicks in for
+// paths the wine heuristic could NOT resolve to a specific wine — a
+// discontinued SKU with no fixture-catalog match still lands on the
+// portfolio instead of 404ing.
+func TestMapURLs_ProductPrefixFallsBackToPortfolioWhenNoWineMatches(t *testing.T) {
+	mapped, unmatched := MapURLs(
+		[]string{"/products/discontinued-sku.html", "/portfolio/index.html", "/wines/"},
+		fixtureWines(), fixtureNews(), nil,
+	)
+
+	for _, old := range []string{"/products/discontinued-sku.html", "/portfolio/index.html", "/wines/"} {
+		if got := mapped[old]; got != "/portfolio/" {
+			t.Errorf("mapped[%q] = %q, want %q", old, got, "/portfolio/")
+		}
+	}
+	if len(unmatched) != 0 {
+		t.Errorf("unmatched = %#v, want empty", unmatched)
+	}
+}
+
+func TestMapURLs_UnmatchedWhenNothingMatches(t *testing.T) {
+	mapped, unmatched := MapURLs(
+		[]string{"/random-page"},
+		fixtureWines(), fixtureNews(), nil,
+	)
+
+	if _, ok := mapped["/random-page"]; ok {
+		t.Errorf("mapped unexpectedly contains /random-page: %#v", mapped)
+	}
+	want := []string{"/random-page"}
+	if !reflect.DeepEqual(unmatched, want) {
+		t.Errorf("unmatched = %#v, want %#v", unmatched, want)
+	}
+}
+
+// TestMapURLs_ShortSegmentGuardAvoidsFalsePositive proves the heuristic
+// doesn't fire on a degenerate short last segment that would otherwise
+// substring-match almost anything (e.g. an empty/very short segment is
+// trivially "contained in" every slug).
+func TestMapURLs_ShortSegmentGuardAvoidsFalsePositive(t *testing.T) {
+	mapped, unmatched := MapURLs(
+		[]string{"/x.html"},
+		fixtureWines(), fixtureNews(), nil,
+	)
+
+	if _, ok := mapped["/x.html"]; ok {
+		t.Errorf("mapped unexpectedly matched a short segment: %#v", mapped)
+	}
+	if len(unmatched) != 1 || unmatched[0] != "/x.html" {
+		t.Errorf("unmatched = %#v, want [\"/x.html\"]", unmatched)
+	}
+}
+
+func TestMapURLs_QueryStringIgnoredForPrefixAndSlugMatching(t *testing.T) {
+	mapped, _ := MapURLs(
+		[]string{"/about.html?ref=email", "/products/hubert-lamy-saint-aubin.html?src=old-menu"},
+		fixtureWines(), fixtureNews(), nil,
+	)
+
+	if got := mapped["/about.html?ref=email"]; got != "/about/" {
+		t.Errorf("mapped[about?ref] = %q, want /about/", got)
+	}
+	want := "/wines/hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021/"
+	if got := mapped["/products/hubert-lamy-saint-aubin.html?src=old-menu"]; got != want {
+		t.Errorf("mapped[wine?src] = %q, want %q", got, want)
+	}
+}
+
+func TestSave_WritesSortedIndentedJSON(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "redirects.json")
+
+	mapped := map[string]string{
+		"/zzz.html":   "/portfolio/",
+		"/about.html": "/about/",
+		"/mmm.html":   "/portfolio/",
+	}
+
+	if err := Save(path, mapped); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading saved file: %v", err)
+	}
+
+	var roundTrip map[string]string
+	if err := json.Unmarshal(data, &roundTrip); err != nil {
+		t.Fatalf("saved file is not valid JSON: %v", err)
+	}
+	if !reflect.DeepEqual(roundTrip, mapped) {
+		t.Errorf("round-tripped = %#v, want %#v", roundTrip, mapped)
+	}
+
+	// Assert key order in the raw bytes is sorted (git-diffable requirement) —
+	// find each key's byte offset and check they're increasing.
+	content := string(data)
+	keys := []string{"/about.html", "/mmm.html", "/zzz.html"}
+	lastIdx := -1
+	for _, k := range keys {
+		idx := indexOf(content, `"`+k+`"`)
+		if idx < 0 {
+			t.Fatalf("key %q not found in output:\n%s", k, content)
+		}
+		if idx < lastIdx {
+			t.Errorf("key %q appears out of sorted order in output:\n%s", k, content)
+		}
+		lastIdx = idx
+	}
+}
+
+func indexOf(haystack, needle string) int {
+	for i := 0; i+len(needle) <= len(haystack); i++ {
+		if haystack[i:i+len(needle)] == needle {
+			return i
+		}
+	}
+	return -1
+}
+
+func TestLoadOverrides_MissingFileReturnsEmptyMap(t *testing.T) {
+	m, err := LoadOverrides(filepath.Join(t.TempDir(), "does-not-exist.json"))
+	if err != nil {
+		t.Fatalf("LoadOverrides returned error: %v", err)
+	}
+	if len(m) != 0 {
+		t.Errorf("LoadOverrides() = %#v, want empty map", m)
+	}
+}
+
+func TestLoadOverrides_ReadsExistingFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "redirect-overrides.json")
+	want := map[string]string{"/old.html": "/new/"}
+	data, _ := json.Marshal(want)
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatalf("writing fixture: %v", err)
+	}
+
+	got, err := LoadOverrides(path)
+	if err != nil {
+		t.Fatalf("LoadOverrides returned error: %v", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("LoadOverrides() = %#v, want %#v", got, want)
+	}
+}
