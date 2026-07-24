@@ -17,6 +17,8 @@ const (
 	ImageProducerSupplied = "producer-supplied"
 )
 
+// Wine is one row of data/wines.json — the enrich pipeline's output and
+// build's primary input.
 type Wine struct {
 	ID             string `json:"id"`
 	SourceHash     string `json:"sourceHash"`
@@ -36,6 +38,7 @@ type Wine struct {
 	Slug           string `json:"slug"`
 }
 
+// NewsPost is one data/news/<slug>.json file.
 type NewsPost struct {
 	Title    string `json:"title"`
 	Date     string `json:"date"` // YYYY-MM-DD
@@ -45,6 +48,7 @@ type NewsPost struct {
 	Slug     string `json:"slug"`
 }
 
+// TeamMember is one entry of data/team.json.
 type TeamMember struct {
 	Name      string `json:"name"`
 	Role      string `json:"role"`
@@ -53,6 +57,8 @@ type TeamMember struct {
 	Note      string `json:"note,omitempty"`
 }
 
+// LoadWines reads and parses path as JSON. A missing file is not an error:
+// it returns an empty slice and a nil error (first-run behavior).
 func LoadWines(path string) ([]Wine, error) {
 	data, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -68,9 +74,12 @@ func LoadWines(path string) ([]Wine, error) {
 	return wines, nil
 }
 
+// SaveWines writes wines to path as pretty-printed JSON sorted by slug
+// (deterministic for clean diffs); the caller's slice is not modified.
 func SaveWines(path string, wines []Wine) error {
-	sort.Slice(wines, func(i, j int) bool { return wines[i].Slug < wines[j].Slug })
-	data, err := json.MarshalIndent(wines, "", "  ")
+	sorted := append([]Wine(nil), wines...)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Slug < sorted[j].Slug })
+	data, err := json.MarshalIndent(sorted, "", "  ")
 	if err != nil {
 		return err
 	}

@@ -27,6 +27,20 @@ func TestWineJSONRoundTrip(t *testing.T) {
 	}
 }
 
+func TestSaveWinesDoesNotMutateCallerSlice(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "wines.json")
+	in := []Wine{
+		{Slug: "b-wine"},
+		{Slug: "a-wine"},
+	}
+	if err := SaveWines(path, in); err != nil {
+		t.Fatal(err)
+	}
+	if in[0].Slug != "b-wine" || in[1].Slug != "a-wine" {
+		t.Fatalf("SaveWines mutated caller's slice order: %+v", in)
+	}
+}
+
 func TestLoadWinesMissingFileReturnsEmpty(t *testing.T) {
 	out, err := LoadWines(filepath.Join(t.TempDir(), "wines.json"))
 	if err != nil || len(out) != 0 {
