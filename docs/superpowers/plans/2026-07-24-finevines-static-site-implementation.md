@@ -913,21 +913,34 @@ func TestWineDetailPages(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure**, then implement. In `Run`, after static pages:
+- [ ] **Step 2: Run to verify failure**, then implement. **Template-data contract (established by Task 5, binding on every page):** the base template's `head`/`header`/`footer` reference `.Title`, `.Description`, `.Path`, and `.BaseURL`, so every page's template data MUST embed Task 5's `page` struct (`page{ *site; Title, Description, Path string }`) and set a unique title/description/path — this is exactly what the per-wine SEO requirement (unique `<title>`/meta/canonical) needs anyway. Define a wine page type that embeds `page`, and in `Run`, after the static pages:
 
 ```go
+	// winePage carries this wine plus the shared page contract (Title/Description/
+	// Path/BaseURL) that base.html.tmpl's head/header/footer require.
+	type winePage struct {
+		page
+		Wine model.Wine
+	}
 	for _, w := range s.Wines {
-		data := struct {
-			Wine model.Wine
-			Site *site
-		}{w, s}
+		data := winePage{
+			page: page{
+				site:        s,
+				Title:       fmt.Sprintf("%s %s %s — Fine Vines", w.Producer, w.Name, w.Vintage),
+				Description: firstNonEmpty(w.Description, w.Producer+" "+w.Name),
+				Path:        "/wines/" + w.Slug + "/",
+			},
+			Wine: w,
+		}
 		if err := renderPage(tmpl, distDir, "wines/"+w.Slug, "wine", data); err != nil {
 			return err
 		}
 	}
 ```
 
-`templates/wine.html.tmpl`: two-column layout (bottle image left, copy right) — producer eyebrow, name + vintage as display heading, region/appellation/varietal/style as a spec table, `Description` paragraph, `SommelierNotes` in a bordered aside. JSON-LD block:
+(`firstNonEmpty` is a tiny local helper; or inline the fallback. `Title`/`Description`/`Path` may instead be defined as a small constructor if `Run` gets crowded — see Task 5's Minor note.)
+
+`templates/wine.html.tmpl`: two-column layout (bottle image left, copy right) — producer eyebrow, name + vintage as display heading, region/appellation/varietal/style as a spec table, `Description` paragraph, `SommelierNotes` in a bordered aside. Because `winePage` embeds `page` (which embeds `*site`), `BaseURL` is reachable directly as `.BaseURL`; the wine's own fields are under `.Wine`. JSON-LD block:
 
 ```html
 <script type="application/ld+json">
@@ -935,7 +948,7 @@ func TestWineDetailPages(t *testing.T) {
   "@context": "https://schema.org",
   "@type": "Product",
   "name": {{printf "%s %s %s" .Wine.Producer .Wine.Name .Wine.Vintage}},
-  "image": {{printf "%s/%s" .Site.BaseURL .Wine.ImagePath}},
+  "image": {{printf "%s/%s" .BaseURL .Wine.ImagePath}},
   "description": {{.Wine.Description}},
   "sku": {{.Wine.SKU}},
   "brand": {"@type": "Brand", "name": {{.Wine.Producer}}},
@@ -948,7 +961,7 @@ func TestWineDetailPages(t *testing.T) {
 </script>
 ```
 
-(No price — wholesale; availability is always InStock because ineligible wines never reach `wines.json`. `html/template` auto-JSON-escapes inside `<script type="application/ld+json">` context.)
+(No price — wholesale; availability is always InStock because ineligible wines never reach `wines.json`. `html/template` auto-JSON-escapes inside `<script type="application/ld+json">` context. The wine detail `<title>`/canonical come from the embedded `page`, so no per-page title logic lives in the template.)
 
 - [ ] **Step 3: Verify** — `go test ./internal/build/` → PASS.
 - [ ] **Step 4: Commit** — `git commit -am "feat: per-wine detail pages with Product/Offer JSON-LD"`
@@ -981,7 +994,7 @@ type indexEntry struct {
 }
 ```
 
-Marshal with `json.Marshal` (compact — this file is fetched by browsers; ~5–10k wines ≈ 1–2 MB, acceptable and cacheable; note in code comment that if it grows past ~3 MB, gzip via Bunny handles it). Portfolio template: facet sidebar (`<details>` groups per facet, checkbox per distinct value — computed in Go, sorted), pre-rendered `<ul class="wine-grid">` of every wine (server-rendered = the SEO surface), `<script src="/assets/js/portfolio.js" defer>`.
+Marshal with `json.Marshal` (compact — this file is fetched by browsers; ~5–10k wines ≈ 1–2 MB, acceptable and cacheable; note in code comment that if it grows past ~3 MB, gzip via Bunny handles it). The portfolio page's template data must embed Task 5's `page` struct (title e.g. "Portfolio — Fine Vines", path `/portfolio/`) alongside the facet groups and wine list — define a `portfolioPage` type embedding `page` (same pattern as `homePage`/`winePage`), so `head`/`header`/`footer` resolve. Portfolio template: facet sidebar (`<details>` groups per facet, checkbox per distinct value — computed in Go, sorted), pre-rendered `<ul class="wine-grid">` of every wine (server-rendered = the SEO surface), `<script src="/assets/js/portfolio.js" defer>`.
 
 - [ ] **Step 3: Write `assets/js/portfolio.js`** (~120 lines, no framework):
 
@@ -1048,7 +1061,7 @@ Marshal with `json.Marshal` (compact — this file is fetched by browsers; ~5–
 
 - [ ] **Step 1: Extend tests** — assert: news landing lists the fixture post title linking to `/news/spring-portfolio-tasting/`; the post page exists with `<title>Spring Portfolio Tasting` and an `Article` JSON-LD block (`"@type": "NewsArticle"`, `datePublished`); about page contains both fixture team members' names and roles.
 
-- [ ] **Step 2: Run to verify failure**, then implement — same `renderPage` pattern: loop `s.News` for post pages; about gets `s`. Post body: the skill writes plain paragraphs separated by blank lines; convert in Go with a tiny helper `paragraphs(body string) []string` (split on `\n\n`) exposed to the template via `template.FuncMap` — **no** markdown engine (YAGNI; the news skill writes prose paragraphs).
+- [ ] **Step 2: Run to verify failure**, then implement — same `renderPage` pattern, honoring Task 5's template-data contract: **every page's data embeds the `page` struct**. The news landing embeds `page` (title "News & Events — Fine Vines", path `/news/`) with the posts list; each news post embeds `page` (title = post title, description = a body excerpt, path `/news/<slug>/`) plus its `NewsPost` (define a `newsPostPage` type like `winePage`); the about page embeds `page` (title "About — Fine Vines", path `/about/`) — it does NOT pass bare `s`, because `head`/`header`/`footer` need `.Title`/`.Path`. The per-post unique title/meta/canonical IS the SEO point of the news skill, so this is required, not optional. Post body: the skill writes plain paragraphs separated by blank lines; convert in Go with a tiny helper `paragraphs(body string) []string` (split on `\n\n`) exposed to the template via `template.FuncMap` — **no** markdown engine (YAGNI; the news skill writes prose paragraphs).
 
 - [ ] **Step 3: About copy.** Use Fine Vines' existing About text verbatim (from the current site / proposal — the "A service company, first and last..." copy). This is a durable decision: do not rewrite it. Store it directly in `about.html.tmpl`.
 
