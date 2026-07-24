@@ -66,6 +66,23 @@ type facetGroup struct {
 	Values []string
 }
 
+// newsPage carries the full news list (already newest-first, from loadSite)
+// plus the shared page contract for the news landing page.
+type newsPage struct {
+	page
+	Posts []model.NewsPost
+}
+
+// newsPostPage carries one post plus the shared page contract (Title/
+// Description/Path/BaseURL) that base.html.tmpl's head/header/footer
+// require. Because it embeds page, each post gets its own unique title,
+// meta description, and canonical URL — that per-post uniqueness is the
+// entire SEO point of the News & Events skill (see the design spec).
+type newsPostPage struct {
+	page
+	Post model.NewsPost
+}
+
 // portfolioPage carries the full wine list plus its computed facet groups
 // for the portfolio's server-rendered grid and sidebar, alongside the
 // shared page contract. The wine list here (and the search-index.json
@@ -99,7 +116,9 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 	if err != nil {
 		return err
 	}
-	tmpl, err := template.ParseGlob(filepath.Join(templatesDir, "*.tmpl"))
+	tmpl, err := template.New("").Funcs(template.FuncMap{
+		"paragraphs": paragraphs,
+	}).ParseGlob(filepath.Join(templatesDir, "*.tmpl"))
 	if err != nil {
 		return err
 	}
@@ -144,6 +163,27 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 			Facets: buildFacets(s.Wines),
 			Wines:  s.Wines,
 		}},
+		{"news", "news", newsPage{
+			page: page{
+				site:        s,
+				Title:       "News & Events — Fine Vines",
+				Description: "Tastings, allocations, and news from the Fine Vines trade team.",
+				Path:        "/news/",
+			},
+			Posts: s.News,
+		}},
+		// About does NOT wrap page in a bigger type — .Team is already
+		// reachable through the embedded *site, and head/header/footer only
+		// need Title/Description/Path, which page supplies directly. Passing
+		// a bare *site here would break head/header/footer (see Task 5's
+		// page-embedding contract in the doc comment above).
+		{"about", "about", page{
+			site:  s,
+			Title: "About — Fine Vines",
+			Description: "A service company, first and last — meet the Fine Vines sales, warehouse, and " +
+				"support team.",
+			Path: "/about/",
+		}},
 	}
 	for _, p := range pages {
 		if err := renderPage(tmpl, distDir, p.rel, p.tmpl, p.data); err != nil {
@@ -169,7 +209,56 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 			return err
 		}
 	}
+
+	for _, n := range s.News {
+		data := newsPostPage{
+			page: page{
+				site:        s,
+				Title:       n.Title + " — Fine Vines",
+				Description: excerpt(n.Body, 160),
+				Path:        "/news/" + n.Slug + "/",
+			},
+			Post: n,
+		}
+		if err := renderPage(tmpl, distDir, "news/"+n.Slug, "newspost", data); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+// paragraphs splits a news post's body into paragraphs on blank lines and
+// trims each. The news skill writes plain prose separated by "\n\n" — no
+// markdown engine (YAGNI); this is the full extent of body formatting.
+// Exposed to templates via template.FuncMap in Run.
+func paragraphs(body string) []string {
+	parts := strings.Split(body, "\n\n")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// excerpt returns a short plain-text summary of a news post's body for its
+// meta description: the first paragraph, truncated to maxLen runes at a
+// word boundary with a trailing ellipsis if cut.
+func excerpt(body string, maxLen int) string {
+	first := body
+	if paras := paragraphs(body); len(paras) > 0 {
+		first = paras[0]
+	}
+	runes := []rune(first)
+	if len(runes) <= maxLen {
+		return first
+	}
+	cut := string(runes[:maxLen])
+	if i := strings.LastIndex(cut, " "); i > 0 {
+		cut = cut[:i]
+	}
+	return strings.TrimSpace(cut) + "…"
 }
 
 // firstNonEmpty returns s if it is non-empty, else fallback. Used for a

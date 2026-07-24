@@ -1,0 +1,41 @@
+{{/*
+  news.html.tmpl — dist/news/index.html: the news & events landing page,
+  every post newest-first (loadSite already sorts s.News; this template does
+  not re-sort). Reuses the .news-list/.news-item classes home.html.tmpl uses
+  for its "From the Tasting Room" digest, but lists every post (not just the
+  latest three) and each title links to that post's own indexable page.
+
+  Dot is a newsPage (build.go): the embedded page supplies Title/
+  Description/Path/BaseURL for head/header/footer, and .Posts is the full
+  list.
+*/}}
+{{define "news"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head" .}}
+</head>
+<body>
+{{template "header" .}}
+<main>
+  <section class="wrap">
+    <span class="eyebrow">News &amp; Events</span>
+    <h1>From the Tasting Room</h1>
+    <p class="lede">Tastings, allocations, and news from the Fine Vines trade team.</p>
+
+    <div class="news-list">
+      {{range .Posts}}<article class="news-item">
+        <div class="date">{{.Date}}</div>
+        <div>
+          <h3><a href="/news/{{.Slug}}/">{{.Title}}</a></h3>
+          <p class="excerpt">{{.Body}}</p>
+          <span class="category">{{.Category}}</span>
+        </div>
+      </article>
+      {{end}}
+    </div>
+  </section>
+</main>
+{{template "footer" .}}
+</body>
+</html>
+{{end}}

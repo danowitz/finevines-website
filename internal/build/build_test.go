@@ -105,6 +105,69 @@ func TestPortfolioPage(t *testing.T) {
 	}
 }
 
+func TestNewsPages(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com"); err != nil {
+		t.Fatal(err)
+	}
+
+	landing, err := os.ReadFile(filepath.Join(dist, "news", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	landingHTML := string(landing)
+	for _, want := range []string{
+		"Spring Portfolio Tasting",
+		`href="/news/spring-portfolio-tasting/"`,
+	} {
+		if !strings.Contains(landingHTML, want) {
+			t.Errorf("news landing missing %q", want)
+		}
+	}
+
+	post, err := os.ReadFile(filepath.Join(dist, "news", "spring-portfolio-tasting", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	postHTML := string(post)
+	for _, want := range []string{
+		"<title>Spring Portfolio Tasting",
+		`rel="canonical" href="https://finevines.com/news/spring-portfolio-tasting/"`,
+		`<script type="application/ld+json">`,
+		`"@type": "NewsArticle"`,
+		"datePublished",
+		"2026-04-12",
+	} {
+		if !strings.Contains(postHTML, want) {
+			t.Errorf("news post missing %q", want)
+		}
+	}
+}
+
+func TestAboutPage(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com"); err != nil {
+		t.Fatal(err)
+	}
+	page, err := os.ReadFile(filepath.Join(dist, "about", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	html := string(page)
+	for _, want := range []string{
+		"<title>About",
+		`rel="canonical" href="https://finevines.com/about/"`,
+		"George Molitor",
+		"Founder &amp; President",
+		"Barbara Fultz",
+		"Office Manager",
+	} {
+		if !strings.Contains(html, want) {
+			t.Errorf("about page missing %q", want)
+		}
+	}
+}
+
 func TestSearchIndex(t *testing.T) {
 	dist := t.TempDir()
 	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com"); err != nil {

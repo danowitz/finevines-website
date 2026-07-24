@@ -1,0 +1,48 @@
+{{/*
+  newspost.html.tmpl — one page per news post, dist/news/<slug>/index.html.
+
+  Dot is a newsPostPage (build.go): the embedded page supplies its own
+  unique Title/Description/Path/BaseURL for head/header/footer — that
+  per-post title, meta description, and canonical URL is the entire SEO
+  point of the News & Events skill, not optional decoration. .Post carries
+  the post's own fields for the body and JSON-LD.
+
+  Body is split into paragraphs with the "paragraphs" FuncMap helper
+  (build.go): the news skill writes plain prose separated by blank lines,
+  no markdown engine (YAGNI).
+
+  NewsArticle JSON-LD mirrors wine.html.tmpl's Product/Offer block: bare
+  {{...}} pipelines inside the application/ld+json <script>, relying on
+  html/template's contextual JS/JSON escaping rather than hand-rolling it.
+*/}}
+{{define "newspost"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head" .}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": {{.Post.Title}},
+  "datePublished": {{.Post.Date}},
+  "articleBody": {{.Post.Body}},
+  "publisher": {"@type": "Organization", "name": "Fine Vines Ltd."}
+}
+</script>
+</head>
+<body>
+{{template "header" .}}
+<main>
+  <section class="wrap">
+    <span class="eyebrow">{{.Post.Category}}</span>
+    <h1>{{.Post.Title}}</h1>
+    <p class="lede">{{.Post.Date}}</p>
+    {{range paragraphs .Post.Body}}<p>{{.}}</p>
+    {{end}}
+    <p><a href="/news/">&larr; Back to News &amp; Events</a></p>
+  </section>
+</main>
+{{template "footer" .}}
+</body>
+</html>
+{{end}}
