@@ -149,3 +149,5 @@ vite.config.ts.timestamp-*
 .env
 dist/
 .bunny-manifest.json
+finevines.exe
+*.exe
