@@ -134,8 +134,17 @@ enrich: complete — enriched 42, kept 5113, dropped 3, label-fallbacks 1
   new bottle image.
 - **kept** — wines that hadn't changed since the last run, so nothing was re-done (this keeps runs fast and
   cheap after the first one).
-- **dropped** — wines that went out of stock, were removed from Salesforce, or hit a text-generation error and
-  will simply be retried automatically on the next run. They come off the live site.
+- **dropped** — wines that this run tried to write fresh tasting notes/photos for, but couldn't. This number
+  does **not** include wines that simply went out of stock or were removed from Salesforce — those come off the
+  live site automatically and quietly, without being counted here at all. "Dropped" only ever means one of two
+  things, and they're not equally serious:
+  - Most of the time, it's a wine whose AI tasting-note text failed to generate this run (e.g. a hiccup talking
+    to the AI service). This is safe: that one wine is simply skipped and tried again automatically on the next
+    run, and every other wine still gets published normally.
+  - Rarely, it's a wine whose bottle-image step hit a file-saving problem. This is serious: it stops the entire
+    `enrich` run in its tracks right then, and none of that run's changes are published — this is what shows up
+    as `deploy.bat`'s `FAILED` message. If you see a `dropped` count together with a failed run, this is
+    almost certainly why — see "If something fails," below.
 - **label-fallbacks** — wines where the AI photo step didn't succeed, so a generated illustrated wine label was
   used instead of a photorealistic bottle image. This is a normal, on-brand fallback, not an error — nothing to
   act on.
