@@ -1,0 +1,45 @@
+{{/*
+  base.html.tmpl — shared head/header/footer for every page.
+
+  These are named templates, not a page of their own: each page template
+  (home.html.tmpl, contact.html.tmpl, and later portfolio/wine/news/about)
+  defines its own top-level {{define "<name>"}} that assembles <!doctype
+  html> + head + header + that page's own content + footer, then Run()
+  executes that top-level name directly (see build.go's pages slice).
+
+  The dot passed into "head"/"header"/"footer" is always a `page` value (or
+  something that embeds one) — see build.go — so BaseURL/Title/Description/
+  Path are reachable as plain fields via Go's embedded-struct promotion.
+*/}}
+
+{{define "head"}}<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>
+<meta name="description" content="{{.Description}}">
+<link rel="canonical" href="{{.BaseURL}}{{.Path}}">
+<link rel="stylesheet" href="/assets/css/site.css">
+{{end}}
+
+{{define "header"}}<header class="site-header">
+  <div class="wrap">
+    <a class="mark" href="/">Fine<span class="vines">Vines</span></a>
+    <nav class="site-nav">
+      <a href="/portfolio/"{{if eq .Path "/portfolio/"}} aria-current="page"{{end}}>Portfolio</a>
+      <a href="/news/"{{if eq .Path "/news/"}} aria-current="page"{{end}}>News &amp; Events</a>
+      <a href="/about/"{{if eq .Path "/about/"}} aria-current="page"{{end}}>About</a>
+      <a href="/contact/"{{if eq .Path "/contact/"}} aria-current="page"{{end}}>Contact</a>
+    </nav>
+  </div>
+</header>
+{{end}}
+
+{{define "footer"}}<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p>Pouring elegance with a sommelier's touch.</p>
+      <p>Trade inquiries &mdash; <a href="mailto:trade@finevines.com">trade@finevines.com</a> &middot; <a href="tel:+16305550100">(630) 555-0100</a></p>
+    </div>
+    <p class="foot-meta">Licensed wholesale distributor of wine &amp; spirits, State of Illinois.</p>
+  </div>
+</footer>
+{{end}}

@@ -1,0 +1,56 @@
+{{define "home"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head" .}}
+</head>
+<body>
+{{template "header" .}}
+<main>
+  <section class="wrap">
+    <span class="eyebrow">Wholesale Wine &amp; Spirits &middot; Chicagoland</span>
+    <h1>Pouring elegance with a sommelier's touch.</h1>
+    <p class="lede">Fine Vines is a licensed wholesale distributor bringing a hand-selected portfolio of wine
+      and spirits to Illinois restaurants, retailers, and hospitality tables &mdash; sourced with care, stored
+      with precision, and poured with a sommelier's instinct for the right bottle at the right moment.</p>
+    <p>
+      <a class="btn btn-primary" href="/portfolio/">Browse the Portfolio</a>
+      <a class="btn btn-ghost" href="/contact/">Get in Touch</a>
+    </p>
+  </section>
+
+  <hr class="rule-gold">
+
+  <section class="wrap">
+    <span class="eyebrow">Featured Regions</span>
+    <h2>A Portfolio Built by Region</h2>
+    <p class="lede">From old-world benchmarks to the producers reshaping the new world, every bottle in the
+      portfolio is chosen on its own merits, not by allocation alone.</p>
+    <p>
+      <a href="/portfolio/">Bordeaux</a> &middot;
+      <a href="/portfolio/">Burgundy</a> &middot;
+      <a href="/portfolio/">Piedmont</a> &middot;
+      <a href="/portfolio/">Rh&ocirc;ne Valley</a> &middot;
+      <a href="/portfolio/">Napa Valley</a>
+    </p>
+  </section>
+
+  <section class="wrap">
+    <span class="eyebrow">News &amp; Events</span>
+    <h2>From the Tasting Room</h2>
+    <div class="news-list">
+      {{range .LatestNews}}<article class="news-item">
+        <div class="date">{{.Date}}</div>
+        <div>
+          <h3><a href="/news/{{.Slug}}/">{{.Title}}</a></h3>
+          <p class="excerpt">{{.Body}}</p>
+          <span class="category">{{.Category}}</span>
+        </div>
+      </article>
+      {{end}}
+    </div>
+  </section>
+</main>
+{{template "footer" .}}
+</body>
+</html>
+{{end}}
