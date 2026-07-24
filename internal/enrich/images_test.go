@@ -1,0 +1,281 @@
+package enrich
+
+import (
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/gritautomation/finevines-website/internal/model"
+	"github.com/gritautomation/finevines-website/internal/salesforce"
+)
+
+// fakeImageProvider adapts a plain function to ImageProvider and counts
+// calls, so tests can assert the producer-supplied guard never invokes the
+// provider at all (step (d) of the brief).
+type fakeImageProvider struct {
+	fn    func(ctx context.Context, prompt string) ([]byte, error)
+	calls int
+}
+
+func (f *fakeImageProvider) GenerateJPEG(ctx context.Context, prompt string) ([]byte, error) {
+	f.calls++
+	return f.fn(ctx, prompt)
+}
+
+// resolveImageWine is a representative WineRaw used across ResolveImage tests.
+var resolveImageWine = salesforce.WineRaw{
+	ID: "SF-1", SKU: "AB1234", Producer: "Hubert Lamy", Name: "Puligny-Montrachet",
+	Vintage: "2019", Region: "Burgundy",
+}
+
+func collectLogs(t *testing.T) (logFn func(string, ...any), get func() []string) {
+	t.Helper()
+	var logs []string
+	return func(format string, args ...any) {
+			logs = append(logs, fmt.Sprintf(format, args...))
+		}, func() []string {
+			return logs
+		}
+}
+
+func TestResolveImage_ProviderSuccessWritesJPEGAndReturnsPhotoSource(t *testing.T) {
+	imgDir := t.TempDir()
+	wantBytes := []byte("fake jpeg bytes from provider")
+	provider := &fakeImageProvider{fn: func(ctx context.Context, prompt string) ([]byte, error) {
+		return wantBytes, nil
+	}}
+	logFn, _ := collectLogs(t)
+
+	gotPath, gotSource, err := ResolveImage(context.Background(), provider, resolveImageWine, "a prompt", imgDir, nil, logFn)
+	if err != nil {
+		t.Fatalf("ResolveImage returned error: %v", err)
+	}
+	if gotSource != model.ImageGeneratedPhoto {
+		t.Errorf("imageSource = %q, want %q", gotSource, model.ImageGeneratedPhoto)
+	}
+	if provider.calls != 1 {
+		t.Errorf("provider called %d times, want 1", provider.calls)
+	}
+
+	diskPath := filepath.Join(imgDir, "AB1234.jpg")
+	got, err := os.ReadFile(diskPath)
+	if err != nil {
+		t.Fatalf("expected %s to exist on disk: %v", diskPath, err)
+	}
+	if !bytes.Equal(got, wantBytes) {
+		t.Errorf("written bytes = %q, want %q", got, wantBytes)
+	}
+	if !strings.HasSuffix(gotPath, "AB1234.jpg") {
+		t.Errorf("imagePath = %q, want it to end with AB1234.jpg", gotPath)
+	}
+}
+
+func TestResolveImage_ProviderRejectionFallsBackToLabel(t *testing.T) {
+	imgDir := t.TempDir()
+	provider := &fakeImageProvider{fn: func(ctx context.Context, prompt string) ([]byte, error) {
+		return nil, fmt.Errorf("imagen: rejected: %w", ErrImageRejected)
+	}}
+	logFn, getLogs := collectLogs(t)
+
+	gotPath, gotSource, err := ResolveImage(context.Background(), provider, resolveImageWine, "a prompt", imgDir, nil, logFn)
+	if err != nil {
+		t.Fatalf("ResolveImage returned error: %v", err)
+	}
+	if gotSource != model.ImageGeneratedLabel {
+		t.Errorf("imageSource = %q, want %q", gotSource, model.ImageGeneratedLabel)
+	}
+	if !strings.HasSuffix(gotPath, "AB1234.svg") {
+		t.Errorf("imagePath = %q, want it to end with AB1234.svg", gotPath)
+	}
+
+	diskPath := filepath.Join(imgDir, "AB1234.svg")
+	data, err := os.ReadFile(diskPath)
+	if err != nil {
+		t.Fatalf("expected %s to exist on disk: %v", diskPath, err)
+	}
+	if !bytes.Contains(data, []byte("<svg")) {
+		t.Errorf("written label file does not look like an SVG: %q", data[:min(len(data), 80)])
+	}
+
+	if len(getLogs()) == 0 { // want a warning logged on fallback
+		t.Error("want a warning logged on fallback, got none")
+	}
+}
+
+func TestResolveImage_PlainNetworkErrorStillFallsBackToLabelWithoutFailingRun(t *testing.T) {
+	imgDir := t.TempDir()
+	provider := &fakeImageProvider{fn: func(ctx context.Context, prompt string) ([]byte, error) {
+		return nil, errors.New("dial tcp: connection refused")
+	}}
+	logFn, getLogs := collectLogs(t)
+
+	gotPath, gotSource, err := ResolveImage(context.Background(), provider, resolveImageWine, "a prompt", imgDir, nil, logFn)
+	if err != nil {
+		t.Fatalf("ResolveImage returned error for a flaky provider call: %v", err)
+	}
+	if gotSource != model.ImageGeneratedLabel {
+		t.Errorf("imageSource = %q, want %q", gotSource, model.ImageGeneratedLabel)
+	}
+	if _, err := os.Stat(filepath.Join(imgDir, "AB1234.svg")); err != nil {
+		t.Errorf("expected label svg on disk: %v", err)
+	}
+	if !strings.HasSuffix(gotPath, "AB1234.svg") {
+		t.Errorf("imagePath = %q, want it to end with AB1234.svg", gotPath)
+	}
+	if len(getLogs()) == 0 {
+		t.Error("want a warning logged on fallback, got none")
+	}
+}
+
+func TestResolveImage_ProducerSuppliedGuardNeverCallsProvider(t *testing.T) {
+	imgDir := t.TempDir()
+	provider := &fakeImageProvider{fn: func(ctx context.Context, prompt string) ([]byte, error) {
+		t.Fatal("provider must not be called when prev is producer-supplied")
+		return nil, nil
+	}}
+	logFn, _ := collectLogs(t)
+
+	prev := &model.Wine{
+		ImagePath:   "assets/img/wines/AB1234-producer-original.png",
+		ImageSource: model.ImageProducerSupplied,
+	}
+
+	gotPath, gotSource, err := ResolveImage(context.Background(), provider, resolveImageWine, "a prompt", imgDir, prev, logFn)
+	if err != nil {
+		t.Fatalf("ResolveImage returned error: %v", err)
+	}
+	if provider.calls != 0 {
+		t.Errorf("provider called %d times, want 0 (producer-supplied guard)", provider.calls)
+	}
+	if gotPath != prev.ImagePath {
+		t.Errorf("imagePath = %q, want unchanged prev.ImagePath %q", gotPath, prev.ImagePath)
+	}
+	if gotSource != model.ImageProducerSupplied {
+		t.Errorf("imageSource = %q, want %q", gotSource, model.ImageProducerSupplied)
+	}
+
+	entries, _ := os.ReadDir(imgDir)
+	if len(entries) != 0 {
+		t.Errorf("expected no files written to imgDir, got %v", entries)
+	}
+}
+
+func TestResolveImage_SiblingCleanup_LabelToPhotoRemovesStaleSVG(t *testing.T) {
+	imgDir := t.TempDir()
+	stale := filepath.Join(imgDir, "AB1234.svg")
+	if err := os.WriteFile(stale, []byte("<svg>stale label</svg>"), 0o644); err != nil {
+		t.Fatalf("seed stale svg: %v", err)
+	}
+
+	provider := &fakeImageProvider{fn: func(ctx context.Context, prompt string) ([]byte, error) {
+		return []byte("new jpeg bytes"), nil
+	}}
+	logFn, _ := collectLogs(t)
+
+	if _, _, err := ResolveImage(context.Background(), provider, resolveImageWine, "a prompt", imgDir, nil, logFn); err != nil {
+		t.Fatalf("ResolveImage returned error: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(imgDir, "AB1234.jpg")); err != nil {
+		t.Errorf("expected new jpg to exist: %v", err)
+	}
+	if _, err := os.Stat(stale); !os.IsNotExist(err) {
+		t.Errorf("expected stale svg to be removed, stat err = %v", err)
+	}
+}
+
+func TestResolveImage_SiblingCleanup_PhotoToLabelRemovesStaleJPEG(t *testing.T) {
+	imgDir := t.TempDir()
+	stale := filepath.Join(imgDir, "AB1234.jpg")
+	if err := os.WriteFile(stale, []byte("stale jpeg bytes"), 0o644); err != nil {
+		t.Fatalf("seed stale jpg: %v", err)
+	}
+
+	provider := &fakeImageProvider{fn: func(ctx context.Context, prompt string) ([]byte, error) {
+		return nil, ErrImageRejected
+	}}
+	logFn, _ := collectLogs(t)
+
+	if _, _, err := ResolveImage(context.Background(), provider, resolveImageWine, "a prompt", imgDir, nil, logFn); err != nil {
+		t.Fatalf("ResolveImage returned error: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(imgDir, "AB1234.svg")); err != nil {
+		t.Errorf("expected new svg to exist: %v", err)
+	}
+	if _, err := os.Stat(stale); !os.IsNotExist(err) {
+		t.Errorf("expected stale jpg to be removed, stat err = %v", err)
+	}
+}
+
+// TestResolveImage_ImagePathIsSiteRelativeFormEvenOnWindows mirrors the
+// production call shape (imgDir = ".../assets/img/wines") and asserts the
+// returned imagePath is forward-slash form with no leading slash, matching
+// how templates/wine.html.tmpl and build.go's search-index build the <img
+// src> ("/" + w.ImagePath) and "img" fields.
+func TestResolveImage_ImagePathIsSiteRelativeFormEvenOnWindows(t *testing.T) {
+	imgDir := filepath.Join(t.TempDir(), "assets", "img", "wines")
+	provider := &fakeImageProvider{fn: func(ctx context.Context, prompt string) ([]byte, error) {
+		return []byte("jpeg bytes"), nil
+	}}
+	logFn, _ := collectLogs(t)
+
+	gotPath, _, err := ResolveImage(context.Background(), provider, resolveImageWine, "a prompt", imgDir, nil, logFn)
+	if err != nil {
+		t.Fatalf("ResolveImage returned error: %v", err)
+	}
+	if strings.Contains(gotPath, "\\") {
+		t.Errorf("imagePath = %q, must not contain backslashes", gotPath)
+	}
+	if !strings.HasSuffix(gotPath, "assets/img/wines/AB1234.jpg") {
+		t.Errorf("imagePath = %q, want it to end with assets/img/wines/AB1234.jpg", gotPath)
+	}
+	if strings.HasPrefix(gotPath, "/") {
+		t.Errorf("imagePath = %q, must not have a leading slash (templates add it)", gotPath)
+	}
+}
+
+func TestResolveImage_MkdirCreatesImgDirWhenMissing(t *testing.T) {
+	imgDir := filepath.Join(t.TempDir(), "not-yet-created")
+	provider := &fakeImageProvider{fn: func(ctx context.Context, prompt string) ([]byte, error) {
+		return []byte("jpeg bytes"), nil
+	}}
+	logFn, _ := collectLogs(t)
+
+	if _, _, err := ResolveImage(context.Background(), provider, resolveImageWine, "a prompt", imgDir, nil, logFn); err != nil {
+		t.Fatalf("ResolveImage returned error: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(imgDir, "AB1234.jpg")); err != nil {
+		t.Errorf("expected imgDir to be created and jpg written: %v", err)
+	}
+}
+
+// TestResolveImage_FilesystemFailurePropagatesAsError confirms the one
+// class of error ResolveImage is allowed to return: MkdirAll failing
+// because imgDir's parent is a regular file, not a directory (deterministic
+// on both Windows and Unix, unlike simulating a permissions failure). This
+// must surface as a real error — unlike a provider failure, a filesystem
+// failure means the image genuinely was not written anywhere.
+func TestResolveImage_FilesystemFailurePropagatesAsError(t *testing.T) {
+	blocker := filepath.Join(t.TempDir(), "blocker-file")
+	if err := os.WriteFile(blocker, []byte("not a directory"), 0o644); err != nil {
+		t.Fatalf("seed blocker file: %v", err)
+	}
+	imgDir := filepath.Join(blocker, "wines") // parent is a file: MkdirAll must fail
+
+	provider := &fakeImageProvider{fn: func(ctx context.Context, prompt string) ([]byte, error) {
+		t.Fatal("provider must not be called if mkdir fails first")
+		return nil, nil
+	}}
+	logFn, _ := collectLogs(t)
+
+	_, _, err := ResolveImage(context.Background(), provider, resolveImageWine, "a prompt", imgDir, nil, logFn)
+	if err == nil {
+		t.Fatal("want a non-nil error for an unwritable imgDir, got nil")
+	}
+}
