@@ -5,6 +5,7 @@ package build
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io/fs"
 	"os"
@@ -43,6 +44,15 @@ type page struct {
 type homePage struct {
 	page
 	LatestNews []model.NewsPost
+}
+
+// winePage carries one wine plus the shared page contract (Title/Description/
+// Path/BaseURL) that base.html.tmpl's head/header/footer require. Because it
+// embeds page (which embeds *site), the wine template reaches BaseURL as
+// .BaseURL and this wine's own fields as .Wine.*.
+type winePage struct {
+	page
+	Wine model.Wine
 }
 
 func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
@@ -90,7 +100,31 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 			return err
 		}
 	}
+
+	for _, w := range s.Wines {
+		data := winePage{
+			page: page{
+				site:        s,
+				Title:       fmt.Sprintf("%s %s %s — Fine Vines", w.Producer, w.Name, w.Vintage),
+				Description: firstNonEmpty(w.Description, w.Producer+" "+w.Name),
+				Path:        "/wines/" + w.Slug + "/",
+			},
+			Wine: w,
+		}
+		if err := renderPage(tmpl, distDir, "wines/"+w.Slug, "wine", data); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+// firstNonEmpty returns s if it is non-empty, else fallback. Used for a
+// page's meta description when the wine record itself has none.
+func firstNonEmpty(s, fallback string) string {
+	if s != "" {
+		return s
+	}
+	return fallback
 }
 
 func loadSite(dataDir, baseURL string) (*site, error) {

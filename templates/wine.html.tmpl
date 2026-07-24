@@ -1,0 +1,62 @@
+{{/*
+  wine.html.tmpl — one page per wine, dist/wines/<slug>/index.html.
+
+  Dot is a winePage (build.go): the embedded `page` supplies Title/
+  Description/Path/BaseURL for head/header/footer (same contract every page
+  uses), and .Wine carries this wine's own fields. Product/Offer JSON-LD is
+  emitted from .Wine — no price (wholesale) and availability is always
+  InStock, because ineligible wines (stockQty <= 0 or SKU starting "9") never
+  reach wines.json in the first place. html/template's contextual escaping
+  handles the JSON-encoding of interpolated values inside the
+  application/ld+json <script> block; nothing here hand-rolls that escaping.
+*/}}
+{{define "wine"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head" .}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": {{printf "%s %s %s" .Wine.Producer .Wine.Name .Wine.Vintage}},
+  "image": {{printf "%s/%s" .BaseURL .Wine.ImagePath}},
+  "description": {{.Wine.Description}},
+  "sku": {{.Wine.SKU}},
+  "brand": {"@type": "Brand", "name": {{.Wine.Producer}}},
+  "offers": {
+    "@type": "Offer",
+    "availability": "https://schema.org/InStock",
+    "seller": {"@type": "Organization", "name": "Fine Vines Ltd."}
+  }
+}
+</script>
+</head>
+<body>
+{{template "header" .}}
+<main>
+  <section class="wrap">
+    <div class="wine-detail">
+      <div class="photo">
+        <img src="/{{.Wine.ImagePath}}" alt="Bottle of {{.Wine.Producer}} {{.Wine.Name}} {{.Wine.Vintage}}">
+      </div>
+      <div>
+        <span class="producer">{{.Wine.Producer}}</span>
+        <h1>{{.Wine.Name}} {{.Wine.Vintage}}</h1>
+        <div class="facts">
+          <span>Region<b>{{.Wine.Region}}</b></span>
+          <span>Appellation<b>{{.Wine.Appellation}}</b></span>
+          <span>Varietal<b>{{.Wine.Varietal}}</b></span>
+          <span>Style<b>{{.Wine.Style}}</b></span>
+        </div>
+        <p>{{.Wine.Description}}</p>
+        <aside class="callout sommelier-notes">
+          <p>{{.Wine.SommelierNotes}}</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+</main>
+{{template "footer" .}}
+</body>
+</html>
+{{end}}
