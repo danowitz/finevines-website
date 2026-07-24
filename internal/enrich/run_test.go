@@ -245,10 +245,29 @@ func TestRun_CheckpointsProgressMidRun(t *testing.T) {
 	rawBlock1 := salesforce.WineRaw{ID: "SF-BLOCK1", SKU: "EF3333", Producer: "Block One", Name: "Block Wine 1", StockQty: 6}
 	rawBlock2 := salesforce.WineRaw{ID: "SF-BLOCK2", SKU: "GH4444", Producer: "Block Two", Name: "Block Wine 2", StockQty: 7}
 
-	src := &fakeSource{roster: []salesforce.WineRaw{rawKeep, rawFast, rawBlock1, rawBlock2}}
+	// rawPending is a wine that ALREADY EXISTS in wines.json but whose
+	// Salesforce data changed (Vintage differs from what's seeded below), so
+	// it lands in Diff.Enrich rather than Diff.Keep — unlike SF-BLOCK1/2
+	// (brand-new wines with no prior entry), holding SF-PENDING open lets
+	// this test exercise buildSnapshot's fallback to existingByID[raw.ID]:
+	// a changed-but-not-yet-processed wine must keep showing its OLD stale
+	// entry in a mid-run checkpoint rather than vanishing from the catalog,
+	// and then get replaced once its worker actually completes.
+	rawPending := salesforce.WineRaw{
+		ID: "SF-PENDING", SKU: "IJ5555", Producer: "Pending Winery", Name: "Pending Wine",
+		Vintage: "2022", StockQty: 9,
+	}
+
+	src := &fakeSource{roster: []salesforce.WineRaw{rawKeep, rawFast, rawBlock1, rawBlock2, rawPending}}
 
 	seed := []model.Wine{
 		{ID: "SF-KEEP", SourceHash: SourceHash(rawKeep), SKU: "AB1111", Producer: "Chateau Keep", Slug: "chateau-keep"},
+		{
+			ID: "SF-PENDING", SourceHash: "stale-hash-does-not-match", SKU: "IJ5555",
+			Producer: "Pending Winery", Name: "Pending Wine", Vintage: "2021", // vs. rawPending's 2022 -> hash mismatch -> Diff.Enrich
+			Description: "OLD STALE DESCRIPTION FROM BEFORE THIS RUN",
+			Slug:        "pending-winery-pending-wine-2021",
+		},
 	}
 	if err := model.SaveWines(dataPath, seed); err != nil {
 		t.Fatalf("seed: %v", err)
@@ -256,7 +275,7 @@ func TestRun_CheckpointsProgressMidRun(t *testing.T) {
 
 	release := make(chan struct{})
 	texts := &fakeTexts{
-		blockIDs: map[string]bool{"SF-BLOCK1": true, "SF-BLOCK2": true},
+		blockIDs: map[string]bool{"SF-BLOCK1": true, "SF-BLOCK2": true, "SF-PENDING": true},
 		release:  release,
 	}
 	images := &fakeImages{}
@@ -266,22 +285,44 @@ func TestRun_CheckpointsProgressMidRun(t *testing.T) {
 		runErr <- Run(context.Background(), src, texts, images, dataPath, imgDir, t.Logf)
 	}()
 
-	// Poll for the intermediate checkpoint: SF-KEEP + SF-FAST written while
-	// SF-BLOCK1/SF-BLOCK2 are still held open in Texts.Enrich.
+	// Poll for the intermediate checkpoint: SF-KEEP (kept) + SF-FAST (freshly
+	// enriched) + SF-PENDING's OLD stale entry (carried over by
+	// buildSnapshot's not-yet-processed fallback, since SF-PENDING is still
+	// held open in Texts.Enrich) = 3 wines.
 	deadline := time.Now().Add(5 * time.Second)
-	sawCheckpoint := false
+	var midRun []model.Wine
 	for time.Now().Before(deadline) {
 		wines, err := model.LoadWines(dataPath)
-		if err == nil && len(wines) == 2 {
-			sawCheckpoint = true
+		if err == nil && len(wines) == 3 {
+			midRun = wines
 			break
 		}
 		time.Sleep(5 * time.Millisecond)
 	}
-	if !sawCheckpoint {
+	if midRun == nil {
 		close(release) // don't leak the goroutine even though the test failed
 		<-runErr
-		t.Fatal("never observed the mid-run checkpoint (SF-KEEP + SF-FAST) before timing out")
+		t.Fatal("never observed the mid-run checkpoint (SF-KEEP + SF-FAST + stale SF-PENDING) before timing out")
+	}
+
+	var pendingMidRun *model.Wine
+	for i := range midRun {
+		if midRun[i].ID == "SF-PENDING" {
+			pendingMidRun = &midRun[i]
+		}
+	}
+	if pendingMidRun == nil {
+		close(release)
+		<-runErr
+		t.Fatal("mid-run checkpoint is missing SF-PENDING entirely — a changed-but-not-yet-processed " +
+			"wine must not vanish from the catalog while its worker is still in flight")
+	}
+	if pendingMidRun.Description != "OLD STALE DESCRIPTION FROM BEFORE THIS RUN" {
+		t.Errorf("mid-run SF-PENDING.Description = %q, want the OLD stale seeded description to survive "+
+			"until the worker actually completes", pendingMidRun.Description)
+	}
+	if pendingMidRun.SourceHash != "stale-hash-does-not-match" {
+		t.Errorf("mid-run SF-PENDING.SourceHash = %q, want the old stale hash (not yet refreshed)", pendingMidRun.SourceHash)
 	}
 
 	close(release)
@@ -299,8 +340,24 @@ func TestRun_CheckpointsProgressMidRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reload final wines.json: %v", err)
 	}
-	if len(final) != 4 {
-		t.Fatalf("want 4 wines in final output, got %d: %+v", len(final), final)
+	if len(final) != 5 {
+		t.Fatalf("want 5 wines in final output, got %d: %+v", len(final), final)
+	}
+
+	var pendingFinal *model.Wine
+	for i := range final {
+		if final[i].ID == "SF-PENDING" {
+			pendingFinal = &final[i]
+		}
+	}
+	if pendingFinal == nil {
+		t.Fatal("final output is missing SF-PENDING")
+	}
+	if pendingFinal.Description == "OLD STALE DESCRIPTION FROM BEFORE THIS RUN" {
+		t.Error("final SF-PENDING.Description should have been replaced by the fresh enrichment once its worker completed, not left stale")
+	}
+	if pendingFinal.SourceHash != SourceHash(rawPending) {
+		t.Errorf("final SF-PENDING.SourceHash = %q, want %q (refreshed)", pendingFinal.SourceHash, SourceHash(rawPending))
 	}
 }
 
