@@ -24,9 +24,14 @@ const minHeuristicSegmentLen = 4
 //  1. overrides — the manual redirect-overrides.json list. Always wins;
 //     this is how a human corrects or short-circuits anything the
 //     automatic tiers below get wrong.
-//  2. well-known root pages ("/", "/about*", "/contact*") — these pages
-//     have no meaningful sub-resources on the new site, so a plain prefix
-//     match is safe and unambiguous.
+//  2. well-known root pages ("/", "/about*", "/contact*", "/news*") — these
+//     pages have no meaningful sub-resources on the new site, so a plain
+//     prefix match is safe and unambiguous. "/news*" is safe to include
+//     here (rather than leaving it to the heuristic below) because the new
+//     site's individual news posts are all created post-launch — there are
+//     no old per-post URLs this could wrongly pre-empt, so every old
+//     "/news" or "/news/..." URL correctly collapses onto the "/news/"
+//     landing page.
 //  3. best-effort wine/news matching (matchBySlug) — the slugified last
 //     path segment is tested for substring containment (either direction)
 //     against every wine slug, then every news slug; a hit redirects
@@ -85,6 +90,8 @@ func matchWellKnownRoot(oldPath string) (string, bool) {
 		return "/about/", true
 	case strings.HasPrefix(p, "/contact"):
 		return "/contact/", true
+	case strings.HasPrefix(p, "/news"):
+		return "/news/", true
 	default:
 		return "", false
 	}

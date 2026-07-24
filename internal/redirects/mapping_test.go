@@ -82,6 +82,42 @@ func TestMapURLs_WellKnownRootPages(t *testing.T) {
 	}
 }
 
+// TestMapURLs_NewsWellKnownRoot proves the well-known-root-pages tier
+// covers "/news*" the same way it already covers "/about*" and "/contact*"
+// (task 19 follow-up: the live finevines.com crawl found "/news" falling
+// through to unmatched even though the new site has a "/news/" landing
+// page — a lost SEO redirect). fixtureNews' only slug
+// ("spring-2026-tasting-event") does not contain "news" as a substring, so
+// this also proves the well-known tier wins BEFORE the heuristic ever gets
+// a chance to (mis)fire, not merely that it produces the same answer.
+func TestMapURLs_NewsWellKnownRoot(t *testing.T) {
+	cases := []struct {
+		old  string
+		want string
+	}{
+		{"/news", "/news/"},
+		{"/news/", "/news/"},
+		{"/news?x=1", "/news/"},
+		{"/News.html", "/news/"}, // case-insensitive prefix match
+	}
+
+	var oldPaths []string
+	for _, c := range cases {
+		oldPaths = append(oldPaths, c.old)
+	}
+
+	mapped, unmatched := MapURLs(oldPaths, fixtureWines(), fixtureNews(), nil)
+
+	for _, c := range cases {
+		if got := mapped[c.old]; got != c.want {
+			t.Errorf("mapped[%q] = %q, want %q", c.old, got, c.want)
+		}
+	}
+	if len(unmatched) != 0 {
+		t.Errorf("unmatched = %#v, want empty", unmatched)
+	}
+}
+
 // TestMapURLs_WineHeuristicMatchesBySlugSubstring is the brief's named
 // scenario: a `/products/<slug-ish-name>.html` old URL maps to the wine
 // whose slug contains that name, even though the old URL doesn't carry the
@@ -101,14 +137,23 @@ func TestMapURLs_WineHeuristicMatchesBySlugSubstring(t *testing.T) {
 	}
 }
 
+// TestMapURLs_NewsHeuristicMatchesBySlugSubstring exercises matchBySlug's
+// news-matching loop directly. It deliberately uses an old path OUTSIDE
+// "/news" (e.g. "/press/...") rather than under it: since "/news*" is now a
+// well-known-root tier (see TestMapURLs_NewsWellKnownRoot), any
+// "/news"-prefixed old URL is intercepted by tier 2 before the heuristic in
+// tier 3 ever runs — matching the brief's explicit intent that every old
+// "/news/..." URL collapses onto the "/news/" landing rather than a
+// specific post. The heuristic itself still applies to a slug-bearing old
+// URL living under some OTHER prefix.
 func TestMapURLs_NewsHeuristicMatchesBySlugSubstring(t *testing.T) {
 	mapped, unmatched := MapURLs(
-		[]string{"/news/spring-2026-tasting.html"},
+		[]string{"/press/spring-2026-tasting.html"},
 		fixtureWines(), fixtureNews(), nil,
 	)
 
 	want := "/news/spring-2026-tasting-event/"
-	if got := mapped["/news/spring-2026-tasting.html"]; got != want {
+	if got := mapped["/press/spring-2026-tasting.html"]; got != want {
 		t.Errorf("mapped[...] = %q, want %q", got, want)
 	}
 	if len(unmatched) != 0 {

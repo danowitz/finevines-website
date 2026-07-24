@@ -303,10 +303,19 @@ func fetchSitemap(ctx context.Context, client *http.Client, base *url.URL) ([]st
 //
 // href is rejected (ok=false) when it's empty, a pure #fragment reference
 // (resolves to the current page itself — fragments never reach the
-// server), or resolves to a different host or a non-http(s) scheme.
-// mailto:/tel:/javascript: links fall out of the same-host check
-// automatically: they have no host component at all, so they can never
-// equal base.Host.
+// server), resolves to a different host or a non-http(s) scheme, or is a
+// "/cdn-cgi/..." path. mailto:/tel:/javascript: links fall out of the
+// same-host check automatically: they have no host component at all, so
+// they can never equal base.Host.
+//
+// "/cdn-cgi/..." is Cloudflare's own reserved namespace — every path under
+// it (e.g. "/cdn-cgi/l/email-protection", the obfuscated-mailto rewrite
+// Cloudflare injects in place of a plain mailto: link when email
+// obfuscation is on) is an infrastructure artifact rather than real site
+// content, and was found 404ing during the live finevines.com crawl this
+// package validates against. It's excluded here, at the same point every
+// other non-content href is filtered, so it's never enqueued for the crawl
+// or collected in Discover's result.
 func resolveSameHostPath(base *url.URL, currentPath, href string) (string, bool) {
 	href = strings.TrimSpace(href)
 	if href == "" || strings.HasPrefix(href, "#") {
@@ -326,6 +335,9 @@ func resolveSameHostPath(base *url.URL, currentPath, href string) (string, bool)
 		return "", false
 	}
 	if resolved.Host != base.Host {
+		return "", false
+	}
+	if strings.HasPrefix(strings.ToLower(resolved.Path), "/cdn-cgi/") {
 		return "", false
 	}
 	return pathWithQuery(resolved), true

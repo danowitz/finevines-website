@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"sort"
+	"strings"
 	"sync/atomic"
 	"testing"
 )
@@ -204,6 +205,54 @@ func TestDiscover_FragmentsStrippedFromLinks(t *testing.T) {
 		})(); contains {
 			t.Errorf("discovered path retained a fragment: %q", p)
 		}
+	}
+}
+
+// TestDiscover_SkipsCdnCgiArtifacts proves an href pointing at Cloudflare's
+// "/cdn-cgi/" email-obfuscation artifact (found linked on the live
+// finevines.com homepage as "/cdn-cgi/l/email-protection"; it 404s and is
+// never real content) is neither enqueued for the crawl nor collected in
+// the result, while an ordinary same-host link on the same page still is.
+func TestDiscover_SkipsCdnCgiArtifacts(t *testing.T) {
+	var fetchedCdnCgi bool
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		fmt.Fprint(w, `<html><body>
+			<a href="/cdn-cgi/l/email-protection">Email</a>
+			<a href="/contact.html">Contact</a>
+		</body></html>`)
+	})
+	mux.HandleFunc("/cdn-cgi/l/email-protection", func(w http.ResponseWriter, r *http.Request) {
+		fetchedCdnCgi = true
+		http.NotFound(w, r)
+	})
+	mux.HandleFunc("/contact.html", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `<html><body>no further links</body></html>`)
+	})
+
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	got, err := Discover(context.Background(), srv.URL, nil)
+	if err != nil {
+		t.Fatalf("Discover returned error: %v", err)
+	}
+
+	want := []string{"/", "/contact.html"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Discover() = %#v, want %#v", got, want)
+	}
+	for _, p := range got {
+		if strings.HasPrefix(strings.ToLower(p), "/cdn-cgi/") {
+			t.Errorf("Discover() = %#v, should not contain a /cdn-cgi/ path", got)
+		}
+	}
+	if fetchedCdnCgi {
+		t.Errorf("Discover fetched the /cdn-cgi/ artifact — it should have been skipped before enqueueing, never fetched")
 	}
 }
 
