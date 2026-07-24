@@ -31,12 +31,14 @@ func TestGenerateMiddleware_EmitsFetchFromStorageAndRedirectLogic(t *testing.T) 
 
 	for _, want := range []string{
 		"https://www.finevines.com/redirects.json", // the storage URL, embedded
-		"fetch(",          // cold-start fetch of the map
-		"servePullZone",   // Bunny middleware attachment
-		"onOriginRequest", // Bunny middleware request-interception hook
-		"status: 301",     // 301 on hit
-		"Location",        // Location header on hit
-		"redirects.get(",  // O(1) map lookup, not embedded literal scan
+		"fetch(",            // cold-start fetch of the map
+		"servePullZone",     // Bunny middleware attachment
+		"onOriginRequest",   // Bunny middleware request-interception hook
+		"status: 301",       // 301 on hit
+		"Location",          // Location header on hit
+		"redirects.get(",    // O(1) map lookup, not embedded literal scan
+		"url.search",        // query string read for the pathname+query lookup key
+		"?? redirects.get(", // pathname-alone fallback when pathname+query misses
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("GenerateMiddleware() output missing %q; full output:\n%s", want, got)
@@ -51,6 +53,11 @@ func TestGenerateMiddleware_EmitsFetchFromStorageAndRedirectLogic(t *testing.T) 
 	}
 }
 
+// TestGenerateMiddleware_PassesThroughOnFetchFailure pins the FULL fail-open
+// contract, not just "a catch exists" — a regression that removed the
+// redirectsPromise reset (leaving the isolate permanently stuck with an
+// empty map after one transient fetch failure) would still contain the
+// word "catch" and wrongly pass a looser assertion.
 func TestGenerateMiddleware_PassesThroughOnFetchFailure(t *testing.T) {
 	script, err := GenerateMiddleware("https://www.finevines.com/redirects.json")
 	if err != nil {
@@ -58,11 +65,49 @@ func TestGenerateMiddleware_PassesThroughOnFetchFailure(t *testing.T) {
 	}
 	got := string(script)
 
-	// Graceful degradation: a failed fetch of redirects.json must never
-	// break the site. Look for a catch/error path that falls back instead
-	// of throwing out of onOriginRequest.
-	if !strings.Contains(got, "catch") {
-		t.Errorf("GenerateMiddleware() output has no catch around the redirects fetch (must fail open):\n%s", got)
+	for _, want := range []string{
+		"catch",                   // a catch/error path exists around the fetch
+		"redirectsPromise = null", // failure is NOT cached — next request retries
+		"new Map",                 // the catch body hands back an empty map (fail open)
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("GenerateMiddleware() output missing %q (fail-open contract); full output:\n%s", want, got)
+		}
+	}
+}
+
+// TestGenerateMiddleware_GuardsAgainstSelfFetchReentry covers the resilience
+// fix from code review: loadRedirects() fetches the map through the SAME
+// pull zone this middleware is attached to. If that subrequest is ever
+// re-entrant on the same isolate, awaiting redirectsPromise from within the
+// nested call would deadlock forever (the promise can't resolve until the
+// nested call — which is itself waiting on it — returns). The guard must
+// compare the incoming request's path against the map's own path and
+// return BEFORE loadRedirects() is ever called.
+func TestGenerateMiddleware_GuardsAgainstSelfFetchReentry(t *testing.T) {
+	script, err := GenerateMiddleware("https://www.finevines.com/redirects.json")
+	if err != nil {
+		t.Fatalf("GenerateMiddleware() error = %v", err)
+	}
+	got := string(script)
+
+	for _, want := range []string{
+		"MAP_PATH",
+		"url.pathname === MAP_PATH",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("GenerateMiddleware() output missing %q (reentry guard); full output:\n%s", want, got)
+		}
+	}
+
+	guardIdx := strings.Index(got, "url.pathname === MAP_PATH")
+	loadIdx := strings.Index(got, "await loadRedirects()")
+	if guardIdx == -1 || loadIdx == -1 {
+		t.Fatalf("could not locate guard (%d) or loadRedirects call (%d) in output", guardIdx, loadIdx)
+	}
+	if guardIdx > loadIdx {
+		t.Errorf("reentry guard (offset %d) must appear BEFORE the loadRedirects() call (offset %d) — "+
+			"otherwise the deadlock it's meant to prevent can still occur", guardIdx, loadIdx)
 	}
 }
 

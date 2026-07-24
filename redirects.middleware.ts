@@ -40,6 +40,20 @@
 // falls back to an empty map, which makes every request pass through to
 // origin unchanged. The site is never broken by a redirects-map problem.
 //
+// REENTRY GUARD: loadRedirects() fetches REDIRECT_MAP_URL through this
+// SAME pull zone (it's just the site's own /redirects.json). Bunny's
+// reentry behavior for an edge script's own subrequests isn't documented
+// either way, but IF that subrequest is ever routed back through this same
+// middleware on the same isolate while the parent call's redirectsPromise
+// is still pending, awaiting it there would wait on a promise that can
+// only resolve once that very (nested) request finishes — a circular
+// deadlock with no timeout, no error, and no reset of redirectsPromise, so
+// every subsequent request on the isolate hangs forever. onOriginRequest
+// below checks the request path against the map's own path FIRST, before
+// ever calling loadRedirects(), so the cycle is broken unconditionally —
+// insurance against unconfirmed platform behavior, not a response to an
+// observed bug.
+//
 // generator note: this file is a Go text/template — the only variable
 // piece is the redirects.json URL below, so output is fully deterministic
 // for a given input (important since the rendered file is committed to
@@ -52,6 +66,11 @@ import * as BunnySDK from "@bunny.net/edgescript-sdk";
 // ordinary site asset) — NOT baked into this script, so a redirects.json
 // refresh never requires touching or redeploying this file.
 const REDIRECT_MAP_URL = "https://finevines.com/redirects.json";
+
+// MAP_PATH is REDIRECT_MAP_URL's path component, computed once at module
+// scope so the reentry guard in onOriginRequest (see REENTRY GUARD above)
+// is a cheap per-request string comparison, not a URL parse.
+const MAP_PATH = new URL(REDIRECT_MAP_URL).pathname;
 
 // redirectsPromise memoizes the in-flight/completed fetch+parse of
 // REDIRECT_MAP_URL for the lifetime of this isolate. Concurrent requests
@@ -94,9 +113,18 @@ BunnySDK.net.http
   // reasonable stand-in rather than a value this script depends on.
   .servePullZone({ url: "https://finevines.com" })
   .onOriginRequest(async (ctx: { request: Request }) => {
+    const url = new URL(ctx.request.url);
+
+    // Reentry guard (see REENTRY GUARD above) — must run BEFORE
+    // loadRedirects() so the map's own self-fetch can never nest into
+    // this handler while a parent call is still awaiting the same
+    // in-flight redirectsPromise.
+    if (url.pathname === MAP_PATH) {
+      return ctx.request;
+    }
+
     const redirects = await loadRedirects();
 
-    const url = new URL(ctx.request.url);
     const withQuery = url.pathname + url.search;
 
     // Try pathname+query first (the map's keys carry query strings when
