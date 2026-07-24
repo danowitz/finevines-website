@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gritautomation/finevines-website/internal/build"
 	"github.com/gritautomation/finevines-website/internal/config"
@@ -32,7 +34,7 @@ func main() {
 	case "build":
 		runErr = runBuild(cfg)
 	case "redirects":
-		runErr = runRedirects(cfg)
+		runErr = runRedirects(cfg, os.Args[2:])
 	case "deploy":
 		runErr = runDeploy(cfg)
 	default:
@@ -113,12 +115,28 @@ const edgeRulesGateMax = 20
 // 301 the entire old footprint and Google's existing index carries over
 // (design spec §7, plan Task 19/20).
 //
-// Only discovery + mapping + the redirects.json write happen here.
-// PUBLISHING that map to Bunny.net — Edge Rules if the count is at most
-// edgeRulesGateMax, Edge Scripting middleware otherwise — is Task 20 and is
-// not implemented yet; this function prints the gate verdict so that
-// decision is visible ahead of time, but takes no publishing action.
-func runRedirects(cfg config.Config) error {
+// Discovery + mapping + the redirects.json write always happen. PUBLISHING
+// that map to Bunny.net only happens when args contains --publish — without
+// it, runRedirects stays exactly the discovery+mapping+save behavior Task
+// 19 left it as, so a plain `finevines redirects` run stays side-effect-free
+// against the live Bunny account (safe to run repeatedly while iterating on
+// redirect-overrides.json, e.g.).
+//
+// The map is 51,511 entries (>> Bunny's 20-Edge-Rule-per-zone cap), so the
+// crawl-gate verdict is settled: publishing always uses Edge Scripting
+// (internal/redirects.GenerateMiddleware + PublishMiddleware), never Edge
+// Rules (internal/redirects/publish_rules.go is a documented-only stub). If
+// a future run of Discover somehow shrinks the map to at most
+// edgeRulesGateMax entries, --publish deliberately refuses rather than
+// silently doing nothing useful — see the error below.
+func runRedirects(cfg config.Config, args []string) error {
+	fs := flag.NewFlagSet("redirects", flag.ContinueOnError)
+	publish := fs.Bool("publish", false,
+		"after discovering and mapping, publish the redirect map to Bunny.net via Edge Scripting")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+
 	oldPaths, err := redirects.Discover(context.Background(), cfg.SiteBaseURL, log.Printf)
 	if err != nil {
 		return fmt.Errorf("redirects: discover %s: %w", cfg.SiteBaseURL, err)
@@ -169,16 +187,58 @@ func runRedirects(cfg config.Config) error {
 		log.Printf("%d redirects → Edge Scripting", len(mapped))
 	}
 
-	// TODO(task 20): publish `mapped` to Bunny.net.
-	//   - len(mapped) <= edgeRulesGateMax: Edge Rules — POST
-	//     https://api.bunny.net/pullzone/{id}/edgerules/addOrUpdate per
-	//     old path (301, deterministic GUID per old path for idempotent
-	//     upserts on re-run).
-	//   - otherwise: generate + deploy the Edge Scripting middleware
-	//     (redirects.middleware.ts, a Record<string,string> lookup that
-	//     301s a hit and passes through a miss).
-	// See the implementation plan's Task 20 Branch A/B for the confirmed
-	// API shapes.
+	if !*publish {
+		log.Printf("redirects: --publish not set; discovery + mapping only (redirects.json written, nothing sent to Bunny.net)")
+		return nil
+	}
+
+	if len(mapped) <= edgeRulesGateMax {
+		return fmt.Errorf("redirects: --publish requested but the map has only %d entries (<=%d) — "+
+			"Edge Rules publishing (Branch A) is a documented stub, not implemented; "+
+			"see internal/redirects/publish_rules.go", len(mapped), edgeRulesGateMax)
+	}
+
+	// Edge Scripting (Branch B, plan Task 20). Needs a different set of
+	// Bunny credentials than `deploy`'s storage-zone upload: the account
+	// API key (shared with deploy's Purge) plus the target compute
+	// script's ID, which is created and linked to the Fine Vines Pull
+	// Zone once via the Bunny dashboard/Terraform (see ScriptClient's doc
+	// comment) — that one-time setup is a launch step, client item C4.
+	requiredEnv := []struct{ name, value string }{
+		{"FINEVINES_BUNNY_API_KEY", cfg.BunnyAPIKey},
+		{"FINEVINES_BUNNY_SCRIPT_ID", cfg.BunnyScriptID},
+	}
+	for _, req := range requiredEnv {
+		if req.value == "" {
+			return fmt.Errorf("redirects: --publish set but %s is not configured; "+
+				"set it in .env (or the environment) before publishing", req.name)
+		}
+	}
+
+	// Fine Vines keeps its domain, so cfg.SiteBaseURL doubles as both the
+	// old-site crawl target (Discover, above) and — after cutover — the
+	// new site's own host, which is where the deployed redirects.json the
+	// middleware fetches at runtime will live.
+	redirectsURL := strings.TrimRight(cfg.SiteBaseURL, "/") + "/redirects.json"
+
+	script, err := redirects.GenerateMiddleware(redirectsURL)
+	if err != nil {
+		return fmt.Errorf("redirects: generate middleware: %w", err)
+	}
+	// Committed alongside the map's own JSON for reproducibility and as
+	// the manual-dashboard-paste fallback if the API call below ever
+	// proves awkward against the real Bunny account.
+	if err := os.WriteFile("redirects.middleware.ts", script, 0o644); err != nil {
+		return fmt.Errorf("redirects: write redirects.middleware.ts: %w", err)
+	}
+
+	scriptClient := redirects.NewScriptClient(cfg.BunnyAPIKey, cfg.BunnyScriptID, http.DefaultClient)
+	if err := redirects.PublishMiddleware(context.Background(), scriptClient, script); err != nil {
+		return fmt.Errorf("redirects: publish middleware: %w", err)
+	}
+
+	log.Printf("redirects: published %d-entry redirect map via Bunny Edge Scripting (script id %s)",
+		len(mapped), cfg.BunnyScriptID)
 	return nil
 }
 

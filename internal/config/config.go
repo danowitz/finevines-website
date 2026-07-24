@@ -15,6 +15,7 @@ type Config struct {
 	BunnyStorageZone, BunnyStorageKey                   string
 	BunnyStorageEndpoint                                string // e.g. https://ny.storage.bunnycdn.com
 	BunnyAPIKey, BunnyPullZoneID                        string
+	BunnyScriptID                                       string // Edge Scripting compute script ID (redirect middleware)
 	SiteBaseURL                                         string // e.g. https://finevines.com
 }
 
@@ -52,6 +53,7 @@ func Load(envPath string) (Config, error) {
 		BunnyStorageEndpoint: orDefault(get("FINEVINES_BUNNY_STORAGE_ENDPOINT"), "https://storage.bunnycdn.com"),
 		BunnyAPIKey:          get("FINEVINES_BUNNY_API_KEY"),
 		BunnyPullZoneID:      get("FINEVINES_BUNNY_PULL_ZONE_ID"),
+		BunnyScriptID:        get("FINEVINES_BUNNY_SCRIPT_ID"),
 		SiteBaseURL:          orDefault(get("FINEVINES_SITE_BASE_URL"), "https://finevines.com"),
 	}, nil
 }
