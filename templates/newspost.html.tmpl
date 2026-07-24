@@ -11,6 +11,11 @@
   (build.go): the news skill writes plain prose separated by blank lines,
   no markdown engine (YAGNI).
 
+  .Post.Image is optional (the finevines-news skill only asks for it when
+  natural, per its SKILL.md) — rendered only when present, site-relative
+  with the leading slash added here, matching wine.html.tmpl's
+  .Wine.ImagePath and about.html.tmpl's .PhotoPath convention.
+
   NewsArticle JSON-LD mirrors wine.html.tmpl's Product/Offer block: bare
   {{...}} pipelines inside the application/ld+json <script>, relying on
   html/template's contextual JS/JSON escaping rather than hand-rolling it.
@@ -37,6 +42,7 @@
     <span class="eyebrow">{{.Post.Category}}</span>
     <h1>{{.Post.Title}}</h1>
     <p class="lede">{{.Post.Date}}</p>
+    {{if .Post.Image}}<img class="news-post-photo" src="/{{.Post.Image}}" alt="{{.Post.Title}}">{{end}}
     {{range paragraphs .Post.Body}}<p>{{.}}</p>
     {{end}}
     <p><a href="/news/">&larr; Back to News &amp; Events</a></p>

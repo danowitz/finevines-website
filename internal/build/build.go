@@ -5,6 +5,7 @@ package build
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -15,6 +16,15 @@ import (
 
 	"github.com/gritautomation/finevines-website/internal/model"
 )
+
+// redirectsJSONName is the file redirects.Save writes at the repo root
+// (internal/redirects/mapping.go's Save, invoked from cmd/finevines's
+// runRedirects) — the SAME location copyRedirectsJSON looks for it here.
+// `finevines build` and `finevines redirects` are both always run from the
+// repo root (cmd/finevines/main.go's runBuild/runRedirects pass bare
+// relative paths like "data" and "redirects.json"), so reading this literal
+// name from the process's cwd is the correct, consistent lookup.
+const redirectsJSONName = "redirects.json"
 
 // site is the seam between loadSite (producer) and every page template
 // (consumer): the full data set behind one build run. Tasks 6-8 read
@@ -127,11 +137,15 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 	}
 	tmpl, err := template.New("").Funcs(template.FuncMap{
 		"paragraphs": paragraphs,
+		"excerpt":    excerpt,
 	}).ParseGlob(filepath.Join(templatesDir, "*.tmpl"))
 	if err != nil {
 		return err
 	}
 	if err := copyTree(assetsDir, filepath.Join(distDir, "assets")); err != nil {
+		return err
+	}
+	if err := copyRedirectsJSON(distDir); err != nil {
 		return err
 	}
 
@@ -405,6 +419,29 @@ func renderPage(tmpl *template.Template, distDir, rel, name string, data any) er
 	}
 	defer f.Close()
 	return tmpl.ExecuteTemplate(f, name, data)
+}
+
+// copyRedirectsJSON copies redirects.json from the process's current
+// working directory (repo root) into dist/, so the deployed Edge
+// middleware (internal/redirects/middleware.ts.tmpl) — which fetches
+// /redirects.json from the live site at runtime — actually finds the
+// generated redirect map instead of 404ing into an effectively empty one.
+// Without this, every 301 discovered by `finevines redirects` would
+// silently no-op at launch: redirects.Save writes redirects.json to the
+// repo root, but nothing else ever put it into dist/, and deploy.Run only
+// uploads dist/.
+//
+// A from-scratch checkout (or one that hasn't run `redirects` yet) has no
+// redirects.json — that is not an error, just nothing to copy.
+func copyRedirectsJSON(distDir string) error {
+	data, err := os.ReadFile(redirectsJSONName)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(distDir, redirectsJSONName), data, 0o644)
 }
 
 func copyTree(src, dst string) error {

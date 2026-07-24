@@ -8,6 +8,12 @@
   Dot is a newsPage (build.go): the embedded page supplies Title/
   Description/Path/BaseURL for head/header/footer, and .Posts is the full
   list.
+
+  The excerpt is truncated via the "excerpt" FuncMap helper (build.go's
+  excerpt func, the same one meta descriptions use), not the raw .Body — a
+  multi-paragraph body rendered whole here would be one run-on block. The
+  post's own page (newspost.html.tmpl) renders the full body via the
+  "paragraphs" helper instead.
 */}}
 {{define "news"}}<!doctype html>
 <html lang="en">
@@ -27,7 +33,7 @@
         <div class="date">{{.Date}}</div>
         <div>
           <h3><a href="/news/{{.Slug}}/">{{.Title}}</a></h3>
-          <p class="excerpt">{{.Body}}</p>
+          <p class="excerpt">{{excerpt .Body 200}}</p>
           <span class="category">{{.Category}}</span>
         </div>
       </article>

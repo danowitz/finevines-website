@@ -1,9 +1,11 @@
 package build
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -39,6 +41,94 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dist, "assets", "css", "site.css")); err != nil {
 		t.Error("assets not copied into dist")
 	}
+}
+
+// TestRunCopiesRedirectsJSONWhenPresent guards Fix 1: redirects.Save writes
+// redirects.json to the repo root (the process's working directory), and
+// nothing else previously copied it into dist/ — so the deployed Edge
+// middleware's runtime fetch of /redirects.json 404'd into an empty map and
+// every discovered 301 silently no-op'd. Run must now pick it up from cwd
+// and copy it into dist/ verbatim.
+func TestRunCopiesRedirectsJSONWhenPresent(t *testing.T) {
+	dataDir := mustAbs(t, "testdata")
+	assetsDir := mustAbs(t, "../../assets")
+	templatesDir := mustAbs(t, "../../templates")
+	dist := t.TempDir()
+
+	workDir := t.TempDir()
+	want := []byte("{\n  \"/old-page.html\": \"/new-page/\"\n}\n")
+	if err := os.WriteFile(filepath.Join(workDir, "redirects.json"), want, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	chdir(t, workDir)
+
+	if err := Run(dataDir, assetsDir, templatesDir, dist, "https://finevines.com"); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(dist, "redirects.json"))
+	if err != nil {
+		t.Fatalf("dist/redirects.json not written: %v", err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Errorf("dist/redirects.json = %q, want %q (bytes must match exactly, per deploy's hash-diff)", got, want)
+	}
+}
+
+// TestRunSucceedsWithoutRedirectsJSON guards the other half of Fix 1: a
+// fresh checkout (or one that hasn't run `finevines redirects` yet) has no
+// redirects.json at the repo root — that must not fail the build, and
+// dist/redirects.json must simply not exist.
+func TestRunSucceedsWithoutRedirectsJSON(t *testing.T) {
+	dataDir := mustAbs(t, "testdata")
+	assetsDir := mustAbs(t, "../../assets")
+	templatesDir := mustAbs(t, "../../templates")
+	dist := t.TempDir()
+
+	chdir(t, t.TempDir()) // empty working dir: no redirects.json here
+
+	if err := Run(dataDir, assetsDir, templatesDir, dist, "https://finevines.com"); err != nil {
+		t.Fatalf("Run should succeed when redirects.json is absent: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dist, "redirects.json")); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("dist/redirects.json should not exist when the source file is absent, stat err = %v", err)
+	}
+}
+
+// mustAbs resolves rel (relative to the package directory this test binary
+// starts in) to an absolute path. Tests that chdir (see chdir below) must
+// resolve dataDir/assetsDir/templatesDir through this first, since those
+// Run arguments stop being valid relative paths once the process's cwd
+// moves.
+func mustAbs(t *testing.T, rel string) string {
+	t.Helper()
+	abs, err := filepath.Abs(rel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return abs
+}
+
+// chdir switches the test process's working directory to dir for the
+// duration of the calling test, restoring the original directory via
+// t.Cleanup. Needed because copyRedirectsJSON reads "redirects.json"
+// relative to the process's cwd — matching where redirects.Save writes it
+// (repo root) and where cmd/finevines's runBuild/runRedirects always
+// operate from.
+func chdir(t *testing.T, dir string) {
+	t.Helper()
+	orig, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(orig); err != nil {
+			t.Fatal(err)
+		}
+	})
 }
 
 func TestWineDetailPages(t *testing.T) {
@@ -129,6 +219,16 @@ func TestNewsPages(t *testing.T) {
 			t.Errorf("news landing missing %q", want)
 		}
 	}
+	// Fix 4: the landing excerpt must be truncated via the excerpt() helper,
+	// not the raw multi-paragraph .Body — the fixture's second paragraph
+	// must never appear on the landing page, and the truncated excerpt must
+	// carry its trailing ellipsis.
+	if strings.Contains(landingHTML, "Light bites will be served") {
+		t.Error("news landing excerpt should be truncated, not the full multi-paragraph body")
+	}
+	if !strings.Contains(landingHTML, "…") {
+		t.Error("news landing excerpt should be truncated with a trailing ellipsis")
+	}
 
 	post, err := os.ReadFile(filepath.Join(dist, "news", "spring-portfolio-tasting", "index.html"))
 	if err != nil {
@@ -142,6 +242,9 @@ func TestNewsPages(t *testing.T) {
 		`"@type": "NewsArticle"`,
 		"datePublished",
 		"2026-04-12",
+		"Light bites will be served", // full body still renders on the post page, unlike the landing excerpt
+		// Fix 3: the fixture's "image" field must render on the post page.
+		`<img class="news-post-photo" src="/assets/news/spring-tasting.jpg" alt="Spring Portfolio Tasting">`,
 	} {
 		if !strings.Contains(postHTML, want) {
 			t.Errorf("news post missing %q", want)

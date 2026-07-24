@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"sort"
 )
 
@@ -76,6 +77,16 @@ func LoadWines(path string) ([]Wine, error) {
 
 // SaveWines writes wines to path as pretty-printed JSON sorted by slug
 // (deterministic for clean diffs); the caller's slice is not modified.
+//
+// The write is atomic: data is written to a temp file created alongside
+// path (same directory, so the later rename stays on one filesystem), then
+// renamed into place. Enrich rewrites data/wines.json every 50 wines during
+// the initial 5-10k-wine run as its crash-safety checkpoint; a plain
+// os.WriteFile that crashes mid-write would leave a truncated file that
+// fails LoadWines on resume, defeating the whole point of checkpointing.
+// os.Rename is atomic on the same filesystem, so a reader (including a
+// resumed enrich run) only ever observes the old complete file or the new
+// complete file, never a partial one.
 func SaveWines(path string, wines []Wine) error {
 	sorted := append([]Wine(nil), wines...)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Slug < sorted[j].Slug })
@@ -83,5 +94,25 @@ func SaveWines(path string, wines []Wine) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, append(data, '\n'), 0o644)
+	data = append(data, '\n')
+
+	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".tmp-*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath) // no-op once the rename below has succeeded
+
+	if err := tmp.Chmod(0o644); err != nil {
+		tmp.Close()
+		return err
+	}
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpPath, path)
 }

@@ -17,10 +17,13 @@ import (
 // ErrImageRejected is the sentinel GenerateJPEG wraps whenever Imagen
 // declines to produce a photo: a non-2xx response (the shape a safety/policy
 // rejection takes on this endpoint) or a 200 with an empty predictions
-// array. The enrich pipeline (Task 15) treats this as "fall back to the
-// deterministic label", not a run failure — only transport/network errors
-// and malformed responses (ordinary errors, not this sentinel) should abort
-// a run.
+// array. It exists to distinguish a content/safety rejection from a
+// transport/network error or malformed response (ordinary errors, not this
+// sentinel) — but that distinction is informational only: the pipeline
+// (ResolveImage, images.go) falls back to the deterministic label on ANY
+// provider error, wrapped in this sentinel or not, and never aborts an
+// enrich run because of it. Only filesystem failures (MkdirAll/WriteFile)
+// abort a run; see ResolveImage's doc comment.
 var ErrImageRejected = errors.New("imagen: image generation rejected")
 
 // ImageProvider turns one Claude-authored image prompt into a photorealistic
@@ -108,11 +111,13 @@ type imagenResponse struct {
 //
 // A non-2xx response or a 200 with no usable prediction (both are how this
 // endpoint surfaces a safety/policy rejection) return an error wrapping
-// ErrImageRejected, so callers can fall back to the deterministic label
-// instead of failing the whole enrich run. Network/transport failures and
-// malformed response bodies are returned as ordinary errors — those are
-// real run failures, not content rejections, and must not satisfy
-// errors.Is(err, ErrImageRejected).
+// ErrImageRejected. Network/transport failures and malformed response
+// bodies are returned as ordinary errors instead, and must not satisfy
+// errors.Is(err, ErrImageRejected) — that distinction lets a caller tell a
+// content rejection apart from a transport problem if it ever wants to, but
+// ResolveImage (images.go), the only caller today, does not: it falls back
+// to the deterministic label on either kind of error and never aborts the
+// enrich run because of it.
 func (c *ImagenClient) GenerateJPEG(ctx context.Context, prompt string) ([]byte, error) {
 	reqBody, err := json.Marshal(imagenRequest{
 		Instances:  []imagenInstance{{Prompt: prompt}},
