@@ -117,9 +117,9 @@ strong { color: var(--ink-strong); font-weight: 600; }
 .rule-gold { height: 1px; border: 0; background: linear-gradient(90deg, var(--gold), transparent); margin: 34px 0; }
 
 /* ---- Layout ----------------------------------------------------------- */
-.wrap { max-width: 1200px; margin: 0 auto; padding: 0 28px; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: 28px; }
 main { display: block; }
-section.wrap { padding: 56px 0 68px; }
+section.wrap { padding-block: 56px 68px; }
 section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60px; }
 
 /* ---- Header / nav ----------------------------------------------------- */
@@ -594,7 +594,7 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 
 /* sm — single-column phones */
 @media (max-width: 640px) {
-  .wrap { padding: 0 20px; }
+  .wrap { padding-inline: 20px; }
   body { font-size: 17px; }
   .wine-grid.view-cards { grid-template-columns: 1fr; }
   .team-grid { grid-template-columns: 1fr; }
