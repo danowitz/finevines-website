@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Vosne-Romanée Premier Cru",
+  "aroma": "Dark cherry, violet, exotic spice",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "France",
+  "description": "Machard de Gramont's 2015 Vosne-Romanée Premier Cru Les Gaudichots is an exceptionally rare Pinot Noir with dark cherry fruit, floral perfume, and finely wrought spice. The palate is concentrated yet composed, with mineral tension carrying a long, savory close.",
+  "drinkWindow": "2022-2038",
+  "finish": "Long, savory, perfumed",
+  "foodPairings": [
+    "duck breast",
+    "veal loin",
+    "roast grouse",
+    "aged Époisses"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2015 Domaine Machard de Gramont Vosne-Romanée Premier Cru Les Gaudichots.",
+  "imageUrl": "https://www.idealwine.com/media/cache/product_variant_medium/b1/e9/d5e3660886cc35c8843b410768fe.jpg",
+  "matchConfidence": 98,
+  "palate": "Concentrated, silky, mineral",
+  "sommelierNotes": "Decant gently for sediment and serve at 15-16°C with duck, veal, or feathered game; the wine can continue to develop in a sound cellar.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "derived",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "derived",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "found",
+    "palate": "derived",
+    "sommelierNotes": "derived"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "abv": "14.5%",
+  "appellation": "Willamette Valley",
+  "aroma": "Red berries, dried herbs, citrus peel",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "United States",
+  "description": "Maison Roy \u0026 Fils' 2014 Incline Pinot Noir blends red fruit, dried herbs, and citrus peel in a graceful, finely layered style. The palate has depth without heaviness, carrying the vintage's ripeness with measured freshness.",
+  "drinkWindow": "2018-2028",
+  "finish": "Graceful and persistent",
+  "foodPairings": [
+    "duck breast",
+    "cedar-plank salmon",
+    "porcini risotto",
+    "triple-cream cheese"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2014 Maison Roy \u0026 Fils Incline Pinot Noir from Willamette Valley.",
+  "imageUrl": "",
+  "matchConfidence": 98,
+  "palate": "Deep yet light-footed, supple, fresh",
+  "sommelierNotes": "Serve at 15-16°C with duck, cedar-plank salmon, or porcini risotto; a gentle decant is appropriate for sediment.",
+  "sources": {
+    "abv": "found",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "found",
+    "finish": "found",
+    "foodPairings": "derived",
+    "palate": "found",
+    "sommelierNotes": "derived"
+  }
+}

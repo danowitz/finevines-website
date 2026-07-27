@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Morey-Saint-Denis",
+  "aroma": "White flowers, citrus, wet limestone",
+  "bottleSize": "750ml",
+  "color": "White",
+  "country": "France",
+  "description": "Bruno Clair's 2015 Morey-Saint-Denis Blanc En la Rue de Vergy is a mineral, tightly drawn Chardonnay from limestone soils above the village. Oak maturation adds breadth, but the wine's defining qualities are precision, aromatic range, and remarkable length.",
+  "drinkWindow": "2019-2032",
+  "finish": "Long, stony, composed",
+  "foodPairings": [
+    "roast turbot",
+    "lobster",
+    "roast chicken",
+    "mushroom cream sauce"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2015 Domaine Bruno Clair Morey-Saint-Denis Blanc En la Rue de Vergy.",
+  "imageUrl": "https://www.idealwine.com/media/cache/product_current_rating/00-images-etiq/116086.jpg",
+  "matchConfidence": 99,
+  "palate": "Broad yet linear, mineral, finely oaked",
+  "sommelierNotes": "Serve at 11-13°C and allow a little air; pair with turbot, roast poultry, lobster, or a restrained cream sauce.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "found",
+    "finish": "found",
+    "foodPairings": "derived",
+    "palate": "found",
+    "sommelierNotes": "derived"
+  }
+}

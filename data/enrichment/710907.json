@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Santenay",
+  "aroma": "Ripe red cherry, plum, gentle earth",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "France",
+  "description": "Hubert Lamy's 2014 Santenay Clos des Hâtes Rouge carries generous Pinot Noir fruit through a silky, concentrated palate. Mouthwatering acidity arrives beneath the wine's breadth, lending shape and complexity to its mature expression.",
+  "drinkWindow": "2020-2027",
+  "finish": "Fresh, savory, gently firm",
+  "foodPairings": [
+    "roast chicken",
+    "pork tenderloin",
+    "mushroom risotto",
+    "washed-rind cheese"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2014 Domaine Hubert Lamy Santenay Clos des Hâtes Rouge.",
+  "imageUrl": "https://www.idealwine.com/media/cache/product_variant_medium_small/96/4d/5f4fc4da5edd84041571116cec6a.jpg",
+  "matchConfidence": 96,
+  "palate": "Silky, concentrated, mouthwatering",
+  "sommelierNotes": "Serve at 15-16°C with a short, careful decant; its savory freshness suits roast poultry, pork, or earthy vegetable preparations.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "derived",
+    "finish": "found",
+    "foodPairings": "derived",
+    "palate": "found",
+    "sommelierNotes": "derived"
+  }
+}

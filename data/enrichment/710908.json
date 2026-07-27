@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Saint-Aubin Premier Cru",
+  "aroma": "Red cherry, dried rose, forest floor",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "France",
+  "description": "Hubert Lamy's 2014 Saint-Aubin Premier Cru Derrière Chez Edouard Vieilles Vignes Rouge is a rare, finely drawn Pinot Noir with red-fruited lift and a cool, stony profile. Its mature frame favors delicacy, savory nuance, and freshness over weight.",
+  "drinkWindow": "2020-2028",
+  "finish": "Quietly savory and persistent",
+  "foodPairings": [
+    "roast quail",
+    "duck breast",
+    "wild mushrooms",
+    "aged Comté"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2014 Domaine Hubert Lamy Saint-Aubin Premier Cru Derrière Chez Edouard Vieilles Vignes red Burgundy.",
+  "imageUrl": "https://www.idealwine.com/media/cache/product_variant_medium/00-migrated-variant-photos/B2637240_119.jpg",
+  "matchConfidence": 86,
+  "palate": "Silky red fruit, fine tannin, limestone freshness",
+  "sommelierNotes": "Serve at cellar temperature and give the bottle a gentle decant for sediment; pair with roast quail, duck, or mushroom dishes.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "derived",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "derived",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "derived",
+    "palate": "derived",
+    "sommelierNotes": "derived"
+  }
+}

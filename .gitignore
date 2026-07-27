@@ -160,3 +160,10 @@ docs/salesforce/*.wsdl
 
 # Enrichment coverage report (generated, internal — never published to the CDN)
 reports/
+
+# Generated ChatGPT enrichment prompt batches (regenerable from the roster)
+data/enrichment-prompts/
+data/enrichment-prompts.md
+
+# Raw ChatGPT enrichment pastes (transient; ingested into data/enrichment/)
+out-*.json

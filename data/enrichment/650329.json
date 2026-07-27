@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Gevrey-Chambertin",
+  "aroma": "Dark cherry, violet, earth, clove",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "France",
+  "description": "Philippe Charlopin-Parizot's 2014 Gevrey-Chambertin Vieilles Vignes is a savory, firmly built Pinot Noir with dark cherry, earth, and woodland spice. Old-vine depth is balanced by the vintage's freshness, leaving a long, composed finish.",
+  "drinkWindow": "2020-2032",
+  "finish": "Long, savory, woodland-toned",
+  "foodPairings": [
+    "duck breast",
+    "venison",
+    "beef bourguignon",
+    "aged Époisses"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2014 Domaine Philippe Charlopin-Parizot Gevrey-Chambertin Vieilles Vignes.",
+  "imageUrl": "https://www.idealwine.com/media/cache/product_variant_medium/e2/43/1a5a8d627da8d6007c050a3cb97d.jpg",
+  "matchConfidence": 97,
+  "palate": "Layered fruit, firm fine tannin, fresh core",
+  "sommelierNotes": "Decant gently for sediment and serve at 15-16°C with duck, venison, or beef bourguignon.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "derived",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "derived",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "derived",
+    "palate": "derived",
+    "sommelierNotes": "derived"
+  }
+}

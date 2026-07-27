@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Vosne-Romanée Premier Cru",
+  "aroma": "Cherry, rose petal, woodland spice",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "France",
+  "description": "Machard de Gramont's 2014 Vosne-Romanée Premier Cru Les Gaudichots offers fragrant Pinot Noir in a cooler, more linear register. Red and black cherry, woodland spice, and fine tannin gather toward a long mineral finish.",
+  "drinkWindow": "2020-2034",
+  "finish": "Long, lifted, savory",
+  "foodPairings": [
+    "roast duck",
+    "veal medallions",
+    "game birds",
+    "aged Époisses"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2014 Domaine Machard de Gramont Vosne-Romanée Premier Cru Les Gaudichots.",
+  "imageUrl": "https://www.idealwine.com/media/cache/product_current_rating/00-images-etiq/153974.jpg",
+  "matchConfidence": 97,
+  "palate": "Silky fruit, fine tannin, mineral line",
+  "sommelierNotes": "Serve at cellar temperature after a careful decant for sediment; pair with roast duck, veal, or game birds.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "derived",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "derived",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "found",
+    "palate": "derived",
+    "sommelierNotes": "derived"
+  }
+}

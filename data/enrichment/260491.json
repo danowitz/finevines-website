@@ -1,0 +1,36 @@
+{
+  "abv": "13.9%",
+  "appellation": "Golan Heights",
+  "aroma": "Black cherry, plum, cocoa spice",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "Israel",
+  "description": "Mediterranean Soul's 2013 Life Red Blend is a warm-climate Golan Heights red with ripe dark fruit, sweet spice, and an easy, rounded palate. Its mature profile favors generosity and softness over firm structure.",
+  "drinkWindow": "2016-2025",
+  "finish": "Warm and gently spiced",
+  "foodPairings": [
+    "grilled lamb",
+    "braised beef",
+    "roasted eggplant",
+    "aged sheep's-milk cheese"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2013 Mediterranean Soul Life Red Blend from the Golan Heights.",
+  "imageUrl": "",
+  "matchConfidence": 94,
+  "palate": "Rounded dark fruit, soft tannin",
+  "sommelierNotes": "Serve at 16-18°C with grilled meats, braised lamb, or roasted eggplant; a short decant will help the fruit and spice settle together.",
+  "sources": {
+    "abv": "found",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "derived",
+    "palate": "found",
+    "sommelierNotes": "derived"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Napa Valley",
+  "aroma": "Cherry, raspberry, baking spice",
+  "bottleSize": "3L",
+  "color": "Red",
+  "country": "United States",
+  "description": "Anthony \u0026 Dominic's 2018 Pinot Noir is a fruit-led California expression with bright red berries, supple texture, and softly integrated oak. In three-liter format, it is designed for generous service while retaining Pinot Noir's natural freshness.",
+  "drinkWindow": "2022-2030",
+  "finish": "Smooth and fruit-driven",
+  "foodPairings": [
+    "roast salmon",
+    "herb-roasted pork",
+    "grilled chicken",
+    "mushroom pasta"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 3-liter 2018 Anthony \u0026 Dominic Pinot Noir from Napa Valley.",
+  "imageUrl": "",
+  "matchConfidence": 62,
+  "palate": "Supple red fruit, gentle oak, fresh acidity",
+  "sommelierNotes": "Serve lightly cool and allow the large format to open in the glass; pair with salmon, roast poultry, or herb-roasted pork.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "derived",
+    "aroma": "derived",
+    "bottleSize": "derived",
+    "color": "found",
+    "country": "found",
+    "description": "derived",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "derived",
+    "palate": "derived",
+    "sommelierNotes": "derived"
+  }
+}

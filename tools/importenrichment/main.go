@@ -17,6 +17,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/gritautomation/finevines-website/internal/enrich"
 )
 
 func main() {
@@ -61,7 +63,7 @@ func main() {
 			var pretty any
 			json.Unmarshal(obj[sku], &pretty)
 			data, _ := json.MarshalIndent(pretty, "", "  ")
-			if err := os.WriteFile(filepath.Join(outDir, sku+".json"), append(data, '\n'), 0o644); err != nil {
+			if err := os.WriteFile(filepath.Join(outDir, enrich.SKUFileBase(sku)+".json"), append(data, '\n'), 0o644); err != nil {
 				fatal(err)
 			}
 			wrote++

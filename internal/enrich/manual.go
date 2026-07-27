@@ -25,8 +25,23 @@ func NewManualEnricher(dir string) *ManualEnricher { return &ManualEnricher{dir:
 
 var _ Enricher = (*ManualEnricher)(nil)
 
+// SKUFileBase makes a filesystem-safe base name for a SKU's enrichment file.
+// Item numbers can contain characters that are illegal in filenames (notably
+// "*" on Windows, seen on ~1 in 6 rows), so those are replaced with "_". Both
+// ManualEnricher (reader) and tools/importenrichment (writer) use this, so a
+// SKU always maps to the same file.
+func SKUFileBase(sku string) string {
+	return strings.Map(func(r rune) rune {
+		switch r {
+		case '*', '/', '\\', ':', '?', '"', '<', '>', '|':
+			return '_'
+		}
+		return r
+	}, sku)
+}
+
 func (m *ManualEnricher) Enrich(_ context.Context, w salesforce.WineRaw) (EnrichResult, error) {
-	data, err := os.ReadFile(filepath.Join(m.dir, w.SKU+".json"))
+	data, err := os.ReadFile(filepath.Join(m.dir, SKUFileBase(w.SKU)+".json"))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return deriveResult(w), nil // not authored yet → derived placeholder

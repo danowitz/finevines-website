@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Bourgogne",
+  "aroma": "Strawberry, cherry, plum, cedar",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "France",
+  "description": "Sérafin Père et Fils' 2014 Bourgogne Rouge shows mature Pinot Noir in a savory, quietly polished register. Red berries and plum meet cedar-toned spice, with enough freshness to keep the palate composed.",
+  "drinkWindow": "2017-2025",
+  "finish": "Dry, savory, gently spiced",
+  "foodPairings": [
+    "roast chicken",
+    "grilled lamb",
+    "mushroom tart",
+    "soft-ripened cheese"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2014 Domaine Sérafin Père et Fils Bourgogne Rouge.",
+  "imageUrl": "http://winegroup.vn/wp-content/uploads/2022/10/Ruou-Vang-Domaine-Serafin-Pere-Fils-Bourgogne.jpg",
+  "matchConfidence": 93,
+  "palate": "Soft red fruit, light earth, fine tannin",
+  "sommelierNotes": "Serve at 15-16°C and open shortly before service; choose roast chicken, grilled lamb, or a simple mushroom tart.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "found",
+    "palate": "derived",
+    "sommelierNotes": "found"
+  }
+}

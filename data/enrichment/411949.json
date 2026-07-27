@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Marsannay",
+  "aroma": "Red fruit, smoke, light spice",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "France",
+  "description": "Domaine Collotte's 2015 Marsannay Boivin is an aromatic Pinot Noir with abundant red fruit and a subtle smoky cast. The entry is supple before a more taut, persistent finish brings definition.",
+  "drinkWindow": "2020-2030",
+  "finish": "Taut and persistent",
+  "foodPairings": [
+    "hard cheese with onion confit",
+    "country salad",
+    "roasted potatoes",
+    "roast pork"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2015 Domaine Collotte Marsannay Boivin.",
+  "imageUrl": "",
+  "matchConfidence": 96,
+  "palate": "Supple attack, fresh fruit, fine structure",
+  "sommelierNotes": "Serve at 15-16°C with hard cheese and onion confit, a country salad, or crisp roasted potatoes.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "found",
+    "finish": "found",
+    "foodPairings": "found",
+    "palate": "found",
+    "sommelierNotes": "found"
+  }
+}

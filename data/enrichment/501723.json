@@ -1,0 +1,36 @@
+{
+  "abv": "14.3%",
+  "appellation": "Spring Mountain District",
+  "aroma": "Forest floor, wild herbs, dark fruit",
+  "bottleSize": "375ml",
+  "color": "Red",
+  "country": "United States",
+  "description": "Cain Five 2013 is a dense, structured Spring Mountain District blend with forest, wild-herb, and dark-fruit character. Cabernet-led depth is tempered by an earthy, distinctly site-driven savor that unfolds with air.",
+  "drinkWindow": "2017-2037",
+  "finish": "Long, earthy, mountain-savory",
+  "foodPairings": [
+    "roast lamb",
+    "braised beef",
+    "wild mushrooms",
+    "aged hard cheese"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 375ml half-bottle of 2013 Cain Five Spring Mountain District Napa Valley.",
+  "imageUrl": "",
+  "matchConfidence": 100,
+  "palate": "Dense, warm, structured, generous",
+  "sommelierNotes": "Decant for several hours if serving now and pair with roast lamb, wild mushrooms, or braised beef; the wine remains suited to further cellaring.",
+  "sources": {
+    "abv": "found",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "found",
+    "finish": "found",
+    "foodPairings": "derived",
+    "palate": "found",
+    "sommelierNotes": "found"
+  }
+}

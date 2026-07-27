@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Bourgogne",
+  "aroma": "Yellow apple, lemon, hazelnut",
+  "bottleSize": "750ml",
+  "color": "White",
+  "country": "France",
+  "description": "Pierre Morey's 2013 Bourgogne Chardonnay offers a mature white Burgundy profile shaped by orchard fruit, citrus, and gentle nutty development. The palate is rounded yet held in line by clean acidity and a chalky, understated finish.",
+  "drinkWindow": "2016-2023",
+  "finish": "Chalky and softly nutty",
+  "foodPairings": [
+    "sole meunière",
+    "roast chicken",
+    "mushroom fricassée",
+    "Comté"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2013 Domaine Pierre Morey Bourgogne Chardonnay.",
+  "imageUrl": "",
+  "matchConfidence": 97,
+  "palate": "Rounded orchard fruit, bright acidity, light cream",
+  "sommelierNotes": "Serve at 11-12°C without overchilling; pair with roast chicken, sole meunière, or a creamy mushroom dish.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "derived",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "derived",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "derived",
+    "palate": "derived",
+    "sommelierNotes": "derived"
+  }
+}

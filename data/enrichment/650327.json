@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Marsannay",
+  "aroma": "Ruby cherry, peony, cola spice",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "France",
+  "description": "Philippe Charlopin-Parizot's 2014 Marsannay Les Échezots is a ripe, expressive Pinot Noir with ruby fruit, floral lift, and carefully integrated oak. The palate combines generosity with a fresh acid spine and enough structure for a savory close.",
+  "drinkWindow": "2019-2029",
+  "finish": "Savory, energetic, gently firm",
+  "foodPairings": [
+    "roast pork",
+    "duck confit",
+    "mushroom fricassée",
+    "aged Gruyère"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2014 Domaine Philippe Charlopin-Parizot Marsannay Les Échezots.",
+  "imageUrl": "",
+  "matchConfidence": 97,
+  "palate": "Juicy fruit, polished oak, fresh acidity",
+  "sommelierNotes": "Serve at cellar temperature with roast pork, duck confit, or mushrooms; a brief decant will help the mature fruit open evenly.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "derived",
+    "palate": "found",
+    "sommelierNotes": "derived"
+  }
+}

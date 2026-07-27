@@ -1,0 +1,36 @@
+{
+  "abv": "14%",
+  "appellation": "Bergerac",
+  "aroma": "Fresh pineapple, quince, citrus",
+  "bottleSize": "500ml",
+  "color": "White",
+  "country": "France",
+  "description": "Château Puy-Servain Calabre's 2015 Terrement Moelleux is a sweet Sémillon with vivid pineapple and quince character. Its generous entry is balanced by fresh acidity, leaving the wine poised rather than heavy.",
+  "drinkWindow": "2018-2030",
+  "finish": "Fresh and clean",
+  "foodPairings": [
+    "foie gras",
+    "roast chicken",
+    "blue cheese",
+    "fruit tart"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 500ml bottle of 2015 Château Puy-Servain Calabre Terrement Moelleux.",
+  "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Chateau%20Puy-Servain%20Calabre%20Terrement.jpg",
+  "matchConfidence": 93,
+  "palate": "Sweet, generous, lifted by acidity",
+  "sommelierNotes": "Serve well chilled as an aperitif or with foie gras, white meats, or blue-veined cheese.",
+  "sources": {
+    "abv": "found",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "derived",
+    "finish": "found",
+    "foodPairings": "found",
+    "palate": "found",
+    "sommelierNotes": "found"
+  }
+}

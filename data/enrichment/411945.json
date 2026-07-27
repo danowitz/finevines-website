@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Bourgogne",
+  "aroma": "Green apple, lemon, white flowers",
+  "bottleSize": "750ml",
+  "color": "White",
+  "country": "France",
+  "description": "Domaine Collotte's 2015 Bourgogne Blanc is a fresh, unadorned Chardonnay shaped by orchard fruit, citrus, and chalk. Stainless-steel aging preserves clarity and gives the palate a clean, direct line.",
+  "drinkWindow": "2017-2024",
+  "finish": "Chalky and refreshing",
+  "foodPairings": [
+    "oysters",
+    "grilled trout",
+    "roast chicken",
+    "young goat cheese"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2015 Domaine Collotte Bourgogne Blanc Chardonnay.",
+  "imageUrl": "",
+  "matchConfidence": 91,
+  "palate": "Clean orchard fruit, brisk acidity",
+  "sommelierNotes": "Serve at 10-12°C with shellfish, grilled river fish, or a young goat cheese.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "derived",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "derived",
+    "palate": "found",
+    "sommelierNotes": "derived"
+  }
+}

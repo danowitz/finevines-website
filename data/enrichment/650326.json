@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Pernand-Vergelesses",
+  "aroma": "Lemon zest, wet stone, matchstick, beeswax",
+  "bottleSize": "750ml",
+  "color": "White",
+  "country": "France",
+  "description": "Philippe Charlopin-Parizot's 2014 Pernand-Vergelesses Blanc Les Pins is a Chardonnay of bright citrus, wet stone, and restrained beeswax. Its high-toned acidity and firm mineral backbone frame a mature but still energetic white Burgundy.",
+  "drinkWindow": "2018-2029",
+  "finish": "Medium-long and stony",
+  "foodPairings": [
+    "shellfish",
+    "sole meunière",
+    "asparagus risotto",
+    "soft cheese"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2014 Domaine Philippe Charlopin-Parizot Pernand-Vergelesses Blanc Les Pins.",
+  "imageUrl": "",
+  "matchConfidence": 91,
+  "palate": "Bright citrus, firm acidity, mineral depth",
+  "sommelierNotes": "Serve at 11-12°C and give the bottle a modest amount of air; pair with shellfish, sole, asparagus risotto, or soft cheese.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "derived",
+    "finish": "found",
+    "foodPairings": "found",
+    "palate": "found",
+    "sommelierNotes": "found"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "abv": "14%",
+  "appellation": "Pessac-Léognan",
+  "aroma": "Ripe black fruit, cedar, graphite, warm spice",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "France",
+  "description": "Château La Mission Haut-Brion 2016 is a profound Pessac-Léognan built on ripe fruit, broad texture, and exceptionally refined tannins. Richness and power gather through the palate, while freshness keeps the wine articulate and complete.",
+  "drinkWindow": "2026-2055",
+  "finish": "Long, structured, composed",
+  "foodPairings": [
+    "roast beef",
+    "rack of lamb",
+    "truffled mushrooms",
+    "aged hard cheese"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of the 2016 Château La Mission Haut-Brion Rouge.",
+  "imageUrl": "https://www.mission-haut-brion.com/wp-content/uploads/sites/4/2022/04/MHR-2016-min-369x1024.png",
+  "matchConfidence": 100,
+  "palate": "Broad, concentrated, powerful, polished",
+  "sommelierNotes": "Decant for two to three hours if serving now and pour with roast beef, lamb, or truffle-accented dishes; patient cellaring remains well rewarded.",
+  "sources": {
+    "abv": "found",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "derived",
+    "finish": "found",
+    "foodPairings": "derived",
+    "palate": "found",
+    "sommelierNotes": "derived"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Napa Valley",
+  "aroma": "Blackberry, coffee, licorice, cocoa",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "United States",
+  "description": "BRAND Napa Valley's 2014 Brio is a full-bodied Pritchard Hill red centered on blackberry, cocoa, coffee, and licorice tones. Dense mountain fruit is carried by polished tannins and a long, layered finish.",
+  "drinkWindow": "2020-2036",
+  "finish": "Long, lush, graphite-tinged",
+  "foodPairings": [
+    "ribeye steak",
+    "braised short ribs",
+    "rosemary lamb",
+    "aged cheddar"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2014 BRAND Napa Valley Brio red wine from Pritchard Hill.",
+  "imageUrl": "",
+  "matchConfidence": 98,
+  "palate": "Dense dark fruit, silky tannin, layered spice",
+  "sommelierNotes": "Decant for one to two hours and serve with ribeye, braised short ribs, or rosemary-roasted lamb.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "derived",
+    "finish": "found",
+    "foodPairings": "found",
+    "palate": "found",
+    "sommelierNotes": "found"
+  }
+}

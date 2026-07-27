@@ -1,0 +1,36 @@
+{
+  "abv": "15%",
+  "appellation": "Napa Valley",
+  "aroma": "Black cherry, cassis, spice, dark chocolate",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "United States",
+  "description": "BRAND Napa Valley's 2014 Cabernet Sauvignon is a powerful Pritchard Hill wine with black cherry, cassis, spice, and dark chocolate tones. Lush fruit is held by mountain-grown structure, giving the palate both breadth and a long future.",
+  "drinkWindow": "2020-2038",
+  "finish": "Long, structured, cassis-led",
+  "foodPairings": [
+    "ribeye steak",
+    "roast lamb",
+    "braised beef",
+    "aged cheddar"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2014 BRAND Napa Valley Cabernet Sauvignon from Pritchard Hill.",
+  "imageUrl": "https://canawineco.com/cdn/shop/files/IMG-2301.png?v=1712008721",
+  "matchConfidence": 100,
+  "palate": "Lush dark fruit, muscular tannin, balanced acidity",
+  "sommelierNotes": "Decant for two hours if serving now and pair with ribeye, roast lamb, or braised beef.",
+  "sources": {
+    "abv": "found",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "found",
+    "finish": "found",
+    "foodPairings": "derived",
+    "palate": "found",
+    "sommelierNotes": "derived"
+  }
+}

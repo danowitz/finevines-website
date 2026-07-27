@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Marsannay",
+  "aroma": "Dark cherry, violet, woodland spice",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "France",
+  "description": "Pierre Damoy's 2014 Marsannay La Bretignière is a poised Côte de Nuits Pinot Noir with dark cherry fruit, subtle spice, and a firm mineral line. Bottle age has softened the structure while preserving a distinctly savory center.",
+  "drinkWindow": "2019-2028",
+  "finish": "Dry, savory, lingering",
+  "foodPairings": [
+    "duck breast",
+    "veal roast",
+    "lentils with bacon",
+    "aged Gruyère"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2014 Domaine Pierre Damoy Marsannay La Bretignière.",
+  "imageUrl": "",
+  "matchConfidence": 95,
+  "palate": "Layered fruit, fine tannin, mineral tension",
+  "sommelierNotes": "Serve at cellar temperature after a brief decant for sediment; pair with duck, veal, or lentils with smoked bacon.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "derived",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "derived",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "derived",
+    "palate": "derived",
+    "sommelierNotes": "derived"
+  }
+}

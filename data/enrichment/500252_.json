@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Napa Valley",
+  "aroma": "Blackberry, raspberry, lavender, mocha",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "United States",
+  "description": "Arrow \u0026 Branch's 2012 Napa Valley Red Wine is a Cabernet Franc-led Bordeaux blend with blackberry depth, floral lift, and a polished mocha undertone. Integrated tannins and lively acidity give the mature wine shape without sacrificing generosity.",
+  "drinkWindow": "2018-2032",
+  "finish": "Smooth, floral, cocoa-toned",
+  "foodPairings": [
+    "herb-crusted lamb",
+    "beef tenderloin",
+    "roasted mushrooms",
+    "aged Gouda"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2012 Arrow \u0026 Branch Napa Valley Red Wine.",
+  "imageUrl": "",
+  "matchConfidence": 97,
+  "palate": "Rounded dark fruit, bright acidity, integrated tannin",
+  "sommelierNotes": "Give the wine an hour of air and serve with herb-crusted lamb, beef tenderloin, or roasted mushrooms.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "derived",
+    "finish": "found",
+    "foodPairings": "derived",
+    "palate": "found",
+    "sommelierNotes": "derived"
+  }
+}

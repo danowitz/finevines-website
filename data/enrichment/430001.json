@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Bourgueil",
+  "aroma": "Fresh berries, underbrush, gentle spice",
+  "bottleSize": "750ml",
+  "color": "Red",
+  "country": "France",
+  "description": "Yannick Amirault's 2017 Bourgueil La Coudraye is a rounded Cabernet Franc with fresh red and dark fruit, woodland nuance, and gentle spice. Oak aging adds breadth while the wine retains the croquant freshness of its sandy terrace soils.",
+  "drinkWindow": "2020-2025",
+  "finish": "Fresh, savory, lightly woody",
+  "foodPairings": [
+    "roast chicken",
+    "rabbit with mustard",
+    "black pudding",
+    "Sainte-Maure de Touraine"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2017 Domaine Yannick Amirault Bourgueil La Coudraye.",
+  "imageUrl": "https://www.idealwine.com/media/cache/product_current_rating/00-images-etiq/116244.jpg",
+  "matchConfidence": 99,
+  "palate": "Round, ample, fresh, softly structured",
+  "sommelierNotes": "Serve at 14-16°C with white meats, rabbit, black pudding, or Loire goat cheese.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "found",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "found",
+    "finish": "found",
+    "foodPairings": "found",
+    "palate": "found",
+    "sommelierNotes": "found"
+  }
+}

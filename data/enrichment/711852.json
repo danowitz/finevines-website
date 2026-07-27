@@ -1,0 +1,36 @@
+{
+  "abv": "",
+  "appellation": "Bourgogne Aligoté",
+  "aroma": "Lemon, green apple, acacia",
+  "bottleSize": "750ml",
+  "color": "White",
+  "country": "France",
+  "description": "Pierre Morey's 2015 Bourgogne Aligoté is a dry, medium-bodied white with lively acidity and a clear Meursault-grown mineral character. Citrus, green apple, and subtle almond tones move through a lean, refreshing palate.",
+  "drinkWindow": "2016-2025",
+  "finish": "Fresh, mineral, almond-tinged",
+  "foodPairings": [
+    "oysters",
+    "gougères",
+    "grilled trout",
+    "goat cheese"
+  ],
+  "imagePrompt": "Photorealistic studio bottle photograph of a 2015 Domaine Pierre Morey Bourgogne Aligoté.",
+  "imageUrl": "",
+  "matchConfidence": 98,
+  "palate": "Dry, brisk, lightly textured",
+  "sommelierNotes": "Serve at 9-11°C as an aperitif or alongside oysters, gougères, freshwater fish, or goat cheese.",
+  "sources": {
+    "abv": "missing",
+    "appellation": "found",
+    "aroma": "derived",
+    "bottleSize": "found",
+    "color": "found",
+    "country": "found",
+    "description": "found",
+    "drinkWindow": "derived",
+    "finish": "derived",
+    "foodPairings": "derived",
+    "palate": "found",
+    "sommelierNotes": "derived"
+  }
+}
