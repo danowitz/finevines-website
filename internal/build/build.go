@@ -120,6 +120,34 @@ type winePage struct {
 	Wine model.Wine
 }
 
+// ldProp is one schema.org PropertyValue (name/value) for the wine's Product
+// JSON-LD additionalProperty array.
+type ldProp struct{ Name, Value string }
+
+// LDProps returns the enriched, non-empty descriptive fields as JSON-LD
+// PropertyValues, so search engines see the structured facts (country, ABV,
+// drink window, etc.) that the visible facts grid shows. Empty fields are
+// omitted, so a lightly-enriched wine simply carries fewer properties. The
+// wine template ranges this to emit a comma-clean array.
+func (w winePage) LDProps() []ldProp {
+	var p []ldProp
+	add := func(name, value string) {
+		if strings.TrimSpace(value) != "" {
+			p = append(p, ldProp{Name: name, Value: value})
+		}
+	}
+	add("Country", w.Wine.Country)
+	add("Region", w.Wine.Region)
+	add("Appellation", w.Wine.Appellation)
+	add("Varietal", w.Wine.Varietal)
+	add("Colour", w.Wine.Color)
+	add("Style", w.Wine.Style)
+	add("Alcohol by volume", w.Wine.ABV)
+	add("Bottle size", w.Wine.BottleSize)
+	add("Drink window", w.Wine.DrinkWindow)
+	return p
+}
+
 // facetGroup is one filter group in the portfolio sidebar: a facet key and
 // its distinct values across the current wine list, sorted for determinism.
 // Facet must exactly match one of portfolio.js's `active` map keys

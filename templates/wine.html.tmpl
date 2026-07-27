@@ -22,7 +22,8 @@
   "image": {{printf "%s/%s" .BaseURL .Wine.ImagePath}},
   "description": {{.Wine.Description}},
   "sku": {{.Wine.SKU}},
-  "brand": {"@type": "Brand", "name": {{.Wine.Producer}}},
+  "brand": {"@type": "Brand", "name": {{.Wine.Producer}}},{{if .LDProps}}
+  "additionalProperty": [{{range $i, $p := .LDProps}}{{if $i}}, {{end}}{"@type": "PropertyValue", "name": {{$p.Name}}, "value": {{$p.Value}}}{{end}}],{{end}}
   "offers": {
     "@type": "Offer",
     "availability": "https://schema.org/InStock",
@@ -43,15 +44,36 @@
         <span class="producer">{{.Wine.Producer}}</span>
         <h1>{{.Wine.Name}} {{.Wine.Vintage}}</h1>
         <div class="facts">
-          <span>Region<b>{{.Wine.Region}}</b></span>
-          <span>Appellation<b>{{.Wine.Appellation}}</b></span>
-          <span>Varietal<b>{{.Wine.Varietal}}</b></span>
-          <span>Style<b>{{.Wine.Style}}</b></span>
+          {{if .Wine.Region}}<span>Region<b>{{.Wine.Region}}</b></span>{{end}}
+          {{if .Wine.Appellation}}<span>Appellation<b>{{.Wine.Appellation}}</b></span>{{end}}
+          {{if .Wine.Country}}<span>Country<b>{{.Wine.Country}}</b></span>{{end}}
+          {{if .Wine.Varietal}}<span>Varietal<b>{{.Wine.Varietal}}</b></span>{{end}}
+          {{if .Wine.Color}}<span>Colour<b>{{.Wine.Color}}</b></span>{{end}}
+          {{if .Wine.Style}}<span>Style<b>{{.Wine.Style}}</b></span>{{end}}
+          {{if .Wine.ABV}}<span>Alcohol<b>{{.Wine.ABV}}</b></span>{{end}}
+          {{if .Wine.BottleSize}}<span>Bottle<b>{{.Wine.BottleSize}}</b></span>{{end}}
+          {{if .Wine.DrinkWindow}}<span>Drink window<b>{{.Wine.DrinkWindow}}</b></span>{{end}}
         </div>
         <p>{{.Wine.Description}}</p>
-        <aside class="callout sommelier-notes">
+        {{if .Wine.SommelierNotes}}<aside class="callout sommelier-notes">
           <p>{{.Wine.SommelierNotes}}</p>
-        </aside>
+        </aside>{{end}}
+        {{if or .Wine.Aroma .Wine.Palate .Wine.Finish}}
+        <div class="tasting">
+          <h2>Tasting</h2>
+          <dl>
+            {{if .Wine.Aroma}}<dt>Aroma</dt><dd>{{.Wine.Aroma}}</dd>{{end}}
+            {{if .Wine.Palate}}<dt>Palate</dt><dd>{{.Wine.Palate}}</dd>{{end}}
+            {{if .Wine.Finish}}<dt>Finish</dt><dd>{{.Wine.Finish}}</dd>{{end}}
+          </dl>
+        </div>
+        {{end}}
+        {{if .Wine.FoodPairings}}
+        <div class="pairings">
+          <h2>Pairs with</h2>
+          <ul>{{range .Wine.FoodPairings}}<li>{{.}}</li>{{end}}</ul>
+        </div>
+        {{end}}
       </div>
     </div>
   </section>
