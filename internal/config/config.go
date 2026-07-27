@@ -17,6 +17,7 @@ type Config struct {
 	BunnyAPIKey, BunnyPullZoneID                        string
 	BunnyScriptID                                       string // Edge Scripting compute script ID (redirect middleware)
 	SiteBaseURL                                         string // e.g. https://finevines.com
+	GAID                                                string // Google Analytics 4 measurement ID (G-XXXXXXXXXX); empty disables analytics
 }
 
 func Load(envPath string) (Config, error) {
@@ -55,6 +56,7 @@ func Load(envPath string) (Config, error) {
 		BunnyPullZoneID:      get("FINEVINES_BUNNY_PULL_ZONE_ID"),
 		BunnyScriptID:        get("FINEVINES_BUNNY_SCRIPT_ID"),
 		SiteBaseURL:          orDefault(get("FINEVINES_SITE_BASE_URL"), "https://finevines.com"),
+		GAID:                 get("FINEVINES_GA_ID"),
 	}, nil
 }
 

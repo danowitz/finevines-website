@@ -19,7 +19,9 @@
 <link rel="canonical" href="{{.BaseURL}}{{.Path}}">
 <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
 <link rel="stylesheet" href="/assets/css/site.css">
-{{end}}
+{{if and .GAID (hasPrefix .GAID "G-")}}<script async src="https://www.googletagmanager.com/gtag/js?id={{.GAID}}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{.GAID}}');</script>
+{{end}}{{end}}
 
 {{define "header"}}<header class="site-header">
   <div class="wrap">
@@ -38,11 +40,51 @@
 
 {{define "footer"}}<footer class="site-footer">
   <div class="wrap">
-    <div>
-      <p>Pouring elegance with a sommelier's touch.</p>
-      <p>Trade inquiries &mdash; <a href="mailto:trade@finevines.com">trade@finevines.com</a> &middot; <a href="tel:+16305550100">(630) 555-0100</a></p>
+    <div class="footer-cols">
+      <div class="footer-brand">
+        <p class="footer-wordmark">FINEVINES</p>
+        <p class="footer-tagline">Pouring elegance with a sommelier's touch.</p>
+        <p class="footer-descriptor">Licensed wholesale wine &amp; spirits distribution, Chicagoland.</p>
+        <ul class="footer-social" aria-label="FineVines on social media">
+          <li><a href="https://www.instagram.com/finevineswine/" aria-label="FineVines on Instagram" rel="noopener" target="_blank">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16Zm0 1.62c-3.15 0-3.52.01-4.76.07-1.15.05-1.77.24-2.19.4-.55.22-.94.47-1.35.88-.41.41-.66.8-.88 1.35-.16.42-.35 1.04-.4 2.19-.06 1.24-.07 1.61-.07 4.76s.01 3.52.07 4.76c.05 1.15.24 1.77.4 2.19.22.55.47.94.88 1.35.41.41.8.66 1.35.88.42.16 1.04.35 2.19.4 1.24.06 1.61.07 4.76.07s3.52-.01 4.76-.07c1.15-.05 1.77-.24 2.19-.4.55-.22.94-.47 1.35-.88.41-.41.66-.8.88-1.35.16-.42.35-1.04.4-2.19.06-1.24.07-1.61.07-4.76s-.01-3.52-.07-4.76c-.05-1.15-.24-1.77-.4-2.19a3.6 3.6 0 0 0-.88-1.35 3.6 3.6 0 0 0-1.35-.88c-.42-.16-1.04-.35-2.19-.4-1.24-.06-1.61-.07-4.76-.07Zm0 2.76a5.3 5.3 0 1 0 0 10.6 5.3 5.3 0 0 0 0-10.6Zm0 8.74a3.44 3.44 0 1 1 0-6.88 3.44 3.44 0 0 1 0 6.88Zm5.5-8.95a1.24 1.24 0 1 1-2.48 0 1.24 1.24 0 0 1 2.48 0Z"/></svg>
+          </a></li>
+          <li><a href="https://twitter.com/finevineswine" aria-label="FineVines on X (Twitter)" rel="noopener" target="_blank">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.65l-5.22-6.82-5.96 6.82H1.68l7.73-8.84L1.25 2.25h6.82l4.71 6.23 5.46-6.23Zm-1.16 17.52h1.83L7.01 4.13H5.05l12.03 15.64Z"/></svg>
+          </a></li>
+          <li><a href="https://www.linkedin.com/company/1291059" aria-label="FineVines on LinkedIn" rel="noopener" target="_blank">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14ZM7.12 20.45H3.55V9h3.57v11.45ZM22.22 0H1.77C.8 0 0 .78 0 1.75v20.5C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.75V1.75C24 .78 23.2 0 22.22 0Z"/></svg>
+          </a></li>
+        </ul>
+      </div>
+      <nav class="footer-nav" aria-label="Explore">
+        <h2 class="footer-heading">Explore</h2>
+        <ul>
+          <li><a href="/portfolio/">Portfolio</a></li>
+          <li><a href="/news/">News &amp; Events</a></li>
+          <li><a href="/about/">About</a></li>
+          <li><a href="/contact/">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="footer-nav footer-trade">
+        <h2 class="footer-heading">Trade</h2>
+        <p><a class="footer-trade-cta" href="/contact/">Become a Customer</a></p>
+        <p class="footer-trade-note">Wholesale &amp; trade only &mdash; licensed retailers, restaurants &amp; hospitality accounts in Illinois.</p>
+      </div>
+      <div class="footer-nav footer-contact">
+        <h2 class="footer-heading">Contact</h2>
+        <address class="footer-address">
+          [Mailing address &mdash; to be confirmed]<br>
+          Phone: [to be confirmed]<br>
+          Fax: [to be confirmed]<br>
+          Email: [to be confirmed]
+        </address>
+      </div>
     </div>
-    <p class="foot-meta">Licensed wholesale distributor of wine &amp; spirits, State of Illinois.</p>
+    <div class="footer-bottom">
+      <p class="footer-copy">&copy; 2026 FineVines. All rights reserved.</p>
+      <p class="footer-legal">Licensed wholesale distributor of wine &amp; spirits, State of Illinois.</p>
+    </div>
   </div>
 </footer>
 {{end}}

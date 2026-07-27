@@ -306,12 +306,78 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .team-card .email { font-family: var(--sans); font-size: 13px; color: var(--wine); border-top: 1px solid var(--line); padding-top: 12px; word-break: break-all; text-decoration: none; display: block; }
 
 /* ---- Footer ----------------------------------------------------------- */
-.site-footer { background: var(--wine-dark); color: var(--brass-100); padding: 46px 0 52px; margin-top: 0; }
-.site-footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 22px; align-items: flex-start; }
-.site-footer p { margin: 0 0 8px; }
-.site-footer p:first-child { font-family: var(--serif-display); font-style: italic; font-size: 22px; color: var(--brass-300); }
-.site-footer a { color: #fff; text-decoration-color: var(--brass-500); }
-.site-footer .foot-meta { font-family: var(--sans); font-size: 12.5px; letter-spacing: .04em; color: var(--brass-300); max-width: 30ch; text-align: right; }
+.site-footer {
+  background: var(--bordeaux-950);
+  color: var(--parchment-100);
+  border-top: 2px solid var(--gold);
+  margin-top: 0;
+  font-family: var(--serif-text);
+}
+.site-footer .wrap { padding-top: 60px; padding-bottom: 32px; }
+.site-footer a { color: var(--parchment-100); text-decoration: none; }
+.site-footer a:hover { color: #fff; text-decoration: underline; text-decoration-color: var(--brass-500); text-underline-offset: 3px; }
+
+.footer-cols {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1.2fr;
+  gap: 40px;
+  align-items: start;
+}
+
+/* Brand column */
+.footer-wordmark {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: .34em;
+  color: var(--parchment-50);
+  margin: 0 0 14px;
+  text-indent: .34em;
+}
+.footer-tagline { font-family: var(--serif-display); font-style: italic; font-size: 20px; color: var(--brass-300); margin: 0 0 10px; max-width: 34ch; line-height: 1.4; }
+.footer-descriptor { font-family: var(--sans); font-size: 13px; letter-spacing: .02em; color: var(--brass-100); opacity: .82; margin: 0 0 20px; max-width: 34ch; line-height: 1.5; }
+.footer-social { list-style: none; display: flex; gap: 14px; padding: 0; margin: 0; }
+.footer-social a {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgba(221, 196, 137, .35);
+  color: var(--brass-300);
+  transition: color .18s ease, border-color .18s ease, background-color .18s ease;
+}
+.footer-social a:hover { color: var(--bordeaux-950); background: var(--gold); border-color: var(--gold); text-decoration: none; }
+
+/* Link / heading columns */
+.footer-heading {
+  font-family: var(--sans);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  font-size: 12px;
+  color: var(--gold);
+  margin: 4px 0 18px;
+}
+.footer-nav ul { list-style: none; padding: 0; margin: 0; }
+.footer-nav li { margin: 0 0 11px; }
+.footer-nav a { font-size: 16.5px; }
+.footer-trade p { margin: 0 0 14px; max-width: none; }
+.footer-trade-cta { font-family: var(--sans); font-weight: 600; font-size: 14px; letter-spacing: .02em; color: var(--brass-300) !important; }
+.footer-trade-cta:hover { color: #fff !important; }
+.footer-trade-note { font-size: 15px; color: var(--brass-100); opacity: .82; line-height: 1.5; }
+.footer-address { font-style: normal; font-size: 15px; line-height: 1.85; color: var(--brass-100); opacity: .9; }
+
+/* Bottom bar */
+.footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px 28px;
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(221, 196, 137, .22);
+}
+.footer-bottom p { margin: 0; font-family: var(--sans); font-size: 12.5px; letter-spacing: .03em; color: var(--brass-300); opacity: .82; }
+.footer-legal { text-align: right; }
 
 /* ---- Responsive ------------------------------------------------------- */
 @media (max-width: 980px) {
@@ -320,6 +386,8 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   .wine-detail { grid-template-columns: 1fr; gap: 36px; }
   .portfolio-layout { grid-template-columns: 1fr; }
   .facets { position: static; }
+  .footer-cols { grid-template-columns: 1fr 1fr; gap: 36px 40px; }
+  .footer-brand { grid-column: 1 / -1; }
 }
 @media (max-width: 640px) {
   .wrap { padding: 0 20px; }
@@ -332,6 +400,8 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   .wine-detail .facts span:nth-child(even) { padding-left: 4px; }
   .site-header .wrap { justify-content: center; }
   .site-nav { margin-left: 0; gap: 14px 18px; justify-content: center; }
-  .site-footer .wrap { flex-direction: column; }
-  .site-footer .foot-meta { text-align: left; }
+  .footer-cols { grid-template-columns: 1fr; gap: 32px; }
+  .footer-brand { grid-column: auto; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; }
+  .footer-legal { text-align: left; }
 }

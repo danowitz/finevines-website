@@ -17,7 +17,7 @@ import (
 
 func TestRunGeneratesHomeAndContact(t *testing.T) {
 	dist := t.TempDir()
-	err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com")
+	err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,6 +35,37 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 	} {
 		if !strings.Contains(string(home), want) {
 			t.Errorf("home missing %q", want)
+		}
+	}
+
+	// Enterprise footer: text wordmark (not the colored logo image, which
+	// would clash on the dark bordeaux band), all four column headings, the
+	// real social handles, the clearly-marked contact placeholders, and the
+	// static-year bottom bar (no runtime clock — must stay deterministic).
+	for _, want := range []string{
+		`class="footer-wordmark">FINEVINES`,                              // styled text wordmark
+		`>Explore</h2>`, `>Trade</h2>`, `>Contact</h2>`,                  // column headings
+		`href="https://www.instagram.com/finevineswine/"`,               // real Instagram
+		`href="https://twitter.com/finevineswine"`,                      // real X/Twitter
+		`href="https://www.linkedin.com/company/1291059"`,               // real LinkedIn
+		`Become a Customer`,                                             // trade CTA
+		`[Mailing address &mdash; to be confirmed]`,                     // placeholder, not fabricated
+		`Email: [to be confirmed]`,
+		`&copy; 2026 FineVines. All rights reserved.`,                   // static year, no clock
+	} {
+		if !strings.Contains(string(home), want) {
+			t.Errorf("footer missing %q", want)
+		}
+	}
+	// The colored brand logo image must stay in the HEADER only — the footer
+	// renders the wordmark as text, so there must be exactly one logo <img>.
+	if n := strings.Count(string(home), "finevines-logo.png"); n != 1 {
+		t.Errorf("expected exactly 1 logo image (header only), got %d", n)
+	}
+	// No fabricated contact data may reappear in the footer.
+	for _, bad := range []string{"@finevines.com", "(847)", "(630)", "(773)"} {
+		if strings.Contains(string(home), bad) {
+			t.Errorf("footer must not contain fabricated contact detail %q", bad)
 		}
 	}
 	if _, err := os.Stat(filepath.Join(dist, "contact", "index.html")); err != nil {
@@ -64,7 +95,7 @@ func TestRunCopiesRedirectsJSONWhenPresent(t *testing.T) {
 	}
 	chdir(t, workDir)
 
-	if err := Run(dataDir, assetsDir, templatesDir, dist, "https://finevines.com"); err != nil {
+	if err := Run(dataDir, assetsDir, templatesDir, dist, "https://finevines.com", ""); err != nil {
 		t.Fatal(err)
 	}
 
@@ -89,7 +120,7 @@ func TestRunSucceedsWithoutRedirectsJSON(t *testing.T) {
 
 	chdir(t, t.TempDir()) // empty working dir: no redirects.json here
 
-	if err := Run(dataDir, assetsDir, templatesDir, dist, "https://finevines.com"); err != nil {
+	if err := Run(dataDir, assetsDir, templatesDir, dist, "https://finevines.com", ""); err != nil {
 		t.Fatalf("Run should succeed when redirects.json is absent: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(dist, "redirects.json")); !errors.Is(err, fs.ErrNotExist) {
@@ -133,9 +164,50 @@ func chdir(t *testing.T, dir string) {
 	})
 }
 
+// TestGA4Hook verifies the config-driven analytics hook: the gtag snippet
+// is emitted only when a real GA4 id (G-…) is configured. An empty id (the
+// default, which keeps the build byte-identical) and a stray legacy UA id
+// (Universal Analytics stopped processing data in July 2023 — a UA tag must
+// never be emitted) both produce no snippet.
+func TestGA4Hook(t *testing.T) {
+	render := func(t *testing.T, gaID string) string {
+		t.Helper()
+		dist := t.TempDir()
+		if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", gaID); err != nil {
+			t.Fatal(err)
+		}
+		home, err := os.ReadFile(filepath.Join(dist, "index.html"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(home)
+	}
+
+	// Real GA4 id → snippet present, configured with that exact id.
+	withID := render(t, "G-ABC1234567")
+	for _, want := range []string{
+		`src="https://www.googletagmanager.com/gtag/js?id=G-ABC1234567"`,
+		`gtag('config','G-ABC1234567')`,
+	} {
+		if !strings.Contains(withID, want) {
+			t.Errorf("GA4 snippet missing %q when a G- id is configured", want)
+		}
+	}
+
+	// Empty id (default) → nothing emitted, so the build stays deterministic.
+	if got := render(t, ""); strings.Contains(got, "googletagmanager.com/gtag") {
+		t.Error("GA snippet must not be emitted when FINEVINES_GA_ID is empty")
+	}
+
+	// Legacy UA id → nothing emitted (guarded by the G- prefix check).
+	if got := render(t, "UA-41731070-1"); strings.Contains(got, "googletagmanager.com/gtag") {
+		t.Error("GA snippet must not be emitted for a legacy UA (Universal Analytics) id")
+	}
+}
+
 func TestWineDetailPages(t *testing.T) {
 	dist := t.TempDir()
-	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com"); err != nil {
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
 		t.Fatal(err)
 	}
 	page, err := os.ReadFile(filepath.Join(dist, "wines",
@@ -161,7 +233,7 @@ func TestWineDetailPages(t *testing.T) {
 
 func TestPortfolioPage(t *testing.T) {
 	dist := t.TempDir()
-	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com"); err != nil {
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
 		t.Fatal(err)
 	}
 	page, err := os.ReadFile(filepath.Join(dist, "portfolio", "index.html"))
@@ -205,7 +277,7 @@ func TestPortfolioPage(t *testing.T) {
 
 func TestNewsPages(t *testing.T) {
 	dist := t.TempDir()
-	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com"); err != nil {
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
 		t.Fatal(err)
 	}
 
@@ -257,7 +329,7 @@ func TestNewsPages(t *testing.T) {
 
 func TestAboutPage(t *testing.T) {
 	dist := t.TempDir()
-	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com"); err != nil {
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
 		t.Fatal(err)
 	}
 	page, err := os.ReadFile(filepath.Join(dist, "about", "index.html"))
@@ -281,7 +353,7 @@ func TestAboutPage(t *testing.T) {
 
 func TestSearchIndex(t *testing.T) {
 	dist := t.TempDir()
-	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com"); err != nil {
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
 		t.Fatal(err)
 	}
 	data, err := os.ReadFile(filepath.Join(dist, "search-index.json"))
@@ -310,7 +382,7 @@ func TestSearchIndex(t *testing.T) {
 
 func TestSitemapListsEveryPage(t *testing.T) {
 	dist := t.TempDir()
-	Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com")
+	Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", "")
 	sm, _ := os.ReadFile(filepath.Join(dist, "sitemap.xml"))
 	for _, want := range []string{
 		"<loc>https://finevines.com/</loc>",
@@ -329,7 +401,7 @@ func TestSitemapListsEveryPage(t *testing.T) {
 
 func TestRobotsTxt(t *testing.T) {
 	dist := t.TempDir()
-	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com"); err != nil {
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
 		t.Fatal(err)
 	}
 	robots, err := os.ReadFile(filepath.Join(dist, "robots.txt"))
@@ -349,8 +421,8 @@ func TestRobotsTxt(t *testing.T) {
 
 func TestBuildIsDeterministic(t *testing.T) {
 	a, b := t.TempDir(), t.TempDir()
-	Run("testdata", "../../assets", "../../templates", a, "https://finevines.com")
-	Run("testdata", "../../assets", "../../templates", b, "https://finevines.com")
+	Run("testdata", "../../assets", "../../templates", a, "https://finevines.com", "")
+	Run("testdata", "../../assets", "../../templates", b, "https://finevines.com", "")
 	if diff := treeDiff(t, a, b); diff != "" { // helper: walk both, compare bytes
 		t.Fatalf("non-deterministic build:\n%s", diff)
 	}

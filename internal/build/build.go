@@ -35,6 +35,11 @@ type site struct {
 	News    []model.NewsPost
 	Team    []model.TeamMember
 	BaseURL string
+	// GAID is the Google Analytics 4 measurement ID (G-XXXXXXXXXX), promoted
+	// through page's embedded *site so base.html.tmpl's head can emit the
+	// gtag snippet. Empty by default (analytics off) — which keeps the build
+	// output deterministic and byte-identical unless a real ID is configured.
+	GAID string
 }
 
 // page is the template data shared by every page: the site's data plus this
@@ -130,14 +135,15 @@ type indexEntry struct {
 	Img      string `json:"img"`
 }
 
-func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
-	s, err := loadSite(dataDir, baseURL)
+func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error {
+	s, err := loadSite(dataDir, baseURL, gaID)
 	if err != nil {
 		return err
 	}
 	tmpl, err := template.New("").Funcs(template.FuncMap{
 		"paragraphs": paragraphs,
 		"excerpt":    excerpt,
+		"hasPrefix":  strings.HasPrefix,
 	}).ParseGlob(filepath.Join(templatesDir, "*.tmpl"))
 	if err != nil {
 		return err
@@ -376,12 +382,12 @@ func writeSearchIndex(distDir string, wines []model.Wine) error {
 	return os.WriteFile(filepath.Join(distDir, "search-index.json"), data, 0o644)
 }
 
-func loadSite(dataDir, baseURL string) (*site, error) {
+func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 	wines, err := model.LoadWines(filepath.Join(dataDir, "wines.json"))
 	if err != nil {
 		return nil, err
 	}
-	s := &site{Wines: wines, BaseURL: baseURL}
+	s := &site{Wines: wines, BaseURL: baseURL, GAID: gaID}
 	// team.json is optional until seeded
 	if data, err := os.ReadFile(filepath.Join(dataDir, "team.json")); err == nil {
 		if err := jsonUnmarshal(data, &s.Team); err != nil {

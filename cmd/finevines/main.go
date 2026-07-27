@@ -58,7 +58,7 @@ func fatal(err error) {
 // runBuild renders data/*.json + assets/ + templates/*.tmpl into dist/ — see
 // internal/build.Run for the actual page-generation logic.
 func runBuild(cfg config.Config) error {
-	return build.Run("data", "assets", "templates", "dist", cfg.SiteBaseURL)
+	return build.Run("data", "assets", "templates", "dist", cfg.SiteBaseURL, cfg.GAID)
 }
 
 // runEnrich wires the real Salesforce/Anthropic/Imagen clients together and
