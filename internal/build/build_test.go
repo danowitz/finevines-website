@@ -32,6 +32,20 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 		`href="/assets/css/site.css"`,
 		`href="/assets/img/favicon.ico"`,                         // favicon wired in base head
 		`<img src="/assets/img/finevines-logo.png" alt="FineVines"`, // real logo wordmark in header
+		// Social/link-preview meta: Open Graph, Twitter Card, and the mobile
+		// theme-color. og:image / twitter:image MUST be absolute (scrapers
+		// won't fetch a relative one) and, with no per-page override, resolve
+		// to the branded default share PNG.
+		`<meta property="og:type" content="website">`,
+		`<meta property="og:site_name" content="FineVines">`,
+		`<meta property="og:title" content="FineVines`,
+		`<meta property="og:url" content="https://finevines.com/">`,
+		`<meta property="og:image" content="https://finevines.com/assets/img/og-default.png">`,
+		`<meta property="og:image:width" content="1200">`,
+		`<meta name="twitter:card" content="summary_large_image">`,
+		`<meta name="twitter:site" content="@finevineswine">`,
+		`<meta name="twitter:image" content="https://finevines.com/assets/img/og-default.png">`,
+		`<meta name="theme-color" content="#531427">`,
 	} {
 		if !strings.Contains(string(home), want) {
 			t.Errorf("home missing %q", want)
@@ -224,9 +238,34 @@ func TestWineDetailPages(t *testing.T) {
 		"<title>Hubert Lamy",         // unique title
 		`alt="Bottle of Hubert Lamy`, // real alt text
 		`rel="canonical" href="https://finevines.com/wines/hubert-lamy-`,
+		`<meta name="twitter:card" content="summary_large_image">`,
+		`<meta property="og:title" content="Hubert Lamy`, // per-wine og:title
+		// This wine's art is a .webp — NOT a scraper-safe raster — so its
+		// og:image must fall back to the branded default, not point at the webp.
+		`<meta property="og:image" content="https://finevines.com/assets/img/og-default.png">`,
 	} {
 		if !strings.Contains(html, want) {
 			t.Errorf("wine page missing %q", want)
+		}
+	}
+	if strings.Contains(html, "ab1234.webp") && strings.Contains(html, `property="og:image" content="https://finevines.com/assets/img/wines/ab1234.webp"`) {
+		t.Error("webp wine art must NOT be used as og:image (scrapers won't render it)")
+	}
+
+	// The Ridgeview wine's art IS a .jpg, so its own photo (absolute URL) must
+	// override the default as the og:image — the per-page raster override.
+	rid, err := os.ReadFile(filepath.Join(dist, "wines",
+		"ridgeview-cellars-estate-cabernet-sauvignon-2020", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	ridHTML := string(rid)
+	for _, want := range []string{
+		`<meta property="og:image" content="https://finevines.com/assets/img/wines/ef9012.jpg">`,
+		`<meta name="twitter:image" content="https://finevines.com/assets/img/wines/ef9012.jpg">`,
+	} {
+		if !strings.Contains(ridHTML, want) {
+			t.Errorf("ridgeview wine page missing raster og override %q", want)
 		}
 	}
 }
