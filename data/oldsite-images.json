@@ -1,0 +1,2834 @@
+[
+  {
+    "sku": "111232",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Les%20H%C3%A9ritiers%20du%20Comte%20Lafon%20M%C3%A2con-Chardonnay%20Clos%20De%20La%20Crochette.jpg",
+    "oldSlug": "les-heritiers-du-comte-lafon/les-heritiers-du-comte-lafon-macon-chardonnay-clos-de-la",
+    "confidence": 1
+  },
+  {
+    "sku": "210220",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/Meo%20Camuzet%20echezeaux-grand-cru-les-rouges.png",
+    "oldSlug": "domaine-meo-camuzet/meo-camuzet-echezeaux-les-rouges-du-bas-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "210426",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Anne%20Parent%20Bourgogne%20Pinot%20Noir%20Selection%20Pomone.jpg",
+    "oldSlug": "domaine-anne-parent/domaine-anne-parent-bourgogne-pinot-noir-selection-pomone",
+    "confidence": 0.71
+  },
+  {
+    "sku": "210427",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Screen%20Shot%202020-06-10%20at%2010.27.24%20AM.png",
+    "oldSlug": "domaine-anne-parent/domaine-anne-parent-monthelie",
+    "confidence": 0.67
+  },
+  {
+    "sku": "210428",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Anne%20Parent%20Pommard%20La%20Croix%20Blanche.jpg",
+    "oldSlug": "domaine-anne-parent/domaine-anne-parent-pommard-la-croix-blanche",
+    "confidence": 0.8
+  },
+  {
+    "sku": "210429",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Screen%20Shot%202020-06-10%20at%2010.27.24%20AM.png",
+    "oldSlug": "domaine-anne-parent/domaine-anne-parent-monthelie",
+    "confidence": 0.67
+  },
+  {
+    "sku": "210430",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Screen%20Shot%202020-06-10%20at%2010.27.24%20AM.png",
+    "oldSlug": "domaine-anne-parent/domaine-anne-parent-monthelie",
+    "confidence": 0.67
+  },
+  {
+    "sku": "210646",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/LA%20GRANDE%20RUE.jpg",
+    "oldSlug": "domaine-francois-lamarche/domaine-nicole-lamarche-la-grande-rue-grand-cru-monopole",
+    "confidence": 0.57
+  },
+  {
+    "sku": "210654",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/LA%20GRANDE%20RUE.jpg",
+    "oldSlug": "domaine-francois-lamarche/domaine-nicole-lamarche-la-grande-rue-grand-cru-monopole",
+    "confidence": 0.57
+  },
+  {
+    "sku": "210655",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/LA%20GRANDE%20RUE.jpg",
+    "oldSlug": "domaine-francois-lamarche/domaine-nicole-lamarche-la-grande-rue-grand-cru-monopole",
+    "confidence": 0.57
+  },
+  {
+    "sku": "210663",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/LA%20GRANDE%20RUE.jpg",
+    "oldSlug": "domaine-francois-lamarche/domaine-nicole-lamarche-la-grande-rue-grand-cru-monopole",
+    "confidence": 0.71
+  },
+  {
+    "sku": "210673",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/LA%20GRANDE%20RUE.jpg",
+    "oldSlug": "domaine-francois-lamarche/domaine-nicole-lamarche-la-grande-rue-grand-cru-monopole",
+    "confidence": 0.71
+  },
+  {
+    "sku": "212169",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/Pernot%20-%20Puligny.png",
+    "oldSlug": "domaine-paul-pernot/domaine-paul-pernot-puligny-montrachet",
+    "confidence": 1
+  },
+  {
+    "sku": "212172",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/Pernot%20-%20Batard.png",
+    "oldSlug": "domaine-paul-pernot/domaine-paul-pernot-batard-montrachet-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "212173",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/Pernot%20-%20Batard.png",
+    "oldSlug": "domaine-paul-pernot/domaine-paul-pernot-batard-montrachet-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "212421",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Dom%20Bart%20Marsannay%20Les%20Finottes%20Monopole%20front-2.jpg",
+    "oldSlug": "domaine-bart/domaine-bart-marsannay-les-finottes",
+    "confidence": 0.67
+  },
+  {
+    "sku": "212423",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Dom%20Bart%20Marsannay%20Les%20Finottes%20Monopole%20front-2.jpg",
+    "oldSlug": "domaine-bart/domaine-bart-marsannay-les-finottes",
+    "confidence": 0.67
+  },
+  {
+    "sku": "212426",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Dom%20Bart%20Marsannay%20Saint%20Jacques%20front-2.jpg",
+    "oldSlug": "domaine-bart/domaine-bart-marsannay-saint-jacques",
+    "confidence": 1
+  },
+  {
+    "sku": "214962",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/michel%20bouzereau%20Meursault%20Tessons%20front-2.jpg",
+    "oldSlug": "domaine-michel-bouzereau/domaine-michel-bouzereau-meursault-les-tessons",
+    "confidence": 1
+  },
+  {
+    "sku": "214963",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/michel%20bouzereau%20Meursault%20Perrieres%20B%20front.jpg",
+    "oldSlug": "domaine-michel-bouzereau/domaine-michel-bouzereau-meursault-les-perrieres",
+    "confidence": 0.75
+  },
+  {
+    "sku": "214964",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/michel%20bouzereau%20Meursault%20Perrieres%20B%20front.jpg",
+    "oldSlug": "domaine-michel-bouzereau/domaine-michel-bouzereau-meursault-les-perrieres",
+    "confidence": 0.75
+  },
+  {
+    "sku": "214965",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Michel%20Lafarge%20Bourgogne%20Pinot%20Noir.jpg",
+    "oldSlug": "domaine-michel-lafarge/domaine-michel-lafarge-bourgogne-pinot-noir",
+    "confidence": 0.8
+  },
+  {
+    "sku": "215076",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/langoureau%20saint-aubin_0.png",
+    "oldSlug": "domaine-sylvain-langoureau/domaine-sylvain-langoureau-saint-aubin-blanc",
+    "confidence": 0.6
+  },
+  {
+    "sku": "215077",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/langoureau%20saint-aubin_0.png",
+    "oldSlug": "domaine-sylvain-langoureau/domaine-sylvain-langoureau-saint-aubin-blanc",
+    "confidence": 0.6
+  },
+  {
+    "sku": "241234",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Grand%20Veneur%20Lirac%20Clos%20De%20Sixte.jpg",
+    "oldSlug": "domaine-grand-veneur/domaine-grand-veneur-lirac-clos-de-sixte",
+    "confidence": 1
+  },
+  {
+    "sku": "241241*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Grand%20Veneur%20Chateauneuf-du-Pape%20Rouge%20Les%20Origines.jpg",
+    "oldSlug": "domaine-grand-veneur/domaine-grand-veneur-chateauneuf-du-pape-rouge-les-origines",
+    "confidence": 0.67
+  },
+  {
+    "sku": "241862*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20de%20la%20Mordor%C3%A9e%20Cotes%20Du%20Rhone%20La%20Dame%20Rousse.jpg",
+    "oldSlug": "domaine-de-la-mordoree/domaine-de-la-mordoree-cotes-du-rhone-la-dame-rousse",
+    "confidence": 0.6
+  },
+  {
+    "sku": "260526*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-07/422488.jpg",
+    "oldSlug": "galil-wines/galil-merlot",
+    "confidence": 1
+  },
+  {
+    "sku": "260529",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-02/gilgal%20sauvignon%20blanc_0.png",
+    "oldSlug": "galil-wines/galil-sauvignon-blanc",
+    "confidence": 1
+  },
+  {
+    "sku": "260537",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-02/gilgal%20sauvignon%20blanc_0.png",
+    "oldSlug": "galil-wines/galil-sauvignon-blanc",
+    "confidence": 0.67
+  },
+  {
+    "sku": "260545*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-07/fapxdlx7px6lyn8uvek4.jpg",
+    "oldSlug": "galil-wines/galil-cabernet-sauvignon",
+    "confidence": 1
+  },
+  {
+    "sku": "260547*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-07/121702_refDetail-0.jpg",
+    "oldSlug": "galil-wines/galil-syrah",
+    "confidence": 1
+  },
+  {
+    "sku": "341544*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Paul%20Autard%20C%C3%B4tes%20Du%20Rh%C3%B4ne.png",
+    "oldSlug": "domaine-paul-autard/domaine-paul-autard-cotes-du-rhone",
+    "confidence": 1
+  },
+  {
+    "sku": "342052",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Courbis%20Saint-Joseph.jpg",
+    "oldSlug": "domaine-courbis/domaine-courbis-saint-joseph",
+    "confidence": 0.67
+  },
+  {
+    "sku": "342058*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Courbis%20Saint-Joseph%20Les%20Royes.jpg",
+    "oldSlug": "domaine-courbis/domaine-courbis-saint-joseph-les-royes",
+    "confidence": 0.75
+  },
+  {
+    "sku": "342063",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Courbis%20Saint-Joseph.jpg",
+    "oldSlug": "domaine-courbis/domaine-courbis-saint-joseph",
+    "confidence": 0.67
+  },
+  {
+    "sku": "360900",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Bachelards%20Fleurie%20FRONT-2.jpg",
+    "oldSlug": "chateau-des-bachelards/chateau-des-bachelards-fleurie",
+    "confidence": 1
+  },
+  {
+    "sku": "360901",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Bachelards%20Saint%20Amour%20FRONT-2.jpg",
+    "oldSlug": "chateau-des-bachelards/chateau-des-bachelards-saint-amour",
+    "confidence": 0.67
+  },
+  {
+    "sku": "397514",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/Screen%20Shot%202019-08-11%20at%204.23.35%20PM.png",
+    "oldSlug": "libenzi/libenzi-rubideo-rosso-piceno",
+    "confidence": 1
+  },
+  {
+    "sku": "398254",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/centive.jpg",
+    "oldSlug": "tenuta-olim-bauda/tenuta-olim-bauda-moscato-centive",
+    "confidence": 1
+  },
+  {
+    "sku": "398264",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/centive.jpg",
+    "oldSlug": "tenuta-olim-bauda/tenuta-olim-bauda-moscato-centive",
+    "confidence": 1
+  },
+  {
+    "sku": "398266*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/NIZZA-2015-2.jpg",
+    "oldSlug": "tenuta-olim-bauda/tenuta-olim-bauda-nizza-docg",
+    "confidence": 1
+  },
+  {
+    "sku": "398267*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/la-villa.jpg",
+    "oldSlug": "tenuta-olim-bauda/tenuta-olim-bauda-barbera-dasti-la-villa",
+    "confidence": 0.83
+  },
+  {
+    "sku": "398268",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/centive.jpg",
+    "oldSlug": "tenuta-olim-bauda/tenuta-olim-bauda-moscato-centive",
+    "confidence": 1
+  },
+  {
+    "sku": "398269",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/390959_refDetail-0.jpg",
+    "oldSlug": "tenuta-olim-bauda/tenuta-olim-bauda-gavi-di-gavi",
+    "confidence": 1
+  },
+  {
+    "sku": "398446",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/brezza%20nebbiolo%20vigna%20santa%20rosalia.jpg",
+    "oldSlug": "giacomo-brezza/giacomo-brezza-nebbiolo-dalba-vigna-santa-rosalia",
+    "confidence": 0.71
+  },
+  {
+    "sku": "398456",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Giacomo%20Brezza%20Langhe%20Chardonnay%20DOC%20Label.jpg",
+    "oldSlug": "giacomo-brezza/giacomo-brezza-langhe-chardonnay-doc",
+    "confidence": 1
+  },
+  {
+    "sku": "398462",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Giacomo%20Brezza%20Langhe%20Chardonnay%20DOC%20Label.jpg",
+    "oldSlug": "giacomo-brezza/giacomo-brezza-langhe-chardonnay-doc",
+    "confidence": 1
+  },
+  {
+    "sku": "398463",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/68386_refDetail-0.jpg",
+    "oldSlug": "brezza/giacomo-brezza-langhe-rosato",
+    "confidence": 1
+  },
+  {
+    "sku": "398465",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/brezza%20nebbiolo%20vigna%20santa%20rosalia.jpg",
+    "oldSlug": "giacomo-brezza/giacomo-brezza-nebbiolo-dalba-vigna-santa-rosalia",
+    "confidence": 0.71
+  },
+  {
+    "sku": "398467*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Giacomo%20Brezza%20Barolo%20Sarmassa%20Label.jpg",
+    "oldSlug": "brezza/giacomo-brezza-barolo-sarmassa",
+    "confidence": 1
+  },
+  {
+    "sku": "398468",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/brezza%20barolo%20castellero.jpg",
+    "oldSlug": "giacomo-brezza/giacomo-brezza-barolo-docg-castellero",
+    "confidence": 0.8
+  },
+  {
+    "sku": "398469*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/brezza%20barolo%20cannubi.jpg",
+    "oldSlug": "giacomo-brezza/giacomo-brezza-barolo-cannubi",
+    "confidence": 1
+  },
+  {
+    "sku": "398470",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/brezza%20barolo%20castellero.jpg",
+    "oldSlug": "giacomo-brezza/giacomo-brezza-barolo-docg-castellero",
+    "confidence": 1
+  },
+  {
+    "sku": "398472*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/brezza%20lange.jpg",
+    "oldSlug": "giacomo-brezza/giacomo-brezza-langhe-nebbiolo",
+    "confidence": 0.75
+  },
+  {
+    "sku": "400101",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Chateau%20Grange%20Cochard%20Morgon%20Les%20Charmes.jpg",
+    "oldSlug": "chateau-grange-cochard/chateau-grange-cochard-morgon-les-charmes",
+    "confidence": 1
+  },
+  {
+    "sku": "400104",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Chateau%20Grange%20Cochard%20Morgon%20Les%20Charmes.jpg",
+    "oldSlug": "chateau-grange-cochard/chateau-grange-cochard-morgon-les-charmes",
+    "confidence": 1
+  },
+  {
+    "sku": "410334",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Rapet%20Savigny-Les-Beaune.png",
+    "oldSlug": "domaine-rapet/domaine-rapet-savigny-les-beaune",
+    "confidence": 1
+  },
+  {
+    "sku": "410340",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Rapet%20Savigny-Les-Beaune.png",
+    "oldSlug": "domaine-rapet/domaine-rapet-savigny-les-beaune",
+    "confidence": 1
+  },
+  {
+    "sku": "410349",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Rapet%20Savigny-Les-Beaune.png",
+    "oldSlug": "domaine-rapet/domaine-rapet-savigny-les-beaune",
+    "confidence": 1
+  },
+  {
+    "sku": "410350",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Rapet%20Savigny-Les-Beaune.png",
+    "oldSlug": "domaine-rapet/domaine-rapet-savigny-les-beaune",
+    "confidence": 0.67
+  },
+  {
+    "sku": "410351",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Rapet%20Savigny-Les-Beaune.png",
+    "oldSlug": "domaine-rapet/domaine-rapet-savigny-les-beaune",
+    "confidence": 0.67
+  },
+  {
+    "sku": "411478",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/domaine-cecile-tremblay-bourgogne-la-croix-blanche%20png.jpg",
+    "oldSlug": "domaine-cecile-tremblay/domaine-cecile-tremblay-bourgogne-la-croix-blanche",
+    "confidence": 0.6
+  },
+  {
+    "sku": "411479",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-10/cecile%20tremblay%20chambolle%20musigny%20les%20cabottes%20png.png",
+    "oldSlug": "domaine-cecile-tremblay/domaine-cecile-tremblay-chambolle-musigny-premier-cru-les-0",
+    "confidence": 0.67
+  },
+  {
+    "sku": "411480",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-10/cecile%20tremblay%20chambolle%20musigny%20les%20cabottes%20png.png",
+    "oldSlug": "domaine-cecile-tremblay/domaine-cecile-tremblay-chambolle-musigny-premier-cru-les-0",
+    "confidence": 0.67
+  },
+  {
+    "sku": "411483",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/domaine-cecile-tremblay-bourgogne-la-croix-blanche%20png.jpg",
+    "oldSlug": "domaine-cecile-tremblay/domaine-cecile-tremblay-bourgogne-la-croix-blanche",
+    "confidence": 0.6
+  },
+  {
+    "sku": "411945",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Collotte%20Bourgogne%20Blanc_0.jpg",
+    "oldSlug": "domaine-collotte/domaine-collotte-bourgogne-blanc",
+    "confidence": 1
+  },
+  {
+    "sku": "411946",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Collotte%20Bourgogne%20Pinot%20Noir%20Noble%20Souche.jpg",
+    "oldSlug": "domaine-collotte/domaine-collotte-bourgogne-pinot-noir-noble-souche",
+    "confidence": 1
+  },
+  {
+    "sku": "411949",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Collotte%20Marsannay%20Les%20Boivins.jpg",
+    "oldSlug": "domaine-collotte/domaine-collotte-marsannay-les-boivins",
+    "confidence": 1
+  },
+  {
+    "sku": "411971",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Collotte%20Marsannay%20Les%20Boivins.jpg",
+    "oldSlug": "domaine-collotte/domaine-collotte-marsannay-les-boivins",
+    "confidence": 0.67
+  },
+  {
+    "sku": "411974",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Collotte%20Marsannay%20Le%20Clos%20de%20Jeu-2.jpg",
+    "oldSlug": "domaine-collotte/domaine-collotte-marsannay-le-clos-de-jeu",
+    "confidence": 1
+  },
+  {
+    "sku": "411975",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Collotte%20Fixin-2.jpg",
+    "oldSlug": "domaine-collotte/domaine-collotte-fixin",
+    "confidence": 1
+  },
+  {
+    "sku": "411980",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Collotte%20Marsannay%20En%20Combereau.jpg",
+    "oldSlug": "domaine-collotte/domaine-collotte-marsannay-en-combereau",
+    "confidence": 1
+  },
+  {
+    "sku": "411981",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Collotte%20Fixin-2.jpg",
+    "oldSlug": "domaine-collotte/domaine-collotte-fixin",
+    "confidence": 1
+  },
+  {
+    "sku": "419057*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Domaine%20Daniel%20Bouland%20Cote%20De%20Brouilly%20Cuv%C3%A9e%20Melanie.jpg",
+    "oldSlug": "domaine-daniel-bouland/domaine-daniel-bouland-cote-de-brouilly-cuvee-melanie",
+    "confidence": 1
+  },
+  {
+    "sku": "419058",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Domaine%20Daniel%20Bouland%20Morgon%20Vieilles%20Vignes%20Corcelette.jpg",
+    "oldSlug": "domaine-daniel-bouland/domaine-daniel-bouland-morgon-vieilles-vignes-corcelette",
+    "confidence": 1
+  },
+  {
+    "sku": "419064",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Domaine%20Daniel%20Bouland%20Morgon%20Schiste%20Bellevue_0.jpg",
+    "oldSlug": "domaine-daniel-bouland/domaine-daniel-bouland-morgon-schiste-bellevue",
+    "confidence": 1
+  },
+  {
+    "sku": "419065",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Domaine%20Daniel%20Bouland%20Morgon%20Vieilles%20Vignes%20Corcelette.jpg",
+    "oldSlug": "domaine-daniel-bouland/domaine-daniel-bouland-morgon-vieilles-vignes-corcelette",
+    "confidence": 1
+  },
+  {
+    "sku": "419067",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Domaine%20Daniel%20Bouland%20Cote%20De%20Brouilly%20Cuv%C3%A9e%20Melanie.jpg",
+    "oldSlug": "domaine-daniel-bouland/domaine-daniel-bouland-cote-de-brouilly-cuvee-melanie",
+    "confidence": 1
+  },
+  {
+    "sku": "419079",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Domaine%20Daniel%20Bouland%20Morgon%20Schiste%20Bellevue_0.jpg",
+    "oldSlug": "domaine-daniel-bouland/domaine-daniel-bouland-morgon-schiste-bellevue",
+    "confidence": 0.6
+  },
+  {
+    "sku": "419500",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Ratte%20Savagnin%20Ouill%C3%A9%20Natur%C3%A9-2.jpg",
+    "oldSlug": "domaine-ratte/domaine-ratte-savagnin-ouille-nature",
+    "confidence": 1
+  },
+  {
+    "sku": "419501",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Ratte%20Clos%20Maire%20Rouge-2.jpg",
+    "oldSlug": "domaine-ratte/domaine-ratte-clos-maire-rouge",
+    "confidence": 1
+  },
+  {
+    "sku": "419502",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Ratte%20Trousseau%20%2522%C3%80%20la%20Dame%2522-2.jpg",
+    "oldSlug": "domaine-ratte/domaine-ratte-trousseau-la-dame",
+    "confidence": 1
+  },
+  {
+    "sku": "442039*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/pierre%20usseglio%20cdp%20front-2.jpg",
+    "oldSlug": "domaine-pierre-usseglio/domaine-pierre-usseglio-chateauneuf-du-pape",
+    "confidence": 0.75
+  },
+  {
+    "sku": "480152",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Mann%20Gewurtztraminer%20Grand%20Cru%20Furstentum%20Vieilles%20Vignes%20.jpg",
+    "oldSlug": "domaine-albert-mann/domaine-albert-mann-gewurztraminer-grand-cru-furstentum",
+    "confidence": 0.67
+  },
+  {
+    "sku": "480159",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Mann%20Riesling%20Cuvee%20Albert.jpg",
+    "oldSlug": "domaine-albert-mann/domaine-albert-mann-riesling-cuvee-albert",
+    "confidence": 0.75
+  },
+  {
+    "sku": "495158",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/PICHRLBURG12.jpg",
+    "oldSlug": "fx-pichler/fx-pichler-riesling-loibner-burgstall-federspiel",
+    "confidence": 0.83
+  },
+  {
+    "sku": "495159",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/FX%20Pichler%20Riesling%20Kellerberg%20Smaragd.jpg",
+    "oldSlug": "fx-pichler/fx-pichler-riesling-kellerberg-smaragd",
+    "confidence": 0.8
+  },
+  {
+    "sku": "495163",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/PICHGVM12.jpg",
+    "oldSlug": "fx-pichler/fx-pichler-gruner-veltliner-m-smaragd",
+    "confidence": 1
+  },
+  {
+    "sku": "495415",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Weingut%20Franz%20Hirtzberger%20Weissburgunder%20Steinporz%20Smaragd-2.jpg",
+    "oldSlug": "weingut-franz-hirtzberger/weingut-franz-hirtzberger-weissburgunder-steinporz-smaragd",
+    "confidence": 0.6
+  },
+  {
+    "sku": "495419",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Weingut%20Franz%20Hirtzberger%20Riesling%20Steinerterrassen%20Federspiel-2.jpg",
+    "oldSlug": "weingut-franz-hirtzberger/weingut-franz-hirtzberger-riesling-steinerterrassen",
+    "confidence": 1
+  },
+  {
+    "sku": "495423",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Weingut%20Franz%20Hirtzberger%20Riesling%20Steinerterrassen%20Federspiel-2.jpg",
+    "oldSlug": "weingut-franz-hirtzberger/weingut-franz-hirtzberger-riesling-steinerterrassen",
+    "confidence": 0.75
+  },
+  {
+    "sku": "495424",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Weingut%20Franz%20Hirtzberger%20Riesling%20Steinerterrassen%20Federspiel-2.jpg",
+    "oldSlug": "weingut-franz-hirtzberger/weingut-franz-hirtzberger-riesling-steinerterrassen",
+    "confidence": 1
+  },
+  {
+    "sku": "500221",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/school-house-vineyard-chardonnay.png",
+    "oldSlug": "school-house-vineyard/school-house-vineyard-chardonnay",
+    "confidence": 1
+  },
+  {
+    "sku": "500274*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/McNab%20Ridge%20Zinzilla%20Zinfandel.jpg",
+    "oldSlug": "mcnab-ridge-wine-company/mcnab-ridge-zinzilla-zinfandel",
+    "confidence": 1
+  },
+  {
+    "sku": "500277*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/McNab%20Ridge%20Cabernet%20Sauvignon.jpg",
+    "oldSlug": "mcnab-ridge-wine-company/mcnab-ridge-cabernet-sauvignon",
+    "confidence": 1
+  },
+  {
+    "sku": "500279*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/McNab%20Ridge%20Zinzilla%20Zinfandel.jpg",
+    "oldSlug": "mcnab-ridge-wine-company/mcnab-ridge-zinzilla-zinfandel",
+    "confidence": 1
+  },
+  {
+    "sku": "500280*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/McNab%20Ridge%20Fred%27s%20Red.jpg",
+    "oldSlug": "mcnab-ridge-wine-company/mcnab-ridge-freds-red",
+    "confidence": 0.75
+  },
+  {
+    "sku": "500341",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Dashe%20Chenin%20Blanc%20Concrete%20Cuv%C3%A9e%20%20.png",
+    "oldSlug": "dashe-cellars/dashe-chenin-blanc-concrete-cuvee",
+    "confidence": 1
+  },
+  {
+    "sku": "500349",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Dashe%20Cabernet%20Sauvignon%20Heart%20Arrow%20Ranch.jpg",
+    "oldSlug": "dashe-cellars/dashe-cabernet-sauvignon-heart-arrow-ranch",
+    "confidence": 1
+  },
+  {
+    "sku": "500350",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Dashe%20Chenin%20Blanc%20Concrete%20Cuv%C3%A9e%20%20.png",
+    "oldSlug": "dashe-cellars/dashe-chenin-blanc-concrete-cuvee",
+    "confidence": 1
+  },
+  {
+    "sku": "500351",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Dashe%20Cabernet%20Sauvignon%20Heart%20Arrow%20Ranch.jpg",
+    "oldSlug": "dashe-cellars/dashe-cabernet-sauvignon-heart-arrow-ranch",
+    "confidence": 1
+  },
+  {
+    "sku": "500356*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/https---storage.googleapis.com-gen-atmedia-3-2013-02-80782aba3d022811516e4f7ea76eb209a92b7cfc.jpeg",
+    "oldSlug": "dashe-cellars/dashe-late-harvest-zinfandel",
+    "confidence": 1
+  },
+  {
+    "sku": "500357*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Dashe%20Zinfandel%20Vineyard%20Select.jpg",
+    "oldSlug": "dashe-cellars/dashe-zinfandel-vineyard-select",
+    "confidence": 1
+  },
+  {
+    "sku": "500432",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/McNab%20Ridge%20Chardonnay.jpg",
+    "oldSlug": "mcnab-ridge-wine-company/mcnab-ridge-chardonnay",
+    "confidence": 0.67
+  },
+  {
+    "sku": "500687*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/ghost%20block%20estate%20cab%20sauvignon.png",
+    "oldSlug": "ghost-block-winery/ghost-block-estate-cabernet-sauvignon-napa-valley",
+    "confidence": 0.67
+  },
+  {
+    "sku": "500688*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/ghost%20block%20estate%20cab%20sauvignon.png",
+    "oldSlug": "ghost-block-winery/ghost-block-estate-cabernet-sauvignon-napa-valley",
+    "confidence": 0.67
+  },
+  {
+    "sku": "500690*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Ghost%20Block%20Zinfandel%20Napa%20Valley.jpg",
+    "oldSlug": "ghost-block-winery/ghost-block-pelissa-vineyard-zinfandel-napa-valley",
+    "confidence": 1
+  },
+  {
+    "sku": "500693*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/ghost%20block%20estate%20cab%20sauvignon.png",
+    "oldSlug": "ghost-block-winery/ghost-block-estate-cabernet-sauvignon-napa-valley",
+    "confidence": 1
+  },
+  {
+    "sku": "500695*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/ghost%20block%20estate%20cab%20sauvignon.png",
+    "oldSlug": "ghost-block-winery/ghost-block-estate-cabernet-sauvignon-napa-valley",
+    "confidence": 0.67
+  },
+  {
+    "sku": "500697*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-01/ghost%20block%20estate%20cab%20sauvignon.png",
+    "oldSlug": "ghost-block-winery/ghost-block-estate-cabernet-sauvignon-napa-valley",
+    "confidence": 1
+  },
+  {
+    "sku": "501056",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Eyrie%20Chasselas%20Dor%C3%A9.jpg",
+    "oldSlug": "eyrie-vineyards/eyrie-chasselas-dore",
+    "confidence": 1
+  },
+  {
+    "sku": "501057",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Eyrie%20Vineyards%20Muscat%20Ottonel.png",
+    "oldSlug": "eyrie-vineyards/eyrie-vineyards-muscat-ottonel",
+    "confidence": 1
+  },
+  {
+    "sku": "501142",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-10/Eyrie%20PN%20Willamette%20Valley%20png.png",
+    "oldSlug": "eyrie-vineyards/eyrie-vineyards-pinot-noir-estate",
+    "confidence": 1
+  },
+  {
+    "sku": "501144",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-10/Eyrie%20PN%20Willamette%20Valley%20png.png",
+    "oldSlug": "eyrie-vineyards/eyrie-vineyards-pinot-noir-estate",
+    "confidence": 0.67
+  },
+  {
+    "sku": "501145",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-10/Eyrie%20PN%20Willamette%20Valley%20png.png",
+    "oldSlug": "eyrie-vineyards/eyrie-vineyards-pinot-noir-estate",
+    "confidence": 1
+  },
+  {
+    "sku": "501146",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-10/Eyrie%20PN%20Willamette%20Valley%20png.png",
+    "oldSlug": "eyrie-vineyards/eyrie-vineyards-pinot-noir-estate",
+    "confidence": 1
+  },
+  {
+    "sku": "501149",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-10/Eyrie%20PN%20Willamette%20Valley%20png.png",
+    "oldSlug": "eyrie-vineyards/eyrie-vineyards-pinot-noir-estate",
+    "confidence": 1
+  },
+  {
+    "sku": "501613",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/maison_roy_petite_incline_hq_label.jpg",
+    "oldSlug": "domaine-roy-fils/maison-roy-petite-incline-pinot-noir",
+    "confidence": 0.8
+  },
+  {
+    "sku": "501615*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/208030.jpg",
+    "oldSlug": "domaine-roy-fils/maison-roy-incline-pinot-noir-dundee-hills",
+    "confidence": 1
+  },
+  {
+    "sku": "501617",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Maison%20Roy%20Dundee%20Hills%20Incline%20Chardonnay-2.jpg",
+    "oldSlug": "domaine-roy-fils/maison-roy-dundee-hills-incline-chardonnay",
+    "confidence": 0.6
+  },
+  {
+    "sku": "502616*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/photo_label.jpg",
+    "oldSlug": "pellet-estate/pellet-chardonnay-sunchase-vineyard-petaluma-gap-ava",
+    "confidence": 1
+  },
+  {
+    "sku": "502617*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/rm8gsa1eotcfqlwc2jwk.jpg",
+    "oldSlug": "pellet-estate/pellet-napa-valley-henrys-reserve",
+    "confidence": 0.8
+  },
+  {
+    "sku": "502781",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Roots%20Klee%20Willamette%20Valley%20Pinot%20Noir.png",
+    "oldSlug": "roots-wines-vineyard/roots-klee-willamette-valley-pinot-noir",
+    "confidence": 1
+  },
+  {
+    "sku": "502783",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Roots%20Estate%20Pinot%20Gris%20Label.jpg",
+    "oldSlug": "roots-wines-vineyard/roots-estate-pinot-gris",
+    "confidence": 1
+  },
+  {
+    "sku": "502790",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/Roots-Crosshairs-1-600x602.jpg",
+    "oldSlug": "roots-wines-vineyard/roots-crosshairs-pinot-noir",
+    "confidence": 0.75
+  },
+  {
+    "sku": "502792",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Roots%20Klee%20Willamette%20Valley%20Pinot%20Noir.png",
+    "oldSlug": "roots-wines-vineyard/roots-klee-willamette-valley-pinot-noir",
+    "confidence": 1
+  },
+  {
+    "sku": "502827*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/Screen%20Shot%202019-08-25%20at%2010.30.18%20AM.png",
+    "oldSlug": "terre-rouge-and-easton-wines/terre-rouge-garrigue",
+    "confidence": 0.67
+  },
+  {
+    "sku": "502832*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/Screen%20Shot%202019-08-25%20at%2010.30.18%20AM.png",
+    "oldSlug": "terre-rouge-and-easton-wines/terre-rouge-garrigue",
+    "confidence": 0.67
+  },
+  {
+    "sku": "502833",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/Screen%20Shot%202019-08-25%20at%2010.30.18%20AM.png",
+    "oldSlug": "terre-rouge-and-easton-wines/terre-rouge-garrigue",
+    "confidence": 1
+  },
+  {
+    "sku": "502834*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-09/TerraRouge%20DTR_Syrah_Co%CC%82tes_NV.jpeg",
+    "oldSlug": "terre-rouge-and-easton-wines/terre-rouge-syrah-les-cotes-de-louest",
+    "confidence": 0.8
+  },
+  {
+    "sku": "502835",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/Screen%20Shot%202019-08-25%20at%2010.25.41%20AM.png",
+    "oldSlug": "terre-rouge-and-easton-wines/terre-rouge-tete-tete",
+    "confidence": 1
+  },
+  {
+    "sku": "502836*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Easton%20Amador%20County%20Zinfandel%20Label.jpg",
+    "oldSlug": "terre-rouge-and-easton-wines/easton-amador-county-zinfandel",
+    "confidence": 1
+  },
+  {
+    "sku": "503028*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-08/2018%20Zin%20DCV-3.jpg",
+    "oldSlug": "kokomo-winery/kokomo-winery-zinfandel-dry-creek-valley",
+    "confidence": 1
+  },
+  {
+    "sku": "503030*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-08/2018%20Zin%20DCV-3.jpg",
+    "oldSlug": "kokomo-winery/kokomo-winery-zinfandel-dry-creek-valley",
+    "confidence": 1
+  },
+  {
+    "sku": "503031*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-08/2018%20Cabernet%20Sauvignon-2.jpg",
+    "oldSlug": "kokomo-winery/kokomo-winery-cabernet-sauvignon-sonoma-county",
+    "confidence": 1
+  },
+  {
+    "sku": "503042",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-08/2018%20Chardonnay-2.jpg",
+    "oldSlug": "kokomo-winery/kokomo-winery-chardonnay-peters-vineyard-russian-river",
+    "confidence": 0.8
+  },
+  {
+    "sku": "503547",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-10/Dr%20Frank%20Dry-Riesling.png",
+    "oldSlug": "dr-konstantin-frank/dr-konstantin-frank-dry-riesling",
+    "confidence": 1
+  },
+  {
+    "sku": "503548",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-10/Dr%20Frank%20Dry-Riesling.png",
+    "oldSlug": "dr-konstantin-frank/dr-konstantin-frank-dry-riesling",
+    "confidence": 0.8
+  },
+  {
+    "sku": "503549",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-10/Dr%20Frank%20Dry-Riesling.png",
+    "oldSlug": "dr-konstantin-frank/dr-konstantin-frank-dry-riesling",
+    "confidence": 1
+  },
+  {
+    "sku": "510003",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Maison%20Bertrand%20Ambroise%20Nuits%20Saint%20Georges.jpg",
+    "oldSlug": "maison-bertrand-ambroise/maison-bertrand-ambroise-nuits-saint-georges",
+    "confidence": 0.6
+  },
+  {
+    "sku": "510004",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Maison%20Bertrand%20Ambroise%20Echezeaux%20Grand%20Cru.jpg",
+    "oldSlug": "maison-bertrand-ambroise/maison-bertrand-ambroise-echezeaux-grand-cru",
+    "confidence": 0.6
+  },
+  {
+    "sku": "510017",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Maison%20Bertrand%20Ambroise%20Nuits%20Saint%20Georges.jpg",
+    "oldSlug": "maison-bertrand-ambroise/maison-bertrand-ambroise-nuits-saint-georges",
+    "confidence": 0.6
+  },
+  {
+    "sku": "510253",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Coteaux%20Bourguignons%20Pinot%20Noir.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-coteaux-bourguignons-pinot-noir",
+    "confidence": 0.83
+  },
+  {
+    "sku": "510264",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Bourgogne%20Aligot%C3%A9.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-bourgogne-aligote",
+    "confidence": 0.75
+  },
+  {
+    "sku": "510270",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Gevrey%20Chambertin.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-gevrey-chambertin",
+    "confidence": 0.75
+  },
+  {
+    "sku": "510271*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Clos%20de%20Vougeot%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-clos-de-vougeot-grand-cru",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510279",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Bourgogne%20Aligot%C3%A9.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-bourgogne-aligote",
+    "confidence": 1
+  },
+  {
+    "sku": "510280",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Bourgogne%20Aligot%C3%A9.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-bourgogne-aligote",
+    "confidence": 0.75
+  },
+  {
+    "sku": "510281",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Coteaux%20Bourguignons%20Pinot%20Noir.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-coteaux-bourguignons-pinot-noir",
+    "confidence": 1
+  },
+  {
+    "sku": "510282",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Bourgogne%20Aligot%C3%A9.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-bourgogne-aligote",
+    "confidence": 0.75
+  },
+  {
+    "sku": "510286",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Clos%20de%20la%20Roche%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-clos-de-la-roche-grand-cru",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510287",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Clos%20Saint%20Denis%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-clos-saint-denis-grand-cru",
+    "confidence": 0.57
+  },
+  {
+    "sku": "510289",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Clos%20de%20Vougeot%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-clos-de-vougeot-grand-cru",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510292",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Castagnier%20Bourgogne%20Aligot%C3%A9.jpg",
+    "oldSlug": "domaine-jerome-castagnier/domaine-jerome-castagnier-bourgogne-aligote",
+    "confidence": 0.75
+  },
+  {
+    "sku": "510401",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Damoy%20Bourgogne.png",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-bourgogne-rouge",
+    "confidence": 1
+  },
+  {
+    "sku": "510418",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Damoy%20La%20Bretigniere.png",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-marsannay-la-bretigniere",
+    "confidence": 1
+  },
+  {
+    "sku": "510426",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Damoy%20La%20Bretigniere.png",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-marsannay-la-bretigniere",
+    "confidence": 1
+  },
+  {
+    "sku": "510427",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Damoy%20Marsonnay%20Les%20Longeroies.png",
+    "oldSlug": "domaine-pierre-damoy/pierre-damoy-marsannay-les-longeroies",
+    "confidence": 1
+  },
+  {
+    "sku": "510431",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Pierre%20Damoy%20Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "510432",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Pierre%20Damoy%20Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "510433",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Pierre%20Damoy%20Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "510435",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Damoy%20Bourgogne%20Blanc%20Les%20Ravry.png",
+    "oldSlug": "domaine-pierre-damoy/pierre-damoy-bourgogne-blanc-les-ravry",
+    "confidence": 1
+  },
+  {
+    "sku": "510438",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Demoy%20Gevery%20Charmbertin.png",
+    "oldSlug": "domaine-pierre-damoy/pierre-damoy-gevrey-chambertin",
+    "confidence": 1
+  },
+  {
+    "sku": "510439",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Damoy%20Chambolle%20Musigny.png",
+    "oldSlug": "domaine-pierre-damoy/pierre-damoy-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "510440",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Damoy%20GC%20Clos%20Tamisot.png",
+    "oldSlug": "domaine-pierre-damoy/pierre-damoy-gevrey-chambertin-clos-tamisot",
+    "confidence": 1
+  },
+  {
+    "sku": "510442",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Pierre%20Damoy%20Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "510443",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Pierre%20Damoy%20Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "510444*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Damoy%20Bourgogne%20Blanc%20Les%20Ravry.png",
+    "oldSlug": "domaine-pierre-damoy/pierre-damoy-bourgogne-blanc-les-ravry",
+    "confidence": 1
+  },
+  {
+    "sku": "510445",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Damoy%20Bourgogne.png",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-bourgogne-rouge",
+    "confidence": 1
+  },
+  {
+    "sku": "510447",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Damoy%20Chambolle%20Musigny.png",
+    "oldSlug": "domaine-pierre-damoy/pierre-damoy-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "510448",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Pierre%20Damoy%20Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "510449",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Pierre%20Damoy%20Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "510450",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Pierre%20Damoy%20Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-pierre-damoy/domaine-pierre-damoy-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "510535",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Patrice%20Rion%20Bourgogne%20Chardonnay%20.jpg",
+    "oldSlug": "domaine-patrice-rion/domaine-patrice-rion-bourgogne-chardonnay",
+    "confidence": 0.75
+  },
+  {
+    "sku": "510551",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Niellon%20Chassagne%20Montrachet%20Blanc%20Front.png",
+    "oldSlug": "domaine-michel-niellon/domaine-michel-niellon-chassagne-montrachet-blanc",
+    "confidence": 1
+  },
+  {
+    "sku": "510678",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-08/164246.jpg",
+    "oldSlug": "kracher/kracher-pinot-gris-trocken",
+    "confidence": 0.75
+  },
+  {
+    "sku": "510679",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/KRR%20Beerenauslese%20Cuvee%202011_front.png",
+    "oldSlug": "kracher/kracher-beerenauslese-cuvee",
+    "confidence": 1
+  },
+  {
+    "sku": "510680",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/KRR%20Beerenauslese%20Cuvee%202011_front.png",
+    "oldSlug": "kracher/kracher-beerenauslese-cuvee",
+    "confidence": 1
+  },
+  {
+    "sku": "510683",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/KRR%20Beerenauslese%20Cuvee%202011_front.png",
+    "oldSlug": "kracher/kracher-beerenauslese-cuvee",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510686",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Kracher%20Auslese%20Cuvee%20NV_front%20label.png",
+    "oldSlug": "kracher/kracher-auslese-cuvee",
+    "confidence": 1
+  },
+  {
+    "sku": "510688",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Beerenauslese%20Zweigelt%202012%20L1-2.jpg",
+    "oldSlug": "kracher/kracher-zweigelt-beerenauslese",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510711",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Gevrey%20Chambertin%20_Les%20Seuvree_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-gevrey-chambertin-les-seuvrees",
+    "confidence": 1
+  },
+  {
+    "sku": "510716",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambertin%20Clos%20de%20Beze%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambertin-clos-de-beze-grand",
+    "confidence": 1
+  },
+  {
+    "sku": "510719",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Gevrey%20Chambertin%20_Les%20Seuvree_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-gevrey-chambertin-les-seuvrees",
+    "confidence": 1
+  },
+  {
+    "sku": "510720",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510721",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510722",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510723",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Bonnes%20Mares%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domainie-robert-groffier-bonnes-mares-grand-cru",
+    "confidence": 0.86
+  },
+  {
+    "sku": "510724",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambertin%20Clos%20de%20Beze%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambertin-clos-de-beze-grand",
+    "confidence": 1
+  },
+  {
+    "sku": "510727",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Gevrey%20Chambertin%20_Les%20Seuvree_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-gevrey-chambertin-les-seuvrees",
+    "confidence": 1
+  },
+  {
+    "sku": "510731",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Bonnes%20Mares%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domainie-robert-groffier-bonnes-mares-grand-cru",
+    "confidence": 0.86
+  },
+  {
+    "sku": "510733",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Bourgogne%20Passtoutgrain%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-bourgogne-passetoutgrain",
+    "confidence": 1
+  },
+  {
+    "sku": "510734",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Bourgogne%20Passtoutgrain%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-bourgogne-passetoutgrain",
+    "confidence": 0.75
+  },
+  {
+    "sku": "510735",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Gevrey%20Chambertin%20_Les%20Seuvree_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-gevrey-chambertin-les-seuvrees",
+    "confidence": 1
+  },
+  {
+    "sku": "510736",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510738",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510739",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Bonnes%20Mares%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domainie-robert-groffier-bonnes-mares-grand-cru",
+    "confidence": 0.86
+  },
+  {
+    "sku": "510740",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambertin%20Clos%20de%20Beze%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambertin-clos-de-beze-grand",
+    "confidence": 1
+  },
+  {
+    "sku": "510741",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510742",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510744",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Bonnes%20Mares%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domainie-robert-groffier-bonnes-mares-grand-cru",
+    "confidence": 0.71
+  },
+  {
+    "sku": "510745",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambertin%20Clos%20de%20Beze%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambertin-clos-de-beze-grand",
+    "confidence": 1
+  },
+  {
+    "sku": "510746",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Bourgogne%20Passtoutgrain%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-bourgogne-passetoutgrain",
+    "confidence": 1
+  },
+  {
+    "sku": "510748",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Gevrey%20Chambertin%20_Les%20Seuvree_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-gevrey-chambertin-les-seuvrees",
+    "confidence": 1
+  },
+  {
+    "sku": "510749",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510750",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510751",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510752",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510753",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Bonnes%20Mares%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domainie-robert-groffier-bonnes-mares-grand-cru",
+    "confidence": 0.86
+  },
+  {
+    "sku": "510754",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambertin%20Clos%20de%20Beze%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambertin-clos-de-beze-grand",
+    "confidence": 1
+  },
+  {
+    "sku": "510755",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambertin%20Clos%20de%20Beze%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambertin-clos-de-beze-grand",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510756",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Bourgogne%20Passtoutgrain%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-bourgogne-passetoutgrain",
+    "confidence": 0.75
+  },
+  {
+    "sku": "510757",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Bourgogne%20Passtoutgrain%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-bourgogne-passetoutgrain",
+    "confidence": 0.75
+  },
+  {
+    "sku": "510758",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510759",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510760",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510761",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambolle%20Musigny%201er%20CRU%20_Les%20Amoureuses_%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambolle-musigny-premier-cru-1",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510762",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Bonnes%20Mares%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domainie-robert-groffier-bonnes-mares-grand-cru",
+    "confidence": 0.86
+  },
+  {
+    "sku": "510763",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Groffier%20Chambertin%20Clos%20de%20Beze%20Front.png",
+    "oldSlug": "domaine-robert-groffier-pere-fils/domaine-robert-groffier-chambertin-clos-de-beze-grand",
+    "confidence": 1
+  },
+  {
+    "sku": "510908",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/2016%20Clos%20de%20Vougeot%20Front-3.jpg",
+    "oldSlug": "domaine-drouhin-laroze/domaine-drouhin-laroze-clos-de-vougeot-grand-cru",
+    "confidence": 0.67
+  },
+  {
+    "sku": "510927",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/2016%20Bonnes%20Mares%20Front-2.jpg",
+    "oldSlug": "domaine-drouhin-laroze/domaine-drouhin-laroze-bonnes-mares-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "510929",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/2016%20Gevrey-Chambertin%20Front-2.jpg",
+    "oldSlug": "domaine-drouhin-laroze/domaine-drouhin-laroze-gevrey-chambertin",
+    "confidence": 1
+  },
+  {
+    "sku": "510931",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/2016%20Latrici%C3%A8res%20Front-2.jpg",
+    "oldSlug": "domaine-drouhin-laroze/domaine-drouhin-laroze-latricieres-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "510932",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Chapelle%20Chambertin%20Front.jpg",
+    "oldSlug": "domaine-drouhin-laroze/domaine-drouhin-laroze-chapelle-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "510933",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/2016%20Chambertin%20Clos%20de%20Beze%20Front-2.jpg",
+    "oldSlug": "domaine-drouhin-laroze/domaine-drouhin-laroze-chambertin-clos-de-beze-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "511239",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Vocoret%20Chablis%20-%20Front_0.png",
+    "oldSlug": "domaine-vocoret/domaine-vocoret-chablis",
+    "confidence": 1
+  },
+  {
+    "sku": "511240",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Vocoret%20Chablis%20-%20Front_0.png",
+    "oldSlug": "domaine-vocoret/domaine-vocoret-chablis",
+    "confidence": 1
+  },
+  {
+    "sku": "511250",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Vocoret%20Chablis%20-%20Front_0.png",
+    "oldSlug": "domaine-vocoret/domaine-vocoret-chablis",
+    "confidence": 1
+  },
+  {
+    "sku": "511254",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Vocoret%20Chablis%20-%20Front_0.png",
+    "oldSlug": "domaine-vocoret/domaine-vocoret-chablis",
+    "confidence": 1
+  },
+  {
+    "sku": "511259",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Vocoret%20Chablis%20-%20Front_0.png",
+    "oldSlug": "domaine-vocoret/domaine-vocoret-chablis",
+    "confidence": 1
+  },
+  {
+    "sku": "511260",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Vocoret%20Chablis%20-%20Front_0.png",
+    "oldSlug": "domaine-vocoret/domaine-vocoret-chablis",
+    "confidence": 1
+  },
+  {
+    "sku": "511261",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Vocoret%20Chablis%20-%20Front_0.png",
+    "oldSlug": "domaine-vocoret/domaine-vocoret-chablis",
+    "confidence": 1
+  },
+  {
+    "sku": "511262",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Vocoret%20Chablis%20-%20Front_0.png",
+    "oldSlug": "domaine-vocoret/domaine-vocoret-chablis",
+    "confidence": 1
+  },
+  {
+    "sku": "511263",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Vocoret%20Chablis%20-%20Front_0.png",
+    "oldSlug": "domaine-vocoret/domaine-vocoret-chablis",
+    "confidence": 1
+  },
+  {
+    "sku": "511264",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Vocoret%20Chablis%20-%20Front_0.png",
+    "oldSlug": "domaine-vocoret/domaine-vocoret-chablis",
+    "confidence": 1
+  },
+  {
+    "sku": "511267",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Vocoret%20Chablis%20-%20Front_0.png",
+    "oldSlug": "domaine-vocoret/domaine-vocoret-chablis",
+    "confidence": 1
+  },
+  {
+    "sku": "511342",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Screen%20Shot%202020-07-01%20at%201.59.43%20PM.png",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-clos-de-la-roche-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "511345",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Screen%20Shot%202020-07-01%20at%201.43.30%20PM.png",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-nuits-saint-georges",
+    "confidence": 0.75
+  },
+  {
+    "sku": "511346",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Screen%20Shot%202020-07-01%20at%201.30.36%20PM.png",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "511347",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20L%C3%A9cheneaut%20Bourgogne%20Hautes-C%C3%B4tes%20de%20Nuits%20Chardonnay.jpg",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-bourgogne-hautes-cotes-de-nuits",
+    "confidence": 1
+  },
+  {
+    "sku": "511348",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Screen%20Shot%202020-07-01%20at%201.42.35%20PM.png",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-vosne-romanee",
+    "confidence": 1
+  },
+  {
+    "sku": "511349",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Screen%20Shot%202020-07-01%20at%201.30.36%20PM.png",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "511600*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-05/Laurent%20Perrachon%20Juli%C3%A9nas%20%2522Les%20Mouilles%2522.jpg",
+    "oldSlug": "laurent-perrachon/laurent-perrachon-julienas-les-mouilles",
+    "confidence": 0.75
+  },
+  {
+    "sku": "512200",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-12/Domaine%20Ramonet%20B%C3%A2tard-Montrachet_1.jpg",
+    "oldSlug": "domaine-ramonet/domaine-ramonet-batard-montrachet",
+    "confidence": 0.67
+  },
+  {
+    "sku": "514012",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/GRANDS%20CHARRONS%202018-2.jpg",
+    "oldSlug": "domaine-bachey-legros/domaine-bachey-legros-meursault-les-grands-charrons",
+    "confidence": 1
+  },
+  {
+    "sku": "514018",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/LE%20GOTY%202018-2.jpg",
+    "oldSlug": "domaine-bachey-legros/domaine-bachey-legros-maranges-le-goty-vieilles-vignes",
+    "confidence": 0.83
+  },
+  {
+    "sku": "514021",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/CHAMPS%20CLAUDES%202018-2.jpg",
+    "oldSlug": "domaine-bachey-legros/domaine-bachey-legros-santenay-les-champs-claudes",
+    "confidence": 0.8
+  },
+  {
+    "sku": "520491",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Screen%20Shot%202020-07-03%20at%209.03.30%20PM.png",
+    "oldSlug": "chateau-nicot/chateau-nicot-bordeaux-rouge",
+    "confidence": 0.67
+  },
+  {
+    "sku": "520571",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Ch%C3%A2teau%20Haut%20Selve%20Graves%20Blanc.png",
+    "oldSlug": "chateau-haut-selve/chateau-haut-selve-graves-blanc",
+    "confidence": 1
+  },
+  {
+    "sku": "520572",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-07/Screen%20Shot%202019-07-27%20at%209.22.04%20PM.png",
+    "oldSlug": "chateau-peyros/chateau-peyros-madiran-vieilles-vignes",
+    "confidence": 0.75
+  },
+  {
+    "sku": "520577",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Chateau%20La%20Mouliniere%20Bordeaux%20Blanc.jpg",
+    "oldSlug": "chateau-la-mouliniere/chateau-la-mouliniere-bordeaux-blanc",
+    "confidence": 1
+  },
+  {
+    "sku": "520579",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Chateau%20La%20Mouliniere%20Bordeaux%20Rouge.png",
+    "oldSlug": "chateau-la-mouliniere/chateau-la-mouliniere-bordeaux-rouge",
+    "confidence": 1
+  },
+  {
+    "sku": "521032",
+    "imageUrl": "https://www.finevines.com/sites/default/files/images/product/2010%20haut%20montravel.jpg",
+    "oldSlug": "chateau-haut-sarthes/chateau-haut-sarthes-haut-montravel",
+    "confidence": 1
+  },
+  {
+    "sku": "521033",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2017-12/Chateau%20Haut-sarthes%20bergerac%20rouge.jpg",
+    "oldSlug": "chateau-haut-sarthes/chateau-haut-sarthes-bergerac-rouge",
+    "confidence": 1
+  },
+  {
+    "sku": "521528",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Entre%20Deux%20Mers.jpg",
+    "oldSlug": "chateau-lestrille/chateau-lestrille-entre-deux-mers-blanc",
+    "confidence": 1
+  },
+  {
+    "sku": "521529*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Ch%C3%A2teau%20Lestrille%20Bordeaux%20Sup%C3%A9rieur.jpg",
+    "oldSlug": "chateau-lestrille/chateau-lestrille-bordeaux-superieur",
+    "confidence": 1
+  },
+  {
+    "sku": "530080",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Henri%20Bourgeois%20Sancerre%20La%20Bourgeoise.jpg",
+    "oldSlug": "famille-bourgeois/henri-bourgeois-sancerre-la-bourgeoise",
+    "confidence": 0.75
+  },
+  {
+    "sku": "530102",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-10/Clos%20Henri%20SB%20png.png",
+    "oldSlug": "clos-henri-wines/clos-henri-vineyards-clos-henri-sauvignon-blanc",
+    "confidence": 1
+  },
+  {
+    "sku": "530117",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-10/Clos%20Henri%20SB%20png.png",
+    "oldSlug": "clos-henri-wines/clos-henri-vineyards-clos-henri-sauvignon-blanc",
+    "confidence": 1
+  },
+  {
+    "sku": "530118",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-10/petit%20clos%20PN%20png.png",
+    "oldSlug": "clos-henri-wines/clos-henri-vineyards-petit-clos-pinot-noir",
+    "confidence": 1
+  },
+  {
+    "sku": "530120",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-10/petit%20clos%20PN%20png.png",
+    "oldSlug": "clos-henri-wines/clos-henri-vineyards-petit-clos-pinot-noir",
+    "confidence": 0.8
+  },
+  {
+    "sku": "530131",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Henri%20Bourgeois%20Sancerre%20La%20Bourgeoise.jpg",
+    "oldSlug": "famille-bourgeois/henri-bourgeois-sancerre-la-bourgeoise",
+    "confidence": 0.75
+  },
+  {
+    "sku": "530132",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Henri%20Bourgeois%20Sancerre%20La%20Bourgeoise.jpg",
+    "oldSlug": "famille-bourgeois/henri-bourgeois-sancerre-la-bourgeoise",
+    "confidence": 0.75
+  },
+  {
+    "sku": "530135",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Henri%20Bourgeois%20Sancerre%20Rose%20Les%20Jeunes%20Vignes.jpg",
+    "oldSlug": "famille-bourgeois/henri-bourgeois-sancerre-rose-les-jeunes-vignes",
+    "confidence": 0.83
+  },
+  {
+    "sku": "530407",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-08/Domaine%20Vacheron%20Sancerre%20Rouge.jpg",
+    "oldSlug": "domaine-vacheron/domaine-vacheron-sancerre-rouge",
+    "confidence": 1
+  },
+  {
+    "sku": "530424",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-08/Domaine%20Vacheron%20Sancerre%20Rouge.jpg",
+    "oldSlug": "domaine-vacheron/domaine-vacheron-sancerre-rouge",
+    "confidence": 1
+  },
+  {
+    "sku": "532431",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Screen%20Shot%202019-12-21%20at%205.48.22%20PM.png",
+    "oldSlug": "denis-breussin/denis-breussin-vouvray-demi-sec",
+    "confidence": 1
+  },
+  {
+    "sku": "540186*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Chave%20croze%20herimatage%20silene%20label_0.png",
+    "oldSlug": "jl-chave-selection/jl-chave-selection-crozes-hermitage-silene",
+    "confidence": 1
+  },
+  {
+    "sku": "540231",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/JL%20Chave%20Selection%20Hermitage%20Blanche.jpg",
+    "oldSlug": "jl-chave-selection/jl-chave-selection-hermitage-blanche",
+    "confidence": 0.6
+  },
+  {
+    "sku": "540233",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/JL%20Chave%20Selection%20Hermitage%20Blanche.jpg",
+    "oldSlug": "jl-chave-selection/jl-chave-selection-hermitage-blanche",
+    "confidence": 0.6
+  },
+  {
+    "sku": "540415*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Pierre%20Amadieu%20Gigondas%20Grand%20Romane%20Cuv%C3%A9e%20Prestige.jpg",
+    "oldSlug": "pierre-amadieu/pierre-amadieu-gigondas-grand-romane-cuvee-prestige",
+    "confidence": 0.71
+  },
+  {
+    "sku": "540517*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Jean%20Royer%20Chateauneuf%20du%20Pape%20Sables%20de%20la%20Crau.jpg",
+    "oldSlug": "domaine-jean-royer/domaine-jean-royer-chateauneuf-du-pape-sables-de-la-crau",
+    "confidence": 0.83
+  },
+  {
+    "sku": "540523*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Jean%20Royer%20Chateauneuf%20du%20Pape%20Sables%20de%20la%20Crau.jpg",
+    "oldSlug": "domaine-jean-royer/domaine-jean-royer-chateauneuf-du-pape-sables-de-la-crau",
+    "confidence": 0.83
+  },
+  {
+    "sku": "540533*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Jean%20Royer%20Chateauneuf%20Du%20Pape%20Prestige.jpg",
+    "oldSlug": "domaine-jean-royer/domaine-jean-royer-chateauneuf-du-pape-prestige",
+    "confidence": 0.8
+  },
+  {
+    "sku": "540534*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Jean%20Royer%20Chateauneuf%20du%20Pape%20Sables%20de%20la%20Crau.jpg",
+    "oldSlug": "domaine-jean-royer/domaine-jean-royer-chateauneuf-du-pape-sables-de-la-crau",
+    "confidence": 0.83
+  },
+  {
+    "sku": "540542*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Jean%20Royer%20Chateauneuf%20du%20Pape.jpg",
+    "oldSlug": "domaine-jean-royer/domaine-jean-royer-chateauneuf-du-pape",
+    "confidence": 1
+  },
+  {
+    "sku": "540543*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Jean%20Royer%20Chateauneuf%20du%20Pape.jpg",
+    "oldSlug": "domaine-jean-royer/domaine-jean-royer-chateauneuf-du-pape",
+    "confidence": 1
+  },
+  {
+    "sku": "540735",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Cristia%20Cotes%20Du%20Rhone_0.jpg",
+    "oldSlug": "domaine-de-cristia/domaine-de-cristia-cotes-du-rhone",
+    "confidence": 1
+  },
+  {
+    "sku": "540738",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Cristia%20Cotes%20Du%20Rhone_0.jpg",
+    "oldSlug": "domaine-de-cristia/domaine-de-cristia-cotes-du-rhone",
+    "confidence": 1
+  },
+  {
+    "sku": "541047*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Paul%20Jaboulet%20A%C3%AEn%C3%A9%20Hermitage%20La%20Chapelle.jpg",
+    "oldSlug": "domaine-paul-jaboulet-aine/domaine-paul-jaboulet-aine-hermitage-la-chapelle",
+    "confidence": 1
+  },
+  {
+    "sku": "541056*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Paul%20Jaboulet%20A%C3%AEn%C3%A9%20Hermitage%20La%20Chapelle.jpg",
+    "oldSlug": "domaine-paul-jaboulet-aine/domaine-paul-jaboulet-aine-hermitage-la-chapelle",
+    "confidence": 1
+  },
+  {
+    "sku": "541069*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Paul%20Jaboulet%20A%C3%AEn%C3%A9%20Hermitage%20La%20Chapelle.jpg",
+    "oldSlug": "domaine-paul-jaboulet-aine/domaine-paul-jaboulet-aine-hermitage-la-chapelle",
+    "confidence": 1
+  },
+  {
+    "sku": "544210*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Pierre%20Usseglio%20Ch%C3%A2teauneuf%20du%20Pape%20Cuv%C3%A9e%20Mon%20Aieul.jpg",
+    "oldSlug": "domaine-pierre-usseglio/domaine-pierre-usseglio-chateauneuf-du-pape-cuvee-mon-aieul",
+    "confidence": 1
+  },
+  {
+    "sku": "570015",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/68b435cb548ef7ce-FrontLabelDomainePetroniNV.jpg",
+    "oldSlug": "domaine-petroni/domaine-petroni-rouge-corse-aop",
+    "confidence": 1
+  },
+  {
+    "sku": "570061",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-07/Screen%20Shot%202019-07-27%20at%207.20.32%20PM.png",
+    "oldSlug": "chateau-gautoul/chateau-gautoul-cahors",
+    "confidence": 1
+  },
+  {
+    "sku": "570218",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Le%20Cloitre%20front-2.jpg",
+    "oldSlug": "chateau-sainte-roseline/chateau-sainte-roseline-cotes-de-provence-le-cloitre",
+    "confidence": 1
+  },
+  {
+    "sku": "571046",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/McNab%20Ridge%20Zinfandel.jpg",
+    "oldSlug": "mcnab-ridge-wine-company/mcnab-ridge-zinfandel",
+    "confidence": 0.67
+  },
+  {
+    "sku": "571048",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/McNab%20Ridge%20Chardonnay.jpg",
+    "oldSlug": "mcnab-ridge-wine-company/mcnab-ridge-chardonnay",
+    "confidence": 0.67
+  },
+  {
+    "sku": "571050",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/McNab%20Ridge%20Cabernet%20Sauvignon.jpg",
+    "oldSlug": "mcnab-ridge-wine-company/mcnab-ridge-cabernet-sauvignon",
+    "confidence": 0.75
+  },
+  {
+    "sku": "580100",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/label-pinot-blanc.jpg",
+    "oldSlug": "domaine-saint-remy/domaine-saint-remy-pinot-blanc",
+    "confidence": 0.75
+  },
+  {
+    "sku": "580108",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/label-pinot-blanc.jpg",
+    "oldSlug": "domaine-saint-remy/domaine-saint-remy-pinot-blanc",
+    "confidence": 0.75
+  },
+  {
+    "sku": "603542",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_SauvBlanc_Front.png",
+    "oldSlug": "zolo/zolo-sauvignon-blanc",
+    "confidence": 0.67
+  },
+  {
+    "sku": "603564",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_SauvBlanc_Front.png",
+    "oldSlug": "zolo/zolo-sauvignon-blanc",
+    "confidence": 0.67
+  },
+  {
+    "sku": "603569",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_SignatureRed_Front.png",
+    "oldSlug": "zolo/zolo-signature-red",
+    "confidence": 1
+  },
+  {
+    "sku": "603571",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/xLabels_Zolo_SignatureWhite_Front.png",
+    "oldSlug": "zolo/zolo-signature-white",
+    "confidence": 1
+  },
+  {
+    "sku": "603578",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_SauvBlanc_Front.png",
+    "oldSlug": "zolo/zolo-sauvignon-blanc",
+    "confidence": 0.67
+  },
+  {
+    "sku": "603579",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_SignatureRed_Front.png",
+    "oldSlug": "zolo/zolo-signature-red",
+    "confidence": 0.67
+  },
+  {
+    "sku": "603580",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_Torrontes_Front.png",
+    "oldSlug": "zolo/zolo-torrontes",
+    "confidence": 1
+  },
+  {
+    "sku": "603581",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_Malbec_Front.png",
+    "oldSlug": "zolo/zolo-malbec",
+    "confidence": 1
+  },
+  {
+    "sku": "603582",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_Malbec_Front.png",
+    "oldSlug": "zolo/zolo-malbec",
+    "confidence": 1
+  },
+  {
+    "sku": "603584",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_Torrontes_Front.png",
+    "oldSlug": "zolo/zolo-torrontes",
+    "confidence": 1
+  },
+  {
+    "sku": "603585",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_SauvBlanc_Front.png",
+    "oldSlug": "zolo/zolo-sauvignon-blanc",
+    "confidence": 0.67
+  },
+  {
+    "sku": "603587",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_Malbec_Front.png",
+    "oldSlug": "zolo/zolo-malbec",
+    "confidence": 1
+  },
+  {
+    "sku": "603588",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_Malbec_Front.png",
+    "oldSlug": "zolo/zolo-malbec",
+    "confidence": 1
+  },
+  {
+    "sku": "603590",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_SauvBlanc_Front.png",
+    "oldSlug": "zolo/zolo-sauvignon-blanc",
+    "confidence": 1
+  },
+  {
+    "sku": "603592",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Zolo_Malbec_Front.png",
+    "oldSlug": "zolo/zolo-malbec",
+    "confidence": 1
+  },
+  {
+    "sku": "603733",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-07/hyi5rxquqojpey2bnztv.jpg",
+    "oldSlug": "altocedro/altocedro-ano-cero-cabernet-sauvignon-la-consulta-mendoza",
+    "confidence": 1
+  },
+  {
+    "sku": "603736*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Altocedro_MalbecReserva.png",
+    "oldSlug": "altocedro/altocedro-malbec-reserva",
+    "confidence": 1
+  },
+  {
+    "sku": "603738*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Altocedro_MalbecReserva.png",
+    "oldSlug": "altocedro/altocedro-malbec-reserva",
+    "confidence": 1
+  },
+  {
+    "sku": "603740*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Altocedro_MalbecGranReserva.png",
+    "oldSlug": "altocedro/altocedro-malbec-gran-reserva",
+    "confidence": 0.75
+  },
+  {
+    "sku": "603742*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-07/168296.jpg",
+    "oldSlug": "altocedro/altocedro-ano-cero-malbec-la-consulta-mendoza",
+    "confidence": 1
+  },
+  {
+    "sku": "603743*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Altocedro_LaConsultaSelect.png",
+    "oldSlug": "altocedro/altocedro-la-consulta-select-blend",
+    "confidence": 1
+  },
+  {
+    "sku": "604265*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Gen5_CabSauv.png",
+    "oldSlug": "gen5/gen5-cabernet-sauvignon-lodi",
+    "confidence": 0.75
+  },
+  {
+    "sku": "604268*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Gen5_Merlot.png",
+    "oldSlug": "gen5/gen5-merlot-lodi",
+    "confidence": 0.67
+  },
+  {
+    "sku": "604270*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Gen5_AncestralRed.png",
+    "oldSlug": "gen5/gen5-ancestral-red-lodi",
+    "confidence": 0.75
+  },
+  {
+    "sku": "604271",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Gen5_Chardonnay.png",
+    "oldSlug": "gen5/gen5-chardonnay-lodi",
+    "confidence": 0.67
+  },
+  {
+    "sku": "604420",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_BlackCabra_Malbec.png",
+    "oldSlug": "black-cabra/black-cabra-malbec-mendoza",
+    "confidence": 0.75
+  },
+  {
+    "sku": "604421",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_BlackCabra_Malbec.png",
+    "oldSlug": "black-cabra/black-cabra-malbec-mendoza",
+    "confidence": 0.75
+  },
+  {
+    "sku": "604422",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_BlackCabra_CabSauv.png",
+    "oldSlug": "black-cabra/black-cabra-cabernet-sauvignon-mendoza",
+    "confidence": 0.8
+  },
+  {
+    "sku": "604744",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Tapiz_SparklingTorrontes.png",
+    "oldSlug": "tapiz/tapiz-sparkling-torrontes",
+    "confidence": 0.67
+  },
+  {
+    "sku": "604745",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Tapiz_SparklingTorrontes.png",
+    "oldSlug": "tapiz/tapiz-sparkling-torrontes",
+    "confidence": 1
+  },
+  {
+    "sku": "604747",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Tapiz_MalbecBlackTears.png",
+    "oldSlug": "tapiz/tapiz-black-tears",
+    "confidence": 1
+  },
+  {
+    "sku": "604748",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Tapiz_MalbecAltaCollection.png",
+    "oldSlug": "tapiz/tapiz-alta-collection-malbec",
+    "confidence": 1
+  },
+  {
+    "sku": "604749",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Tapiz_ChardonnayAltaCollection.png",
+    "oldSlug": "tapiz/tapiz-alta-collection-chardonnay",
+    "confidence": 1
+  },
+  {
+    "sku": "604750",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Tapiz_CabSauvAltaCollection.png",
+    "oldSlug": "tapiz/tapiz-alta-collection-cabernet-sauvignon",
+    "confidence": 1
+  },
+  {
+    "sku": "660004",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Gevrey-Chambertin%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-gevrey-chambertin-vieilles",
+    "confidence": 0.75
+  },
+  {
+    "sku": "660006",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Gevrey-Chambertin%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-gevrey-chambertin-vieilles",
+    "confidence": 0.75
+  },
+  {
+    "sku": "660007",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Gevrey-Chambertin%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-gevrey-chambertin-vieilles",
+    "confidence": 0.75
+  },
+  {
+    "sku": "660008",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Morey%20St%20Denis%20Premier%20Cru%20Les%20Millandes.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-morey-st-denis-premier-cru-les",
+    "confidence": 0.67
+  },
+  {
+    "sku": "660009",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Chambolle-Musigny%20Premier%20Cru%20Les%20Baudes.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-chambolle-musigny-premier-cru",
+    "confidence": 0.6
+  },
+  {
+    "sku": "660010",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Charmes-Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-charmes-chambertin-grand-cru",
+    "confidence": 0.6
+  },
+  {
+    "sku": "660019",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Gevrey-Chambertin%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-gevrey-chambertin-vieilles",
+    "confidence": 0.75
+  },
+  {
+    "sku": "660025",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Gevrey-Chambertin%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-gevrey-chambertin-vieilles",
+    "confidence": 0.75
+  },
+  {
+    "sku": "660028",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Bourgogne%20Rouge.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-bourgogne-rouge",
+    "confidence": 1
+  },
+  {
+    "sku": "660029",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Gevrey-Chambertin%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-gevrey-chambertin-vieilles",
+    "confidence": 1
+  },
+  {
+    "sku": "660030",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Gevrey-Chambertin%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-gevrey-chambertin-vieilles",
+    "confidence": 0.75
+  },
+  {
+    "sku": "660035",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Bourgogne%20Rouge.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-bourgogne-rouge",
+    "confidence": 1
+  },
+  {
+    "sku": "660039",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20S%C3%A9rafin%20P%C3%A8re%20et%20Fils%20Gevrey-Chambertin%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-serafin-pere-et-fils/domaine-serafin-pere-et-fils-gevrey-chambertin-vieilles",
+    "confidence": 0.75
+  },
+  {
+    "sku": "660107",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Screen%20Shot%202020-07-01%20at%201.30.36%20PM.png",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "660108",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Lecheneaut%20Nuits%20Saint%20Georges%20Au%20Chouillet.png",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-nuits-saint-georges-au-chouillet",
+    "confidence": 0.83
+  },
+  {
+    "sku": "660110",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Screen%20Shot%202020-07-01%20at%201.43.30%20PM.png",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-nuits-saint-georges",
+    "confidence": 0.75
+  },
+  {
+    "sku": "660112",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20L%C3%A9cheneaut%20Bourgogne%20Hautes-C%C3%B4tes%20de%20Nuits%20Chardonnay.jpg",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-bourgogne-hautes-cotes-de-nuits",
+    "confidence": 1
+  },
+  {
+    "sku": "660116",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Lecheneaut%20Nuits%20Saint%20Georges%20Au%20Chouillet.png",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-nuits-saint-georges-au-chouillet",
+    "confidence": 0.83
+  },
+  {
+    "sku": "660119",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Screen%20Shot%202020-07-01%20at%201.59.43%20PM.png",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-clos-de-la-roche-grand-cru",
+    "confidence": 0.6
+  },
+  {
+    "sku": "660121",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Screen%20Shot%202020-07-01%20at%201.43.30%20PM.png",
+    "oldSlug": "domaine-lecheneaut/domaine-lecheneaut-nuits-saint-georges",
+    "confidence": 0.75
+  },
+  {
+    "sku": "660156",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2017-08/chauvenet%20vougeot_0.jpg",
+    "oldSlug": "domaine-chauvenet-chopin/domaine-chauvenet-chopin-vougeot",
+    "confidence": 0.67
+  },
+  {
+    "sku": "660157",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2017-08/chauvenet%20vougeot_0.jpg",
+    "oldSlug": "domaine-chauvenet-chopin/domaine-chauvenet-chopin-vougeot",
+    "confidence": 0.67
+  },
+  {
+    "sku": "660160",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2017-08/chauvenet%20vougeot_0.jpg",
+    "oldSlug": "domaine-chauvenet-chopin/domaine-chauvenet-chopin-vougeot",
+    "confidence": 0.67
+  },
+  {
+    "sku": "660161",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2017-08/chauvenet%20vougeot_0.jpg",
+    "oldSlug": "domaine-chauvenet-chopin/domaine-chauvenet-chopin-vougeot",
+    "confidence": 0.67
+  },
+  {
+    "sku": "660162",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2017-08/chauvenet%20vougeot_0.jpg",
+    "oldSlug": "domaine-chauvenet-chopin/domaine-chauvenet-chopin-vougeot",
+    "confidence": 0.67
+  },
+  {
+    "sku": "660309",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/ETA00073%20_GEVREY%20CHAMBERTIN_1er%20cru_craipillot%20USA%20%282%29-2.jpg",
+    "oldSlug": "domaine-humbert-freres/domaine-humbert-freres-gevrey-chambertin-premier-cru",
+    "confidence": 0.67
+  },
+  {
+    "sku": "710274",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "710275",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Benjamin%20Leroux%20Clos%20de%20la%20Roche%20Grand%20Cru.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-clos-de-la-roche-grand-cru",
+    "confidence": 0.83
+  },
+  {
+    "sku": "710477",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/G%C3%A9rard%20Mugneret%20Bourgogne%20Passetoutgrain.jpg",
+    "oldSlug": "gerard-mugneret/gerard-mugneret-bourgogne-passetoutgrain",
+    "confidence": 0.75
+  },
+  {
+    "sku": "710479",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/G%C3%A9rard%20Mugneret%20Bourgogne%20Passetoutgrain.jpg",
+    "oldSlug": "gerard-mugneret/gerard-mugneret-bourgogne-passetoutgrain",
+    "confidence": 0.75
+  },
+  {
+    "sku": "710482",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/G%C3%A9rard%20Mugneret%20Bourgogne%20Passetoutgrain.jpg",
+    "oldSlug": "gerard-mugneret/gerard-mugneret-bourgogne-passetoutgrain",
+    "confidence": 0.75
+  },
+  {
+    "sku": "710771",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Hubert%20Lamy%20Santenay%20Clos%20des%20H%C3%A2tes.jpg",
+    "oldSlug": "hubert-lamy/hubert-lamy-santenay-clos-des-hates",
+    "confidence": 0.8
+  },
+  {
+    "sku": "710772",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Hubert%20Lamy%20Saint-Aubin%20Premier%20Cru%20Derri%C3%A8re%20chez%20Edouard.jpg",
+    "oldSlug": "hubert-lamy/hubert-lamy-saint-aubin-premier-cru-derriere-chez-edouard-0",
+    "confidence": 0.56
+  },
+  {
+    "sku": "710790",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Hubert%20Lamy%20Saint-Aubin%20Premier%20Cru%20Derri%C3%A8re%20chez%20Edouard.jpg",
+    "oldSlug": "hubert-lamy/hubert-lamy-saint-aubin-premier-cru-derriere-chez-edouard-0",
+    "confidence": 0.56
+  },
+  {
+    "sku": "710791",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Hubert%20Lamy%20Santenay%20Clos%20des%20H%C3%A2tes.jpg",
+    "oldSlug": "hubert-lamy/hubert-lamy-santenay-clos-des-hates",
+    "confidence": 0.6
+  },
+  {
+    "sku": "710907",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Hubert%20Lamy%20Santenay%20Clos%20des%20H%C3%A2tes.jpg",
+    "oldSlug": "hubert-lamy/hubert-lamy-santenay-clos-des-hates",
+    "confidence": 0.8
+  },
+  {
+    "sku": "710908",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Hubert%20Lamy%20Saint-Aubin%20Premier%20Cru%20Derri%C3%A8re%20chez%20Edouard.jpg",
+    "oldSlug": "hubert-lamy/hubert-lamy-saint-aubin-premier-cru-derriere-chez-edouard-0",
+    "confidence": 0.56
+  },
+  {
+    "sku": "710946",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Hubert%20Lamy%20Santenay%20Clos%20des%20H%C3%A2tes.jpg",
+    "oldSlug": "hubert-lamy/hubert-lamy-santenay-clos-des-hates",
+    "confidence": 1
+  },
+  {
+    "sku": "711130",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Digioia-Royer%20Chambolle-Musigny.jpg",
+    "oldSlug": "digioia-royer/digioia-royer-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "711131",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Digioia-Royer%20Chambolle-Musigny.jpg",
+    "oldSlug": "digioia-royer/digioia-royer-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "711133",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Digioia-Royer%20Chambolle-Musigny.jpg",
+    "oldSlug": "digioia-royer/digioia-royer-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "711134",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Digioia-Royer%20Chambolle-Musigny.jpg",
+    "oldSlug": "digioia-royer/digioia-royer-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "711348",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.71
+  },
+  {
+    "sku": "711350",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711449",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2018-10/Pataille%20Marsannay%20Rouge.png",
+    "oldSlug": "domaine-sylvain-pataille/domaine-sylvain-pataille-marsannay",
+    "confidence": 1
+  },
+  {
+    "sku": "711528",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711529",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711530",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711531",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711532",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Lignier-Michelot%20Clos%20de%20la%20Roche%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-clos-de-la-roche-grand-cru",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711534",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Lignier-Michelot%20Clos%20de%20la%20Roche%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-clos-de-la-roche-grand-cru",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711577",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Lignier-Michelot%20Chambolle-Musigny%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-chambolle-musigny-vieilles",
+    "confidence": 0.67
+  },
+  {
+    "sku": "711578",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.71
+  },
+  {
+    "sku": "711579",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711580",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711581",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711582",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711583",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711585",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Charmes-Chambertin%20Grand%20Cru_0.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-charmes-chambertin-grand-cru",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711586",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Lignier-Michelot%20Clos%20de%20la%20Roche%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-clos-de-la-roche-grand-cru",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711588",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711589",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Virgile%20Lignier-Michelot%20Morey-Saint-Denis%20Vieilles%20Vignes.jpg",
+    "oldSlug": "domaine-virgile-lignier-michelot/virgile-lignier-michelot-morey-saint-denis-vieilles",
+    "confidence": 0.57
+  },
+  {
+    "sku": "711840",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20Bourgogne%20Chardonnay.jpg",
+    "oldSlug": "pierre-morey-morey-blanc/pierre-morey-bourgogne-chardonnay",
+    "confidence": 0.75
+  },
+  {
+    "sku": "711851",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20Bourgogne%20Chardonnay.jpg",
+    "oldSlug": "pierre-morey-morey-blanc/pierre-morey-bourgogne-chardonnay",
+    "confidence": 1
+  },
+  {
+    "sku": "711852",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20Bourgogne%20Aligot%C3%A9.jpg",
+    "oldSlug": "pierre-morey-morey-blanc/pierre-morey-bourgogne-aligote",
+    "confidence": 1
+  },
+  {
+    "sku": "712327",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Bruno%20Clair%20Morey-Saint-Denis%20En%20la%20rue%20de%20Vergy.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-morey-saint-denis-en-la-rue-de-vergy",
+    "confidence": 0.88
+  },
+  {
+    "sku": "712377",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Bruno%20Clair%20Bonnes-Mares%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-bonnes-mares-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "712386",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Bruno%20Clair%20Marsannay%20Blanc.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-marsannay-blanc",
+    "confidence": 0.75
+  },
+  {
+    "sku": "712395",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Bruno%20Clair%20Bonnes-Mares%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-bonnes-mares-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "712430",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Bruno%20Clair%20Morey-Saint-Denis%20En%20la%20rue%20de%20Vergy.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-morey-saint-denis-en-la-rue-de-vergy",
+    "confidence": 0.88
+  },
+  {
+    "sku": "712477",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Bruno%20Clair%20Morey-Saint-Denis%20En%20la%20rue%20de%20Vergy.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-morey-saint-denis-en-la-rue-de-vergy",
+    "confidence": 0.88
+  },
+  {
+    "sku": "712632",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Comte%20Armand%20Auxey-Duresses.jpg",
+    "oldSlug": "comte-armand/comte-armand-auxey-duresses",
+    "confidence": 1
+  },
+  {
+    "sku": "712739",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Camille%20Giroud%20Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "camille-giroud/camille-giroud-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "713132",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Label-LowR-Bachelet-GCEvocelles.jpg",
+    "oldSlug": "domaine-denis-bachelet/domaine-denis-bachelet-gevrey-chambertin-les-evocelles",
+    "confidence": 0.6
+  },
+  {
+    "sku": "713236",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Benjamin%20Leroux%20Savigny-Les-Beaune.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-savigny-les-beaune",
+    "confidence": 1
+  },
+  {
+    "sku": "713244",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Benjamin%20Leroux%20Volnay%20Label.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-volnay",
+    "confidence": 0.67
+  },
+  {
+    "sku": "713303",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Benjamin%20Leroux%20Batard%20Montrachet%20Grand%20Cru%20Label.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-batard-montrachet-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "713325",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Benjamin%20Leroux%20Batard%20Montrachet%20Grand%20Cru%20Label.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-batard-montrachet-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "713330",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Benjamin%20Leroux%20Chambolle-Musigny.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "713338",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Benjamin%20Leroux%20Clos%20de%20la%20Roche%20Grand%20Cru.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-clos-de-la-roche-grand-cru",
+    "confidence": 0.83
+  },
+  {
+    "sku": "713358",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Benjamin%20Leroux%20Chambolle-Musigny.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "713400",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2017-08/lerouxVR_0.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-vosne-romanee",
+    "confidence": 1
+  },
+  {
+    "sku": "713409",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Benjamin%20Leroux%20Bourgogne%20Aligot%C3%A9.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-bourgogne-aligote",
+    "confidence": 1
+  },
+  {
+    "sku": "713440",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2017-08/lerouxVR_0.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-vosne-romanee",
+    "confidence": 1
+  },
+  {
+    "sku": "713442",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Benjamin%20Leroux%20Volnay%20Label.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-volnay",
+    "confidence": 1
+  },
+  {
+    "sku": "713453",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Benjamin%20Leroux%20Bourgogne%20Aligot%C3%A9.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-bourgogne-aligote",
+    "confidence": 1
+  },
+  {
+    "sku": "713456",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Benjamin%20Leroux%20Auxey-Duresses.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-auxey-duresses",
+    "confidence": 1
+  },
+  {
+    "sku": "713457",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Benjamin%20Leroux%20Meursault%20Les%20Vireuils.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-meursault-les-vireuils",
+    "confidence": 0.75
+  },
+  {
+    "sku": "713458",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Benjamin%20Leroux%20Meursault%20Les%20Vireuils.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-meursault-les-vireuils",
+    "confidence": 1
+  },
+  {
+    "sku": "713459",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Benjamin%20Leroux%20Meursault%20Les%20Vireuils.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-meursault-les-vireuils",
+    "confidence": 0.75
+  },
+  {
+    "sku": "713461",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Benjamin%20Leroux%20Meursault%20Les%20Vireuils.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-meursault-les-vireuils",
+    "confidence": 0.75
+  },
+  {
+    "sku": "713462",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Benjamin%20Leroux%20Corton%20Charlemagne%20Grand%20Cru.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-corton-charlemagne-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "713463",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Benjamin%20Leroux%20Bourgogne%20Rouge.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-bourgogne-rouge",
+    "confidence": 1
+  },
+  {
+    "sku": "713464",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Benjamin%20Leroux%20Savigny-Les-Beaune.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-savigny-les-beaune",
+    "confidence": 1
+  },
+  {
+    "sku": "713465",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Benjamin%20Leroux%20Gevrey-Chambertin.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-gevrey-chambertin",
+    "confidence": 1
+  },
+  {
+    "sku": "713466",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2017-08/lerouxVR_0.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-vosne-romanee",
+    "confidence": 1
+  },
+  {
+    "sku": "713467",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Benjamin%20Leroux%20Chambolle-Musigny.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-chambolle-musigny",
+    "confidence": 1
+  },
+  {
+    "sku": "713468",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Benjamin%20Leroux%20Volnay%20Label.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-volnay",
+    "confidence": 1
+  },
+  {
+    "sku": "713469",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Benjamin%20Leroux%20Volnay%20Label.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-volnay",
+    "confidence": 1
+  },
+  {
+    "sku": "713470",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Benjamin%20Leroux%20Volnay%20Label.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-volnay",
+    "confidence": 1
+  },
+  {
+    "sku": "713471",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Benjamin%20Leroux%20Volnay%20Label.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-volnay",
+    "confidence": 1
+  },
+  {
+    "sku": "713472",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Benjamin%20Leroux%20Volnay%20Label.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-volnay",
+    "confidence": 0.67
+  },
+  {
+    "sku": "713473",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Benjamin%20Leroux%20Gevrey-Chambertin.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-gevrey-chambertin",
+    "confidence": 1
+  },
+  {
+    "sku": "713475*",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2017-08/lerouxVR_0.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-vosne-romanee",
+    "confidence": 1
+  },
+  {
+    "sku": "713476",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "713477",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Benjamin%20Leroux%20Clos%20de%20la%20Roche%20Grand%20Cru.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-clos-de-la-roche-grand-cru",
+    "confidence": 0.83
+  },
+  {
+    "sku": "713478",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Chambertin%20Grand%20Cru.jpg",
+    "oldSlug": "benjamin-leroux/benjamin-leroux-chambertin-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "713616",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20Meursault.jpg",
+    "oldSlug": "pierre-morey-morey-blanc/pierre-morey-meursault",
+    "confidence": 1
+  },
+  {
+    "sku": "713617",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20Meursault.jpg",
+    "oldSlug": "pierre-morey-morey-blanc/pierre-morey-meursault",
+    "confidence": 1
+  },
+  {
+    "sku": "713618",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20B%C3%A2tard-Montrachet%20Grand%20Cru.jpg",
+    "oldSlug": "pierre-morey-morey-blanc/pierre-morey-batard-montrachet-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "713619",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20Bourgogne%20Chardonnay.jpg",
+    "oldSlug": "pierre-morey-morey-blanc/pierre-morey-bourgogne-chardonnay",
+    "confidence": 0.75
+  },
+  {
+    "sku": "713620",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20Monthelie%20Rouge.jpg",
+    "oldSlug": "pierre-morey-morey-blanc/pierre-morey-monthelie-rouge",
+    "confidence": 1
+  },
+  {
+    "sku": "713622",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20Meursault.jpg",
+    "oldSlug": "pierre-morey-morey-blanc/pierre-morey-meursault",
+    "confidence": 0.67
+  },
+  {
+    "sku": "713626",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20Meursault.jpg",
+    "oldSlug": "pierre-morey-morey-blanc/pierre-morey-meursault",
+    "confidence": 1
+  },
+  {
+    "sku": "713627",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20Meursault.jpg",
+    "oldSlug": "pierre-morey-morey-blanc/pierre-morey-meursault",
+    "confidence": 1
+  },
+  {
+    "sku": "713822",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Noellat%20Beaune%201er%20cru%20Tuvilains%20front-2.jpg",
+    "oldSlug": "georges-noellat/georges-noellat-beaune-premier-cru-les-tuvilains",
+    "confidence": 0.67
+  },
+  {
+    "sku": "713825",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Georges%20Noellat%20Vosne-Roman%C3%A9e%20Premier%20Cru%20Les%20Chaumes.jpg",
+    "oldSlug": "georges-noellat/georges-noellat-vosne-romanee-premier-cru-les-chaumes",
+    "confidence": 0.57
+  },
+  {
+    "sku": "714104",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Bruno%20Clair%20Morey-Saint-Denis%20En%20la%20rue%20de%20Vergy.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-morey-saint-denis-en-la-rue-de-vergy",
+    "confidence": 0.88
+  },
+  {
+    "sku": "714107",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Bruno%20Clair%20Marsannay%20Blanc.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-marsannay-blanc",
+    "confidence": 0.75
+  },
+  {
+    "sku": "714112",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Bruno%20Clair%20Gevrey-Chambertin%20Premier%20Cru%20Clos%20du%20Fonteny%20Monopole.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-gevrey-chambertin-premier-cru-clos-du",
+    "confidence": 0.71
+  },
+  {
+    "sku": "714113",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Bruno%20Clair%20Gevrey-Chambertin%20Premier%20Cru%20Petite%20Chapelle.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-gevrey-chambertin-premier-cru-petite",
+    "confidence": 0.71
+  },
+  {
+    "sku": "714116",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Bruno%20Clair%20Bonnes-Mares%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-bonnes-mares-grand-cru",
+    "confidence": 1
+  },
+  {
+    "sku": "714124",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Bruno%20Clair%20Marsannay%20Blanc.jpg",
+    "oldSlug": "domaine-bruno-clair/domaine-bruno-clair-marsannay-blanc",
+    "confidence": 0.75
+  },
+  {
+    "sku": "730127",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Arnaud%20Lambert%20Saumur%20Blanc%20Clos%20de%20la%20Rue.jpg",
+    "oldSlug": "arnaud-lambert/arnaud-lambert-saumur-blanc-clos-de-la-rue",
+    "confidence": 1
+  },
+  {
+    "sku": "730128",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Arnaud%20Lambert%20Saumur%20Blanc%20Clos%20de%20la%20Rue.jpg",
+    "oldSlug": "arnaud-lambert/arnaud-lambert-saumur-blanc-clos-de-la-rue",
+    "confidence": 1
+  },
+  {
+    "sku": "730129",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Arnaud%20Lambert%20Saumur%20Rouge%20Clos%20du%20Tue-Loup.jpg",
+    "oldSlug": "arnaud-lambert/arnaud-lambert-saumur-rouge-clos-du-tue-loup",
+    "confidence": 1
+  },
+  {
+    "sku": "740008",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Serol%20Turbullent%20Ros%C3%A9%20P%C3%A9tillant.jpg",
+    "oldSlug": "domaine-serol/domaine-serol-turbullent-rose-petillant",
+    "confidence": 1
+  },
+  {
+    "sku": "740010",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Serol%20C%C3%B4te%20Roannaise%20Rouge%20Les%20Blondins.jpg",
+    "oldSlug": "domaine-serol/domaine-serol-cote-roannaise-rouge-les-blondins",
+    "confidence": 1
+  },
+  {
+    "sku": "740011",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Serol%20C%C3%B4te%20Roannaise%20Rouge%20%C3%89clat%20De%20Granite.jpg",
+    "oldSlug": "domaine-serol/domaine-serol-cote-roannaise-rouge-eclat-de-granite",
+    "confidence": 1
+  },
+  {
+    "sku": "740012",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Serol%20Turbullent%20Ros%C3%A9%20P%C3%A9tillant.jpg",
+    "oldSlug": "domaine-serol/domaine-serol-turbullent-rose-petillant",
+    "confidence": 1
+  },
+  {
+    "sku": "740014",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Serol%20C%C3%B4te%20Roannaise%20Rouge%20Les%20Blondins.jpg",
+    "oldSlug": "domaine-serol/domaine-serol-cote-roannaise-rouge-les-blondins",
+    "confidence": 1
+  },
+  {
+    "sku": "750325",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-10/camille%20saves.png",
+    "oldSlug": "camille-saves/camille-saves-champagne-bouzy-grand-cru-extra-brut",
+    "confidence": 0.63
+  },
+  {
+    "sku": "750331",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2019-10/camille%20saves.png",
+    "oldSlug": "camille-saves/camille-saves-champagne-bouzy-grand-cru-extra-brut",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780139",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780147",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780148",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780149",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780151",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780152",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780154",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780156",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780157",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780158",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Marcel%20Deiss%20Alsace%20Blanc%20Altenberg%20de%20Bergheim%20Grand%20Cru.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-blanc-altenberg-de-bergheim",
+    "confidence": 0.83
+  },
+  {
+    "sku": "780159",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780160",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  },
+  {
+    "sku": "780161",
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Alsace%20Rouge.jpg",
+    "oldSlug": "domaine-marcel-deiss/domaine-marcel-deiss-alsace-rouge-0",
+    "confidence": 0.75
+  }
+]
