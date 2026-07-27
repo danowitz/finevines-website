@@ -15,7 +15,7 @@
     "style": "Red · Still",
     "description": "A 2018 red Corvina Blend from Amarone della Valpolicella: dark fruit, savoury depth, and fine-grained tannin from Allegrini.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/VN7050.svg",
+    "imagePath": "assets/img/wines/allegrini-amarone-della-valpolicella-classico-2018.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -45,7 +45,7 @@
     "style": "Red · Still",
     "description": "Old-vine La Consulta Malbec: violet, blueberry, and cocoa with a plush, generous mid-palate.",
     "sommelierNotes": "A crowd-pleaser for the grill — steak, lamb, or empanadas.",
-    "imagePath": "assets/img/wines/JK6612.svg",
+    "imagePath": "assets/img/wines/altocedro-ano-cero-malbec-2022.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -75,7 +75,7 @@
     "style": "Red · Still",
     "description": "A 2021 red Garnacha Blend from Priorat: dark fruit, savoury depth, and fine-grained tannin from Álvaro Palacios.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/PT2170.svg",
+    "imagePath": "assets/img/wines/alvaro-palacios-camins-del-priorat-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -105,7 +105,7 @@
     "style": "White · Still",
     "description": "Steely, sun-warmed Chenin from limestone: quince, beeswax, and a savoury mineral spine.",
     "sommelierNotes": "Serve well-chilled with goat cheese, river fish, or Thai-spiced dishes.",
-    "imagePath": "assets/img/wines/GH5501.svg",
+    "imagePath": "assets/img/wines/arnaud-lambert-saumur-blanc-clos-david-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -135,7 +135,7 @@
     "style": "White · Still",
     "description": "An insider's white Burgundy: hazelnut, ripe pear, and a gently reductive struck-match complexity.",
     "sommelierNotes": "Serve at 12°C with roast chicken, sole, or a wedge of Beaufort.",
-    "imagePath": "assets/img/wines/NP8834.svg",
+    "imagePath": "assets/img/wines/benjamin-leroux-auxey-duresses-blanc-2020.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -165,7 +165,7 @@
     "style": "White · Sweet",
     "description": "A sweet Sémillon Blend from Barsac — honeyed stone fruit balanced by fresh acidity, from Château Doisy-Daëne.",
     "sommelierNotes": "Serve chilled with blue cheese, foie gras, or fruit tart.",
-    "imagePath": "assets/img/wines/BX2015.svg",
+    "imagePath": "assets/img/wines/chateau-doisy-daene-barsac-2015.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -195,7 +195,7 @@
     "style": "Red · Still",
     "description": "A 2016 red Cabernet Blend from Haut-Médoc: dark fruit, savoury depth, and fine-grained tannin from Château Sociando-Mallet.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/BX1010.svg",
+    "imagePath": "assets/img/wines/chateau-sociando-mallet-haut-medoc-2016.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -225,7 +225,7 @@
     "style": "White · Still",
     "description": "A 2023 white Sauvignon Blanc from Marlborough — orchard fruit and a clean, mineral line, in Cloudy Bay's hand.",
     "sommelierNotes": "Serve at 10–12°C with poultry, shellfish, or fresh cheese.",
-    "imagePath": "assets/img/wines/MB5110.svg",
+    "imagePath": "assets/img/wines/cloudy-bay-sauvignon-blanc-2023.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -255,7 +255,7 @@
     "style": "Red · Still",
     "description": "A 2021 red Pinot Noir from Willamette Valley: dark fruit, savoury depth, and fine-grained tannin from Cristom Vineyards.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/WM4100.svg",
+    "imagePath": "assets/img/wines/cristom-vineyards-mt-jefferson-cuvee-pinot-noir-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -285,7 +285,7 @@
     "style": "Rosé · Still",
     "description": "The only rosé appellation in the Côte d'Or: wild strawberry, blood orange, and a dry, mineral cut.",
     "sommelierNotes": "A serious apéritif rosé — charcuterie, grilled prawns, or a summer lunch.",
-    "imagePath": "assets/img/wines/QR9945.svg",
+    "imagePath": "assets/img/wines/domaine-bruno-clair-marsannay-rose-2022.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -315,7 +315,7 @@
     "style": "Red · Still",
     "description": "Whole-cluster lift over red cherry and rose petal, with the silken tannins that have made this estate a cult name in the Côte de Nuits.",
     "sommelierNotes": "Decant thirty minutes; pour at 15°C. Beautiful with duck, mushroom risotto, or charcuterie.",
-    "imagePath": "assets/img/wines/CD3310.svg",
+    "imagePath": "assets/img/wines/domaine-charles-lachaux-bourgogne-rouge-2020.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -345,7 +345,7 @@
     "style": "Rosé · Still",
     "description": "A dry rosé of Mourvèdre Blend from Bandol: crisp red-berry fruit and a mineral, food-friendly finish.",
     "sommelierNotes": "Serve cold with charcuterie, grilled seafood, or a long summer lunch.",
-    "imagePath": "assets/img/wines/PR8140.svg",
+    "imagePath": "assets/img/wines/domaine-tempier-bandol-rose-2022.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -375,7 +375,7 @@
     "style": "White · Still",
     "description": "A 2021 white Riesling from Alsace — orchard fruit and a clean, mineral line, in Domaine Weinbach's hand.",
     "sommelierNotes": "Serve at 10–12°C with poultry, shellfish, or fresh cheese.",
-    "imagePath": "assets/img/wines/AL4025.svg",
+    "imagePath": "assets/img/wines/domaine-weinbach-riesling-cuvee-theo-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -405,7 +405,7 @@
     "style": "White · Still",
     "description": "A 2021 white Chardonnay from Chablis 1er Cru — orchard fruit and a clean, mineral line, in Domaine William Fèvre's hand.",
     "sommelierNotes": "Serve at 10–12°C with poultry, shellfish, or fresh cheese.",
-    "imagePath": "assets/img/wines/CB1160.svg",
+    "imagePath": "assets/img/wines/domaine-william-fevre-chablis-1er-cru-montmains-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -435,7 +435,7 @@
     "style": "Red · Still",
     "description": "A 2021 red Tempranillo from Ribera del Duero: dark fruit, savoury depth, and fine-grained tannin from Dominio de Pingus.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/RD8065.svg",
+    "imagePath": "assets/img/wines/dominio-de-pingus-psi-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -465,7 +465,7 @@
     "style": "Red · Still",
     "description": "A 2021 red Pinot Noir from Central Otago: dark fruit, savoury depth, and fine-grained tannin from Felton Road.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/CO7130.svg",
+    "imagePath": "assets/img/wines/felton-road-bannockburn-pinot-noir-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -495,7 +495,7 @@
     "style": "White · Still",
     "description": "A 2021 white Sauvignon Blanc from Sancerre — orchard fruit and a clean, mineral line, in François Cotat's hand.",
     "sommelierNotes": "Serve at 10–12°C with poultry, shellfish, or fresh cheese.",
-    "imagePath": "assets/img/wines/LO9150.svg",
+    "imagePath": "assets/img/wines/francois-cotat-sancerre-la-grande-cote-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -525,7 +525,7 @@
     "style": "White · Still",
     "description": "A taut, saline expression of high-density Saint-Aubin: white orchard fruit, crushed oyster shell, and a long chalky finish that rewards patience.",
     "sommelierNotes": "Serve at 12°C in a broad white-Burgundy glass. A natural partner to roast poultry, aged Comté, or simply a quiet evening.",
-    "imagePath": "assets/img/wines/AB1201.svg",
+    "imagePath": "assets/img/wines/hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -555,7 +555,7 @@
     "style": "Red · Still",
     "description": "A 2018 red Sangiovese from Brunello di Montalcino: dark fruit, savoury depth, and fine-grained tannin from Il Poggione.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/TU6041.svg",
+    "imagePath": "assets/img/wines/il-poggione-brunello-di-montalcino-2018.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -585,7 +585,7 @@
     "style": "Red · Still",
     "description": "A 2021 red Sangiovese from Chianti Classico: dark fruit, savoury depth, and fine-grained tannin from Isole e Olena.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/TU6040.svg",
+    "imagePath": "assets/img/wines/isole-e-olena-chianti-classico-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -615,7 +615,7 @@
     "style": "Red · Still",
     "description": "Garrigue, black pepper, and dark berry from a legendary Hermitage house's négociant hand.",
     "sommelierNotes": "Weeknight-perfect with sausages, ratatouille, or a hard aged cheese.",
-    "imagePath": "assets/img/wines/LM7723.svg",
+    "imagePath": "assets/img/wines/jl-chave-selection-cotes-du-rhone-mon-coeur-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -645,7 +645,7 @@
     "style": "White · Still",
     "description": "A 2021 white Chardonnay from Sonoma Coast — orchard fruit and a clean, mineral line, in Kistler's hand.",
     "sommelierNotes": "Serve at 10–12°C with poultry, shellfish, or fresh cheese.",
-    "imagePath": "assets/img/wines/SO3096.svg",
+    "imagePath": "assets/img/wines/kistler-les-noisetiers-chardonnay-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -675,7 +675,7 @@
     "style": "Red · Still",
     "description": "A 2016 red Tempranillo Blend from Rioja: dark fruit, savoury depth, and fine-grained tannin from La Rioja Alta.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/RJ8060.svg",
+    "imagePath": "assets/img/wines/la-rioja-alta-vina-ardanza-reserva-2016.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -705,7 +705,7 @@
     "style": "Red · Still",
     "description": "A 2021 red Pinot Noir from Anderson Valley: dark fruit, savoury depth, and fine-grained tannin from Littorai.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/SO3095.svg",
+    "imagePath": "assets/img/wines/littorai-les-larmes-pinot-noir-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -735,7 +735,7 @@
     "style": "Sparkling",
     "description": "A sparkling Glera from Valdobbiadene Prosecco Superiore — fine, persistent mousse and bright orchard fruit, in the house style of Nino Franco.",
     "sommelierNotes": "Serve well-chilled as an apéritif, or alongside oysters, fried foods, and celebration.",
-    "imagePath": "assets/img/wines/VN7051.svg",
+    "imagePath": "assets/img/wines/nino-franco-rustico-prosecco-superiore-nv.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -765,7 +765,7 @@
     "style": "White · Still",
     "description": "A 2022 white Albariño from Rías Baixas — orchard fruit and a clean, mineral line, in Pazo Señorans's hand.",
     "sommelierNotes": "Serve at 10–12°C with poultry, shellfish, or fresh cheese.",
-    "imagePath": "assets/img/wines/RB9070.svg",
+    "imagePath": "assets/img/wines/pazo-senorans-albarino-2022.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -795,7 +795,7 @@
     "style": "Sparkling",
     "description": "A sparkling Chardonnay from Champagne Grand Cru — fine, persistent mousse and bright orchard fruit, in the house style of Pierre Péters.",
     "sommelierNotes": "Serve well-chilled as an apéritif, or alongside oysters, fried foods, and celebration.",
-    "imagePath": "assets/img/wines/CH3020.svg",
+    "imagePath": "assets/img/wines/pierre-peters-cuvee-de-reserve-blanc-de-blancs-brut-nv.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -825,7 +825,7 @@
     "style": "Red · Still",
     "description": "A 2020 red Nebbiolo from Barbaresco: dark fruit, savoury depth, and fine-grained tannin from Produttori del Barbaresco.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/PM5031.svg",
+    "imagePath": "assets/img/wines/produttori-del-barbaresco-barbaresco-2020.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -855,7 +855,7 @@
     "style": "Red · Still",
     "description": "A 2019 red Cabernet Sauvignon from Santa Cruz Mountains: dark fruit, savoury depth, and fine-grained tannin from Ridge Vineyards.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/NP2090.svg",
+    "imagePath": "assets/img/wines/ridge-vineyards-estate-cabernet-sauvignon-2019.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -885,7 +885,7 @@
     "style": "Red · Still",
     "description": "From the vines that founded Oregon Pinot: cranberry, wild herb, and forest floor carried on a cool, understated frame.",
     "sommelierNotes": "An all-purpose table red — salmon, roast vegetables, or a Sunday roast.",
-    "imagePath": "assets/img/wines/EF4420.svg",
+    "imagePath": "assets/img/wines/the-eyrie-vineyards-pinot-noir-estate-2019.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -915,7 +915,7 @@
     "style": "Red · Still",
     "description": "A 2020 red Grenache Blend from Barossa Valley: dark fruit, savoury depth, and fine-grained tannin from Torbreck.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/BR6120.svg",
+    "imagePath": "assets/img/wines/torbreck-the-steading-grenache-shiraz-mataro-2020.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -945,7 +945,7 @@
     "style": "Red · Still",
     "description": "A 2019 red Nebbiolo from Barolo: dark fruit, savoury depth, and fine-grained tannin from Vietti.",
     "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/PM5030.svg",
+    "imagePath": "assets/img/wines/vietti-barolo-castiglione-2019.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",
@@ -975,7 +975,7 @@
     "style": "White · Off-Dry",
     "description": "A 2021 white Riesling from Mosel — orchard fruit and a clean, mineral line, in Weingut Joh. Jos. Prüm's hand.",
     "sommelierNotes": "Serve at 10–12°C with poultry, shellfish, or fresh cheese.",
-    "imagePath": "assets/img/wines/MZ1080.svg",
+    "imagePath": "assets/img/wines/weingut-joh-jos-prum-wehlener-sonnenuhr-riesling-kabinett-2021.svg",
     "imageSource": "generated-label",
     "sources": {
       "appellation": "salesforce",

@@ -33,6 +33,10 @@ var resolveImageWine = salesforce.WineRaw{
 	Vintage: "2019", Region: "Burgundy",
 }
 
+// resolveImageBase is resolveImageWine's SEO slug — the basename ResolveImage
+// writes image files under (matching the wine's /wines/<slug>/ page URL).
+var resolveImageBase = model.Slugify(resolveImageWine.Producer, resolveImageWine.Name, resolveImageWine.Vintage)
+
 func collectLogs(t *testing.T) (logFn func(string, ...any), get func() []string) {
 	t.Helper()
 	var logs []string
@@ -62,7 +66,7 @@ func TestResolveImage_ProviderSuccessWritesJPEGAndReturnsPhotoSource(t *testing.
 		t.Errorf("provider called %d times, want 1", provider.calls)
 	}
 
-	diskPath := filepath.Join(imgDir, "AB1234.jpg")
+	diskPath := filepath.Join(imgDir, resolveImageBase+".jpg")
 	got, err := os.ReadFile(diskPath)
 	if err != nil {
 		t.Fatalf("expected %s to exist on disk: %v", diskPath, err)
@@ -70,7 +74,7 @@ func TestResolveImage_ProviderSuccessWritesJPEGAndReturnsPhotoSource(t *testing.
 	if !bytes.Equal(got, wantBytes) {
 		t.Errorf("written bytes = %q, want %q", got, wantBytes)
 	}
-	if !strings.HasSuffix(gotPath, "AB1234.jpg") {
+	if !strings.HasSuffix(gotPath, resolveImageBase+".jpg") {
 		t.Errorf("imagePath = %q, want it to end with AB1234.jpg", gotPath)
 	}
 }
@@ -89,11 +93,11 @@ func TestResolveImage_ProviderRejectionFallsBackToLabel(t *testing.T) {
 	if gotSource != model.ImageGeneratedLabel {
 		t.Errorf("imageSource = %q, want %q", gotSource, model.ImageGeneratedLabel)
 	}
-	if !strings.HasSuffix(gotPath, "AB1234.svg") {
+	if !strings.HasSuffix(gotPath, resolveImageBase+".svg") {
 		t.Errorf("imagePath = %q, want it to end with AB1234.svg", gotPath)
 	}
 
-	diskPath := filepath.Join(imgDir, "AB1234.svg")
+	diskPath := filepath.Join(imgDir, resolveImageBase+".svg")
 	data, err := os.ReadFile(diskPath)
 	if err != nil {
 		t.Fatalf("expected %s to exist on disk: %v", diskPath, err)
@@ -121,10 +125,10 @@ func TestResolveImage_PlainNetworkErrorStillFallsBackToLabelWithoutFailingRun(t 
 	if gotSource != model.ImageGeneratedLabel {
 		t.Errorf("imageSource = %q, want %q", gotSource, model.ImageGeneratedLabel)
 	}
-	if _, err := os.Stat(filepath.Join(imgDir, "AB1234.svg")); err != nil {
+	if _, err := os.Stat(filepath.Join(imgDir, resolveImageBase+".svg")); err != nil {
 		t.Errorf("expected label svg on disk: %v", err)
 	}
-	if !strings.HasSuffix(gotPath, "AB1234.svg") {
+	if !strings.HasSuffix(gotPath, resolveImageBase+".svg") {
 		t.Errorf("imagePath = %q, want it to end with AB1234.svg", gotPath)
 	}
 	if len(getLogs()) == 0 {
@@ -167,7 +171,7 @@ func TestResolveImage_ProducerSuppliedGuardNeverCallsProvider(t *testing.T) {
 
 func TestResolveImage_SiblingCleanup_LabelToPhotoRemovesStaleSVG(t *testing.T) {
 	imgDir := t.TempDir()
-	stale := filepath.Join(imgDir, "AB1234.svg")
+	stale := filepath.Join(imgDir, resolveImageBase+".svg")
 	if err := os.WriteFile(stale, []byte("<svg>stale label</svg>"), 0o644); err != nil {
 		t.Fatalf("seed stale svg: %v", err)
 	}
@@ -181,7 +185,7 @@ func TestResolveImage_SiblingCleanup_LabelToPhotoRemovesStaleSVG(t *testing.T) {
 		t.Fatalf("ResolveImage returned error: %v", err)
 	}
 
-	if _, err := os.Stat(filepath.Join(imgDir, "AB1234.jpg")); err != nil {
+	if _, err := os.Stat(filepath.Join(imgDir, resolveImageBase+".jpg")); err != nil {
 		t.Errorf("expected new jpg to exist: %v", err)
 	}
 	if _, err := os.Stat(stale); !os.IsNotExist(err) {
@@ -191,7 +195,7 @@ func TestResolveImage_SiblingCleanup_LabelToPhotoRemovesStaleSVG(t *testing.T) {
 
 func TestResolveImage_SiblingCleanup_PhotoToLabelRemovesStaleJPEG(t *testing.T) {
 	imgDir := t.TempDir()
-	stale := filepath.Join(imgDir, "AB1234.jpg")
+	stale := filepath.Join(imgDir, resolveImageBase+".jpg")
 	if err := os.WriteFile(stale, []byte("stale jpeg bytes"), 0o644); err != nil {
 		t.Fatalf("seed stale jpg: %v", err)
 	}
@@ -205,7 +209,7 @@ func TestResolveImage_SiblingCleanup_PhotoToLabelRemovesStaleJPEG(t *testing.T) 
 		t.Fatalf("ResolveImage returned error: %v", err)
 	}
 
-	if _, err := os.Stat(filepath.Join(imgDir, "AB1234.svg")); err != nil {
+	if _, err := os.Stat(filepath.Join(imgDir, resolveImageBase+".svg")); err != nil {
 		t.Errorf("expected new svg to exist: %v", err)
 	}
 	if _, err := os.Stat(stale); !os.IsNotExist(err) {
@@ -232,7 +236,7 @@ func TestResolveImage_ImagePathIsSiteRelativeFormEvenOnWindows(t *testing.T) {
 	if strings.Contains(gotPath, "\\") {
 		t.Errorf("imagePath = %q, must not contain backslashes", gotPath)
 	}
-	if !strings.HasSuffix(gotPath, "assets/img/wines/AB1234.jpg") {
+	if !strings.HasSuffix(gotPath, "assets/img/wines/"+resolveImageBase+".jpg") {
 		t.Errorf("imagePath = %q, want it to end with assets/img/wines/AB1234.jpg", gotPath)
 	}
 	if strings.HasPrefix(gotPath, "/") {
@@ -250,7 +254,7 @@ func TestResolveImage_MkdirCreatesImgDirWhenMissing(t *testing.T) {
 	if _, _, err := ResolveImage(context.Background(), provider, resolveImageWine, "a prompt", imgDir, nil, logFn); err != nil {
 		t.Fatalf("ResolveImage returned error: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(imgDir, "AB1234.jpg")); err != nil {
+	if _, err := os.Stat(filepath.Join(imgDir, resolveImageBase+".jpg")); err != nil {
 		t.Errorf("expected imgDir to be created and jpg written: %v", err)
 	}
 }

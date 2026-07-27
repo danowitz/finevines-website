@@ -169,8 +169,11 @@ func main() {
 			matchConf = 95
 		}
 
+		// SEO slug basename (producer-wine-vintage), matching the live
+		// pipeline's image naming and the wine's /wines/<slug>/ page URL.
+		slug := model.Slugify(raw.Producer, raw.Name, raw.Vintage)
 		svg := label.Generate(raw)
-		imgPath := filepath.Join(imgDir, raw.SKU+".svg")
+		imgPath := filepath.Join(imgDir, slug+".svg")
 		if err := os.WriteFile(imgPath, svg, 0o644); err != nil {
 			panic(err)
 		}
@@ -202,7 +205,7 @@ func main() {
 			Appellation: raw.Appellation, Country: country, Color: color, Style: raw.Style,
 			StockQty:    raw.StockQty,
 			Description: desc, SommelierNotes: som,
-			ImagePath:       "assets/img/wines/" + raw.SKU + ".svg",
+			ImagePath:       "assets/img/wines/" + slug + ".svg",
 			ImageSource:     model.ImageGeneratedLabel,
 			Sources:         sources,
 			MetadataScore:   model.MetadataScore(sources),
