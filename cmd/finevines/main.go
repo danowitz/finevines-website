@@ -102,9 +102,16 @@ func runEnrich(cfg config.Config) error {
 	// randomized in Go, and we want a stable, deterministic "first missing"
 	// error rather than a different one every run), paired with the .env key
 	// name to report.
-	requiredEnv := []struct{ name, value string }{
-		{"OPENAI_API_KEY", cfg.OpenAIAPIKey},
-		{"FINEVINES_GEMINI_API_KEY", cfg.GeminiAPIKey},
+	// Manual mode (FINEVINES_MANUAL_ENRICH_DIR) enriches from hand-authored
+	// <SKU>.json files and uses the SVG-label image floor, so neither the
+	// OpenAI nor the image API key is needed — a stopgap while OpenAI billing
+	// is being set up.
+	var requiredEnv []struct{ name, value string }
+	if cfg.ManualEnrichDir == "" {
+		requiredEnv = append(requiredEnv,
+			struct{ name, value string }{"OPENAI_API_KEY", cfg.OpenAIAPIKey},
+			struct{ name, value string }{"FINEVINES_GEMINI_API_KEY", cfg.GeminiAPIKey},
+		)
 	}
 	if !cfg.SFMock {
 		requiredEnv = append(requiredEnv,
@@ -135,8 +142,16 @@ func runEnrich(cfg config.Config) error {
 			APIVersion:   cfg.SFAPIVersion,
 		}, http.DefaultClient)
 	}
-	enr := enrich.NewOpenAIEnricher(cfg.OpenAIAPIKey, cfg.OpenAIModel, "", http.DefaultClient)
-	imgs := enrich.NewImagenClient(cfg.GeminiAPIKey, cfg.ImageModel, "", http.DefaultClient)
+	var enr enrich.Enricher
+	var imgs enrich.ImageProvider
+	if cfg.ManualEnrichDir != "" {
+		log.Printf("enrich: FINEVINES_MANUAL_ENRICH_DIR=%s — enriching from hand-authored files, SVG-label images (no OpenAI/image API)", cfg.ManualEnrichDir)
+		enr = enrich.NewManualEnricher(cfg.ManualEnrichDir)
+		imgs = enrich.LabelOnlyProvider{}
+	} else {
+		enr = enrich.NewOpenAIEnricher(cfg.OpenAIAPIKey, cfg.OpenAIModel, "", http.DefaultClient)
+		imgs = enrich.NewImagenClient(cfg.GeminiAPIKey, cfg.ImageModel, "", http.DefaultClient)
+	}
 
 	if err := enrich.Run(context.Background(), src, enr, imgs,
 		"data/wines.json", "assets/img/wines", log.Printf); err != nil {

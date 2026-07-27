@@ -1,0 +1,31 @@
+{
+  "description": "An insider's white Burgundy from Hubert Lamy's densely-planted Saint-Aubin holdings. Taut and struck-match in its youth, it shows pear, citrus zest and dried white flowers over a mineral core of wet stone and toasted hazelnut. Medium- to full-bodied and satiny, it rides a racy line of acidity to a long, saline finish.",
+  "sommelierNotes": "Serve at around 12°C with roast poultry, richer white fish, or a wedge of aged Comté.",
+  "aroma": "Pear, citrus zest, dried white flowers, hazelnut and wet stone",
+  "palate": "Satiny and layered, orange rind and bitter lemon over a racy spine of acidity",
+  "finish": "Long, saline and scintillating",
+  "foodPairings": ["Roast poultry", "Richer white fish", "Aged Comté", "Shellfish"],
+  "appellation": "Saint-Aubin 1er Cru",
+  "country": "France",
+  "color": "White",
+  "abv": "13%",
+  "bottleSize": "750ml",
+  "drinkWindow": "2026–2035",
+  "sources": {
+    "description": "found",
+    "sommelierNotes": "derived",
+    "aroma": "found",
+    "palate": "found",
+    "finish": "found",
+    "foodPairings": "derived",
+    "appellation": "found",
+    "country": "found",
+    "color": "found",
+    "abv": "derived",
+    "bottleSize": "found",
+    "drinkWindow": "found"
+  },
+  "matchConfidence": 92,
+  "imageUrl": "",
+  "imagePrompt": "Studio product photograph of a tall pale-green white-Burgundy bottle with a classic cream Saint-Aubin label, neutral warm-grey backdrop, soft key light."
+}

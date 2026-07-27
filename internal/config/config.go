@@ -19,6 +19,7 @@ type Config struct {
 	SiteBaseURL                                         string // e.g. https://finevines.com
 	GAID                                                string // Google Analytics 4 measurement ID (G-XXXXXXXXXX); empty disables analytics
 	SFMock                                              bool   // FINEVINES_SF_MOCK: read the embedded sample roster instead of a live Salesforce org
+	ManualEnrichDir                                     string // FINEVINES_MANUAL_ENRICH_DIR: enrich from hand-authored <SKU>.json files instead of OpenAI (billing-pending stopgap)
 }
 
 func Load(envPath string) (Config, error) {
@@ -60,6 +61,7 @@ func Load(envPath string) (Config, error) {
 		SiteBaseURL:          orDefault(get("FINEVINES_SITE_BASE_URL"), "https://finevines.com"),
 		GAID:                 get("FINEVINES_GA_ID"),
 		SFMock:               truthy(get("FINEVINES_SF_MOCK")),
+		ManualEnrichDir:      get("FINEVINES_MANUAL_ENRICH_DIR"),
 	}, nil
 }
 

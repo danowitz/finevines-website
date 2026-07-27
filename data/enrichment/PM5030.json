@@ -1,0 +1,31 @@
+{
+  "description": "A classic cru-blended Barolo from one of Piedmont's benchmark houses, raised in large casks in the traditional manner. Dried roses and violets lift over red cherry and a hint of baking spice; the palate is fine-boned and structured, dried-herb and leather notes threading through mouthwatering tannin and vibrant acidity.",
+  "sommelierNotes": "Decant an hour ahead and serve at cellar temperature with braised beef, truffle, mushroom risotto, or an aged hard cheese.",
+  "aroma": "Dried roses, violets, red cherry and fine baking spice",
+  "palate": "Structured red fruit with dried basil, a kiss of leather and vibrant acidity",
+  "finish": "Long, savoury and refreshingly acidic",
+  "foodPairings": ["Braised beef", "Truffle dishes", "Mushroom risotto", "Aged hard cheese", "Game"],
+  "appellation": "Barolo",
+  "country": "Italy",
+  "color": "Red",
+  "abv": "14%",
+  "bottleSize": "750ml",
+  "drinkWindow": "2024–2040",
+  "sources": {
+    "description": "found",
+    "sommelierNotes": "derived",
+    "aroma": "found",
+    "palate": "found",
+    "finish": "found",
+    "foodPairings": "derived",
+    "appellation": "found",
+    "country": "found",
+    "color": "found",
+    "abv": "found",
+    "bottleSize": "found",
+    "drinkWindow": "found"
+  },
+  "matchConfidence": 95,
+  "imageUrl": "",
+  "imagePrompt": "Studio product photograph of a classic Piedmontese Barolo bottle (tall Burgundy shape, dark glass) with a traditional cream label, neutral warm-grey backdrop, soft key light."
+}

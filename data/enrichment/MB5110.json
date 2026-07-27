@@ -1,0 +1,31 @@
+{
+  "description": "The benchmark that put Marlborough on the world's wine map, and still a model of the style. Ripe honeydew melon, passionfruit and citrus play against a cool thread of blackcurrant leaf; fermented largely in stainless steel with a whisper of old French oak, it stays concentrated yet bright, closing on a saline, sea-air freshness.",
+  "sommelierNotes": "Serve well-chilled as an apéritif, or alongside fresh goat cheese, oysters, ceviche, and green-herb salads.",
+  "aroma": "Honeydew melon, passionfruit, citrus and a touch of blackcurrant leaf",
+  "palate": "Concentrated and elegant, tropical fruit cut by makrut lime and grapefruit",
+  "finish": "Lemongrass and a saline, sea-air lift",
+  "foodPairings": ["Fresh goat cheese", "Oysters", "Ceviche", "Green-herb salads", "Grilled white fish"],
+  "appellation": "Marlborough",
+  "country": "New Zealand",
+  "color": "White",
+  "abv": "13.5%",
+  "bottleSize": "750ml",
+  "drinkWindow": "2024–2027",
+  "sources": {
+    "description": "found",
+    "sommelierNotes": "derived",
+    "aroma": "found",
+    "palate": "found",
+    "finish": "found",
+    "foodPairings": "derived",
+    "appellation": "found",
+    "country": "found",
+    "color": "found",
+    "abv": "found",
+    "bottleSize": "found",
+    "drinkWindow": "derived"
+  },
+  "matchConfidence": 96,
+  "imageUrl": "",
+  "imagePrompt": "Studio product photograph of a tall, slender pale-green New Zealand Sauvignon Blanc bottle with a clean modern white label, neutral warm-grey backdrop, soft key light."
+}
