@@ -1,0 +1,26 @@
+<svg viewBox="0 0 480 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La Rioja Alta — Viña Ardanza Reserva">
+<defs>
+<linearGradient id="glass" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#0a140d"/>
+<stop offset="0.5" stop-color="#1d3527"/>
+<stop offset="1" stop-color="#08110b"/>
+</linearGradient>
+</defs>
+<path d="M220 30 L260 30 L260 130 C260 152 324 158 324 195 L324 655 Q324 690 289 690 L191 690 Q156 690 156 655 L156 195 C156 158 220 152 220 130 Z" fill="url(#glass)" stroke="#050a07" stroke-width="1"/>
+<path d="M220 30 L260 30 L260 68 L220 68 Z" fill="#c9a24a"/>
+<line x1="220" y1="76" x2="260" y2="76" stroke="#050a07" stroke-width="0.8" opacity="0.5"/>
+<g transform="translate(140,380)">
+<rect width="200" height="250" fill="#0e2c26"/>
+<rect x="8" y="8" width="184" height="234" fill="none" stroke="#e9e2c9" stroke-width="1.1"/>
+<text x="100" y="26" text-anchor="middle" font-family="'Archivo','Inter',system-ui,sans-serif" font-size="8" font-weight="600" letter-spacing="2.5" fill="#c9a24a">LA RIOJA ALTA</text>
+<g><line x1="100" y1="72" x2="79" y2="44" stroke="#c9a24a" stroke-width="0.8"/><line x1="100" y1="72" x2="86" y2="44" stroke="#c9a24a" stroke-width="0.8"/><line x1="100" y1="72" x2="93" y2="44" stroke="#c9a24a" stroke-width="0.8"/><line x1="100" y1="72" x2="100" y2="44" stroke="#c9a24a" stroke-width="0.8"/><line x1="100" y1="72" x2="107" y2="44" stroke="#c9a24a" stroke-width="0.8"/><line x1="100" y1="72" x2="114" y2="44" stroke="#c9a24a" stroke-width="0.8"/><line x1="100" y1="72" x2="121" y2="44" stroke="#c9a24a" stroke-width="0.8"/></g><circle cx="100" cy="72" r="2" fill="#c9a24a"/>
+<text x="100" y="92" text-anchor="middle" font-family="'Cormorant Garamond',Georgia,serif" font-size="15" font-weight="600" letter-spacing="1" fill="#e9e2c9">Viña Ardanza Reserva</text>
+<g stroke="#c9a24a" stroke-width="0.8"><line x1="70" y1="118" x2="88" y2="118"/><line x1="112" y1="118" x2="130" y2="118"/></g>
+<rect x="96.5" y="118" width="7" height="7" fill="#c9a24a" transform="translate(-3.5,-3.5) rotate(45 100 118)"/>
+<text x="100" y="140" text-anchor="middle" font-family="'Cormorant Garamond',Georgia,serif" font-style="italic" font-size="10.5" letter-spacing="0.8" fill="#9fb08a">RIOJA</text>
+<text x="100" y="190" text-anchor="middle" font-family="'Cormorant Garamond',Georgia,serif" font-size="30" font-weight="600" letter-spacing="1.5" fill="#e9e2c9">2016</text>
+<g stroke="#c9a24a" stroke-width="0.8"><line x1="76" y1="212" x2="94" y2="212"/><line x1="106" y1="212" x2="124" y2="212"/></g>
+<rect x="96.5" y="212" width="7" height="7" fill="#c9a24a" transform="translate(-3.5,-3.5) rotate(45 100 212)"/>
+<text x="100" y="232" text-anchor="middle" font-family="'Archivo','Inter',system-ui,sans-serif" font-size="7.5" font-weight="500" letter-spacing="1.6" fill="#9fb08a">RED · STILL</text>
+</g>
+</svg>

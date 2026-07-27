@@ -18,6 +18,7 @@ type Config struct {
 	BunnyScriptID                                       string // Edge Scripting compute script ID (redirect middleware)
 	SiteBaseURL                                         string // e.g. https://finevines.com
 	GAID                                                string // Google Analytics 4 measurement ID (G-XXXXXXXXXX); empty disables analytics
+	SFMock                                              bool   // FINEVINES_SF_MOCK: read the embedded sample roster instead of a live Salesforce org
 }
 
 func Load(envPath string) (Config, error) {
@@ -57,7 +58,18 @@ func Load(envPath string) (Config, error) {
 		BunnyScriptID:        get("FINEVINES_BUNNY_SCRIPT_ID"),
 		SiteBaseURL:          orDefault(get("FINEVINES_SITE_BASE_URL"), "https://finevines.com"),
 		GAID:                 get("FINEVINES_GA_ID"),
+		SFMock:               truthy(get("FINEVINES_SF_MOCK")),
 	}, nil
+}
+
+// truthy reports whether an env value means "on". Accepts the usual set so a
+// .env line like FINEVINES_SF_MOCK=true (or 1/yes/on) all work.
+func truthy(v string) bool {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "1", "true", "yes", "on":
+		return true
+	}
+	return false
 }
 
 func orDefault(v, def string) string {

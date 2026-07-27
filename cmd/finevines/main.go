@@ -72,16 +72,26 @@ func runBuild(cfg config.Config) error {
 // consider adding a temporary "LIMIT 25" to that query to eyeball output
 // before running against the full catalog.
 func runEnrich(cfg config.Config) error {
-	// requiredEnv is an ordered list (not a map — map iteration order is
+	// The generation APIs (text + image) are always required; the Salesforce
+	// credentials are required only for a live roster pull. In mock mode
+	// (FINEVINES_SF_MOCK) the roster comes from the embedded sample instead,
+	// so those three SF vars are skipped — this is how the generation pipeline
+	// is developed and exercised before the Connected App exists (issue #1).
+	//
+	// requiredEnv is an ordered slice (not a map — map iteration order is
 	// randomized in Go, and we want a stable, deterministic "first missing"
-	// error rather than a different one every run) of the env vars runEnrich
-	// needs, paired with the .env key name to report.
+	// error rather than a different one every run), paired with the .env key
+	// name to report.
 	requiredEnv := []struct{ name, value string }{
-		{"FINEVINES_SF_BASE_URL", cfg.SFBaseURL},
-		{"FINEVINES_SF_CLIENT_ID", cfg.SFClientID},
-		{"FINEVINES_SF_CLIENT_SECRET", cfg.SFClientSecret},
 		{"ANTHROPIC_API_KEY", cfg.AnthropicAPIKey},
 		{"FINEVINES_GEMINI_API_KEY", cfg.GeminiAPIKey},
+	}
+	if !cfg.SFMock {
+		requiredEnv = append(requiredEnv,
+			struct{ name, value string }{"FINEVINES_SF_BASE_URL", cfg.SFBaseURL},
+			struct{ name, value string }{"FINEVINES_SF_CLIENT_ID", cfg.SFClientID},
+			struct{ name, value string }{"FINEVINES_SF_CLIENT_SECRET", cfg.SFClientSecret},
+		)
 	}
 	for _, req := range requiredEnv {
 		if req.value == "" {
@@ -89,12 +99,22 @@ func runEnrich(cfg config.Config) error {
 		}
 	}
 
-	src := salesforce.NewClient(salesforce.Config{
-		BaseURL:      cfg.SFBaseURL,
-		ClientID:     cfg.SFClientID,
-		ClientSecret: cfg.SFClientSecret,
-		APIVersion:   cfg.SFAPIVersion,
-	}, http.DefaultClient)
+	var src salesforce.Source
+	if cfg.SFMock {
+		mock, err := salesforce.NewMockSource()
+		if err != nil {
+			return fmt.Errorf("enrich: %w", err)
+		}
+		log.Printf("enrich: FINEVINES_SF_MOCK set — using the embedded sample roster instead of a live Salesforce org")
+		src = mock
+	} else {
+		src = salesforce.NewClient(salesforce.Config{
+			BaseURL:      cfg.SFBaseURL,
+			ClientID:     cfg.SFClientID,
+			ClientSecret: cfg.SFClientSecret,
+			APIVersion:   cfg.SFAPIVersion,
+		}, http.DefaultClient)
+	}
 	texts := enrich.NewTextEnricher(cfg.AnthropicAPIKey)
 	imgs := enrich.NewImagenClient(cfg.GeminiAPIKey, cfg.ImageModel, "", http.DefaultClient)
 

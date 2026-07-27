@@ -39,10 +39,15 @@ artifacts, and are complete/self-contained on their own.
   in principle, but it already syncs to Salesforce, and Salesforce is far easier to integrate with from Go (plain
   HTTPS/OAuth) than QuickBooks Desktop's COM/qbXML integration. No new QuickBooks integration is in scope.
 - **Web-eligibility rule**: a wine is shown when `stockQty > 0 AND SKU does not start with "9"`.
-- **Images are generated, never scraped.** Auto-sourcing photos from web search was explicitly rejected (copyright
-  risk). The pipeline is: Claude writes a per-wine prompt → an AI image model renders a photorealistic bottle → a
-  deterministic vector label generator is the guaranteed fallback (always succeeds, wine-branded, never
-  Fine-Vines-branded).
+- **Wine data AND images are search-scraped (REVERSED 2026-07-26).** The original decision was "generate, never
+  scrape" (copyright risk); the client (GRIT, for Fine Vines) has since **explicitly accepted the copyright risk**
+  and directed that both descriptive wine metadata and real bottle/label images be sourced via web search. The
+  copyright call is the client's, made after the risk was flagged twice. New enrich pipeline: Salesforce stays the
+  authoritative source for commercial fields (SKU, producer, name, vintage, stock, price); a Claude-driven
+  search→extract→normalize step fills the descriptive schema and fetches real bottle/label images, with a
+  match-confidence flag. Guardrails still applied: prefer scraping structured *facts* and have Claude write original
+  tasting prose (don't lift verbatim copyrighted prose/critic scores); keep `imageSourceUrl` for provenance. The
+  deterministic SVG label generator remains only as the guaranteed no-broken-image fallback.
 - **Pricing is fixed-fee**, not hourly estimates — the client relationship and pricing rationale is personal/history
   with the founders; don't reference that history in any client-facing copy, only use it to price confidently.
 - **Brand voice**: elegant, editorial, old-world-wine-trade tone. Avoid corporate-tech phrasing like "no developer
