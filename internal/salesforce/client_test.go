@@ -68,17 +68,15 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 			"records": []map[string]any{
 				{
 					"Id": "01t000000001AAA", "StockKeepingUnit": "AB1001",
-					"Producer__c": "Chateau Alpha", "Name": "Alpha Reserve",
-					"Vintage__c": "2019", "Varietal__c": "Cabernet Sauvignon",
-					"Region__c": "Napa Valley", "Appellation__c": "Oakville",
-					"Style__c": "Red", "Stock_Qty__c": 12,
+					"FV_Brand__c": "Chateau Alpha", "Name": "Alpha Reserve",
+					"FV_Vintage_Year__c": "2019", "FV_Varietal__c": "Cabernet Sauvignon",
+					"FV_Region__c": "Napa Valley", "FV_OnHand_Qty__c": 12,
 				},
 				{
 					"Id": "01t000000002BBB", "StockKeepingUnit": "AB1002",
-					"Producer__c": "Chateau Beta", "Name": "Beta Blanc",
-					"Vintage__c": "2021", "Varietal__c": "Chardonnay",
-					"Region__c": "Sonoma Coast", "Appellation__c": "Russian River Valley",
-					"Style__c": "White", "Stock_Qty__c": 0,
+					"FV_Brand__c": "Chateau Beta", "Name": "Beta Blanc",
+					"FV_Vintage_Year__c": "2021", "FV_Varietal__c": "Chardonnay",
+					"FV_Region__c": "Sonoma Coast", "FV_OnHand_Qty__c": 0,
 				},
 			},
 		})
@@ -97,10 +95,9 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 			"records": []map[string]any{
 				{
 					"Id": "01t000000003CCC", "StockKeepingUnit": "9X9999",
-					"Producer__c": "Chateau Gamma", "Name": "Gamma Noir",
-					"Vintage__c": "2018", "Varietal__c": "Pinot Noir",
-					"Region__c": "Willamette Valley", "Appellation__c": "Dundee Hills",
-					"Style__c": "Red", "Stock_Qty__c": 4,
+					"FV_Brand__c": "Chateau Gamma", "Name": "Gamma Noir",
+					"FV_Vintage_Year__c": "2018", "FV_Varietal__c": "Pinot Noir",
+					"FV_Region__c": "Willamette Valley", "FV_OnHand_Qty__c": 4,
 				},
 			},
 		})
@@ -122,21 +119,24 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 		t.Fatalf("Roster() error = %v", err)
 	}
 
+	// Appellation and Style are intentionally absent: Product2 has no field
+	// for them, so Roster leaves them empty and the search-scrape enrichment
+	// step fills them later.
 	want := []WineRaw{
 		{
 			ID: "01t000000001AAA", SKU: "AB1001", Producer: "Chateau Alpha",
 			Name: "Alpha Reserve", Vintage: "2019", Varietal: "Cabernet Sauvignon",
-			Region: "Napa Valley", Appellation: "Oakville", Style: "Red", StockQty: 12,
+			Region: "Napa Valley", StockQty: 12,
 		},
 		{
 			ID: "01t000000002BBB", SKU: "AB1002", Producer: "Chateau Beta",
 			Name: "Beta Blanc", Vintage: "2021", Varietal: "Chardonnay",
-			Region: "Sonoma Coast", Appellation: "Russian River Valley", Style: "White", StockQty: 0,
+			Region: "Sonoma Coast", StockQty: 0,
 		},
 		{
 			ID: "01t000000003CCC", SKU: "9X9999", Producer: "Chateau Gamma",
 			Name: "Gamma Noir", Vintage: "2018", Varietal: "Pinot Noir",
-			Region: "Willamette Valley", Appellation: "Dundee Hills", Style: "Red", StockQty: 4,
+			Region: "Willamette Valley", StockQty: 4,
 		},
 	}
 

@@ -154,3 +154,6 @@ finevines.exe
 
 # Editor workspace file (personal, not shared)
 *.code-workspace
+
+# Salesforce Enterprise WSDL (exposes full custom schema — keep out of history)
+docs/salesforce/*.wsdl

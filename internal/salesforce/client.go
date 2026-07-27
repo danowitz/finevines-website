@@ -45,19 +45,30 @@ func NewClient(cfg Config, hc *http.Client) *Client {
 
 // rosterSOQL pulls every candidate wine row in one paginated query.
 //
-// ⚠ CHECKPOINT (client action item C1): the object name (Product2) and every
-// field API name below (StockKeepingUnit, Producer__c, Vintage__c,
-// Varietal__c, Region__c, Appellation__c, Style__c, Stock_Qty__c) are
-// PROVISIONAL GUESSES against a standard Product2 layout — they have NOT
-// been confirmed against the real FineVines org. Before the first live
-// run, pull the real object/field API names (Workbench "Data > Query" or
-// `sf sobject describe --sobject Product2`), in particular which field
-// actually carries the QuickBooks-synced stock quantity, and correct the
-// SOQL text below. The field->WineRaw mapping in Roster, just below this
-// query, is the one other place that must change in lockstep — keeping
-// both in one function is deliberate so the fix is a single, obvious edit.
-const rosterSOQL = `SELECT Id, StockKeepingUnit, Producer__c, Name, Vintage__c,
- Varietal__c, Region__c, Appellation__c, Style__c, Stock_Qty__c FROM Product2`
+// Field mapping RESOLVED 2026-07-27 from the org's Enterprise WSDL
+// (docs/salesforce/enterprise.wsdl, gitignored): the wine catalog lives on the
+// standard Product2 object with FineVines custom fields (FV_ prefix). SKU is
+// the standard StockKeepingUnit; stock-on-hand is FV_OnHand_Qty__c (an
+// xsd:double). There is NO Salesforce field for appellation or style — those
+// stay empty here and are filled by the search-scrape enrichment step.
+//
+// ⚠ THREE mappings still await a one-word client confirmation (raised via
+// AskUserQuestion in the 2026-07-27 session); each is a single-token edit here
+// plus its line in the Roster mapping below:
+//   1. producer -> FV_Brand__c  (alt: FV_Supplier__c, the importer/vendor)
+//   2. stock    -> FV_OnHand_Qty__c  (alt: AVSFQB__OnHand__c, raw QB-connector)
+//   3. whether FV_Ready_To_Sell__c should additionally gate web-eligibility on
+//      top of the confirmed `stockQty > 0 AND !SKU^"9"` rule (enrich.Eligible).
+// The field->WineRaw mapping in Roster is the one other place that must change
+// in lockstep — keeping both in this one file is deliberate.
+//
+// Additional authoritative Product2 fields exist and will be pulled in once
+// WineRaw/model.Wine expand for the scraped schema: FV_Country__c, FV_Color__c,
+// FV_ALC_Percent__c, FV_Bottle_Size__c, FV_Bottles_Per_Case__c, FV_List_Price__c,
+// FV_Net_Price__c, FV_BTG_Price__c, FV_Category__c, FV_Rating__c.
+const rosterSOQL = `SELECT Id, StockKeepingUnit, Name, FV_Brand__c,
+ FV_Vintage_Year__c, FV_Varietal__c, FV_Region__c, FV_OnHand_Qty__c
+ FROM Product2`
 
 // Roster authenticates and runs rosterSOQL, following nextRecordsUrl until
 // Salesforce reports done:true, mapping every record into a WineRaw in API
@@ -81,21 +92,21 @@ func (c *Client) Roster(ctx context.Context) ([]WineRaw, error) {
 			return nil, err
 		}
 
-		// ⚠ See the CHECKPOINT comment on rosterSOQL above: this mapping
-		// must be corrected in lockstep with the SOQL field list once the
-		// real org's field names are known.
+		// ⚠ This mapping must move in lockstep with rosterSOQL's SELECT list
+		// above (see its doc comment for the three field choices still
+		// awaiting client confirmation).
 		for _, r := range page.Records {
 			out = append(out, WineRaw{
-				ID:          str(r["Id"]),
-				SKU:         str(r["StockKeepingUnit"]),
-				Producer:    str(r["Producer__c"]),
-				Name:        str(r["Name"]),
-				Vintage:     str(r["Vintage__c"]),
-				Varietal:    str(r["Varietal__c"]),
-				Region:      str(r["Region__c"]),
-				Appellation: str(r["Appellation__c"]),
-				Style:       str(r["Style__c"]),
-				StockQty:    intval(r["Stock_Qty__c"]),
+				ID:       str(r["Id"]),
+				SKU:      str(r["StockKeepingUnit"]),
+				Producer: str(r["FV_Brand__c"]),
+				Name:     str(r["Name"]),
+				Vintage:  str(r["FV_Vintage_Year__c"]),
+				Varietal: str(r["FV_Varietal__c"]),
+				Region:   str(r["FV_Region__c"]),
+				StockQty: intval(r["FV_OnHand_Qty__c"]),
+				// Appellation and Style have no Product2 field — both are
+				// populated later by the search-scrape enrichment step.
 			})
 		}
 
