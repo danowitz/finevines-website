@@ -330,6 +330,17 @@ func TestPortfolioPage(t *testing.T) {
 		`class="view-toggle"`,
 		`data-view="cards"`,
 		`data-view="list"`,
+		// Off-canvas filter drawer (≤1024px): the Filters button in the toolbar
+		// opens the .facets panel, which now carries an id so aria-controls and
+		// the drawer JS can target it, a close (×) control, and a backdrop.
+		// filters.js drives open/close; the search box + facet checkboxes stay
+		// inside .facets so portfolio.js keeps filtering in both card & list views.
+		`class="filters-toggle"`,
+		`aria-controls="portfolio-facets"`,
+		`id="portfolio-facets"`,
+		`class="facets-close"`,
+		`class="facets-backdrop"`,
+		`src="/assets/js/filters.js"`,
 	} {
 		if !strings.Contains(html, want) {
 			t.Errorf("portfolio missing hook %q", want)

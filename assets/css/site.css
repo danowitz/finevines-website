@@ -293,9 +293,17 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .wine-card h3 { font-size: 21px; margin: 0 0 6px; color: var(--ink-strong); }
 .wine-card .meta { font-family: var(--sans); font-size: 12.5px; letter-spacing: .02em; color: var(--ink-soft); }
 
-/* Portfolio toolbar: results count + Cards|List view toggle */
+/* Portfolio toolbar: results count + (mobile Filters button) + Cards|List toggle */
 .portfolio-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .portfolio-toolbar #portfolio-count { margin: 0; }
+.portfolio-toolbar-actions { display: inline-flex; align-items: center; gap: 12px; }
+
+/* Off-canvas filter drawer chrome. On desktop the .facets sidebar is static
+   and always visible, so the mobile Filters button, drawer header (title + ×),
+   and backdrop are all hidden here; the ≤1024px block below turns them on. */
+.filters-toggle { display: none; }
+.facets-drawer-head { display: none; }
+.facets-backdrop { position: fixed; inset: 0; z-index: 55; background: rgba(28, 20, 16, .5); }
 .view-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
 .view-toggle-btn {
   font-family: var(--sans); font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
@@ -307,14 +315,49 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .view-toggle-btn.is-active { background: var(--wine); color: var(--parchment-50); }
 .view-toggle-btn:focus-visible { outline: 2px solid var(--wine); outline-offset: -2px; }
 
-/* List view: full-width rows, label thumbnail left + details right. The same
-   <li data-slug> items and [hidden] filtering apply — only the layout changes. */
-.wine-grid.view-list { grid-template-columns: 1fr; gap: 14px; }
-.wine-grid.view-list .wine-card { flex-direction: row; align-items: stretch; height: auto; }
-.wine-grid.view-list .wine-card .thumb { aspect-ratio: auto; width: 96px; flex: 0 0 96px; padding: 14px 12px; border-bottom: 0; border-right: 1px solid var(--line); }
-.wine-grid.view-list .wine-card .thumb img { height: 84px; }
-.wine-grid.view-list .wine-card .body { display: flex; flex-direction: column; justify-content: center; padding: 14px 20px; }
-.wine-grid.view-list .wine-card h3 { font-size: 20px; }
+/* List view: dense, scannable "data table" rows instead of cards. The same
+   <li data-slug> items and [hidden] filtering apply — only the layout changes.
+   Rows are separated by dividers (no grid gap), each ~64–76px tall, with a
+   small thumbnail, the producer/name as the main cell, and region · varietal
+   pinned to the right. The whole .wine-card <a> stays the row-wide click target. */
+.wine-grid.view-list { grid-template-columns: 1fr; grid-auto-rows: auto; gap: 0; border-top: 1px solid var(--line); }
+.wine-grid.view-list > li { border-bottom: 1px solid var(--line); }
+.wine-grid.view-list .wine-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  height: auto;
+  padding: 10px 14px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.wine-grid.view-list .wine-card:hover { background: #fff; box-shadow: none; transform: none; border-color: transparent; }
+.wine-grid.view-list .wine-card .thumb {
+  aspect-ratio: auto;
+  width: 46px;
+  flex: 0 0 46px;
+  height: 56px;
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+}
+.wine-grid.view-list .wine-card .thumb img { height: 100%; width: auto; max-width: 100%; filter: none; }
+.wine-grid.view-list .wine-card .body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "producer meta" "name meta";
+  align-items: center;
+  column-gap: 24px;
+  row-gap: 1px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+}
+.wine-grid.view-list .wine-card .producer { grid-area: producer; margin: 0 0 1px; }
+.wine-grid.view-list .wine-card h3 { grid-area: name; margin: 0; font-size: 17px; line-height: 1.2; }
+.wine-grid.view-list .wine-card .meta { grid-area: meta; text-align: right; white-space: nowrap; }
 
 /* ---- Wine detail: two-column ------------------------------------------ */
 .wine-detail { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 52px; align-items: start; }
@@ -465,9 +508,66 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   .team-grid { grid-template-columns: repeat(2, 1fr); }
   .wine-detail { grid-template-columns: 1fr; gap: 36px; }
   .portfolio-layout { grid-template-columns: 1fr; }
-  .facets { position: static; }
-  .footer-cols { grid-template-columns: repeat(2, 1fr); gap: 36px 40px; }
+
+  /* Footer: brand full-width on top, then Explore/Trade/Contact in an even
+     three-column grid — tight and balanced, no orphaned/half-empty column. */
+  .footer-cols { grid-template-columns: repeat(3, 1fr); gap: 34px 30px; }
   .footer-brand { grid-column: 1 / -1; }
+
+  /* ---- Off-canvas filter drawer ------------------------------------------
+     The facet sidebar becomes a left slide-out drawer; the toolbar's Filters
+     button opens it. Selecting facets still filters live (portfolio.js is
+     untouched); results stay visible behind the semi-transparent backdrop. */
+  .filters-toggle {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--sans); font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-700); background: #fff; border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 15px; cursor: pointer;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .filters-toggle:hover { color: var(--wine); border-color: var(--brass-300); }
+  .filters-toggle:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
+  .filters-toggle svg { flex: 0 0 auto; }
+
+  .facets {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 60;
+    width: min(320px, 86vw);
+    max-width: 320px;
+    height: 100%;
+    margin: 0;
+    border: 0;
+    border-right: 1px solid var(--line);
+    border-radius: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transform: translateX(-100%);
+    transition: transform .28s ease;
+    box-shadow: 0 0 44px -6px rgba(42, 10, 19, .55);
+  }
+  .facets.is-open { transform: translateX(0); }
+
+  .facets-drawer-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 0 0 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .facets-drawer-title { font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-700); }
+  .facets-close {
+    width: 34px; height: 34px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 24px; line-height: 1;
+    color: var(--ink-700); background: var(--parchment-50);
+    border: 1px solid var(--line); border-radius: 8px; cursor: pointer;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .facets-close:hover { color: var(--wine); border-color: var(--brass-300); }
+  .facets-close:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
+
+  /* Body scroll lock while the drawer is open. */
+  body.drawer-open { overflow: hidden; }
 }
 
 /* md — collapse the header nav into a hamburger menu */
@@ -506,6 +606,15 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   .footer-brand { grid-column: auto; }
   .footer-bottom { flex-direction: column; align-items: flex-start; }
   .footer-legal { text-align: left; }
+
+  /* List rows: stack producer/name over the meta on phones, but stay tight —
+     the meta drops under the name (left-aligned) instead of pinning right. */
+  .wine-grid.view-list .wine-card .body {
+    grid-template-columns: 1fr;
+    grid-template-areas: "producer" "name" "meta";
+    row-gap: 2px;
+  }
+  .wine-grid.view-list .wine-card .meta { text-align: left; white-space: normal; }
 }
 
 /* ---- Responsive hardening: prevent horizontal overflow on mobile -------- */

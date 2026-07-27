@@ -34,7 +34,18 @@
 
   <section class="wrap">
     <div class="portfolio-layout">
-      <aside class="facets">
+      {{/* Backdrop for the off-canvas filter drawer (≤1024px). Starts hidden;
+           assets/js/filters.js unhides it while the drawer is open and closes
+           the drawer when it's clicked. Inert/invisible on desktop. */}}
+      <div class="facets-backdrop" hidden aria-hidden="true"></div>
+
+      <aside class="facets" id="portfolio-facets" aria-label="Filter the portfolio">
+        {{/* Drawer chrome — only visible when .facets is a mobile drawer. */}}
+        <div class="facets-drawer-head">
+          <span class="facets-drawer-title">Filters</span>
+          <button type="button" class="facets-close" aria-label="Close filters">&times;</button>
+        </div>
+
         <h3>Search</h3>
         <input type="search" id="portfolio-search" placeholder="Producer, wine, region&hellip;"
           aria-label="Search the portfolio">
@@ -53,9 +64,17 @@
       <div>
         <div class="portfolio-toolbar">
           <p id="portfolio-count">{{len .Wines}} wines</p>
-          <div class="view-toggle" role="group" aria-label="Choose portfolio layout">
-            <button type="button" class="view-toggle-btn is-active" data-view="cards" aria-pressed="true">Cards</button>
-            <button type="button" class="view-toggle-btn" data-view="list" aria-pressed="false">List</button>
+          <div class="portfolio-toolbar-actions">
+            {{/* Opens the .facets panel as an off-canvas drawer on ≤1024px;
+                 display:none on desktop where the sidebar is always visible. */}}
+            <button type="button" class="filters-toggle" aria-expanded="false" aria-controls="portfolio-facets">
+              <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18v2.6l-7 7V21l-4-2v-5.4l-7-7V4Z"/></svg>
+              Filters
+            </button>
+            <div class="view-toggle" role="group" aria-label="Choose portfolio layout">
+              <button type="button" class="view-toggle-btn is-active" data-view="cards" aria-pressed="true">Cards</button>
+              <button type="button" class="view-toggle-btn" data-view="list" aria-pressed="false">List</button>
+            </div>
           </div>
         </div>
         <ul class="wine-grid view-cards" style="list-style:none;margin:0;padding:0;">
@@ -84,6 +103,7 @@
 </main>
 {{template "footer" .}}
 <script src="/assets/js/portfolio.js" defer></script>
+<script src="/assets/js/filters.js" defer></script>
 </body>
 </html>
 {{end}}
