@@ -17,17 +17,20 @@
 <title>{{.Title}}</title>
 <meta name="description" content="{{.Description}}">
 <link rel="canonical" href="{{.BaseURL}}{{.Path}}">
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
 <link rel="stylesheet" href="/assets/css/site.css">
 {{end}}
 
 {{define "header"}}<header class="site-header">
   <div class="wrap">
-    <a class="mark" href="/">Fine<span class="vines">Vines</span></a>
+    <a class="brand" href="/" aria-label="FineVines home"><img src="/assets/img/finevines-logo.png" alt="FineVines" width="172"></a>
     <nav class="site-nav">
+      <a href="/"{{if eq .Path "/"}} aria-current="page"{{end}}>Home</a>
       <a href="/portfolio/"{{if eq .Path "/portfolio/"}} aria-current="page"{{end}}>Portfolio</a>
       <a href="/news/"{{if eq .Path "/news/"}} aria-current="page"{{end}}>News &amp; Events</a>
-      <a href="/about/"{{if eq .Path "/about/"}} aria-current="page"{{end}}>About</a>
+      <a href="/about/"{{if eq .Path "/about/"}} aria-current="page"{{end}}>About Us</a>
       <a href="/contact/"{{if eq .Path "/contact/"}} aria-current="page"{{end}}>Contact</a>
+      <a class="btn btn-cta" href="/contact/">Become a Customer</a>
     </nav>
   </div>
 </header>

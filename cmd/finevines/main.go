@@ -66,7 +66,7 @@ func runBuild(cfg config.Config) error {
 // orchestration logic (roster -> eligibility filter -> diff -> per-wine
 // text+image enrichment -> checkpointed data/wines.json).
 //
-// ⚠ Before the first live run against the real Fine Vines org, confirm the
+// ⚠ Before the first live run against the real FineVines org, confirm the
 // SOQL field names against the org (client action item C1) — see the
 // checkpoint comment on rosterSOQL in internal/salesforce/client.go — and
 // consider adding a temporary "LIMIT 25" to that query to eyeball output
@@ -110,7 +110,7 @@ func runEnrich(cfg config.Config) error {
 const edgeRulesGateMax = 20
 
 // runRedirects discovers every URL currently live on the OLD finevines.com
-// (the site this rebuild replaces — cfg.SiteBaseURL, since Fine Vines keeps
+// (the site this rebuild replaces — cfg.SiteBaseURL, since FineVines keeps
 // its domain) and maps each one to its new-site location, so launch can
 // 301 the entire old footprint and Google's existing index carries over
 // (design spec §7, plan Task 19/20).
@@ -201,7 +201,7 @@ func runRedirects(cfg config.Config, args []string) error {
 	// Edge Scripting (Branch B, plan Task 20). Needs a different set of
 	// Bunny credentials than `deploy`'s storage-zone upload: the account
 	// API key (shared with deploy's Purge) plus the target compute
-	// script's ID, which is created and linked to the Fine Vines Pull
+	// script's ID, which is created and linked to the FineVines Pull
 	// Zone once via the Bunny dashboard/Terraform (see ScriptClient's doc
 	// comment) — that one-time setup is a launch step, client item C4.
 	requiredEnv := []struct{ name, value string }{
@@ -215,7 +215,7 @@ func runRedirects(cfg config.Config, args []string) error {
 		}
 	}
 
-	// Fine Vines keeps its domain, so cfg.SiteBaseURL doubles as both the
+	// FineVines keeps its domain, so cfg.SiteBaseURL doubles as both the
 	// old-site crawl target (Discover, above) and — after cutover — the
 	// new site's own host, which is where the deployed redirects.json the
 	// middleware fetches at runtime will live.

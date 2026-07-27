@@ -17,7 +17,7 @@ import (
 //
 //  1. Producer-supplied guard: if prev already carries a producer-supplied
 //     image, it is returned untouched and provider is never invoked — enrich
-//     must never overwrite an image the producer gave Fine Vines directly.
+//     must never overwrite an image the producer gave FineVines directly.
 //  2. Imagen photo: provider.GenerateJPEG renders a photorealistic bottle
 //     photo, written to <imgDir>/<SKU>.jpg (source model.ImageGeneratedPhoto).
 //  3. Label floor: ANY provider error — the ErrImageRejected sentinel or an

@@ -1,9 +1,9 @@
 ---
 name: finevines-team
-description: Use when adding, removing, or editing a team member on the Fine Vines About page.
+description: Use when adding, removing, or editing a team member on the FineVines About page.
 ---
 
-# Fine Vines Team Roster
+# FineVines Team Roster
 
 This skill turns a short conversation with Barbara (or whoever on staff is updating the roster) into an updated
 `data/team.json`, and optionally publishes it to finevines.com. Barbara isn't a developer — no jargon, no talk of
@@ -67,7 +67,7 @@ Each member object must have exactly these keys — no more, no fewer (this must
   "role": "Sales",
   "email": "jane@finevines.com",
   "photoPath": "assets/img/team/jane-doe.jpg",
-  "note": "Joined the Fine Vines team in 2026."
+  "note": "Joined the FineVines team in 2026."
 }
 ```
 
@@ -79,7 +79,7 @@ Each member object must have exactly these keys — no more, no fewer (this must
 ## Step 5 — Show the change, get approval, write the file
 
 Show the user the entry you're about to add, remove, or change — plain language is fine ("Here's what I've got for
-Jane: Sales, jane@finevines.com, with the note 'Joined the Fine Vines team in 2026.' Look right?"), or the raw JSON
+Jane: Sales, jane@finevines.com, with the note 'Joined the FineVines team in 2026.' Look right?"), or the raw JSON
 if they're comfortable with it. Make any edits they ask for.
 
 Once approved, write `data/team.json` as a valid JSON array containing every existing member unchanged (same order,
@@ -96,7 +96,7 @@ Then ask: **"Publish now? I'll run the site build and deploy."**
 ## Voice
 
 This is mostly a data-entry skill, so the copy burden is light. The one place voice matters is the `note` field, if
-used: keep it brief (a phrase or short sentence) and in the Fine Vines register — elegant, understated, never
+used: keep it brief (a phrase or short sentence) and in the FineVines register — elegant, understated, never
 corporate-tech phrasing. "Twenty years buying Piedmont and Barolo for the portfolio" reads right; "Passionate about
 delivering world-class wine solutions!" does not.
 

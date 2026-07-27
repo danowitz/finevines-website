@@ -37,11 +37,11 @@ func NewTextEnricher(apiKey string, opts ...option.RequestOption) *TextEnricher 
 	return &TextEnricher{client: anthropic.NewClient(append([]option.RequestOption{option.WithAPIKey(apiKey)}, opts...)...)}
 }
 
-// textSystem is the grounded system prompt: it fixes Fine Vines' editorial
+// textSystem is the grounded system prompt: it fixes FineVines' editorial
 // voice and, just as important, forbids Claude from inventing any fact not
 // present in the per-wine prompt (scores, prices, vintages, awards,
 // provenance). The catalog only ever states what Salesforce actually knows.
-const textSystem = `You write catalog copy for Fine Vines, a licensed Illinois
+const textSystem = `You write catalog copy for FineVines, a licensed Illinois
 wholesale wine distributor. Voice: elegant, editorial, old-world wine trade —
 never corporate-tech. You will receive the known facts about one wine. Write:
 1. "description": a 2–3 sentence tasting description for the trade.

@@ -12,7 +12,7 @@ package redirects
 // fetched redirects.json, not in per-rule config).
 //
 // This file intentionally contains no implementation. It documents the
-// alternative for a HYPOTHETICAL future site (or a future Fine Vines
+// alternative for a HYPOTHETICAL future site (or a future FineVines
 // sub-property) whose old-URL inventory is small enough — at most 20
 // entries — that Edge Rules would be the simpler mechanism:
 //

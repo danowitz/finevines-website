@@ -26,10 +26,12 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		"<title>Fine Vines",
-		"Pouring elegance with a sommelier", // tagline present
+		"<title>FineVines",
+		"Pouring elegance with a sommelier",                      // tagline present
 		`rel="canonical" href="https://finevines.com/"`,
 		`href="/assets/css/site.css"`,
+		`href="/assets/img/favicon.ico"`,                         // favicon wired in base head
+		`<img src="/assets/img/finevines-logo.png" alt="FineVines"`, // real logo wordmark in header
 	} {
 		if !strings.Contains(string(home), want) {
 			t.Errorf("home missing %q", want)
@@ -193,6 +195,7 @@ func TestPortfolioPage(t *testing.T) {
 		`id="portfolio-count"`,
 		`id="portfolio-search"`,
 		`src="/assets/js/portfolio.js"`,
+		`class="page-hero"`, // signature bordeaux hero band on section pages
 	} {
 		if !strings.Contains(html, want) {
 			t.Errorf("portfolio missing hook %q", want)

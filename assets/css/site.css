@@ -1,13 +1,12 @@
 /* ==========================================================================
-   Fine Vines — production design system
+   FineVines — production design system
    "Pouring elegance with a sommelier's touch."
 
-   Tokens below are transcribed verbatim from the approved proposal's
-   `<style>` block (index.html, repo root) — the bordeaux/brass/parchment/ink
-   palette and the display/body/ui type stack are the client-approved brand
-   system, not placeholders. Fonts are self-hosted from assets/fonts/
-   (extracted by tools/extractfonts from the same proposal) — no external
-   font CDN.
+   The bordeaux / brass / parchment / cork / ink token scales and the
+   display / body / ui type stack are ported from the approved proposal's
+   design language (.superpowers/sdd/proposal-design.css, extracted from the
+   client-approved proposal). Fonts are self-hosted from assets/fonts/
+   (extracted by tools/extractfonts) — no external font CDN.
    ========================================================================== */
 
 /* ---- Self-hosted webfonts -------------------------------------------- */
@@ -22,37 +21,41 @@
 @font-face { font-family: 'EB Garamond'; font-style: normal; font-weight: 500; font-display: swap; src: url('/assets/fonts/EBGaramond-500.woff2') format('woff2'); }
 @font-face { font-family: 'EB Garamond'; font-style: italic; font-weight: 400; font-display: swap; src: url('/assets/fonts/EBGaramond-400italic.woff2') format('woff2'); }
 
-/* ---- Design tokens ------------------------------------------------------
-   Named after the proposal's own palette (bordeaux/brass/parchment/ink),
-   plus --wine/--cream/--gold/--ink semantic aliases for templates. */
+/* ---- Design tokens ---------------------------------------------------- */
 :root {
-  /* Bordeaux (burgundy accent) */
+  /* Bordeaux */
   --bordeaux-950: #2a0a13;
   --bordeaux-900: #3d0e1c;
   --bordeaux-800: #531427;
   --bordeaux-700: #6b1630;
   --bordeaux-600: #862240;
-  /* Brass (gold rules & accents) */
+  /* Brass */
   --brass-700: #8a6a2f;
   --brass-600: #a9853d;
   --brass-500: #c2a14e;
   --brass-300: #ddc489;
   --brass-100: #f1e6c9;
-  /* Parchment (backgrounds) */
+  /* Parchment */
   --parchment-50: #faf6ee;
   --parchment-100: #f4ece0;
   --parchment-200: #ece0cd;
-  /* Ink (text) */
+  /* Cork */
+  --cork-400: #c4ad88;
+  --cork-600: #87714f;
+  /* Ink */
   --ink-900: #1c1410;
   --ink-800: #2c211a;
   --ink-700: #43352a;
   --ink-500: #6e5d4e;
   --ink-300: #9c8c7c;
-  /* Accents used sparingly (in-stock tag, callouts) */
+  /* Accents */
   --vineyard-700: #46582f;
+  --olive-500: #a3a432;
+  --olive-600: #909020;
+  --magenta-500: #9c2a68;
   --olive-tag-bg: #e7ecd8;
 
-  /* Semantic aliases — what page templates should reach for */
+  /* Semantic aliases */
   --wine: var(--bordeaux-700);
   --wine-dark: var(--bordeaux-900);
   --wine-deepest: var(--bordeaux-950);
@@ -66,15 +69,15 @@
   --ink-strong: var(--ink-900);
   --ink-soft: var(--ink-500);
 
-  /* Type stack (matches the proposal's --display/--body/--ui) */
   --serif-display: 'Cormorant Garamond', 'Hoefler Text', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
   --serif-text: 'EB Garamond', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
   --sans: 'Archivo', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --measure: 64ch;
   --radius: 12px;
+  --hero-band: radial-gradient(120% 150% at 82% -18%, var(--bordeaux-700) 0%, var(--bordeaux-800) 32%, var(--bordeaux-950) 84%);
 }
 
-/* ---- Reset & base ------------------------------------------------------ */
+/* ---- Reset & base ----------------------------------------------------- */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
@@ -88,11 +91,11 @@ body {
   text-rendering: optimizeLegibility;
 }
 img { max-width: 100%; display: block; }
-a { color: var(--wine); text-decoration-color: var(--brass-300); }
+a { color: var(--wine); text-decoration-color: var(--brass-300); text-underline-offset: 2px; }
 a:hover { text-decoration-color: currentColor; }
 ul, ol { padding-left: 1.2em; }
 
-h1, h2, h3, h4 { font-family: var(--serif-display); font-weight: 600; text-wrap: balance; line-height: 1.1; margin: 0 0 .5em; color: var(--ink-strong); }
+h1, h2, h3, h4 { font-family: var(--serif-display); font-weight: 600; text-wrap: balance; line-height: 1.08; margin: 0 0 .5em; color: var(--ink-strong); }
 h1 { font-size: clamp(40px, 6.2vw, 68px); letter-spacing: -.01em; }
 h2 { font-size: clamp(28px, 4vw, 42px); letter-spacing: -.005em; color: var(--bordeaux-800); }
 h3 { font-size: 23px; }
@@ -110,96 +113,211 @@ strong { color: var(--ink-strong); font-weight: 600; }
   color: var(--gold-dark);
   margin: 0 0 14px;
 }
-.lede { font-family: var(--serif-text); font-size: 22px; color: var(--ink-700); max-width: 52ch; line-height: 1.5; }
+.lede { font-family: var(--serif-text); font-size: 22px; color: var(--ink-700); max-width: 58ch; line-height: 1.5; }
 .rule-gold { height: 1px; border: 0; background: linear-gradient(90deg, var(--gold), transparent); margin: 34px 0; }
 
-/* ---- Layout -------------------------------------------------------------*/
-.wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+/* ---- Layout ----------------------------------------------------------- */
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
 main { display: block; }
-section.wrap { padding: 48px 0 64px; }
+section.wrap { padding: 56px 0 68px; }
 section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60px; }
 
-/* ---- Header / nav -------------------------------------------------------*/
+/* ---- Header / nav ----------------------------------------------------- */
 .site-header {
-  background: radial-gradient(120% 140% at 80% -10%, var(--bordeaux-600) 0%, var(--bordeaux-800) 34%, var(--wine-deepest) 78%);
-  color: var(--parchment-100);
+  background: var(--parchment-50);
+  border-bottom: 1px solid var(--parchment-200);
+  box-shadow: 0 1px 0 rgba(194, 161, 78, .35);
 }
-.site-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 20px; padding-bottom: 20px; flex-wrap: wrap; }
-.mark { font-family: var(--serif-display); font-weight: 600; font-size: 26px; letter-spacing: .02em; display: flex; gap: .32em; align-items: baseline; color: #fff; text-decoration: none; }
-.mark .vines { color: var(--brass-300); }
-.site-nav { display: flex; gap: 26px; flex-wrap: wrap; }
-.site-nav a { font-family: var(--sans); font-size: 13.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--brass-100); text-decoration: none; }
-.site-nav a:hover, .site-nav a[aria-current="page"] { color: #fff; }
+.site-header .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding-top: 18px;
+  padding-bottom: 18px;
+  flex-wrap: wrap;
+}
+.brand { display: inline-flex; align-items: center; line-height: 0; flex: 0 0 auto; }
+.brand img { width: 172px; height: auto; }
+.site-nav { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; margin-left: auto; }
+.site-nav a {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-700);
+  text-decoration: none;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+  transition: color .15s ease, border-color .15s ease;
+}
+.site-nav a:hover { color: var(--wine); }
+.site-nav a[aria-current="page"] { color: var(--wine); border-bottom-color: var(--gold); }
+.site-nav .btn-cta {
+  margin-left: 6px;
+  border-bottom: 0;
+  padding: 11px 20px;
+}
 
-/* ---- Footer ---------------------------------------------------------- */
-.site-footer { background: var(--wine-dark); color: var(--brass-100); padding: 40px 0; margin-top: 60px; }
-.site-footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; }
-.site-footer a { color: #fff; }
-.site-footer .foot-meta { font-family: var(--sans); font-size: 12.5px; letter-spacing: .04em; color: var(--brass-300); }
-
-/* ---- Buttons ----------------------------------------------------------- */
-.btn { display: inline-block; font-family: var(--sans); font-weight: 600; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; padding: 12px 22px; border-radius: 30px; text-decoration: none; }
-.btn-primary { background: var(--wine); color: #fff; }
+/* ---- Buttons ---------------------------------------------------------- */
+.btn { display: inline-block; font-family: var(--sans); font-weight: 600; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; padding: 13px 24px; border-radius: 30px; text-decoration: none; transition: background .15s ease, color .15s ease, box-shadow .15s ease; }
+.btn + .btn { margin-left: 10px; }
+.btn-primary { background: var(--wine); color: #fff; box-shadow: 0 12px 26px -16px rgba(107, 22, 48, .8); }
 .btn-primary:hover { background: var(--bordeaux-800); }
 .btn-ghost { background: transparent; border: 1px solid var(--gold); color: var(--wine); }
+.btn-ghost:hover { background: var(--gold-light); }
+.btn-cta { background: var(--wine); color: #fff; border-radius: 4px; font-size: 11.5px; letter-spacing: .1em; box-shadow: 0 10px 22px -14px rgba(107, 22, 48, .85); }
+.btn-cta:hover { background: var(--bordeaux-800); color: #fff; }
 
-/* ---- Portfolio: facet sidebar + wine grid ------------------------------ */
-.portfolio-layout { display: grid; grid-template-columns: 240px 1fr; gap: 40px; align-items: start; }
-.facets { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 20px; position: sticky; top: 20px; }
-.facets h3 { font-size: 15px; font-family: var(--sans); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--gold-dark); margin-bottom: 10px; }
-.facet-group { margin-bottom: 22px; }
-.facet-group:last-child { margin-bottom: 0; }
-.facet-group label { display: flex; align-items: center; gap: 8px; font-family: var(--sans); font-size: 14px; color: var(--ink-700); padding: 4px 0; cursor: pointer; }
-.facet-group input { accent-color: var(--wine); }
+/* ---- Section hero band (portfolio / news / about / wine / contact) ---- */
+.page-hero {
+  background: var(--hero-band);
+  color: var(--parchment-100);
+  border-bottom: 1px solid var(--bordeaux-950);
+}
+.page-hero .wrap { padding-top: 62px; padding-bottom: 66px; }
+.page-hero .eyebrow { color: var(--brass-300); }
+.page-hero h1 { color: #fff; max-width: 20ch; margin-bottom: .28em; }
+.page-hero .lede { color: var(--brass-100); max-width: 60ch; }
+.page-hero .hero-actions { margin-top: 26px; }
+.page-hero .btn-ghost { border-color: var(--brass-300); color: var(--brass-100); }
+.page-hero .btn-ghost:hover { background: rgba(241, 230, 201, .12); color: #fff; }
 
-.wine-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.wine-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; color: inherit; display: block; transition: box-shadow .15s ease; }
-.wine-card:hover { box-shadow: 0 18px 40px -24px rgba(61, 14, 28, .45); }
-.wine-card .thumb { aspect-ratio: 3 / 4; background: var(--cream-alt); }
-.wine-card .thumb img { width: 100%; height: 100%; object-fit: cover; }
-.wine-card .body { padding: 16px 18px 20px; }
-.wine-card .producer { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-dark); margin-bottom: 6px; }
-.wine-card h3 { font-size: 20px; margin-bottom: 4px; }
-.wine-card .meta { font-family: var(--sans); font-size: 12.5px; color: var(--ink-soft); }
+/* ---- Home hero -------------------------------------------------------- */
+.home-hero { background: var(--hero-band); color: var(--parchment-100); border-bottom: 1px solid var(--bordeaux-950); }
+.home-hero .wrap { padding-top: 76px; padding-bottom: 84px; }
+.home-hero .eyebrow { color: var(--brass-300); }
+.home-hero h1 { color: #fff; max-width: 16ch; }
+.home-hero .lede { color: var(--brass-100); max-width: 56ch; margin-bottom: 30px; }
+.home-hero .btn-ghost { border-color: var(--brass-300); color: var(--brass-100); }
+.home-hero .btn-ghost:hover { background: rgba(241, 230, 201, .12); color: #fff; }
+
+/* ---- Region row (home) ------------------------------------------------ */
+.region-row { font-family: var(--serif-display); font-size: 24px; color: var(--bordeaux-800); display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; margin-top: 14px; }
+.region-row a { text-decoration: none; color: var(--bordeaux-800); }
+.region-row a:hover { color: var(--wine); text-decoration: underline; text-decoration-color: var(--gold); }
+.region-row .sep { color: var(--brass-500); }
+
+/* ---- Portfolio: facet sidebar + wine grid ----------------------------- */
+.portfolio-layout { display: grid; grid-template-columns: 244px 1fr; gap: 44px; align-items: start; }
+.facets { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 20px; position: sticky; top: 20px; box-shadow: 0 14px 34px -26px rgba(61, 14, 28, .4); }
+.facets h3 { font-size: 12.5px; font-family: var(--sans); font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--gold-dark); margin: 0 0 10px; }
+.facets input[type=search] { width: 100%; font-family: var(--sans); font-size: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--parchment-50); color: var(--ink-800); }
+.facets input[type=search]:focus { outline: none; border-color: var(--gold); }
+.facet-group { margin: 0 0 6px; border-top: 1px solid var(--line); padding-top: 12px; margin-top: 16px; }
+.facet-group summary { font-family: var(--sans); font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-700); cursor: pointer; list-style: none; padding: 2px 0 8px; }
+.facet-group summary::-webkit-details-marker { display: none; }
+.facet-group summary::after { content: "+"; float: right; color: var(--gold-dark); font-weight: 400; }
+.facet-group[open] summary::after { content: "\2212"; }
+.facet-group label { display: flex; align-items: center; gap: 8px; font-family: var(--sans); font-size: 13.5px; color: var(--ink-700); padding: 4px 0; cursor: pointer; }
+.facet-group input[type=checkbox] { accent-color: var(--wine); }
+
+.wine-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+/* The <li> carries data-slug + [hidden]; it must keep the browser default
+   `[hidden]{display:none}`, so NO display rule lives on the <li>. All card
+   styling lives on the inner .wine-card <a>. */
+.wine-grid > li { list-style: none; }
+.wine-card {
+  display: block;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 12px 30px -24px rgba(61, 14, 28, .5);
+  transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+}
+.wine-card:hover { box-shadow: 0 26px 52px -26px rgba(61, 14, 28, .5); transform: translateY(-4px); border-color: var(--brass-300); }
+.wine-card .thumb {
+  aspect-ratio: 3 / 4;
+  background:
+    radial-gradient(130% 120% at 50% 0%, var(--parchment-50) 0%, var(--parchment-100) 62%, var(--parchment-200) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 26px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.wine-card .thumb img { width: auto; max-width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 18px 24px rgba(42, 10, 19, .28)); }
+.wine-card .body { padding: 18px 20px 22px; }
+.wine-card .producer { display: block; font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--gold-dark); margin-bottom: 7px; }
+.wine-card h3 { font-size: 21px; margin: 0 0 6px; color: var(--ink-strong); }
+.wine-card .meta { font-family: var(--sans); font-size: 12.5px; letter-spacing: .02em; color: var(--ink-soft); }
 
 /* ---- Wine detail: two-column ------------------------------------------ */
-.wine-detail { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 48px; align-items: start; }
-.wine-detail .photo img { width: 100%; border-radius: var(--radius); box-shadow: 0 30px 66px -28px rgba(0, 0, 0, .35); }
-.wine-detail .producer { font-family: var(--sans); font-weight: 600; text-transform: uppercase; letter-spacing: .14em; font-size: 12.5px; color: var(--gold-dark); margin-bottom: 8px; }
-.wine-detail .facts { display: flex; flex-wrap: wrap; gap: 10px 24px; font-family: var(--sans); font-size: 13.5px; color: var(--ink-soft); margin: 18px 0 26px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 16px 0; }
-.wine-detail .facts b { display: block; color: var(--ink-strong); font-family: var(--serif-text); font-size: 15px; font-weight: 600; }
-.wine-detail .sommelier-notes { font-style: italic; font-family: var(--serif-text); color: var(--ink-700); }
+.wine-detail { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 52px; align-items: start; }
+.wine-detail .photo {
+  background: radial-gradient(130% 120% at 50% 0%, var(--parchment-50) 0%, var(--parchment-100) 64%, var(--parchment-200) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 36px 40px;
+  box-shadow: 0 26px 60px -34px rgba(61, 14, 28, .5);
+}
+.wine-detail .photo img { width: 100%; height: auto; filter: drop-shadow(0 26px 34px rgba(42, 10, 19, .3)); }
+.wine-detail .producer { display: block; font-family: var(--sans); font-weight: 700; text-transform: uppercase; letter-spacing: .16em; font-size: 12.5px; color: var(--gold-dark); margin-bottom: 10px; }
+.wine-detail h1 { font-size: clamp(34px, 4.6vw, 52px); margin-bottom: .3em; }
+.wine-detail .facts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 22px 0 28px;
+  border-top: 1px solid var(--line);
+}
+.wine-detail .facts span { padding: 14px 4px; border-bottom: 1px solid var(--line); }
+.wine-detail .facts span:nth-child(odd) { border-right: 1px solid var(--line); padding-right: 20px; }
+.wine-detail .facts span:nth-child(even) { padding-left: 20px; }
+.wine-detail .facts b { display: block; color: var(--ink-strong); font-family: var(--serif-text); font-size: 17px; font-weight: 600; letter-spacing: 0; text-transform: none; margin-top: 4px; }
+.wine-detail .sommelier-notes { font-style: italic; }
 
-/* ---- News list ----------------------------------------------------------*/
-.news-list { display: flex; flex-direction: column; gap: 0; margin-top: 26px; }
-.news-item { display: grid; grid-template-columns: 120px 1fr; gap: 24px; padding: 24px 0; border-bottom: 1px solid var(--line); }
-.news-item:first-child { padding-top: 0; }
-.news-item .date { font-family: var(--sans); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--gold-dark); }
-.news-item h3 { font-size: 22px; margin-bottom: 6px; }
-.news-item h3 a { color: inherit; text-decoration: none; }
-.news-item .excerpt { color: var(--ink-700); margin-bottom: 0; }
-.news-item .category { display: inline-block; font-family: var(--sans); font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--vineyard-700); background: var(--olive-tag-bg); border-radius: 20px; padding: 3px 9px; margin-top: 10px; }
-.news-post-photo { width: 100%; border-radius: var(--radius); margin: 26px 0; box-shadow: 0 24px 54px -28px rgba(61, 14, 28, .35); }
-
-/* ---- Team grid ---------------------------------------------------------*/
-.team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 26px; }
-.team-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 22px 22px; text-align: center; }
-.team-card img, .team-card svg { width: 96px; height: 96px; margin: 0 auto 14px; border-radius: 50%; object-fit: cover; display: block; }
-.team-card .name { font-family: var(--serif-display); font-size: 22px; font-weight: 600; color: var(--ink-strong); line-height: 1.1; }
-.team-card .role { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-dark); margin: 6px 0 12px; }
-.team-card .email { font-family: var(--sans); font-size: 13px; color: var(--wine); border-top: 1px solid var(--line); padding-top: 12px; word-break: break-all; text-decoration: none; }
-
-/* ---- Contact / misc callouts -------------------------------------------*/
-.callout { background: #fff; border-left: 4px solid var(--gold); border-radius: 0 10px 10px 0; padding: 20px 24px; margin: 26px 0; box-shadow: 0 10px 26px -20px rgba(61, 14, 28, .4); }
+/* ---- Callout / sommelier aside ---------------------------------------- */
+.callout { background: #fff; border-left: 4px solid var(--gold); border-radius: 0 10px 10px 0; padding: 20px 24px; margin: 26px 0; box-shadow: 0 12px 30px -22px rgba(61, 14, 28, .45); }
 .callout p { margin: 0; color: var(--ink-700); }
+.callout.sommelier-notes::before { content: "Sommelier's note"; display: block; font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--bordeaux-700); font-style: normal; margin-bottom: 8px; }
+.callout.sommelier-notes p { font-style: italic; font-size: 19px; color: var(--ink-700); }
 
-/* ---- Responsive ----------------------------------------------------------
-   Two breakpoints: 960px (drop to two-column grids, stack facets above
-   results) and 640px (single column everywhere, stacked nav). */
-@media (max-width: 960px) {
+/* ---- News list -------------------------------------------------------- */
+.news-list { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+.news-item { display: grid; grid-template-columns: 130px 1fr; gap: 28px; padding: 26px 0; border-bottom: 1px solid var(--line); }
+.news-item:first-child { padding-top: 0; }
+.news-item .date { font-family: var(--sans); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-dark); padding-top: 6px; }
+.news-item h3 { font-size: 25px; margin: 0 0 8px; }
+.news-item h3 a { color: var(--ink-strong); text-decoration: none; }
+.news-item h3 a:hover { color: var(--wine); }
+.news-item .excerpt { color: var(--ink-700); margin-bottom: 0; }
+.news-item .category { display: inline-block; font-family: var(--sans); font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--vineyard-700); background: var(--olive-tag-bg); border-radius: 20px; padding: 3px 10px; margin-top: 12px; }
+.news-post-photo { width: 100%; border-radius: var(--radius); margin: 26px 0; box-shadow: 0 26px 56px -30px rgba(61, 14, 28, .4); }
+.news-body { max-width: 68ch; }
+.news-body p { font-size: 20px; }
+
+/* ---- Team grid -------------------------------------------------------- */
+.team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 8px; }
+.team-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 24px 24px; text-align: center; box-shadow: 0 14px 34px -28px rgba(61, 14, 28, .5); }
+.team-card img, .team-card svg { width: 96px; height: 96px; margin: 0 auto 14px; border-radius: 50%; object-fit: cover; display: block; }
+.team-card .name { font-family: var(--serif-display); font-size: 23px; font-weight: 600; color: var(--ink-strong); line-height: 1.1; }
+.team-card .role { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--gold-dark); margin: 6px 0 12px; }
+.team-card p { font-family: var(--serif-text); font-style: italic; font-size: 16px; color: var(--ink-700); line-height: 1.45; margin: 0 0 14px; max-width: none; }
+.team-card .email { font-family: var(--sans); font-size: 13px; color: var(--wine); border-top: 1px solid var(--line); padding-top: 12px; word-break: break-all; text-decoration: none; display: block; }
+
+/* ---- Footer ----------------------------------------------------------- */
+.site-footer { background: var(--wine-dark); color: var(--brass-100); padding: 46px 0 52px; margin-top: 0; }
+.site-footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 22px; align-items: flex-start; }
+.site-footer p { margin: 0 0 8px; }
+.site-footer p:first-child { font-family: var(--serif-display); font-style: italic; font-size: 22px; color: var(--brass-300); }
+.site-footer a { color: #fff; text-decoration-color: var(--brass-500); }
+.site-footer .foot-meta { font-family: var(--sans); font-size: 12.5px; letter-spacing: .04em; color: var(--brass-300); max-width: 30ch; text-align: right; }
+
+/* ---- Responsive ------------------------------------------------------- */
+@media (max-width: 980px) {
   .wine-grid { grid-template-columns: repeat(2, 1fr); }
   .team-grid { grid-template-columns: repeat(2, 1fr); }
-  .wine-detail { grid-template-columns: 1fr; }
+  .wine-detail { grid-template-columns: 1fr; gap: 36px; }
   .portfolio-layout { grid-template-columns: 1fr; }
   .facets { position: static; }
 }
@@ -208,8 +326,12 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   body { font-size: 17px; }
   .wine-grid { grid-template-columns: 1fr; }
   .team-grid { grid-template-columns: 1fr; }
-  .news-item { grid-template-columns: 1fr; }
-  .site-header .wrap { flex-direction: column; align-items: flex-start; }
-  .site-nav { gap: 16px; }
+  .news-item { grid-template-columns: 1fr; gap: 8px; }
+  .wine-detail .facts { grid-template-columns: 1fr; }
+  .wine-detail .facts span:nth-child(odd) { border-right: 0; padding-right: 4px; }
+  .wine-detail .facts span:nth-child(even) { padding-left: 4px; }
+  .site-header .wrap { justify-content: center; }
+  .site-nav { margin-left: 0; gap: 14px 18px; justify-content: center; }
   .site-footer .wrap { flex-direction: column; }
+  .site-footer .foot-meta { text-align: left; }
 }

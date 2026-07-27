@@ -171,7 +171,7 @@ type viewModel struct {
 // deterministic: the same WineRaw byte-for-byte reproduces the same SVG,
 // while a different SKU picks a different frame/crest/palette combination.
 // The label always carries the wine's own producer/name/appellation/
-// vintage — never Fine Vines' branding (spec §5).
+// vintage — never FineVines' branding (spec §5).
 func Generate(w salesforce.WineRaw) []byte {
 	seed := fnv64(w.SKU)
 	frame := frames[seed%uint64(len(frames))]

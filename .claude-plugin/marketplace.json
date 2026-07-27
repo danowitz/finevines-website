@@ -1,25 +1,25 @@
 {
   "name": "finevines",
   "owner": {
-    "name": "Fine Vines",
+    "name": "FineVines",
     "email": "barbara@finevines.com"
   },
   "metadata": {
-    "description": "Claude Code plugins for Fine Vines — skills that let the office staff update finevines.com without touching code.",
+    "description": "Claude Code plugins for FineVines — skills that let the office staff update finevines.com without touching code.",
     "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "finevines-news",
       "source": "./plugins/finevines-news",
-      "description": "Post news & events to the Fine Vines website",
+      "description": "Post news & events to the FineVines website",
       "category": "content",
       "tags": ["news", "events", "website"]
     },
     {
       "name": "finevines-team",
       "source": "./plugins/finevines-team",
-      "description": "Manage the Fine Vines About-page team roster",
+      "description": "Manage the FineVines About-page team roster",
       "category": "content",
       "tags": ["team", "roster", "website"]
     }

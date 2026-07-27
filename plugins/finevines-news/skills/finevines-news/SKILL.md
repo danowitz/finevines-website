@@ -1,9 +1,9 @@
 ---
 name: finevines-news
-description: Use when posting a tasting, new arrival, or event to the Fine Vines website — interviews for the details, writes the post in the Fine Vines voice, and offers to publish.
+description: Use when posting a tasting, new arrival, or event to the FineVines website — interviews for the details, writes the post in the FineVines voice, and offers to publish.
 ---
 
-# Fine Vines News & Events
+# FineVines News & Events
 
 This skill turns a short conversation with Barbara (or whoever on staff is posting) into a finished
 `data/news/<slug>.json` file, and optionally publishes it to finevines.com. Barbara isn't a developer — no jargon,
@@ -31,20 +31,20 @@ Ask conversationally, in plain language, one question per turn — don't front-l
 Never invent facts. If a date, price, wine name, producer, or person's name wasn't given to you, ask for it — don't
 guess or fill it in from general wine knowledge.
 
-## Step 2 — Write the body in the Fine Vines voice
+## Step 2 — Write the body in the FineVines voice
 
-Fine Vines is an old-world wine trade voice: elegant, editorial, unhurried. Never corporate-tech phrasing, never
+FineVines is an old-world wine trade voice: elegant, editorial, unhurried. Never corporate-tech phrasing, never
 marketing hype, never exclamation points doing the work that a well-chosen verb should do. Write the way a
 knowledgeable friend in the trade would tell you about a wine or an evening — warm, specific, a little formal, never
 salesy. You don't need to repeat the tagline ("Pouring elegance with a sommelier's touch") — just let that
 sensibility come through in the word choices.
 
 **Before (corporate-tech, wrong):**
-> Exciting news! Fine Vines is thrilled to announce our newest addition to the portfolio! This amazing Barolo is a
+> Exciting news! FineVines is thrilled to announce our newest addition to the portfolio! This amazing Barolo is a
 > must-try for wine lovers everywhere. Don't miss out — stop by today!!
 
-**After (Fine Vines voice, right):**
-> Fine Vines welcomes a new Barolo to the portfolio this month: the 2019 vintage from a family estate in the
+**After (FineVines voice, right):**
+> FineVines welcomes a new Barolo to the portfolio this month: the 2019 vintage from a family estate in the
 > Langhe hills, farmed in the traditional way for three generations. It's a wine that rewards patience — firm
 > tannins now, but the makings of real elegance a few years out. We think it belongs on any list built for the
 > long haul.
@@ -53,7 +53,7 @@ sensibility come through in the word choices.
 > Join us for a tasting event on Friday. Great wines, great people. See you there!
 
 **After:**
-> On Friday evening, Fine Vines opens its tasting room for an evening built around the wines of Piedmont — six
+> On Friday evening, FineVines opens its tasting room for an evening built around the wines of Piedmont — six
 > pours, guided by our sales team, with the kind of unhurried conversation that a good bottle deserves. Doors open
 > at six.
 

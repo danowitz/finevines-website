@@ -1,9 +1,9 @@
 {
   "name": "finevines-news",
   "version": "1.0.0",
-  "description": "Interviews for the details of a tasting, new arrival, or event, writes the post in the Fine Vines voice, and publishes it to finevines.com.",
+  "description": "Interviews for the details of a tasting, new arrival, or event, writes the post in the FineVines voice, and publishes it to finevines.com.",
   "author": {
-    "name": "Fine Vines",
+    "name": "FineVines",
     "email": "barbara@finevines.com"
   },
   "license": "UNLICENSED",

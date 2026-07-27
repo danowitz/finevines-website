@@ -161,8 +161,8 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 		{"", "home", homePage{
 			page: page{
 				site:  s,
-				Title: "Fine Vines — Wholesale Wine & Spirits, Chicagoland",
-				Description: "Fine Vines is a licensed wholesale distributor of wine and spirits, pouring " +
+				Title: "FineVines — Wholesale Wine & Spirits, Chicagoland",
+				Description: "FineVines is a licensed wholesale distributor of wine and spirits, pouring " +
 					"elegance with a sommelier's touch across Chicagoland's restaurants and retailers.",
 				Path: "/",
 			},
@@ -170,16 +170,16 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 		}},
 		{"contact", "contact", page{
 			site:  s,
-			Title: "Contact — Fine Vines",
-			Description: "Reach the Fine Vines trade team — wholesale wine and spirits distribution for " +
+			Title: "Contact — FineVines",
+			Description: "Reach the FineVines trade team — wholesale wine and spirits distribution for " +
 				"licensed Illinois retailers, restaurants, and hospitality accounts.",
 			Path: "/contact/",
 		}},
 		{"portfolio", "portfolio", portfolioPage{
 			page: page{
 				site:  s,
-				Title: "Portfolio — Fine Vines",
-				Description: "Browse the full Fine Vines wholesale portfolio — filter by producer, varietal, " +
+				Title: "Portfolio — FineVines",
+				Description: "Browse the full FineVines wholesale portfolio — filter by producer, varietal, " +
 					"region, vintage, or style across every wine currently in stock.",
 				Path: "/portfolio/",
 			},
@@ -189,8 +189,8 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 		{"news", "news", newsPage{
 			page: page{
 				site:        s,
-				Title:       "News & Events — Fine Vines",
-				Description: "Tastings, allocations, and news from the Fine Vines trade team.",
+				Title:       "News & Events — FineVines",
+				Description: "Tastings, allocations, and news from the FineVines trade team.",
 				Path:        "/news/",
 			},
 			Posts: s.News,
@@ -202,8 +202,8 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 		// page-embedding contract in the doc comment above).
 		{"about", "about", page{
 			site:  s,
-			Title: "About — Fine Vines",
-			Description: "A service company, first and last — meet the Fine Vines sales, warehouse, and " +
+			Title: "About — FineVines",
+			Description: "A service company, first and last — meet the FineVines sales, warehouse, and " +
 				"support team.",
 			Path: "/about/",
 		}},
@@ -229,7 +229,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 		data := winePage{
 			page: page{
 				site:        s,
-				Title:       fmt.Sprintf("%s %s %s — Fine Vines", w.Producer, w.Name, w.Vintage),
+				Title:       fmt.Sprintf("%s %s %s — FineVines", w.Producer, w.Name, w.Vintage),
 				Description: firstNonEmpty(w.Description, w.Producer+" "+w.Name),
 				Path:        "/wines/" + w.Slug + "/",
 			},
@@ -245,7 +245,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL string) error {
 		data := newsPostPage{
 			page: page{
 				site:        s,
-				Title:       n.Title + " — Fine Vines",
+				Title:       n.Title + " — FineVines",
 				Description: excerpt(n.Body, 160),
 				Path:        "/news/" + n.Slug + "/",
 			},

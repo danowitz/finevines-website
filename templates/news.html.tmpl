@@ -23,11 +23,15 @@
 <body>
 {{template "header" .}}
 <main>
-  <section class="wrap">
-    <span class="eyebrow">News &amp; Events</span>
-    <h1>From the Tasting Room</h1>
-    <p class="lede">Tastings, allocations, and news from the Fine Vines trade team.</p>
+  <section class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">News &amp; Events</span>
+      <h1>From the Tasting Room</h1>
+      <p class="lede">Tastings, allocations, and news from the FineVines trade team.</p>
+    </div>
+  </section>
 
+  <section class="wrap">
     <div class="news-list">
       {{range .Posts}}<article class="news-item">
         <div class="date">{{.Date}}</div>

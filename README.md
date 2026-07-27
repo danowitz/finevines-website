@@ -1,11 +1,11 @@
-# Fine Vines Website
+# FineVines Website
 
 Source for [finevines.com](https://finevines.com) — a static, SEO-first website with a self-updating wine
-catalog, built for Fine Vines, a licensed wholesale wine/liquor distributor in Illinois.
+catalog, built for FineVines, a licensed wholesale wine/liquor distributor in Illinois.
 
 For the full architecture and confirmed scope, see
 [`docs/superpowers/specs/2026-07-03-finevines-static-site-design.md`](docs/superpowers/specs/2026-07-03-finevines-static-site-design.md).
-**If you're Fine Vines staff running the site day to day, you want
+**If you're FineVines staff running the site day to day, you want
 [`docs/operations.md`](docs/operations.md) instead — this README is for developers.**
 
 ## What's here
@@ -35,7 +35,7 @@ finevines deploy     dist/ -> Bunny.net Storage Zone + Pull Zone purge    (netwo
 - **`deploy`** uploads `dist/` to a Bunny.net Storage Zone, uploading only files whose content hash changed
   since the last deploy, deletes orphaned files, and purges the Bunny Pull Zone's CDN cache.
 - **Two Claude Code skills** (`plugins/finevines-news`, `plugins/finevines-team`), installed via this repo's
-  `.claude-plugin/marketplace.json`, let Fine Vines office staff post news/events and manage the About-page
+  `.claude-plugin/marketplace.json`, let FineVines office staff post news/events and manage the About-page
   team roster through a plain-language conversation — writing `data/news/<slug>.json` and `data/team.json`
   respectively — without touching code. Both offer to run `build` + `deploy` when done.
 
@@ -50,7 +50,7 @@ Requires Go (see `go.mod` for the version). From the repo root:
 go build -o finevines.exe ./cmd/finevines
 ```
 
-For the actual release binary that ships to the Fine Vines machine, use the release flags (strips debug
+For the actual release binary that ships to the FineVines machine, use the release flags (strips debug
 symbols, smaller binary):
 
 ```
@@ -77,13 +77,13 @@ skills.
 
 ## Proprietary Notice
 
-Copyright © 2026 Fine Vines. All rights reserved.
+Copyright © 2026 FineVines. All rights reserved.
 
 This repository contains proprietary website source code, designs, assets, content, branding, and related
-materials for Fine Vines.
+materials for FineVines.
 
 No license is granted. Public availability of this repository does not permit copying, reuse, modification,
 distribution, publication, sublicensing, or creation of derivative works outside the limited functionality
 provided by GitHub's platform.
 
-Any use of this repository or its contents requires prior written permission from Fine Vines.
+Any use of this repository or its contents requires prior written permission from FineVines.

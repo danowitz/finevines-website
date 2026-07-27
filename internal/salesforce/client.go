@@ -49,7 +49,7 @@ func NewClient(cfg Config, hc *http.Client) *Client {
 // field API name below (StockKeepingUnit, Producer__c, Vintage__c,
 // Varietal__c, Region__c, Appellation__c, Style__c, Stock_Qty__c) are
 // PROVISIONAL GUESSES against a standard Product2 layout — they have NOT
-// been confirmed against the real Fine Vines org. Before the first live
+// been confirmed against the real FineVines org. Before the first live
 // run, pull the real object/field API names (Workbench "Data > Query" or
 // `sf sobject describe --sobject Product2`), in particular which field
 // actually carries the QuickBooks-synced stock quantity, and correct the

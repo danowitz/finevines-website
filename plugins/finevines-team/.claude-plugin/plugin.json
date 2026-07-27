@@ -1,9 +1,9 @@
 {
   "name": "finevines-team",
   "version": "1.0.0",
-  "description": "Manage the Fine Vines About-page team roster",
+  "description": "Manage the FineVines About-page team roster",
   "author": {
-    "name": "Fine Vines",
+    "name": "FineVines",
     "email": "barbara@finevines.com"
   },
   "license": "UNLICENSED",

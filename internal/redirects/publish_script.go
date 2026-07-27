@@ -35,7 +35,7 @@ type middlewareTemplateData struct {
 // script that performs the finevines.com redirect map's 301s at the edge.
 // redirectsURL is where the deployed redirects.json lives at runtime — the
 // new (post-migration) site's own copy, e.g.
-// "https://www.finevines.com/redirects.json" (Fine Vines keeps its domain,
+// "https://www.finevines.com/redirects.json" (FineVines keeps its domain,
 // so the same host serves both the old-site crawl target during `redirects`
 // discovery and the new site's assets after cutover), or a Bunny storage
 // zone URL if serving it through the pull zone itself proves awkward.
@@ -113,7 +113,7 @@ type ScriptClient struct {
 	// uses for Pull Zone purge (see internal/deploy.BunnyClient.Purge).
 	APIKey string
 	// ScriptID is the target compute script's numeric ID (as a string),
-	// already created and linked to the Fine Vines Pull Zone.
+	// already created and linked to the FineVines Pull Zone.
 	ScriptID string
 
 	HTTPClient *http.Client

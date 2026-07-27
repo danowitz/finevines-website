@@ -1,5 +1,5 @@
 @echo off
-REM Fine Vines nightly/on-demand pipeline. Run from the repo root.
+REM FineVines nightly/on-demand pipeline. Run from the repo root.
 finevines.exe enrich || goto :fail
 finevines.exe build || goto :fail
 finevines.exe deploy || goto :fail

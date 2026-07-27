@@ -31,20 +31,26 @@
   "headline": {{.Post.Title}},
   "datePublished": {{.Post.Date}},
   "articleBody": {{.Post.Body}},
-  "publisher": {"@type": "Organization", "name": "Fine Vines Ltd."}
+  "publisher": {"@type": "Organization", "name": "FineVines Ltd."}
 }
 </script>
 </head>
 <body>
 {{template "header" .}}
 <main>
+  <section class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">{{.Post.Category}}</span>
+      <h1>{{.Post.Title}}</h1>
+      <p class="lede">{{.Post.Date}}</p>
+    </div>
+  </section>
+
   <section class="wrap">
-    <span class="eyebrow">{{.Post.Category}}</span>
-    <h1>{{.Post.Title}}</h1>
-    <p class="lede">{{.Post.Date}}</p>
     {{if .Post.Image}}<img class="news-post-photo" src="/{{.Post.Image}}" alt="{{.Post.Title}}">{{end}}
+    <div class="news-body">
     {{range paragraphs .Post.Body}}<p>{{.}}</p>
-    {{end}}
+    {{end}}</div>
     <p><a href="/news/">&larr; Back to News &amp; Events</a></p>
   </section>
 </main>

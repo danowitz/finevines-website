@@ -1,6 +1,6 @@
-# Running the Fine Vines website — a guide for the office
+# Running the FineVines website — a guide for the office
 
-This is the day-to-day guide for keeping finevines.com up to date. It's written for whoever at Fine Vines is
+This is the day-to-day guide for keeping finevines.com up to date. It's written for whoever at FineVines is
 running the machine (Barbara, or anyone covering for her) — no programming knowledge required. If you're a
 developer looking for the technical README, see [`../README.md`](../README.md) instead.
 
@@ -15,7 +15,7 @@ developer looking for the technical README, see [`../README.md`](../README.md) i
 |---|---|
 | `enrich` | Pulls the current wine list from Salesforce, writes AI-generated tasting notes and a bottle photo for anything new or changed, and drops any wine that's out of stock or not meant for the web. Saves everything to `data\wines.json`. This is the only step that talks to Salesforce. |
 | `build` | Turns the wine list, the news posts, and the team roster into the actual website pages (HTML files) in a folder called `dist`. This step never goes out to the internet — it just reads the JSON files and writes pages. |
-| `deploy` | Uploads the freshly built pages to Fine Vines' hosting account (Bunny.net) and tells the CDN to clear its cache so visitors see the new version right away. Only files that actually changed get re-uploaded, so this is fast on a normal day. |
+| `deploy` | Uploads the freshly built pages to FineVines' hosting account (Bunny.net) and tells the CDN to clear its cache so visitors see the new version right away. Only files that actually changed get re-uploaded, so this is fast on a normal day. |
 | `redirects` | A separate, occasional command (not part of the nightly run) that maps every old finevines.com web address to its new location, so old links and Google search results keep working after the rebuild. This is mainly a one-time launch-day tool — GRIT will run this as part of go-live, not something you need to run regularly. |
 
 ---
@@ -33,7 +33,7 @@ values below.
 
 ### What goes in `.env`
 
-**Salesforce** — needed for `enrich` only. Comes from Fine Vines' Salesforce administrator setting up a
+**Salesforce** — needed for `enrich` only. Comes from FineVines' Salesforce administrator setting up a
 "Connected App" in Salesforce Setup (this is a one-time IT step, not something you do daily):
 - `FINEVINES_SF_BASE_URL` — the org's My Domain URL (looks like `https://finevines.my.salesforce.com`).
 - `FINEVINES_SF_CLIENT_ID` — the Connected App's Consumer Key.
@@ -49,7 +49,7 @@ news posts and updating the team page):
 - `FINEVINES_IMAGE_MODEL` — optional; leave blank and the tool picks a sensible default.
 
 **Bunny.net (hosting)** — needed for `deploy`, and for the "publish now" option in the two Claude skills. All
-of these come from the Bunny.net account dashboard once Fine Vines has a Bunny.net account set up:
+of these come from the Bunny.net account dashboard once FineVines has a Bunny.net account set up:
 - `FINEVINES_BUNNY_STORAGE_ZONE` — the name of the storage zone the site's files live in.
 - `FINEVINES_BUNNY_STORAGE_KEY` — that storage zone's password (its "FTP & API Access" key).
 - `FINEVINES_BUNNY_STORAGE_ENDPOINT` — optional; leave blank and the tool picks a sensible default.
@@ -101,7 +101,7 @@ new machine:
 
 1. Open the Start menu, type **Task Scheduler**, and open it.
 2. In the right-hand panel, click **Create Basic Task...**
-3. Name it something like `Fine Vines Nightly Site Update`, click **Next**.
+3. Name it something like `FineVines Nightly Site Update`, click **Next**.
 4. Under **Trigger**, choose **Daily**, click **Next**, set the start time to **2:00 AM**, click **Next**.
 5. Under **Action**, choose **Start a program**, click **Next**.
 6. In **Program/script**, click **Browse...** and select `deploy.bat` inside the repo-root folder.
@@ -209,7 +209,7 @@ from that marketplace: `finevines-news` and `finevines-team`.
 
 Just start a conversation and describe what you want to post — e.g. "I want to post about Friday's tasting
 event." Claude will ask a few plain-language questions (what it's about, a title, the date, and so on — no
-mention of files or code), write it up in the Fine Vines voice, show you the draft for approval, and then ask
+mention of files or code), write it up in the FineVines voice, show you the draft for approval, and then ask
 whether to publish it right away. If you say yes, it runs `build` and `deploy` itself and reports back what
 happened.
 

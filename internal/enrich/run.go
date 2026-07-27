@@ -68,7 +68,7 @@ func (e *resolveImageError) Unwrap() error { return e.err }
 // text and record-to-WineRaw mapping are PROVISIONAL GUESSES against a
 // standard Product2 layout — see the checkpoint comment on rosterSOQL in
 // internal/salesforce/client.go. Before the first live run against the real
-// Fine Vines org, confirm the actual Product2 field API names (and in
+// FineVines org, confirm the actual Product2 field API names (and in
 // particular which field carries the QuickBooks-synced stock quantity) and
 // correct that mapping. That confirmation does NOT block this function: Run
 // itself is fully exercised in run_test.go against fakes and needs no live
