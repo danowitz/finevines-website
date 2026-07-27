@@ -16,6 +16,10 @@ type WineRaw struct {
 	Appellation string
 	Style       string
 	StockQty    int
+	// ReadyToSell mirrors Product2.FV_Ready_To_Sell__c and gates
+	// web-eligibility alongside stock/SKU (confirmed 2026-07-27) — see
+	// enrich.Eligible.
+	ReadyToSell bool
 }
 
 type Source interface {

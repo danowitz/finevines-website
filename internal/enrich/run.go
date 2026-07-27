@@ -104,7 +104,7 @@ func Run(ctx context.Context, src salesforce.Source, texts Texts, imgs ImageProv
 
 	eligible := make([]salesforce.WineRaw, 0, len(rawRoster))
 	for _, w := range rawRoster {
-		if Eligible(w.StockQty, w.SKU) {
+		if Eligible(w.StockQty, w.SKU, w.ReadyToSell) {
 			eligible = append(eligible, w)
 		}
 	}

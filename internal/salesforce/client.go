@@ -55,10 +55,11 @@ func NewClient(cfg Config, hc *http.Client) *Client {
 // ⚠ THREE mappings still await a one-word client confirmation (raised via
 // AskUserQuestion in the 2026-07-27 session); each is a single-token edit here
 // plus its line in the Roster mapping below:
-//   1. producer -> FV_Brand__c  (alt: FV_Supplier__c, the importer/vendor)
-//   2. stock    -> FV_OnHand_Qty__c  (alt: AVSFQB__OnHand__c, raw QB-connector)
-//   3. whether FV_Ready_To_Sell__c should additionally gate web-eligibility on
-//      top of the confirmed `stockQty > 0 AND !SKU^"9"` rule (enrich.Eligible).
+//   1. producer -> FV_Brand__c  (alt: FV_Supplier__c, the importer/vendor).
+//      OPEN QUESTION per the client (2026-07-27): using FV_Brand__c
+//      provisionally — see GitHub issue #2.
+// Confirmed 2026-07-27: stock -> FV_OnHand_Qty__c, and FV_Ready_To_Sell__c
+// additionally gates web-eligibility (enrich.Eligible).
 // The field->WineRaw mapping in Roster is the one other place that must change
 // in lockstep — keeping both in this one file is deliberate.
 //
@@ -67,8 +68,8 @@ func NewClient(cfg Config, hc *http.Client) *Client {
 // FV_ALC_Percent__c, FV_Bottle_Size__c, FV_Bottles_Per_Case__c, FV_List_Price__c,
 // FV_Net_Price__c, FV_BTG_Price__c, FV_Category__c, FV_Rating__c.
 const rosterSOQL = `SELECT Id, StockKeepingUnit, Name, FV_Brand__c,
- FV_Vintage_Year__c, FV_Varietal__c, FV_Region__c, FV_OnHand_Qty__c
- FROM Product2`
+ FV_Vintage_Year__c, FV_Varietal__c, FV_Region__c, FV_OnHand_Qty__c,
+ FV_Ready_To_Sell__c FROM Product2`
 
 // Roster authenticates and runs rosterSOQL, following nextRecordsUrl until
 // Salesforce reports done:true, mapping every record into a WineRaw in API
@@ -97,14 +98,15 @@ func (c *Client) Roster(ctx context.Context) ([]WineRaw, error) {
 		// awaiting client confirmation).
 		for _, r := range page.Records {
 			out = append(out, WineRaw{
-				ID:       str(r["Id"]),
-				SKU:      str(r["StockKeepingUnit"]),
-				Producer: str(r["FV_Brand__c"]),
-				Name:     str(r["Name"]),
-				Vintage:  str(r["FV_Vintage_Year__c"]),
-				Varietal: str(r["FV_Varietal__c"]),
-				Region:   str(r["FV_Region__c"]),
-				StockQty: intval(r["FV_OnHand_Qty__c"]),
+				ID:          str(r["Id"]),
+				SKU:         str(r["StockKeepingUnit"]),
+				Producer:    str(r["FV_Brand__c"]),
+				Name:        str(r["Name"]),
+				Vintage:     str(r["FV_Vintage_Year__c"]),
+				Varietal:    str(r["FV_Varietal__c"]),
+				Region:      str(r["FV_Region__c"]),
+				StockQty:    intval(r["FV_OnHand_Qty__c"]),
+				ReadyToSell: boolval(r["FV_Ready_To_Sell__c"]),
 				// Appellation and Style have no Product2 field — both are
 				// populated later by the search-scrape enrichment step.
 			})
@@ -210,4 +212,9 @@ func str(v any) string {
 func intval(v any) int {
 	f, _ := v.(float64) // Salesforce numbers arrive as JSON numbers (float64).
 	return int(f)
+}
+
+func boolval(v any) bool {
+	b, _ := v.(bool) // Salesforce checkbox fields arrive as JSON true/false.
+	return b
 }

@@ -71,12 +71,14 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 					"FV_Brand__c": "Chateau Alpha", "Name": "Alpha Reserve",
 					"FV_Vintage_Year__c": "2019", "FV_Varietal__c": "Cabernet Sauvignon",
 					"FV_Region__c": "Napa Valley", "FV_OnHand_Qty__c": 12,
+					"FV_Ready_To_Sell__c": true,
 				},
 				{
 					"Id": "01t000000002BBB", "StockKeepingUnit": "AB1002",
 					"FV_Brand__c": "Chateau Beta", "Name": "Beta Blanc",
 					"FV_Vintage_Year__c": "2021", "FV_Varietal__c": "Chardonnay",
 					"FV_Region__c": "Sonoma Coast", "FV_OnHand_Qty__c": 0,
+					"FV_Ready_To_Sell__c": false,
 				},
 			},
 		})
@@ -98,6 +100,7 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 					"FV_Brand__c": "Chateau Gamma", "Name": "Gamma Noir",
 					"FV_Vintage_Year__c": "2018", "FV_Varietal__c": "Pinot Noir",
 					"FV_Region__c": "Willamette Valley", "FV_OnHand_Qty__c": 4,
+					"FV_Ready_To_Sell__c": true,
 				},
 			},
 		})
@@ -126,17 +129,17 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 		{
 			ID: "01t000000001AAA", SKU: "AB1001", Producer: "Chateau Alpha",
 			Name: "Alpha Reserve", Vintage: "2019", Varietal: "Cabernet Sauvignon",
-			Region: "Napa Valley", StockQty: 12,
+			Region: "Napa Valley", StockQty: 12, ReadyToSell: true,
 		},
 		{
 			ID: "01t000000002BBB", SKU: "AB1002", Producer: "Chateau Beta",
 			Name: "Beta Blanc", Vintage: "2021", Varietal: "Chardonnay",
-			Region: "Sonoma Coast", StockQty: 0,
+			Region: "Sonoma Coast", StockQty: 0, ReadyToSell: false,
 		},
 		{
 			ID: "01t000000003CCC", SKU: "9X9999", Producer: "Chateau Gamma",
 			Name: "Gamma Noir", Vintage: "2018", Varietal: "Pinot Noir",
-			Region: "Willamette Valley", StockQty: 4,
+			Region: "Willamette Valley", StockQty: 4, ReadyToSell: true,
 		},
 	}
 

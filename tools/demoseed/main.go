@@ -124,7 +124,7 @@ func main() {
 		// Same web-eligibility rule the live pipeline enforces, so the demo
 		// catalog matches what would actually ship (stock-0 and SKU-9 rows in
 		// the sample are excluded here).
-		if !enrich.Eligible(raw.StockQty, raw.SKU) {
+		if !enrich.Eligible(raw.StockQty, raw.SKU, raw.ReadyToSell) {
 			skipped++
 			continue
 		}

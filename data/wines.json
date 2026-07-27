@@ -450,24 +450,6 @@
     "slug": "nino-franco-rustico-prosecco-superiore-nv"
   },
   {
-    "id": "01tRb00000A034AAU",
-    "sourceHash": "demo",
-    "sku": "ET3180",
-    "producer": "Passopisciaro",
-    "name": "Passorosso",
-    "vintage": "2021",
-    "varietal": "Nerello Mascalese",
-    "region": "Sicily",
-    "appellation": "Terre Siciliane",
-    "style": "Red · Still",
-    "stockQty": 23,
-    "description": "A 2021 red Nerello Mascalese from Terre Siciliane: dark fruit, savoury depth, and fine-grained tannin from Passopisciaro.",
-    "sommelierNotes": "Decant briefly; serve at 15–17°C with roast meats, mushrooms, or aged cheese.",
-    "imagePath": "assets/img/wines/ET3180.svg",
-    "imageSource": "generated-label",
-    "slug": "passopisciaro-passorosso-2021"
-  },
-  {
     "id": "01tRb00000A021AAU",
     "sourceHash": "demo",
     "sku": "RB9070",

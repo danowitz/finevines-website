@@ -38,7 +38,11 @@ artifacts, and are complete/self-contained on their own.
 - **Salesforce, not QuickBooks Desktop, is what `enrich` reads from.** QuickBooks is the accounting source of truth
   in principle, but it already syncs to Salesforce, and Salesforce is far easier to integrate with from Go (plain
   HTTPS/OAuth) than QuickBooks Desktop's COM/qbXML integration. No new QuickBooks integration is in scope.
-- **Web-eligibility rule**: a wine is shown when `stockQty > 0 AND SKU does not start with "9"`.
+- **Web-eligibility rule**: a wine is shown when `stockQty > 0 AND SKU does not start with "9" AND
+  FV_Ready_To_Sell__c = true` (ready-to-sell gate added 2026-07-27, client-confirmed). Real Salesforce mapping
+  (Enterprise WSDL): catalog is `Product2`; producer→`FV_Brand__c` (OPEN — issue #2),
+  vintage→`FV_Vintage_Year__c`, varietal→`FV_Varietal__c`, region→`FV_Region__c`, stock→`FV_OnHand_Qty__c`,
+  SKU→`StockKeepingUnit`; appellation & style are search-scraped.
 - **Wine data AND images are search-scraped (REVERSED 2026-07-26).** The original decision was "generate, never
   scrape" (copyright risk); the client (GRIT, for Fine Vines) has since **explicitly accepted the copyright risk**
   and directed that both descriptive wine metadata and real bottle/label images be sourced via web search. New
