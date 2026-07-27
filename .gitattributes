@@ -1,0 +1,4 @@
+# Golden test fixtures compared byte-for-byte by label.Generate — never let
+# git normalize their line endings (would break TestGenerateMatchesGolden on
+# checkout across platforms).
+*.golden.svg -text
