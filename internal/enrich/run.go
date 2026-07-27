@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gritautomation/finevines-website/internal/model"
+	"github.com/gritautomation/finevines-website/internal/normalize"
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
 
@@ -222,7 +223,21 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 		prev = &p
 	}
 
-	slug := model.Slugify(raw.Producer, raw.Name, raw.Vintage)
+	// Normalize the terse Salesforce trade shorthand into presentable display
+	// values (drives the name, producer, vintage AND the SEO slug / image
+	// filename). Already-clean data (enriched/mock) passes through untouched.
+	producer := normalize.Producer(raw.Producer)
+	name := normalize.WineName(raw.Name, raw.Producer)
+	vintage := normalize.Vintage(raw.Vintage)
+	varietal := normalize.Text(raw.Varietal)
+	region := normalize.Text(raw.Region)
+	// Country: prefer the enrichment's value; fall back to the Salesforce field
+	// (FV_Country__c) for un-enriched wines so they still show a country.
+	country := res.Country
+	if country == "" {
+		country = normalize.Text(raw.Country)
+	}
+	slug := model.Slugify(producer, name, vintage)
 
 	// Image chain: a manually producer-supplied image (from a prior run) is kept
 	// as-is; otherwise try a REAL image — FineVines' own old-site photo, then a
@@ -273,19 +288,22 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 	if raw.Appellation != "" {
 		sources["appellation"] = model.SourceSalesforce
 	}
+	if res.Country == "" && raw.Country != "" {
+		sources["country"] = model.SourceSalesforce // filled from FV_Country__c
+	}
 	sources["image"] = model.ImageFieldSource(imageSource)
 
 	return model.Wine{
 		ID:              raw.ID,
 		SourceHash:      SourceHash(raw),
 		SKU:             raw.SKU,
-		Producer:        raw.Producer,
-		Name:            raw.Name,
-		Vintage:         raw.Vintage,
-		Varietal:        raw.Varietal,
-		Region:          raw.Region,
+		Producer:        producer,
+		Name:            name,
+		Vintage:         vintage,
+		Varietal:        varietal,
+		Region:          region,
 		Appellation:     appellation,
-		Country:         res.Country,
+		Country:         country,
 		Color:           res.Color,
 		Style:           raw.Style,
 		StockQty:        raw.StockQty,
