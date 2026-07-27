@@ -7,8 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/anthropics/anthropic-sdk-go/option"
-
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
 
@@ -27,22 +25,21 @@ func testWine() salesforce.WineRaw {
 	}
 }
 
-// messagesResponseJSON builds a minimal-but-valid Anthropic Messages API
-// response whose sole text content block is textBody.
-func messagesResponseJSON(textBody string) string {
+// responsesJSON builds a minimal-but-valid OpenAI Responses API reply whose
+// single message block's output_text is textBody.
+func responsesJSON(textBody string) string {
 	resp := map[string]any{
-		"id":    "msg_test123",
-		"type":  "message",
-		"role":  "assistant",
-		"model": "claude-opus-4-8",
-		"content": []map[string]any{
-			{"type": "text", "text": textBody},
-		},
-		"stop_reason":   "end_turn",
-		"stop_sequence": nil,
-		"usage": map[string]any{
-			"input_tokens":  100,
-			"output_tokens": 50,
+		"id":     "resp_test123",
+		"object": "response",
+		"model":  "gpt-4.1",
+		"output": []map[string]any{
+			{
+				"type": "message",
+				"role": "assistant",
+				"content": []map[string]any{
+					{"type": "output_text", "text": textBody},
+				},
+			},
 		},
 	}
 	b, err := json.Marshal(resp)
@@ -55,12 +52,15 @@ func messagesResponseJSON(textBody string) string {
 func TestEnrichGroundedRoundTrip(t *testing.T) {
 	const wantDescription = "A bright, mineral Chardonnay with citrus and orchard-fruit lift."
 	const wantNotes = "Serve chilled alongside roast chicken or shellfish."
-	const wantImagePrompt = "Photorealistic studio product photograph of a tall, pale-green Burgundy bottle with a classic white-Burgundy label."
+	const wantImagePrompt = "Photorealistic studio product photograph of a tall, pale-green Burgundy bottle."
 
-	textJSON, err := json.Marshal(EnrichResult{
-		Description:    wantDescription,
-		SommelierNotes: wantNotes,
-		ImagePrompt:    wantImagePrompt,
+	resultJSON, err := json.Marshal(EnrichResult{
+		Description:     wantDescription,
+		SommelierNotes:  wantNotes,
+		Country:         "France",
+		MatchConfidence: 92,
+		Sources:         map[string]string{"description": "found", "country": "found"},
+		ImagePrompt:     wantImagePrompt,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -70,47 +70,54 @@ func TestEnrichGroundedRoundTrip(t *testing.T) {
 	callCount := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount++
-		if r.URL.Path != "/v1/messages" {
+		if r.URL.Path != "/v1/responses" {
 			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		if got := r.Header.Get("Authorization"); got != "Bearer test-key" {
+			t.Errorf("Authorization = %q, want %q", got, "Bearer test-key")
 		}
 		if err := json.NewDecoder(r.Body).Decode(&gotBody); err != nil {
 			t.Fatalf("decode request body: %v", err)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(messagesResponseJSON(string(textJSON))))
+		w.Write([]byte(responsesJSON(string(resultJSON))))
 	}))
 	defer server.Close()
 
-	enricher := NewSearchEnricher("test-key", option.WithBaseURL(server.URL))
+	enricher := NewOpenAIEnricher("test-key", "gpt-4.1", server.URL, server.Client())
 	got, err := enricher.Enrich(t.Context(), testWine())
 	if err != nil {
 		t.Fatalf("Enrich returned error: %v", err)
 	}
-
 	if callCount != 1 {
-		t.Fatalf("want 1 call to the Messages endpoint, got %d", callCount)
+		t.Fatalf("want 1 call to the Responses endpoint, got %d", callCount)
 	}
 
-	// Grounding: model string is exactly the pinned Opus 4.8 id.
-	if model, _ := gotBody["model"].(string); model != "claude-opus-4-8" {
-		t.Errorf("want model claude-opus-4-8, got %q", model)
+	// The request must carry the web_search tool and the configured model.
+	if model, _ := gotBody["model"].(string); model != "gpt-4.1" {
+		t.Errorf("want model gpt-4.1, got %q", model)
+	}
+	tools, _ := gotBody["tools"].([]any)
+	if len(tools) == 0 {
+		t.Error("request missing tools (web_search)")
+	} else if tool, _ := tools[0].(map[string]any); tool["type"] != "web_search" {
+		t.Errorf("first tool = %v, want type web_search", tool)
 	}
 
-	// Grounding: the user prompt must contain the real Salesforce facts —
-	// never invented ones.
-	prompt := extractUserPromptText(t, gotBody)
+	// Grounding: the input must contain the real Salesforce facts.
+	input, _ := gotBody["input"].(string)
 	for _, want := range []string{"Domaine Hubert Lamy", "Burgundy", "Chardonnay", "2021"} {
-		if !strings.Contains(prompt, want) {
-			t.Errorf("user prompt missing grounding fact %q; prompt was:\n%s", want, prompt)
+		if !strings.Contains(input, want) {
+			t.Errorf("input missing grounding fact %q; input was:\n%s", want, input)
 		}
 	}
 
-	// Round-trip.
-	if got.Description != wantDescription {
-		t.Errorf("Description = %q, want %q", got.Description, wantDescription)
+	// Round-trip of the parsed result.
+	if got.Description != wantDescription || got.Country != "France" || got.MatchConfidence != 92 {
+		t.Errorf("round-trip mismatch: %+v", got)
 	}
-	if got.SommelierNotes != wantNotes {
-		t.Errorf("SommelierNotes = %q, want %q", got.SommelierNotes, wantNotes)
+	if got.Sources["country"] != "found" {
+		t.Errorf("sources not parsed: %v", got.Sources)
 	}
 	if got.ImagePrompt != wantImagePrompt {
 		t.Errorf("ImagePrompt = %q, want %q", got.ImagePrompt, wantImagePrompt)
@@ -122,11 +129,11 @@ func TestEnrichRetriesOnceThenErrorsOnMalformedJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount++
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(messagesResponseJSON("this is not JSON at all {{{")))
+		w.Write([]byte(responsesJSON("this is not JSON at all {{{")))
 	}))
 	defer server.Close()
 
-	enricher := NewSearchEnricher("test-key", option.WithBaseURL(server.URL))
+	enricher := NewOpenAIEnricher("test-key", "gpt-4.1", server.URL, server.Client())
 	_, err := enricher.Enrich(t.Context(), testWine())
 	if err == nil {
 		t.Fatal("want error for malformed JSON after retry, got nil")
@@ -136,33 +143,15 @@ func TestEnrichRetriesOnceThenErrorsOnMalformedJSON(t *testing.T) {
 	}
 }
 
-// extractUserPromptText digs the concatenated text of the first user
-// message out of the decoded request body sent to the fake Messages
-// endpoint, tolerating either the string-shorthand or content-block-array
-// message shape.
-func extractUserPromptText(t *testing.T, body map[string]any) string {
-	t.Helper()
-	msgs, _ := body["messages"].([]any)
-	if len(msgs) == 0 {
-		t.Fatal("request body had no messages")
+func TestEnrichSurfacesHTTPError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`{"error":{"message":"bad key"}}`))
+	}))
+	defer server.Close()
+
+	enricher := NewOpenAIEnricher("test-key", "gpt-4.1", server.URL, server.Client())
+	if _, err := enricher.Enrich(t.Context(), testWine()); err == nil {
+		t.Fatal("want error on HTTP 401, got nil")
 	}
-	var sb strings.Builder
-	for _, m := range msgs {
-		msg, _ := m.(map[string]any)
-		if msg["role"] != "user" {
-			continue
-		}
-		switch content := msg["content"].(type) {
-		case string:
-			sb.WriteString(content)
-		case []any:
-			for _, blk := range content {
-				b, _ := blk.(map[string]any)
-				if txt, ok := b["text"].(string); ok {
-					sb.WriteString(txt)
-				}
-			}
-		}
-	}
-	return sb.String()
 }

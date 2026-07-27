@@ -103,7 +103,7 @@ func runEnrich(cfg config.Config) error {
 	// error rather than a different one every run), paired with the .env key
 	// name to report.
 	requiredEnv := []struct{ name, value string }{
-		{"ANTHROPIC_API_KEY", cfg.AnthropicAPIKey},
+		{"OPENAI_API_KEY", cfg.OpenAIAPIKey},
 		{"FINEVINES_GEMINI_API_KEY", cfg.GeminiAPIKey},
 	}
 	if !cfg.SFMock {
@@ -135,7 +135,7 @@ func runEnrich(cfg config.Config) error {
 			APIVersion:   cfg.SFAPIVersion,
 		}, http.DefaultClient)
 	}
-	enr := enrich.NewSearchEnricher(cfg.AnthropicAPIKey)
+	enr := enrich.NewOpenAIEnricher(cfg.OpenAIAPIKey, cfg.OpenAIModel, "", http.DefaultClient)
 	imgs := enrich.NewImagenClient(cfg.GeminiAPIKey, cfg.ImageModel, "", http.DefaultClient)
 
 	if err := enrich.Run(context.Background(), src, enr, imgs,

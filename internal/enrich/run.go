@@ -43,8 +43,6 @@ type Enricher interface {
 	Enrich(ctx context.Context, w salesforce.WineRaw) (EnrichResult, error)
 }
 
-var _ Enricher = (*SearchEnricher)(nil)
-
 // enrichResult is one worker's output for one Diff.Enrich wine, carried back
 // to the coordinating goroutine over the results channel.
 type enrichResult struct {

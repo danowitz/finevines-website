@@ -48,9 +48,10 @@ artifacts, and are complete/self-contained on their own.
   scrape" (copyright risk); the client (GRIT, for Fine Vines) has since **explicitly accepted the copyright risk**
   and directed that both descriptive wine metadata and real bottle/label images be sourced via web search. The
   copyright call is the client's, made after the risk was flagged twice. New enrich pipeline: Salesforce stays the
-  authoritative source for commercial fields (SKU, producer, name, vintage, stock, price); a Claude-driven
-  search→extract→normalize step fills the descriptive schema and fetches real bottle/label images, with a
-  match-confidence flag. Guardrails still applied: prefer scraping structured *facts* and have Claude write original
+  authoritative source for commercial fields (SKU, producer, name, vintage, stock, price); an OpenAI-driven
+  search→extract→normalize step (all-OpenAI decided 2026-07-27: Responses API web_search for enrichment,
+  gpt-image-1 for image generation) fills the descriptive schema and fetches real bottle/label images, with a
+  match-confidence flag and a per-field coverage score. Guardrails still applied: prefer scraping structured *facts* and have Claude write original
   tasting prose (don't lift verbatim copyrighted prose/critic scores); keep `imageSourceUrl` for provenance. The
   deterministic SVG label generator remains only as the guaranteed no-broken-image fallback.
 - **Pricing is fixed-fee**, not hourly estimates — the client relationship and pricing rationale is personal/history

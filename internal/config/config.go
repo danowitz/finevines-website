@@ -10,7 +10,7 @@ import (
 
 type Config struct {
 	SFBaseURL, SFClientID, SFClientSecret, SFAPIVersion string
-	AnthropicAPIKey                                     string
+	OpenAIAPIKey, OpenAIModel                           string
 	GeminiAPIKey, ImageModel                            string
 	BunnyStorageZone, BunnyStorageKey                   string
 	BunnyStorageEndpoint                                string // e.g. https://ny.storage.bunnycdn.com
@@ -47,7 +47,8 @@ func Load(envPath string) (Config, error) {
 		SFClientID:           get("FINEVINES_SF_CLIENT_ID"),
 		SFClientSecret:       get("FINEVINES_SF_CLIENT_SECRET"),
 		SFAPIVersion:         orDefault(get("FINEVINES_SF_API_VERSION"), "v61.0"),
-		AnthropicAPIKey:      get("ANTHROPIC_API_KEY"),
+		OpenAIAPIKey:         get("OPENAI_API_KEY"),
+		OpenAIModel:          get("FINEVINES_OPENAI_MODEL"),
 		GeminiAPIKey:         get("FINEVINES_GEMINI_API_KEY"),
 		ImageModel:           orDefault(get("FINEVINES_IMAGE_MODEL"), "imagen-4.0-generate-001"),
 		BunnyStorageZone:     get("FINEVINES_BUNNY_STORAGE_ZONE"),

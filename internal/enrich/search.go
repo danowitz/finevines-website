@@ -1,13 +1,13 @@
 package enrich
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
-
-	"github.com/anthropics/anthropic-sdk-go"
-	"github.com/anthropics/anthropic-sdk-go/option"
 
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
@@ -16,7 +16,7 @@ import (
 // wine: the descriptive/tasting fields, per-field provenance (so we know what
 // was really sourced versus inferred), a match-confidence score, an optional
 // real image URL, and an image-generation prompt for the fallback. The JSON
-// tags are the contract Claude is asked to return.
+// tags are the contract the model is asked to return.
 type EnrichResult struct {
 	Description    string   `json:"description"`
 	SommelierNotes string   `json:"sommelierNotes"`
@@ -35,8 +35,8 @@ type EnrichResult struct {
 	// source), "derived" (inferred from varietal/region/style), or "missing".
 	Sources map[string]string `json:"sources"`
 
-	// MatchConfidence (0–100) is how sure Claude is that the sourced facts are
-	// about this exact wine (producer + name + vintage), not a lookalike.
+	// MatchConfidence (0–100) is how sure the model is that the sourced facts
+	// are about this exact wine (producer + name + vintage), not a lookalike.
 	MatchConfidence int `json:"matchConfidence"`
 
 	// ImageURL is a real bottle/label image found on the web (empty if none);
@@ -46,20 +46,37 @@ type EnrichResult struct {
 	ImagePrompt string `json:"imagePrompt"`
 }
 
-// SearchEnricher enriches one wine at a time via the Anthropic Messages API
-// with the server-side web_search tool: Claude searches the web for the wine,
-// extracts structured facts, writes original tasting prose, and reports where
-// each field came from.
-type SearchEnricher struct {
-	client anthropic.Client
+// defaultEnrichModel is the OpenAI model used for enrichment when none is
+// configured. It must be a model that supports the web_search tool.
+const defaultEnrichModel = "gpt-4.1"
+
+// OpenAIEnricher enriches one wine at a time via OpenAI's Responses API with
+// the web_search tool: the model searches the web for the wine, extracts
+// structured facts, writes original tasting prose, and reports where each
+// field came from. It talks to the REST API directly (no SDK) so tests can
+// point baseURL at an httptest.Server, matching the ImagenClient/Salesforce
+// pattern in this package.
+type OpenAIEnricher struct {
+	apiKey  string
+	model   string
+	baseURL string
+	http    *http.Client
 }
 
-// NewSearchEnricher builds a SearchEnricher against the given API key. Extra
-// opts are forwarded to SDK client construction — production callers need
-// none; tests pass option.WithBaseURL to point at an httptest.Server.
-func NewSearchEnricher(apiKey string, opts ...option.RequestOption) *SearchEnricher {
-	return &SearchEnricher{client: anthropic.NewClient(append([]option.RequestOption{option.WithAPIKey(apiKey)}, opts...)...)}
+// NewOpenAIEnricher builds an enricher. model defaults to defaultEnrichModel;
+// baseURL defaults to the public API and has any trailing slash trimmed so a
+// test server URL doesn't produce a doubled slash.
+func NewOpenAIEnricher(apiKey, model, baseURL string, hc *http.Client) *OpenAIEnricher {
+	if model == "" {
+		model = defaultEnrichModel
+	}
+	if baseURL == "" {
+		baseURL = "https://api.openai.com"
+	}
+	return &OpenAIEnricher{apiKey: apiKey, model: model, baseURL: strings.TrimSuffix(baseURL, "/"), http: hc}
 }
+
+var _ Enricher = (*OpenAIEnricher)(nil)
 
 // searchSystem fixes FineVines' editorial voice, directs the web search, and —
 // critically — pins the copyright and grounding guardrails: scrape structured
@@ -70,9 +87,9 @@ const searchSystem = `You research and write catalog copy for FineVines, a licen
 Illinois wholesale wine distributor. Voice: elegant, editorial, old-world wine
 trade — never corporate-tech.
 
-Use the web_search tool to find authoritative information about the EXACT wine
-described (match producer, wine name, and vintage). Prefer the producer/importer
-site and reputable references. Then return a single JSON object with these keys:
+Use web search to find authoritative information about the EXACT wine described
+(match producer, wine name, and vintage). Prefer the producer/importer site and
+reputable references. Then return a single JSON object with these keys:
 
 - "description": 2–3 original sentences of trade tasting copy.
 - "sommelierNotes": 1–2 sentences of service/pairing guidance.
@@ -97,53 +114,115 @@ copyrighted text verbatim. Never invent critic scores, prices, awards, or
 provenance; if unsure, mark the field "derived" or "missing" and keep the copy
 general. Respond with ONLY the JSON object, no prose around it.`
 
-// Enrich runs one web-search-grounded enrichment for w. Claude is asked for a
-// bare JSON object; if the response can't be parsed into a usable EnrichResult,
-// Enrich retries once before giving up (LLM output occasionally drifts from the
-// requested shape, and a same-call retry is cheap insurance without masking a
-// persistently broken prompt or endpoint).
-func (t *SearchEnricher) Enrich(ctx context.Context, w salesforce.WineRaw) (EnrichResult, error) {
+// Enrich runs one web-search-grounded enrichment for w. The model is asked for
+// a bare JSON object; if the response can't be parsed into a usable
+// EnrichResult, Enrich retries once before giving up (LLM output occasionally
+// drifts from the requested shape, and a same-call retry is cheap insurance
+// without masking a persistently broken prompt or endpoint).
+func (e *OpenAIEnricher) Enrich(ctx context.Context, w salesforce.WineRaw) (EnrichResult, error) {
 	prompt := fmt.Sprintf(
 		"Producer: %s\nWine: %s\nVintage: %s\nVarietal: %s\nRegion: %s\nAppellation: %s\nStyle: %s\nSKU: %s",
 		w.Producer, w.Name, w.Vintage, w.Varietal, w.Region, w.Appellation, w.Style, w.SKU)
 
+	reqObj := map[string]any{
+		"model":             e.model,
+		"instructions":      searchSystem,
+		"input":             prompt,
+		"tools":             []map[string]string{{"type": "web_search"}},
+		"max_output_tokens": 2000,
+	}
+
 	var lastErr error
 	for attempt := 0; attempt < 2; attempt++ {
-		resp, err := t.client.Beta.Messages.New(ctx, anthropic.BetaMessageNewParams{
-			Model:     anthropic.ModelClaudeOpus4_8,
-			MaxTokens: 2000,
-			System:    []anthropic.BetaTextBlockParam{{Text: searchSystem}},
-			Messages: []anthropic.BetaMessageParam{
-				anthropic.NewBetaUserMessage(anthropic.NewBetaTextBlock(prompt)),
-			},
-			Tools: []anthropic.BetaToolUnionParam{
-				{OfWebSearchTool20250305: &anthropic.BetaWebSearchTool20250305Param{MaxUses: anthropic.Int(5)}},
-			},
-		})
+		text, err := e.call(ctx, reqObj)
 		if err != nil {
-			return EnrichResult{}, err // SDK already retried 429/5xx
+			return EnrichResult{}, err // transport/HTTP error: caller logs & retries next run
 		}
-
-		var text strings.Builder
-		for _, block := range resp.Content {
-			if b, ok := block.AsAny().(anthropic.BetaTextBlock); ok {
-				text.WriteString(b.Text)
-			}
-		}
-
-		out, err := parseEnrichResult([]byte(text.String()))
-		if err == nil {
+		out, perr := parseEnrichResult([]byte(text))
+		if perr == nil {
 			return out, nil
 		}
-		lastErr = fmt.Errorf("unparseable enrichment for %s (attempt %d): %w", w.SKU, attempt+1, err)
+		lastErr = fmt.Errorf("unparseable enrichment for %s (attempt %d): %w", w.SKU, attempt+1, perr)
 	}
 	return EnrichResult{}, lastErr
 }
 
+// call POSTs one Responses API request and returns the assistant's aggregated
+// output text.
+func (e *OpenAIEnricher) call(ctx context.Context, reqObj map[string]any) (string, error) {
+	body, err := json.Marshal(reqObj)
+	if err != nil {
+		return "", err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.baseURL+"/v1/responses", bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Authorization", "Bearer "+e.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := e.http.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("openai responses: %w", err)
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("openai responses: read body: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("openai responses: HTTP %d: %s", resp.StatusCode, snippet(data))
+	}
+	return responsesOutputText(data)
+}
+
+// responsesOutputText pulls the assistant's text out of a Responses API reply,
+// tolerating either the convenience top-level "output_text" or the structured
+// "output[].content[]" array of output_text blocks.
+func responsesOutputText(data []byte) (string, error) {
+	var parsed struct {
+		OutputText string `json:"output_text"`
+		Output     []struct {
+			Type    string `json:"type"`
+			Content []struct {
+				Type string `json:"type"`
+				Text string `json:"text"`
+			} `json:"content"`
+		} `json:"output"`
+	}
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		return "", fmt.Errorf("openai responses: decode: %w", err)
+	}
+	if strings.TrimSpace(parsed.OutputText) != "" {
+		return parsed.OutputText, nil
+	}
+	var sb strings.Builder
+	for _, o := range parsed.Output {
+		if o.Type != "message" {
+			continue
+		}
+		for _, c := range o.Content {
+			if c.Type == "output_text" {
+				sb.WriteString(c.Text)
+			}
+		}
+	}
+	return sb.String(), nil
+}
+
+func snippet(b []byte) string {
+	const max = 300
+	if len(b) > max {
+		return string(b[:max]) + "…"
+	}
+	return string(b)
+}
+
 // parseEnrichResult extracts the JSON object from a model text response
-// (tolerating a ```json fence) and validates the minimum usable shape: a
-// non-empty description. It is separated from the API call so the parsing
-// contract can be unit-tested without a live endpoint.
+// (tolerating a ```json fence or surrounding prose) and validates the minimum
+// usable shape: a non-empty description. It is separated from the API call so
+// the parsing contract can be unit-tested without a live endpoint.
 func parseEnrichResult(raw []byte) (EnrichResult, error) {
 	s := strings.TrimSpace(string(raw))
 	s = strings.TrimPrefix(s, "```json")
