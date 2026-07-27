@@ -7,36 +7,131 @@ import (
 	"encoding/json"
 	"errors"
 	"io/fs"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
 )
 
+// ImageSource values (Wine.ImageSource) record how a wine's image was obtained.
+// The first three are the original generated/producer set; the scraped-* pair
+// is the search-scrape chain's real-image outcomes.
 const (
-	ImageGeneratedPhoto   = "generated-photo"
-	ImageGeneratedLabel   = "generated-label"
-	ImageProducerSupplied = "producer-supplied"
+	ImageGeneratedPhoto   = "generated-photo"   // AI-generated photorealistic bottle
+	ImageGeneratedLabel   = "generated-label"   // deterministic SVG label (guaranteed floor)
+	ImageProducerSupplied = "producer-supplied" // supplied by the producer/importer
+	ImageScrapedWeb       = "scraped-web"       // real bottle/label image found via web search
+	ImageScrapedGoogle    = "scraped-google"    // real image via Google image-search fallback
 )
 
+// FieldSource records where one enriched field's value came from, so the
+// catalog can report how much of a wine's displayed metadata is real (sourced)
+// versus inferred from varietal/region — the coverage the client asked to see.
+type FieldSource string
+
+const (
+	SourceSalesforce FieldSource = "salesforce" // authoritative field straight from the org
+	SourceFound      FieldSource = "found"      // extracted from a real web source (kept in Wine.Sources)
+	SourceDerived    FieldSource = "derived"    // inferred from varietal + region + style, no wine-specific source
+	SourceMissing    FieldSource = "missing"    // could not be determined
+)
+
+// ScoredFields is the canonical set of displayable enriched fields the
+// MetadataScore is computed over — "the metadata we want to display" whose
+// real-vs-inferred ratio the score reports. The Salesforce-authoritative
+// identity inputs (producer, name, vintage, varietal, region) are the GIVENS
+// everything else is derived from, so they are deliberately not scored.
+var ScoredFields = []string{
+	"description", "sommelierNotes", "aroma", "palate", "finish", "foodPairings",
+	"appellation", "country", "color", "abv", "bottleSize", "drinkWindow", "image",
+}
+
+// MetadataScore returns 0–100: the share of ScoredFields whose value is REAL
+// (SourceSalesforce or SourceFound) rather than inferred (SourceDerived) or
+// absent (SourceMissing). It answers "how much of the displayed metadata did we
+// actually source versus infer from varietal/region." A field absent from the
+// map counts as missing.
+func MetadataScore(sources map[string]FieldSource) int {
+	if len(ScoredFields) == 0 {
+		return 0
+	}
+	real := 0
+	for _, f := range ScoredFields {
+		switch sources[f] {
+		case SourceSalesforce, SourceFound:
+			real++
+		}
+	}
+	return int(math.Round(100 * float64(real) / float64(len(ScoredFields))))
+}
+
+// ImageFieldSource classifies an ImageSource value for provenance scoring: a
+// producer-supplied or scraped real image counts as found; an AI-generated
+// photo or the SVG-label fallback counts as derived; empty is missing. Callers
+// set Wine.Sources["image"] = ImageFieldSource(w.ImageSource) so the image
+// participates in MetadataScore consistently.
+func ImageFieldSource(imageSource string) FieldSource {
+	switch imageSource {
+	case ImageProducerSupplied, ImageScrapedWeb, ImageScrapedGoogle:
+		return SourceFound
+	case "":
+		return SourceMissing
+	default: // generated-photo, generated-label
+		return SourceDerived
+	}
+}
+
 // Wine is one row of data/wines.json — the enrich pipeline's output and
-// build's primary input.
+// build's primary input. JSON tags are the contract — do not rename existing
+// ones without a spec change; new descriptive fields are additive and
+// omitempty so older rows stay valid.
 type Wine struct {
-	ID             string `json:"id"`
-	SourceHash     string `json:"sourceHash"`
-	SKU            string `json:"sku"`
-	Producer       string `json:"producer"`
-	Name           string `json:"name"`
-	Vintage        string `json:"vintage"`
-	Varietal       string `json:"varietal"`
-	Region         string `json:"region"`
-	Appellation    string `json:"appellation"`
-	Style          string `json:"style"`
-	StockQty       int    `json:"stockQty"`
-	Description    string `json:"description"`
-	SommelierNotes string `json:"sommelierNotes"`
+	// Identity & commercial — Salesforce-authoritative.
+	ID         string `json:"id"`
+	SourceHash string `json:"sourceHash"`
+	SKU        string `json:"sku"`
+	Producer   string `json:"producer"`
+	Name       string `json:"name"`
+	Vintage    string `json:"vintage"`
+	StockQty   int    `json:"stockQty"`
+
+	// Classification.
+	Varietal    string `json:"varietal"`
+	Region      string `json:"region"`
+	Appellation string `json:"appellation"`
+	Country     string `json:"country,omitempty"`
+	Color       string `json:"color,omitempty"`
+	Style       string `json:"style"`
+
+	// Tasting — facts are sourced or derived, but the prose is always written
+	// original (never lifted verbatim) even when the underlying facts scraped.
+	Description    string   `json:"description"`
+	SommelierNotes string   `json:"sommelierNotes"`
+	Aroma          string   `json:"aroma,omitempty"`
+	Palate         string   `json:"palate,omitempty"`
+	Finish         string   `json:"finish,omitempty"`
+	FoodPairings   []string `json:"foodPairings,omitempty"`
+
+	// Technical.
+	ABV         string `json:"abv,omitempty"`
+	BottleSize  string `json:"bottleSize,omitempty"`
+	DrinkWindow string `json:"drinkWindow,omitempty"`
+
+	// Media.
 	ImagePath      string `json:"imagePath"`
 	ImageSource    string `json:"imageSource"`
-	Slug           string `json:"slug"`
+	ImageSourceURL string `json:"imageSourceUrl,omitempty"`
+
+	// Enrichment provenance & scoring. Sources maps each ScoredFields key to
+	// where its value came from; MetadataScore is derived from it. MatchConfidence
+	// (0–100) is how sure the enricher is it matched the right wine, set by the
+	// search step. EnrichedAt is an RFC3339 timestamp of the last enrich pass.
+	Sources         map[string]FieldSource `json:"sources,omitempty"`
+	MetadataScore   int                    `json:"metadataScore"`
+	MatchConfidence int                    `json:"matchConfidence"`
+	EnrichedAt      string                 `json:"enrichedAt,omitempty"`
+
+	Slug string `json:"slug"`
 }
 
 // NewsPost is one data/news/<slug>.json file.

@@ -1,6 +1,7 @@
 package enrich
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/gritautomation/finevines-website/internal/model"
@@ -64,7 +65,7 @@ func TestDiffRoster_UnchangedGoesToKeepWithEnrichmentFieldsIntact(t *testing.T) 
 	if len(d.Keep) != 1 {
 		t.Fatalf("want 1 wine in Keep, got %+v", d.Keep)
 	}
-	if d.Keep[0] != prev {
+	if !reflect.DeepEqual(d.Keep[0], prev) {
 		t.Fatalf("Keep must carry over the existing wine verbatim, got %+v, want %+v", d.Keep[0], prev)
 	}
 }
@@ -124,7 +125,7 @@ func TestDiffRoster_DoesNotMutateInputs(t *testing.T) {
 	if eligible[0] != raw {
 		t.Fatalf("DiffRoster must not mutate its eligible input, got %+v", eligible[0])
 	}
-	if existing[0] != prev {
+	if !reflect.DeepEqual(existing[0], prev) {
 		t.Fatalf("DiffRoster must not mutate its existing input, got %+v", existing[0])
 	}
 	if len(eligible) != 1 || len(existing) != 1 {

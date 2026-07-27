@@ -103,6 +103,37 @@ func houseNotes(w salesforce.WineRaw) (desc, som string) {
 	return desc, som
 }
 
+// regionCountry backfills a country for the demo from each sample region — in
+// the live pipeline this comes straight from Product2.FV_Country__c
+// (SourceSalesforce); here it stands in for that authoritative field.
+var regionCountry = map[string]string{
+	"Burgundy": "France", "Bordeaux": "France", "Rhône": "France", "Loire": "France",
+	"Champagne": "France", "Alsace": "France", "Provence": "France",
+	"Piedmont": "Italy", "Tuscany": "Italy", "Veneto": "Italy", "Sicily": "Italy",
+	"Rioja": "Spain", "Ribera del Duero": "Spain", "Rías Baixas": "Spain", "Priorat": "Spain",
+	"Mosel": "Germany", "Napa Valley": "United States", "Sonoma": "United States",
+	"Oregon": "United States", "Mendoza": "Argentina", "Marlborough": "New Zealand",
+	"Central Otago": "New Zealand", "Barossa Valley": "Australia", "Douro": "Portugal",
+	"Swartland": "South Africa",
+}
+
+// colorFromStyle derives a wine colour from the Style string for the demo
+// (Product2.FV_Color__c carries this authoritatively in the live pipeline).
+func colorFromStyle(style string) string {
+	switch {
+	case strings.Contains(style, "Rosé"):
+		return "Rosé"
+	case strings.Contains(style, "Sparkling"):
+		return "Sparkling"
+	case strings.Contains(style, "Fortified"):
+		return "Fortified"
+	case strings.Contains(style, "White"):
+		return "White"
+	default:
+		return "Red"
+	}
+}
+
 func main() {
 	src, err := salesforce.NewMockSource()
 	if err != nil {
@@ -130,8 +161,12 @@ func main() {
 		}
 
 		desc, som := houseNotes(raw)
+		descSource := model.SourceDerived // house notes inferred from varietal/region
+		matchConf := 78
 		if a, ok := authored[raw.SKU]; ok {
 			desc, som = a.desc, a.som
+			descSource = model.SourceFound // hero wines stand in for real sourced copy
+			matchConf = 95
 		}
 
 		svg := label.Generate(raw)
@@ -140,14 +175,39 @@ func main() {
 			panic(err)
 		}
 
+		country := regionCountry[raw.Region]
+		color := colorFromStyle(raw.Style)
+
+		// Provenance for the scored fields. Country/Color stand in for
+		// Salesforce-authoritative fields; description/sommelier are found for
+		// hero wines and derived otherwise; the SVG label counts as derived.
+		// The remaining scored fields are left unset (missing) — the live
+		// search pass is what fills aroma/palate/finish/pairings/abv/etc.
+		sources := map[string]model.FieldSource{
+			"description":    descSource,
+			"sommelierNotes": descSource,
+			"color":          model.SourceSalesforce,
+			"image":          model.ImageFieldSource(model.ImageGeneratedLabel),
+		}
+		if raw.Appellation != "" {
+			sources["appellation"] = model.SourceSalesforce
+		}
+		if country != "" {
+			sources["country"] = model.SourceSalesforce
+		}
+
 		wines = append(wines, model.Wine{
 			ID: raw.ID, SourceHash: "demo", SKU: raw.SKU, Producer: raw.Producer,
 			Name: raw.Name, Vintage: raw.Vintage, Varietal: raw.Varietal, Region: raw.Region,
-			Appellation: raw.Appellation, Style: raw.Style, StockQty: raw.StockQty,
+			Appellation: raw.Appellation, Country: country, Color: color, Style: raw.Style,
+			StockQty:    raw.StockQty,
 			Description: desc, SommelierNotes: som,
-			ImagePath:   "assets/img/wines/" + raw.SKU + ".svg",
-			ImageSource: model.ImageGeneratedLabel,
-			Slug:        model.Slugify(raw.Producer, raw.Name, raw.Vintage),
+			ImagePath:       "assets/img/wines/" + raw.SKU + ".svg",
+			ImageSource:     model.ImageGeneratedLabel,
+			Sources:         sources,
+			MetadataScore:   model.MetadataScore(sources),
+			MatchConfidence: matchConf,
+			Slug:            model.Slugify(raw.Producer, raw.Name, raw.Vintage),
 		})
 	}
 	if err := model.SaveWines(filepath.Join("data", "wines.json"), wines); err != nil {

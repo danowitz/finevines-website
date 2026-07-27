@@ -1,4 +1,9 @@
-# Golden test fixtures compared byte-for-byte by label.Generate — never let
-# git normalize their line endings (would break TestGenerateMatchesGolden on
-# checkout across platforms).
+# Generated deterministic text assets → normalize to LF so regenerating them
+# (demoseed / enrich) doesn't churn line endings across platforms.
+*.svg text eol=lf
+data/wines.json text eol=lf
+data/news/*.json text eol=lf
+
+# Golden fixtures are compared byte-for-byte by tests — never translate their
+# line endings. MUST stay last so it overrides the *.svg rule above.
 *.golden.svg -text
