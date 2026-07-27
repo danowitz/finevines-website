@@ -471,7 +471,7 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 }
 
 /* md — collapse the header nav into a hamburger menu */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .site-header .wrap { flex-wrap: wrap; gap: 14px; }
   .nav-toggle { display: inline-flex; }
   .site-nav {
@@ -507,3 +507,22 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   .footer-bottom { flex-direction: column; align-items: flex-start; }
   .footer-legal { text-align: left; }
 }
+
+/* ---- Responsive hardening: prevent horizontal overflow on mobile -------- */
+html, body { overflow-x: clip; }
+img, svg { max-width: 100%; }
+/* flex/grid children default to min-width:auto and refuse to shrink below
+   their content, which forces document-level horizontal overflow on phones.
+   Reset it on the layout containers' children so everything reflows. */
+.site-header .wrap > *,
+.home-hero .wrap > *,
+.page-hero .wrap > *,
+.portfolio-layout > *,
+.footer-cols > *,
+.wine-card,
+.wine-card > * { min-width: 0; }
+/* hero action buttons wrap instead of overflowing */
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-actions .btn + .btn { margin-left: 0; }
+/* long words in display headings/eyebrows break rather than push width */
+h1, h2, .eyebrow, .lede { overflow-wrap: break-word; }
