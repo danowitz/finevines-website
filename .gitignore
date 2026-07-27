@@ -157,3 +157,6 @@ finevines.exe
 
 # Salesforce Enterprise WSDL (exposes full custom schema — keep out of history)
 docs/salesforce/*.wsdl
+
+# Enrichment coverage report (generated, internal — never published to the CDN)
+reports/

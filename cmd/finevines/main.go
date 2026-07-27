@@ -15,6 +15,7 @@ import (
 	"github.com/gritautomation/finevines-website/internal/enrich"
 	"github.com/gritautomation/finevines-website/internal/model"
 	"github.com/gritautomation/finevines-website/internal/redirects"
+	"github.com/gritautomation/finevines-website/internal/report"
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
 
@@ -37,6 +38,8 @@ func main() {
 		runErr = runRedirects(cfg, os.Args[2:])
 	case "deploy":
 		runErr = runDeploy(cfg)
+	case "report":
+		runErr = runReport()
 	default:
 		usage()
 		os.Exit(2)
@@ -47,7 +50,24 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: finevines <enrich|build|redirects|deploy>")
+	fmt.Fprintln(os.Stderr, "usage: finevines <enrich|build|redirects|deploy|report>")
+}
+
+// reportPath is where the enrichment coverage report is written — a LOCAL,
+// gitignored file, deliberately never placed in dist/ so it is not published
+// to the public CDN (see internal/report's package doc).
+const reportPath = "reports/enrichment.html"
+
+// runReport regenerates the enrichment coverage report from data/wines.json
+// without re-enriching — cheap and deterministic, the same read-only
+// relationship build has to the data. `enrich` also emits it at the end of a
+// run; this subcommand is for refreshing it on demand.
+func runReport() error {
+	if err := report.Write("data/wines.json", reportPath); err != nil {
+		return err
+	}
+	log.Printf("report: wrote %s", reportPath)
+	return nil
 }
 
 func fatal(err error) {
@@ -118,8 +138,20 @@ func runEnrich(cfg config.Config) error {
 	texts := enrich.NewTextEnricher(cfg.AnthropicAPIKey)
 	imgs := enrich.NewImagenClient(cfg.GeminiAPIKey, cfg.ImageModel, "", http.DefaultClient)
 
-	return enrich.Run(context.Background(), src, texts, imgs,
-		"data/wines.json", "assets/img/wines", log.Printf)
+	if err := enrich.Run(context.Background(), src, texts, imgs,
+		"data/wines.json", "assets/img/wines", log.Printf); err != nil {
+		return err
+	}
+
+	// Emit the editor-facing coverage report from the freshly-written catalog.
+	// A report failure must not fail the enrich run (the catalog is already
+	// saved) — log and continue.
+	if err := report.Write("data/wines.json", reportPath); err != nil {
+		log.Printf("enrich: warning: could not write %s: %v", reportPath, err)
+	} else {
+		log.Printf("enrich: wrote coverage report %s", reportPath)
+	}
+	return nil
 }
 
 // edgeRulesGateMax is the crawl-gate threshold (plan §"Redirect mechanism
