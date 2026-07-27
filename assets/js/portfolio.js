@@ -3,6 +3,31 @@
 (async function () {
   const grid = document.querySelector('.wine-grid');
   if (!grid) return;
+
+  // View toggle (Cards | List). Set up synchronously so it works even if the
+  // search-index fetch below fails — it only swaps a class on the grid, and
+  // the facet filter's [hidden] on each <li> keeps working in both views.
+  (function setupViewToggle() {
+    const buttons = document.querySelectorAll('.view-toggle-btn');
+    if (!buttons.length) return;
+    const KEY = 'fv-portfolio-view';
+    function setView(view) {
+      const list = view === 'list';
+      grid.classList.toggle('view-list', list);
+      grid.classList.toggle('view-cards', !list);
+      buttons.forEach(b => {
+        const active = b.dataset.view === view;
+        b.classList.toggle('is-active', active);
+        b.setAttribute('aria-pressed', String(active));
+      });
+      try { localStorage.setItem(KEY, view); } catch (e) { /* ignore */ }
+    }
+    let saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) { /* ignore */ }
+    if (saved === 'list' || saved === 'cards') setView(saved);
+    buttons.forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+  })();
+
   const res = await fetch('/search-index.json');
   const wines = await res.json();
   const bySlug = new Map(wines.map(w => [w.slug, w]));

@@ -51,8 +51,14 @@
       </aside>
 
       <div>
-        <p id="portfolio-count">{{len .Wines}} wines</p>
-        <ul class="wine-grid" style="list-style:none;margin:0;padding:0;">
+        <div class="portfolio-toolbar">
+          <p id="portfolio-count">{{len .Wines}} wines</p>
+          <div class="view-toggle" role="group" aria-label="Choose portfolio layout">
+            <button type="button" class="view-toggle-btn is-active" data-view="cards" aria-pressed="true">Cards</button>
+            <button type="button" class="view-toggle-btn" data-view="list" aria-pressed="false">List</button>
+          </div>
+        </div>
+        <ul class="wine-grid view-cards" style="list-style:none;margin:0;padding:0;">
           {{/* The <li> (not the .wine-card <a> inside it) is the element
                portfolio.js toggles [hidden] on: it carries no display rule
                of its own, so the browser's default `[hidden]{display:none}`

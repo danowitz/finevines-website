@@ -43,7 +43,10 @@
 {{define "header"}}<header class="site-header">
   <div class="wrap">
     <a class="brand" href="/" aria-label="FineVines home"><img src="/assets/img/finevines-logo.png" alt="FineVines" width="172"></a>
-    <nav class="site-nav">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+      <span class="nav-toggle-bars" aria-hidden="true"></span>
+    </button>
+    <nav class="site-nav" id="site-nav">
       <a href="/"{{if eq .Path "/"}} aria-current="page"{{end}}>Home</a>
       <a href="/portfolio/"{{if eq .Path "/portfolio/"}} aria-current="page"{{end}}>Portfolio</a>
       <a href="/news/"{{if eq .Path "/news/"}} aria-current="page"{{end}}>News &amp; Events</a>
@@ -52,6 +55,7 @@
       <a class="btn btn-cta" href="/contact/">Become a Customer</a>
     </nav>
   </div>
+  <script src="/assets/js/nav.js" defer></script>
 </header>
 {{end}}
 
@@ -59,7 +63,7 @@
   <div class="wrap">
     <div class="footer-cols">
       <div class="footer-brand">
-        <p class="footer-wordmark">FINEVINES</p>
+        <a class="footer-logo" href="/" aria-label="FineVines home"><img src="/assets/img/finevines-logo.png" alt="FineVines" width="168"></a>
         <p class="footer-tagline">Pouring elegance with a sommelier's touch.</p>
         <p class="footer-descriptor">Licensed wholesale wine &amp; spirits distribution, Chicagoland.</p>
         <ul class="footer-social" aria-label="FineVines on social media">

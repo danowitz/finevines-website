@@ -52,12 +52,13 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 		}
 	}
 
-	// Enterprise footer: text wordmark (not the colored logo image, which
-	// would clash on the dark bordeaux band), all four column headings, the
-	// real social handles, the clearly-marked contact placeholders, and the
-	// static-year bottom bar (no runtime clock — must stay deterministic).
+	// Enterprise footer: the real colored logo image (on a light chip for
+	// legibility on the dark bordeaux band, per the client QA fix), all four
+	// column headings, the real social handles, the clearly-marked contact
+	// placeholders, and the static-year bottom bar (no runtime clock — must
+	// stay deterministic).
 	for _, want := range []string{
-		`class="footer-wordmark">FINEVINES`,                              // styled text wordmark
+		`class="footer-logo"`,                                           // logo lockup wraps the image
 		`>Explore</h2>`, `>Trade</h2>`, `>Contact</h2>`,                  // column headings
 		`href="https://www.instagram.com/finevineswine/"`,               // real Instagram
 		`href="https://twitter.com/finevineswine"`,                      // real X/Twitter
@@ -71,10 +72,27 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 			t.Errorf("footer missing %q", want)
 		}
 	}
-	// The colored brand logo image must stay in the HEADER only — the footer
-	// renders the wordmark as text, so there must be exactly one logo <img>.
-	if n := strings.Count(string(home), "finevines-logo.png"); n != 1 {
-		t.Errorf("expected exactly 1 logo image (header only), got %d", n)
+	// The text wordmark was replaced by the real logo image — it must be gone.
+	if strings.Contains(string(home), "footer-wordmark") {
+		t.Error("footer should use the real logo image, not the text wordmark")
+	}
+	// The colored brand logo image now appears in BOTH the header and the
+	// footer, so there must be exactly two logo <img>s.
+	if n := strings.Count(string(home), "finevines-logo.png"); n != 2 {
+		t.Errorf("expected exactly 2 logo images (header + footer), got %d", n)
+	}
+	// The mobile nav hamburger must be present and accessible (aria-controls
+	// pointing at the nav it toggles, aria-expanded state).
+	for _, want := range []string{
+		`class="nav-toggle"`,
+		`aria-controls="site-nav"`,
+		`aria-expanded="false"`,
+		`id="site-nav"`,
+		`src="/assets/js/nav.js"`,
+	} {
+		if !strings.Contains(string(home), want) {
+			t.Errorf("header nav toggle missing %q", want)
+		}
 	}
 	// No fabricated contact data may reappear in the footer.
 	for _, bad := range []string{"@finevines.com", "(847)", "(630)", "(773)"} {
@@ -300,13 +318,18 @@ func TestPortfolioPage(t *testing.T) {
 	// JS↔template hook contract: portfolio.js (Step 3) depends on these
 	// selectors/attributes existing verbatim in the rendered markup.
 	for _, want := range []string{
-		`class="wine-grid"`,
+		`class="wine-grid view-cards"`,
 		`data-slug="hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021"`,
 		`data-facet="producer"`,
 		`id="portfolio-count"`,
 		`id="portfolio-search"`,
 		`src="/assets/js/portfolio.js"`,
 		`class="page-hero"`, // signature bordeaux hero band on section pages
+		// Cards | List view toggle control + the grid's default view class
+		// that portfolio.js swaps between (facet filtering works in both).
+		`class="view-toggle"`,
+		`data-view="cards"`,
+		`data-view="list"`,
 	} {
 		if !strings.Contains(html, want) {
 			t.Errorf("portfolio missing hook %q", want)
