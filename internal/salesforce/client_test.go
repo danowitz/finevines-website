@@ -67,18 +67,22 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 			"nextRecordsUrl": "/services/data/v61.0/query/01g-2",
 			"records": []map[string]any{
 				{
-					"Id": "01t000000001AAA", "StockKeepingUnit": "AB1001",
-					"FV_Brand__c": "Chateau Alpha", "Name": "Alpha Reserve",
-					"FV_Vintage_Year__c": "2019", "FV_Varietal__c": "Cabernet Sauvignon",
-					"FV_Region__c": "Napa Valley", "FV_OnHand_Qty__c": 12,
-					"FV_Ready_To_Sell__c": true,
+					// Real org shape: item number in Name (SKU), terse name in
+					// Description, StockKeepingUnit empty, fractional on-hand.
+					"Id": "01t000000001AAA", "Name": "AB1001", "StockKeepingUnit": nil,
+					"Description": "Alpha Reserve", "FV_Brand__c": "Chateau Alpha",
+					"FV_Vintage_Year__c": "19", "FV_Varietal__c": "Cabernet Sauvignon",
+					"FV_Region__c": "Napa Valley", "FV_Country__c": "USA",
+					"FV_OnHand_Qty__c": 12, "FV_Ready_To_Sell__c": true,
 				},
 				{
-					"Id": "01t000000002BBB", "StockKeepingUnit": "AB1002",
-					"FV_Brand__c": "Chateau Beta", "Name": "Beta Blanc",
-					"FV_Vintage_Year__c": "2021", "FV_Varietal__c": "Chardonnay",
-					"FV_Region__c": "Sonoma Coast", "FV_OnHand_Qty__c": 0,
-					"FV_Ready_To_Sell__c": false,
+					// FV_OnHand_Qty__c 0.66666 (cases) must ceil to 1, not
+					// truncate to 0 — a genuinely in-stock wine.
+					"Id": "01t000000002BBB", "Name": "AB1002",
+					"Description": "Beta Blanc", "FV_Brand__c": "Chateau Beta",
+					"FV_Vintage_Year__c": "21", "FV_Varietal__c": "Chardonnay",
+					"FV_Region__c": "Sonoma Coast", "FV_Country__c": "USA",
+					"FV_OnHand_Qty__c": 0.66666, "FV_Ready_To_Sell__c": false,
 				},
 			},
 		})
@@ -96,11 +100,12 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 			"nextRecordsUrl": "",
 			"records": []map[string]any{
 				{
-					"Id": "01t000000003CCC", "StockKeepingUnit": "9X9999",
-					"FV_Brand__c": "Chateau Gamma", "Name": "Gamma Noir",
-					"FV_Vintage_Year__c": "2018", "FV_Varietal__c": "Pinot Noir",
-					"FV_Region__c": "Willamette Valley", "FV_OnHand_Qty__c": 4,
-					"FV_Ready_To_Sell__c": true,
+					// Item number (Name) starting "9" → web-ineligible by rule.
+					"Id": "01t000000003CCC", "Name": "9X9999",
+					"Description": "Gamma Noir", "FV_Brand__c": "Chateau Gamma",
+					"FV_Vintage_Year__c": "18", "FV_Varietal__c": "Pinot Noir",
+					"FV_Region__c": "Willamette Valley", "FV_Country__c": "USA",
+					"FV_OnHand_Qty__c": 4, "FV_Ready_To_Sell__c": true,
 				},
 			},
 		})
@@ -122,24 +127,24 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 		t.Fatalf("Roster() error = %v", err)
 	}
 
-	// Appellation and Style are intentionally absent: Product2 has no field
-	// for them, so Roster leaves them empty and the search-scrape enrichment
-	// step fills them later.
+	// SKU comes from Name (item number); the display Name comes from
+	// Description. Appellation/Style stay empty (no Product2 field) and are
+	// filled by enrichment. StockQty is ceil(FV_OnHand_Qty__c).
 	want := []WineRaw{
 		{
 			ID: "01t000000001AAA", SKU: "AB1001", Producer: "Chateau Alpha",
-			Name: "Alpha Reserve", Vintage: "2019", Varietal: "Cabernet Sauvignon",
-			Region: "Napa Valley", StockQty: 12, ReadyToSell: true,
+			Name: "Alpha Reserve", Vintage: "19", Varietal: "Cabernet Sauvignon",
+			Region: "Napa Valley", Country: "USA", StockQty: 12, ReadyToSell: true,
 		},
 		{
 			ID: "01t000000002BBB", SKU: "AB1002", Producer: "Chateau Beta",
-			Name: "Beta Blanc", Vintage: "2021", Varietal: "Chardonnay",
-			Region: "Sonoma Coast", StockQty: 0, ReadyToSell: false,
+			Name: "Beta Blanc", Vintage: "21", Varietal: "Chardonnay",
+			Region: "Sonoma Coast", Country: "USA", StockQty: 1, ReadyToSell: false, // ceil(0.66666)
 		},
 		{
 			ID: "01t000000003CCC", SKU: "9X9999", Producer: "Chateau Gamma",
-			Name: "Gamma Noir", Vintage: "2018", Varietal: "Pinot Noir",
-			Region: "Willamette Valley", StockQty: 4, ReadyToSell: true,
+			Name: "Gamma Noir", Vintage: "18", Varietal: "Pinot Noir",
+			Region: "Willamette Valley", Country: "USA", StockQty: 4, ReadyToSell: true,
 		},
 	}
 

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"strings"
@@ -21,9 +23,21 @@ type Config struct {
 // Client is a Source backed by a live Salesforce org, reached via the
 // OAuth 2.0 Client Credentials Flow and the REST API's SOQL query endpoint.
 type Client struct {
-	cfg  Config
-	http *http.Client
-	tok  string
+	cfg         Config
+	http        *http.Client
+	tok         string
+	identityURL string // "id" URL from the token response — reveals the run-as user
+}
+
+// RunningUserID returns the Salesforce user ID the access token was issued for
+// (the trailing segment of the token response's identity URL), or "" if not yet
+// authenticated. Diagnostic aid: confirms WHICH run-as user the Client
+// Credentials Flow is actually executing as.
+func (c *Client) RunningUserID() string {
+	if i := strings.LastIndex(c.identityURL, "/"); i >= 0 {
+		return c.identityURL[i+1:]
+	}
+	return ""
 }
 
 // Client must satisfy Source so enrich orchestration never depends on
@@ -45,31 +59,30 @@ func NewClient(cfg Config, hc *http.Client) *Client {
 
 // rosterSOQL pulls every candidate wine row in one paginated query.
 //
-// Field mapping RESOLVED 2026-07-27 from the org's Enterprise WSDL
-// (docs/salesforce/enterprise.wsdl, gitignored): the wine catalog lives on the
-// standard Product2 object with FineVines custom fields (FV_ prefix). SKU is
-// the standard StockKeepingUnit; stock-on-hand is FV_OnHand_Qty__c (an
-// xsd:double). There is NO Salesforce field for appellation or style — those
-// stay empty here and are filled by the search-scrape enrichment step.
+// Field mapping VERIFIED against LIVE org data 2026-07-27 (28,953 Product2
+// rows). The WSDL gave the field NAMES but not their real contents; the live
+// data is raw QuickBooks-synced trade shorthand, so the clean consumer catalog
+// comes from the search-enrichment step, NOT these fields directly:
+//   - SKU        <- Name              (the item number, e.g. "710908";
+//     StockKeepingUnit is EMPTY in this org)
+//   - Name (raw) <- Description        (terse "14 LAMY ST AUBIN ROUGE 1C ...
+//     12/750"; enrichment produces the clean
+//     wine name — there is no clean-name field)
+//   - Producer   <- FV_Brand__c        ("LAMY, HUBERT" — Last, First; enrichment
+//     normalizes)
+//   - Vintage    <- FV_Vintage_Year__c ("14" — two-digit; enrichment expands)
+//   - Varietal   <- FV_Varietal__c, Region <- FV_Region__c, Country <- FV_Country__c
+//   - StockQty   <- FV_OnHand_Qty__c    (FRACTIONAL cases, e.g. 0.66 — see
+//     ceilStock; truncation would drop it)
+//   - ReadyToSell<- FV_Ready_To_Sell__c
 //
-// ⚠ THREE mappings still await a one-word client confirmation (raised via
-// AskUserQuestion in the 2026-07-27 session); each is a single-token edit here
-// plus its line in the Roster mapping below:
-//   1. producer -> FV_Brand__c  (alt: FV_Supplier__c, the importer/vendor).
-//      OPEN QUESTION per the client (2026-07-27): using FV_Brand__c
-//      provisionally — see GitHub issue #2.
-// Confirmed 2026-07-27: stock -> FV_OnHand_Qty__c, and FV_Ready_To_Sell__c
-// additionally gates web-eligibility (enrich.Eligible).
-// The field->WineRaw mapping in Roster is the one other place that must change
-// in lockstep — keeping both in this one file is deliberate.
-//
-// Additional authoritative Product2 fields exist and will be pulled in once
-// WineRaw/model.Wine expand for the scraped schema: FV_Country__c, FV_Color__c,
-// FV_ALC_Percent__c, FV_Bottle_Size__c, FV_Bottles_Per_Case__c, FV_List_Price__c,
-// FV_Net_Price__c, FV_BTG_Price__c, FV_Category__c, FV_Rating__c.
-const rosterSOQL = `SELECT Id, StockKeepingUnit, Name, FV_Brand__c,
- FV_Vintage_Year__c, FV_Varietal__c, FV_Region__c, FV_OnHand_Qty__c,
- FV_Ready_To_Sell__c FROM Product2`
+// Pricing fields (FV_Net_Price__c/FV_List_Price__c/COGS/…) are deliberately NOT
+// pulled — the public catalog shows no prices (client decision). Appellation,
+// Style, ABV, colour, etc. are filled by enrichment. The field->WineRaw mapping
+// in Roster must move in lockstep with this SELECT list.
+const rosterSOQL = `SELECT Id, Name, Description, FV_Brand__c, FV_Vintage_Year__c,
+ FV_Varietal__c, FV_Region__c, FV_Country__c, FV_OnHand_Qty__c, FV_Ready_To_Sell__c
+ FROM Product2`
 
 // Roster authenticates and runs rosterSOQL, following nextRecordsUrl until
 // Salesforce reports done:true, mapping every record into a WineRaw in API
@@ -99,13 +112,14 @@ func (c *Client) Roster(ctx context.Context) ([]WineRaw, error) {
 		for _, r := range page.Records {
 			out = append(out, WineRaw{
 				ID:          str(r["Id"]),
-				SKU:         str(r["StockKeepingUnit"]),
-				Producer:    str(r["FV_Brand__c"]),
-				Name:        str(r["Name"]),
+				SKU:         str(r["Name"]),        // item number; StockKeepingUnit is empty in this org
+				Producer:    str(r["FV_Brand__c"]), // "LAST, FIRST" — enrichment normalizes
+				Name:        str(r["Description"]), // terse trade description; enrichment produces the clean name
 				Vintage:     str(r["FV_Vintage_Year__c"]),
 				Varietal:    str(r["FV_Varietal__c"]),
 				Region:      str(r["FV_Region__c"]),
-				StockQty:    intval(r["FV_OnHand_Qty__c"]),
+				Country:     str(r["FV_Country__c"]),
+				StockQty:    ceilStock(r["FV_OnHand_Qty__c"]), // fractional cases -> ceil
 				ReadyToSell: boolval(r["FV_Ready_To_Sell__c"]),
 				// Appellation and Style have no Product2 field — both are
 				// populated later by the search-scrape enrichment step.
@@ -123,6 +137,35 @@ func (c *Client) Roster(ctx context.Context) ([]WineRaw, error) {
 				return nil, fmt.Errorf("salesforce query: server reported done=false with no " +
 					"nextRecordsUrl (roster would be truncated)")
 			}
+			next = page.NextRecordsURL
+		}
+	}
+	return out, nil
+}
+
+// Query runs an arbitrary SOQL string and returns the raw records, following
+// pagination. It's a diagnostic/discovery helper (used by tools/sfquery) — the
+// production roster pull is Roster. It authenticates on first use.
+func (c *Client) Query(ctx context.Context, soql string) ([]map[string]any, error) {
+	if c.tok == "" {
+		if err := c.authenticate(ctx); err != nil {
+			return nil, err
+		}
+	}
+	var out []map[string]any
+	next := fmt.Sprintf("/services/data/%s/query?q=%s", c.cfg.APIVersion, url.QueryEscape(soql))
+	for next != "" {
+		var page struct {
+			Done           bool             `json:"done"`
+			NextRecordsURL string           `json:"nextRecordsUrl"`
+			Records        []map[string]any `json:"records"`
+		}
+		if err := c.getJSON(ctx, next, &page); err != nil {
+			return out, err
+		}
+		out = append(out, page.Records...)
+		next = ""
+		if !page.Done {
 			next = page.NextRecordsURL
 		}
 	}
@@ -169,6 +212,7 @@ func (c *Client) authenticate(ctx context.Context) error {
 
 	var body struct {
 		AccessToken string `json:"access_token"`
+		ID          string `json:"id"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
 		return fmt.Errorf("salesforce auth: decode token response: %w", err)
@@ -177,6 +221,7 @@ func (c *Client) authenticate(ctx context.Context) error {
 		return fmt.Errorf("salesforce auth: token response had no access_token")
 	}
 	c.tok = body.AccessToken
+	c.identityURL = body.ID
 	return nil
 }
 
@@ -196,7 +241,8 @@ func (c *Client) getJSON(ctx context.Context, path string, v any) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("salesforce query %s: HTTP %d", path, resp.StatusCode)
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2000))
+		return fmt.Errorf("salesforce query %s: HTTP %d: %s", path, resp.StatusCode, strings.TrimSpace(string(body)))
 	}
 	if err := json.NewDecoder(resp.Body).Decode(v); err != nil {
 		return fmt.Errorf("salesforce query %s: decode response: %w", path, err)
@@ -212,6 +258,19 @@ func str(v any) string {
 func intval(v any) int {
 	f, _ := v.(float64) // Salesforce numbers arrive as JSON numbers (float64).
 	return int(f)
+}
+
+// ceilStock converts FV_OnHand_Qty__c to an int, rounding UP. That field is
+// fractional (cases, e.g. 0.66), and a plain int() truncation would turn a
+// genuinely in-stock 0.66 into 0 — silently dropping the wine from the web
+// catalog. Ceil preserves the ">0" eligibility test; the exact count is never
+// shown publicly. Zero/negative stays 0.
+func ceilStock(v any) int {
+	f, _ := v.(float64)
+	if f <= 0 {
+		return 0
+	}
+	return int(math.Ceil(f))
 }
 
 func boolval(v any) bool {
