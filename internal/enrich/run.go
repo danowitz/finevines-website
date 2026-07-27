@@ -93,7 +93,7 @@ func (e *resolveImageError) Unwrap() error { return e.err }
 // ResolveImage can only be a filesystem failure and is fatal: Run stops
 // dispatching further work, saves whatever progress exists, and returns the
 // error (see resolveImageError).
-func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImageProvider, dataPath, imgDir string, log func(string, ...any)) error {
+func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImageProvider, oldImages map[string]string, dataPath, imgDir string, log func(string, ...any)) error {
 	if log == nil {
 		log = func(string, ...any) {}
 	}
@@ -139,7 +139,7 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 		go func() {
 			defer wg.Done()
 			for raw := range jobs {
-				wine, err := enrichOne(ctx, enr, imgs, raw, existingByID, imgDir, log)
+				wine, err := enrichOne(ctx, enr, imgs, raw, existingByID, oldImages, imgDir, log)
 				results <- enrichResult{raw: raw, wine: wine, err: err}
 			}
 		}()
@@ -210,7 +210,7 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 // resulting model.Wine. It is called concurrently by up to enrichWorkers
 // goroutines; existingByID is read-only for the duration of Run's worker
 // phase, so no synchronization is needed around it.
-func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesforce.WineRaw, existingByID map[string]model.Wine, imgDir string, log func(string, ...any)) (model.Wine, error) {
+func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesforce.WineRaw, existingByID map[string]model.Wine, oldImages map[string]string, imgDir string, log func(string, ...any)) (model.Wine, error) {
 	res, err := enr.Enrich(ctx, raw)
 	if err != nil {
 		return model.Wine{}, err
@@ -222,9 +222,36 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 		prev = &p
 	}
 
-	imagePath, imageSource, err := ResolveImage(ctx, imgs, raw, res.ImagePrompt, imgDir, prev, log)
-	if err != nil {
-		return model.Wine{}, &resolveImageError{err: err}
+	slug := model.Slugify(raw.Producer, raw.Name, raw.Vintage)
+
+	// Image chain: a manually producer-supplied image (from a prior run) is kept
+	// as-is; otherwise try a REAL image — FineVines' own old-site photo, then a
+	// found web image — downloaded and self-hosted under the SEO slug; failing
+	// that, ResolveImage generates a photo or writes the guaranteed SVG-label
+	// floor. A download failure is logged and falls through, never fatal.
+	var imagePath, imageSource, imageSourceURL string
+	switch {
+	case prev != nil && prev.ImageSource == model.ImageProducerSupplied:
+		imagePath, imageSource, imageSourceURL = prev.ImagePath, prev.ImageSource, prev.ImageSourceURL
+	default:
+		if url, src := imageCandidate(raw.SKU, res.ImageURL, oldImages); url != "" {
+			if data, derr := downloadImage(ctx, url); derr == nil {
+				p, werr := writeImageFile(imgDir, slug, "jpg", "svg", data)
+				if werr != nil {
+					return model.Wine{}, &resolveImageError{err: werr}
+				}
+				imagePath, imageSource, imageSourceURL = p, src, url
+			} else if log != nil {
+				log("enrich: image download failed for SKU %s (%s), falling back: %v", raw.SKU, url, derr)
+			}
+		}
+		if imagePath == "" {
+			p, s, rerr := ResolveImage(ctx, imgs, raw, res.ImagePrompt, imgDir, prev, log)
+			if rerr != nil {
+				return model.Wine{}, &resolveImageError{err: rerr}
+			}
+			imagePath, imageSource = p, s
+		}
 	}
 
 	// Salesforce-authoritative fields win over anything the search inferred,
@@ -248,9 +275,6 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 	}
 	sources["image"] = model.ImageFieldSource(imageSource)
 
-	// ImageSourceURL is only meaningful once a REAL image is actually used;
-	// today ResolveImage yields a generated photo/label, so leave it empty
-	// (the image chain sets it when it downloads res.ImageURL).
 	return model.Wine{
 		ID:              raw.ID,
 		SourceHash:      SourceHash(raw),
@@ -276,11 +300,12 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 		DrinkWindow:     res.DrinkWindow,
 		ImagePath:       imagePath,
 		ImageSource:     imageSource,
+		ImageSourceURL:  imageSourceURL,
 		Sources:         sources,
 		MetadataScore:   model.MetadataScore(sources),
 		MatchConfidence: res.MatchConfidence,
 		EnrichedAt:      nowUTC().Format(time.RFC3339),
-		Slug:            model.Slugify(raw.Producer, raw.Name, raw.Vintage),
+		Slug:            slug,
 	}, nil
 }
 

@@ -140,7 +140,7 @@ func TestRun_FullPipeline(t *testing.T) {
 	texts := &fakeTexts{}
 	images := &fakeImages{}
 
-	if err := Run(context.Background(), src, texts, images, dataPath, imgDir, t.Logf); err != nil {
+	if err := Run(context.Background(), src, texts, images, nil, dataPath, imgDir, t.Logf); err != nil {
 		t.Fatalf("Run returned error: %v", err)
 	}
 
@@ -282,7 +282,7 @@ func TestRun_CheckpointsProgressMidRun(t *testing.T) {
 
 	runErr := make(chan error, 1)
 	go func() {
-		runErr <- Run(context.Background(), src, texts, images, dataPath, imgDir, t.Logf)
+		runErr <- Run(context.Background(), src, texts, images, nil, dataPath, imgDir, t.Logf)
 	}()
 
 	// Poll for the intermediate checkpoint: SF-KEEP (kept) + SF-FAST (freshly
@@ -385,7 +385,7 @@ func TestRun_TextErrorIsLoggedAndSkipped(t *testing.T) {
 		logMu.Unlock()
 	}
 
-	if err := Run(context.Background(), src, texts, images, dataPath, imgDir, logFn); err != nil {
+	if err := Run(context.Background(), src, texts, images, nil, dataPath, imgDir, logFn); err != nil {
 		t.Fatalf("Run returned error for a per-wine text failure (want log-and-skip, not abort): %v", err)
 	}
 
@@ -428,7 +428,7 @@ func TestRun_ResumeAfterPartialRun(t *testing.T) {
 	// Pass 1: SF-B fails (simulates a dropped wine from a crash or a
 	// transient API error) and must be logged-and-skipped, not abort the run.
 	pass1Texts := &fakeTexts{errs: map[string]error{"SF-B": fmt.Errorf("simulated failure")}}
-	if err := Run(context.Background(), src, pass1Texts, images, dataPath, imgDir, t.Logf); err != nil {
+	if err := Run(context.Background(), src, pass1Texts, images, nil, dataPath, imgDir, t.Logf); err != nil {
 		t.Fatalf("pass 1: Run returned error: %v", err)
 	}
 
@@ -444,7 +444,7 @@ func TestRun_ResumeAfterPartialRun(t *testing.T) {
 	// succeed for everyone. SF-A must hash-match and be skipped entirely
 	// (Keep); only SF-B should go through Texts.Enrich this time.
 	pass2Texts := &fakeTexts{}
-	if err := Run(context.Background(), src, pass2Texts, images, dataPath, imgDir, t.Logf); err != nil {
+	if err := Run(context.Background(), src, pass2Texts, images, nil, dataPath, imgDir, t.Logf); err != nil {
 		t.Fatalf("pass 2: Run returned error: %v", err)
 	}
 
@@ -482,7 +482,7 @@ func TestRun_ResolveImageFilesystemErrorAbortsRun(t *testing.T) {
 	texts := &fakeTexts{}
 	images := &fakeImages{}
 
-	err := Run(context.Background(), src, texts, images, dataPath, imgDir, t.Logf)
+	err := Run(context.Background(), src, texts, images, nil, dataPath, imgDir, t.Logf)
 	if err == nil {
 		t.Fatal("want Run to return an error when ResolveImage hits a filesystem failure, got nil")
 	}

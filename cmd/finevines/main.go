@@ -153,7 +153,17 @@ func runEnrich(cfg config.Config) error {
 		imgs = enrich.NewImagenClient(cfg.GeminiAPIKey, cfg.ImageModel, "", http.DefaultClient)
 	}
 
-	if err := enrich.Run(context.Background(), src, enr, imgs,
+	// Old-site image manifest (tools/oldimages): SKU -> FineVines' own photo,
+	// the top rung of the image chain. Missing file is fine — no old-site rung.
+	oldImages, err := enrich.LoadOldSiteImages("data/oldsite-images.json")
+	if err != nil {
+		return fmt.Errorf("enrich: %w", err)
+	}
+	if len(oldImages) > 0 {
+		log.Printf("enrich: %d old-site image matches loaded", len(oldImages))
+	}
+
+	if err := enrich.Run(context.Background(), src, enr, imgs, oldImages,
 		"data/wines.json", "assets/img/wines", log.Printf); err != nil {
 		return err
 	}

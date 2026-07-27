@@ -79,7 +79,7 @@ func TestEnrichOneMapsProvenanceAndScore(t *testing.T) {
 	}}
 
 	raw := salesforce.WineRaw{ID: "SF-1", SKU: "AB1201", Producer: "Hubert Lamy", Name: "Saint-Aubin", Vintage: "2021"}
-	w, err := enrichOne(context.Background(), enr, imgs, raw, map[string]model.Wine{}, t.TempDir(), nil)
+	w, err := enrichOne(context.Background(), enr, imgs, raw, map[string]model.Wine{}, nil, t.TempDir(), nil)
 	if err != nil {
 		t.Fatalf("enrichOne: %v", err)
 	}

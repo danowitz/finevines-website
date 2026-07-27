@@ -20,6 +20,7 @@ const (
 	ImageGeneratedPhoto   = "generated-photo"   // AI-generated photorealistic bottle
 	ImageGeneratedLabel   = "generated-label"   // deterministic SVG label (guaranteed floor)
 	ImageProducerSupplied = "producer-supplied" // supplied by the producer/importer
+	ImageOldSite          = "old-site"          // FineVines' own photo, harvested from the old finevines.com
 	ImageScrapedWeb       = "scraped-web"       // real bottle/label image found via web search
 	ImageScrapedGoogle    = "scraped-google"    // real image via Google image-search fallback
 )
@@ -88,7 +89,7 @@ func ParseFieldSource(s string) FieldSource {
 // participates in MetadataScore consistently.
 func ImageFieldSource(imageSource string) FieldSource {
 	switch imageSource {
-	case ImageProducerSupplied, ImageScrapedWeb, ImageScrapedGoogle:
+	case ImageProducerSupplied, ImageOldSite, ImageScrapedWeb, ImageScrapedGoogle:
 		return SourceFound
 	case "":
 		return SourceMissing

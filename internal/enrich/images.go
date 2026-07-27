@@ -1,16 +1,121 @@
 package enrich
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/jpeg"
+	_ "image/png" // register PNG decoding for downloaded bottle shots
+	"io"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/gritautomation/finevines-website/internal/label"
 	"github.com/gritautomation/finevines-website/internal/model"
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
+
+// imageHTTPClient fetches candidate bottle images (old-site + found URLs). A
+// package var, not threaded through every signature, so tests can point it at
+// an httptest.Server.
+var imageHTTPClient = &http.Client{Timeout: 30 * time.Second}
+
+// maxImageBytes caps a downloaded image so a mislinked huge file can't blow up
+// memory; real bottle shots are well under this.
+const maxImageBytes = 12 << 20 // 12 MiB
+
+// downloadImage fetches url, validates it is a real image, and returns it
+// re-encoded as JPEG (compositing any transparency onto white, so PNG bottle
+// shots don't get a black background). It errors — rather than saving junk —
+// on a non-image, an undecodable body, an HTTP error, or an oversize file, so
+// the caller cleanly falls through to the next rung of the image chain.
+func downloadImage(ctx context.Context, url string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (FineVines catalog image fetch)")
+	resp, err := imageHTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("download image %s: HTTP %d", url, resp.StatusCode)
+	}
+	if ct := resp.Header.Get("Content-Type"); ct != "" && !strings.HasPrefix(ct, "image/") {
+		return nil, fmt.Errorf("download image %s: not an image (%s)", url, ct)
+	}
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, maxImageBytes+1))
+	if err != nil {
+		return nil, fmt.Errorf("download image %s: %w", url, err)
+	}
+	if len(raw) > maxImageBytes {
+		return nil, fmt.Errorf("download image %s: exceeds %d bytes", url, maxImageBytes)
+	}
+	img, _, err := image.Decode(bytes.NewReader(raw))
+	if err != nil {
+		return nil, fmt.Errorf("download image %s: decode: %w", url, err)
+	}
+	b := img.Bounds()
+	rgba := image.NewRGBA(b)
+	draw.Draw(rgba, b, image.NewUniform(color.White), image.Point{}, draw.Src)
+	draw.Draw(rgba, b, img, b.Min, draw.Over)
+	var buf bytes.Buffer
+	if err := jpeg.Encode(&buf, rgba, &jpeg.Options{Quality: 85}); err != nil {
+		return nil, fmt.Errorf("download image %s: encode: %w", url, err)
+	}
+	return buf.Bytes(), nil
+}
+
+// LoadOldSiteImages reads the old-site match manifest (tools/oldimages output)
+// into a SKU->image-URL map. A missing file is not an error — it just means no
+// old-site rung is available.
+func LoadOldSiteImages(path string) (map[string]string, error) {
+	data, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		return map[string]string{}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	var entries []struct {
+		SKU      string `json:"sku"`
+		ImageURL string `json:"imageUrl"`
+	}
+	if err := json.Unmarshal(data, &entries); err != nil {
+		return nil, fmt.Errorf("load old-site images %s: %w", path, err)
+	}
+	m := make(map[string]string, len(entries))
+	for _, e := range entries {
+		if e.ImageURL != "" {
+			m[e.SKU] = e.ImageURL
+		}
+	}
+	return m, nil
+}
+
+// imageCandidate picks the best real-image URL for a wine and the ImageSource
+// to record if it downloads: FineVines' own old-site photo first (best, zero
+// copyright), then a found web image. Empty means no real candidate — resolve
+// via generation/label.
+func imageCandidate(sku, foundURL string, oldImages map[string]string) (url, source string) {
+	if u := oldImages[sku]; u != "" {
+		return u, model.ImageOldSite
+	}
+	if foundURL != "" {
+		return foundURL, model.ImageScrapedWeb
+	}
+	return "", ""
+}
 
 // ResolveImage resolves the bottle image for one wine via a first-success-
 // wins chain (design spec §5):
