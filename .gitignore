@@ -151,3 +151,6 @@ dist/
 .bunny-manifest.json
 finevines.exe
 *.exe
+
+# Editor workspace file (personal, not shared)
+*.code-workspace
