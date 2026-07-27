@@ -38,7 +38,7 @@ type fakeTexts struct {
 	release  chan struct{}
 }
 
-func (f *fakeTexts) Enrich(ctx context.Context, w salesforce.WineRaw) (TextResult, error) {
+func (f *fakeTexts) Enrich(ctx context.Context, w salesforce.WineRaw) (EnrichResult, error) {
 	f.mu.Lock()
 	f.calls = append(f.calls, w.ID)
 	f.mu.Unlock()
@@ -48,10 +48,10 @@ func (f *fakeTexts) Enrich(ctx context.Context, w salesforce.WineRaw) (TextResul
 	}
 	if f.errs != nil {
 		if err, ok := f.errs[w.ID]; ok {
-			return TextResult{}, err
+			return EnrichResult{}, err
 		}
 	}
-	return TextResult{
+	return EnrichResult{
 		Description:    "FAKE description for " + w.Name,
 		SommelierNotes: "FAKE notes for " + w.Name,
 		ImagePrompt:    "FAKE prompt for " + w.Name,

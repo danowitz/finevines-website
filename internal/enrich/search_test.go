@@ -57,7 +57,7 @@ func TestEnrichGroundedRoundTrip(t *testing.T) {
 	const wantNotes = "Serve chilled alongside roast chicken or shellfish."
 	const wantImagePrompt = "Photorealistic studio product photograph of a tall, pale-green Burgundy bottle with a classic white-Burgundy label."
 
-	textJSON, err := json.Marshal(TextResult{
+	textJSON, err := json.Marshal(EnrichResult{
 		Description:    wantDescription,
 		SommelierNotes: wantNotes,
 		ImagePrompt:    wantImagePrompt,
@@ -81,7 +81,7 @@ func TestEnrichGroundedRoundTrip(t *testing.T) {
 	}))
 	defer server.Close()
 
-	enricher := NewTextEnricher("test-key", option.WithBaseURL(server.URL))
+	enricher := NewSearchEnricher("test-key", option.WithBaseURL(server.URL))
 	got, err := enricher.Enrich(t.Context(), testWine())
 	if err != nil {
 		t.Fatalf("Enrich returned error: %v", err)
@@ -126,7 +126,7 @@ func TestEnrichRetriesOnceThenErrorsOnMalformedJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	enricher := NewTextEnricher("test-key", option.WithBaseURL(server.URL))
+	enricher := NewSearchEnricher("test-key", option.WithBaseURL(server.URL))
 	_, err := enricher.Enrich(t.Context(), testWine())
 	if err == nil {
 		t.Fatal("want error for malformed JSON after retry, got nil")

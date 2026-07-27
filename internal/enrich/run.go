@@ -5,10 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/gritautomation/finevines-website/internal/model"
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
+
+// nowUTC is the clock enrichOne stamps EnrichedAt with. It's a package var so
+// a test can pin it for a deterministic timestamp; production uses the wall
+// clock in UTC.
+var nowUTC = func() time.Time { return time.Now().UTC() }
 
 // enrichWorkers bounds concurrent per-wine enrichment (one text call plus
 // one image call each) against the two external APIs (Anthropic, Imagen).
@@ -29,15 +35,15 @@ const enrichWorkers = 4
 // Diff.Keep instead of being re-enriched.
 var checkpointEvery = 50
 
-// Texts is the subset of *TextEnricher that Run depends on. Defining the
-// interface here (rather than depending on the concrete *TextEnricher type)
-// lets tests inject a fake without touching the Anthropic SDK; *TextEnricher
+// Enricher is the subset of *SearchEnricher that Run depends on. Defining the
+// interface here (rather than depending on the concrete *SearchEnricher type)
+// lets tests inject a fake without touching the Anthropic SDK; *SearchEnricher
 // satisfies it with no changes required on that side.
-type Texts interface {
-	Enrich(ctx context.Context, w salesforce.WineRaw) (TextResult, error)
+type Enricher interface {
+	Enrich(ctx context.Context, w salesforce.WineRaw) (EnrichResult, error)
 }
 
-var _ Texts = (*TextEnricher)(nil)
+var _ Enricher = (*SearchEnricher)(nil)
 
 // enrichResult is one worker's output for one Diff.Enrich wine, carried back
 // to the coordinating goroutine over the results channel.
@@ -89,7 +95,7 @@ func (e *resolveImageError) Unwrap() error { return e.err }
 // ResolveImage can only be a filesystem failure and is fatal: Run stops
 // dispatching further work, saves whatever progress exists, and returns the
 // error (see resolveImageError).
-func Run(ctx context.Context, src salesforce.Source, texts Texts, imgs ImageProvider, dataPath, imgDir string, log func(string, ...any)) error {
+func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImageProvider, dataPath, imgDir string, log func(string, ...any)) error {
 	if log == nil {
 		log = func(string, ...any) {}
 	}
@@ -135,7 +141,7 @@ func Run(ctx context.Context, src salesforce.Source, texts Texts, imgs ImageProv
 		go func() {
 			defer wg.Done()
 			for raw := range jobs {
-				wine, err := enrichOne(ctx, texts, imgs, raw, existingByID, imgDir, log)
+				wine, err := enrichOne(ctx, enr, imgs, raw, existingByID, imgDir, log)
 				results <- enrichResult{raw: raw, wine: wine, err: err}
 			}
 		}()
@@ -206,8 +212,8 @@ func Run(ctx context.Context, src salesforce.Source, texts Texts, imgs ImageProv
 // resulting model.Wine. It is called concurrently by up to enrichWorkers
 // goroutines; existingByID is read-only for the duration of Run's worker
 // phase, so no synchronization is needed around it.
-func enrichOne(ctx context.Context, texts Texts, imgs ImageProvider, raw salesforce.WineRaw, existingByID map[string]model.Wine, imgDir string, log func(string, ...any)) (model.Wine, error) {
-	text, err := texts.Enrich(ctx, raw)
+func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesforce.WineRaw, existingByID map[string]model.Wine, imgDir string, log func(string, ...any)) (model.Wine, error) {
+	res, err := enr.Enrich(ctx, raw)
 	if err != nil {
 		return model.Wine{}, err
 	}
@@ -218,28 +224,65 @@ func enrichOne(ctx context.Context, texts Texts, imgs ImageProvider, raw salesfo
 		prev = &p
 	}
 
-	imagePath, imageSource, err := ResolveImage(ctx, imgs, raw, text.ImagePrompt, imgDir, prev, log)
+	imagePath, imageSource, err := ResolveImage(ctx, imgs, raw, res.ImagePrompt, imgDir, prev, log)
 	if err != nil {
 		return model.Wine{}, &resolveImageError{err: err}
 	}
 
+	// Salesforce-authoritative fields win over anything the search inferred,
+	// and are marked as such in the provenance. Appellation is the only scored
+	// field Salesforce can currently supply directly (Product2 has no field
+	// for it today, so raw.Appellation is usually empty — but if a future
+	// mapping fills it, it takes precedence here without further changes).
+	appellation := res.Appellation
+	if raw.Appellation != "" {
+		appellation = raw.Appellation
+	}
+
+	// Per-field provenance: start from what the search reported, force the
+	// Salesforce-sourced fields, then classify the resolved image.
+	sources := make(map[string]model.FieldSource, len(model.ScoredFields))
+	for k, v := range res.Sources {
+		sources[k] = model.ParseFieldSource(v)
+	}
+	if raw.Appellation != "" {
+		sources["appellation"] = model.SourceSalesforce
+	}
+	sources["image"] = model.ImageFieldSource(imageSource)
+
+	// ImageSourceURL is only meaningful once a REAL image is actually used;
+	// today ResolveImage yields a generated photo/label, so leave it empty
+	// (the image chain sets it when it downloads res.ImageURL).
 	return model.Wine{
-		ID:             raw.ID,
-		SourceHash:     SourceHash(raw),
-		SKU:            raw.SKU,
-		Producer:       raw.Producer,
-		Name:           raw.Name,
-		Vintage:        raw.Vintage,
-		Varietal:       raw.Varietal,
-		Region:         raw.Region,
-		Appellation:    raw.Appellation,
-		Style:          raw.Style,
-		StockQty:       raw.StockQty,
-		Description:    text.Description,
-		SommelierNotes: text.SommelierNotes,
-		ImagePath:      imagePath,
-		ImageSource:    imageSource,
-		Slug:           model.Slugify(raw.Producer, raw.Name, raw.Vintage),
+		ID:              raw.ID,
+		SourceHash:      SourceHash(raw),
+		SKU:             raw.SKU,
+		Producer:        raw.Producer,
+		Name:            raw.Name,
+		Vintage:         raw.Vintage,
+		Varietal:        raw.Varietal,
+		Region:          raw.Region,
+		Appellation:     appellation,
+		Country:         res.Country,
+		Color:           res.Color,
+		Style:           raw.Style,
+		StockQty:        raw.StockQty,
+		Description:     res.Description,
+		SommelierNotes:  res.SommelierNotes,
+		Aroma:           res.Aroma,
+		Palate:          res.Palate,
+		Finish:          res.Finish,
+		FoodPairings:    res.FoodPairings,
+		ABV:             res.ABV,
+		BottleSize:      res.BottleSize,
+		DrinkWindow:     res.DrinkWindow,
+		ImagePath:       imagePath,
+		ImageSource:     imageSource,
+		Sources:         sources,
+		MetadataScore:   model.MetadataScore(sources),
+		MatchConfidence: res.MatchConfidence,
+		EnrichedAt:      nowUTC().Format(time.RFC3339),
+		Slug:            model.Slugify(raw.Producer, raw.Name, raw.Vintage),
 	}, nil
 }
 

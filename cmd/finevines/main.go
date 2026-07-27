@@ -135,10 +135,10 @@ func runEnrich(cfg config.Config) error {
 			APIVersion:   cfg.SFAPIVersion,
 		}, http.DefaultClient)
 	}
-	texts := enrich.NewTextEnricher(cfg.AnthropicAPIKey)
+	enr := enrich.NewSearchEnricher(cfg.AnthropicAPIKey)
 	imgs := enrich.NewImagenClient(cfg.GeminiAPIKey, cfg.ImageModel, "", http.DefaultClient)
 
-	if err := enrich.Run(context.Background(), src, texts, imgs,
+	if err := enrich.Run(context.Background(), src, enr, imgs,
 		"data/wines.json", "assets/img/wines", log.Printf); err != nil {
 		return err
 	}

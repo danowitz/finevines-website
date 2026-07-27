@@ -65,6 +65,22 @@ func MetadataScore(sources map[string]FieldSource) int {
 	return int(math.Round(100 * float64(real) / float64(len(ScoredFields))))
 }
 
+// ParseFieldSource maps a provenance string (as reported by the enrichment
+// step) to a FieldSource, defaulting anything unrecognized — including "" — to
+// SourceMissing so an omitted or malformed value never counts as real.
+func ParseFieldSource(s string) FieldSource {
+	switch FieldSource(s) {
+	case SourceSalesforce:
+		return SourceSalesforce
+	case SourceFound:
+		return SourceFound
+	case SourceDerived:
+		return SourceDerived
+	default:
+		return SourceMissing
+	}
+}
+
 // ImageFieldSource classifies an ImageSource value for provenance scoring: a
 // producer-supplied or scraped real image counts as found; an AI-generated
 // photo or the SVG-label fallback counts as derived; empty is missing. Callers
