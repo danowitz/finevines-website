@@ -62,33 +62,55 @@ func main() {
 	// (often the producer's initials) and the punt catches background print;
 	// both add words that are not the label's.
 	band := imgcheck.LabelBand(rep.Box)
-	crop := image.NewRGBA(image.Rect(0, 0, band.Dx(), band.Dy()))
-	for y := 0; y < band.Dy(); y++ {
-		for x := 0; x < band.Dx(); x++ {
-			crop.Set(x, y, img.At(band.Min.X+x, band.Min.Y+y))
-		}
-	}
-	tmp := filepath.Join(os.TempDir(), "imgcheck-band.png")
-	f, err := os.Create(tmp)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	if err := png.Encode(f, crop); err != nil {
-		f.Close()
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	f.Close()
-	if !*keep {
-		defer os.Remove(tmp)
-	}
 
-	text, err := ocr(tmp)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ocr: %v\n", err)
-		os.Exit(1)
+	// Read the band at MORE THAN ONE SCALE and pool the words.
+	//
+	// Upscaling helps small crops: a 263px-wide band read as "CLOS-VOUC,EOT
+	// DOMAINE GROS" at native size and "CLOS-VOUGEOT ... ANNE" enlarged, which
+	// is the difference between rejecting and accepting a correct wine. But it
+	// is not uniformly better — the same change broke a Lafarge that had
+	// matched at native size. Resampling shifts which glyphs survive rather
+	// than improving all of them.
+	//
+	// Since a word only has to be found ONCE to count, the scales need not
+	// agree. Pooling both passes takes each one's successes without inheriting
+	// its failures, and OCR here is local and fast enough that a second read
+	// costs little.
+	scales := []int{1}
+	if band.Dx() < 500 {
+		scales = append(scales, 3)
 	}
+	var texts []string
+	for _, scale := range scales {
+		crop := image.NewRGBA(image.Rect(0, 0, band.Dx()*scale, band.Dy()*scale))
+		for y := 0; y < crop.Bounds().Dy(); y++ {
+			for x := 0; x < crop.Bounds().Dx(); x++ {
+				crop.Set(x, y, img.At(band.Min.X+x/scale, band.Min.Y+y/scale))
+			}
+		}
+		tmp := filepath.Join(os.TempDir(), fmt.Sprintf("imgcheck-band-%d.png", scale))
+		f, err := os.Create(tmp)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		if err := png.Encode(f, crop); err != nil {
+			f.Close()
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		f.Close()
+		if !*keep {
+			defer os.Remove(tmp)
+		}
+		t, err := ocr(tmp)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ocr: %v\n", err)
+			os.Exit(1)
+		}
+		texts = append(texts, t)
+	}
+	text := strings.Join(texts, " ")
 	fmt.Printf("label     %q\n", truncate(strings.Join(strings.Fields(text), " "), 90))
 
 	// A source watermark is not a wine word — and republishing another
