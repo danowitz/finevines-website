@@ -4,6 +4,8 @@
 package build
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -149,10 +151,14 @@ func (w winePage) LDProps() []ldProp {
 }
 
 // facetGroup is one filter group in the portfolio sidebar: a facet key and
-// its distinct values across the current wine list, sorted for determinism.
-// Facet must exactly match one of portfolio.js's `active` map keys
-// (producer/varietal/region/vintage/style) — the template emits it as each
-// checkbox's data-facet attribute, which is how the JS groups selections.
+// its distinct values across the whole (cleaned) wine list, sorted for
+// determinism. Facet must exactly match one of portfolio.js's FACET_KEYS
+// (producer/region/varietal/country/vintage) — the template emits it as each
+// checkbox's data-facet attribute AND as the URL query-param name, which is
+// how the JS groups selections and round-trips them through the URL. Values
+// span the ENTIRE catalog (not just one paginated page) because the client
+// engine filters against the full catalog-index, so every possible facet
+// value must be offered on every page.
 type facetGroup struct {
 	Facet  string
 	Label  string
@@ -176,31 +182,58 @@ type newsPostPage struct {
 	Post model.NewsPost
 }
 
-// portfolioPage carries the full wine list plus its computed facet groups
-// for the portfolio's server-rendered grid and sidebar, alongside the
-// shared page contract. The wine list here (and the search-index.json
-// written alongside it) is the SEO surface: every wine is real HTML in the
-// page, not assembled by JS — portfolio.js only hides/shows what's already
-// rendered.
+// portfolioPage carries ONE paginated slice of the catalog — this page's 48
+// wine cards — plus the facet groups (which span the whole catalog, not just
+// this page) and the pagination metadata the template and portfolio.js need.
+//
+// Why paginate the SEO surface rather than render all ~2,600 wines into one
+// document: the old single-page portfolio was a 2MB, 65k-DOM-node page that
+// took ~12s to paint on 3G. Now each /portfolio/page/N/ is a small (tens of
+// KB) real-HTML document with real <a href> cards AND prev/next <a> links, so
+// a crawler or no-JS visitor can walk the entire catalog page by page, while
+// portfolio.js progressively takes over with client-side filtering against
+// the compact catalog-index once it loads. Every wine still has its own
+// crawlable /wines/<slug>/ detail page — that is the primary SEO surface; the
+// paginated list is the browsable index into it.
 type portfolioPage struct {
 	page
 	Facets []facetGroup
-	Wines  []model.Wine
+	Wines  []model.Wine // this page's slice only (≤ portfolioPageSize)
+
+	// IndexURL is the content-hashed catalog-index URL portfolio.js fetches to
+	// drive client-side filtering/sorting/pagination. Hashing lets Bunny cache
+	// it immutably: the filename changes whenever the data does, so browsers
+	// never serve a stale index.
+	IndexURL string
+	PageSize int // portfolioPageSize; echoed to the JS so both sides agree
+	// PageNum/PageCount/Total drive the server-rendered pagination nav and the
+	// result counter; PrevURL/NextURL are the crawlable prev/next links (empty
+	// string ⇒ no such neighbour, so the template renders a disabled control).
+	PageNum   int
+	PageCount int
+	Total     int
+	PrevURL   string
+	NextURL   string
 }
 
-// indexEntry is one row of dist/search-index.json, the compact per-wine
-// record portfolio.js fetches to drive client-side filtering. Field names
-// are the JS↔Go contract (portfolio.js reads w.producer, w.varietal, etc.
-// by these exact lowercase keys) — do not rename without updating both
-// sides.
+// indexEntry is one row of dist/assets/catalog-index.<hash>.json, the compact
+// per-wine record portfolio.js fetches to drive client-side browsing. It
+// carries ONLY the fields the browse UI needs (identity, classification, and
+// the thumbnail) — deliberately NOT descriptions/tasting notes, which would
+// bloat the index the browser downloads on every /portfolio/ visit and live
+// only on the per-wine detail pages. Field names are the JS↔Go contract
+// (portfolio.js reads w.producer, w.varietal, etc. by these exact lowercase
+// keys) — do not rename without updating both sides.
 type indexEntry struct {
 	Slug     string `json:"slug"`
+	SKU      string `json:"sku"`
 	Producer string `json:"producer"`
 	Name     string `json:"name"`
 	Vintage  string `json:"vintage"`
-	Varietal string `json:"varietal"`
 	Region   string `json:"region"`
-	Style    string `json:"style"`
+	Varietal string `json:"varietal"`
+	Country  string `json:"country"`
+	Color    string `json:"color"`
 	Img      string `json:"img"`
 }
 
@@ -213,8 +246,19 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		"paragraphs": paragraphs,
 		"excerpt":    excerpt,
 		"hasPrefix":  strings.HasPrefix,
+		"comma":      comma,
+		"spaceJoin":  spaceJoin,
 	}).ParseGlob(filepath.Join(templatesDir, "*.tmpl"))
 	if err != nil {
+		return err
+	}
+	// Start each build from an empty dist/ so stale output can never linger.
+	// The catalog-index filename is content-hashed, so without this every data
+	// change would drop a fresh catalog-index.<hash>.json and leave the old ones
+	// behind (deployed as orphans); likewise, if the catalog ever shrinks, the
+	// now-surplus /portfolio/page/N/ dirs would stick around, crawlable and in
+	// stale sitemaps. Cleaning keeps dist/ an exact mirror of this build.
+	if err := cleanDir(distDir); err != nil {
 		return err
 	}
 	if err := copyTree(assetsDir, filepath.Join(distDir, "assets")); err != nil {
@@ -249,17 +293,6 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 			Description: "Reach the FineVines trade team — wholesale wine and spirits distribution for " +
 				"licensed Illinois retailers, restaurants, and hospitality accounts.",
 			Path: "/contact/",
-		}},
-		{"portfolio", "portfolio", portfolioPage{
-			page: page{
-				site:  s,
-				Title: "Portfolio — FineVines",
-				Description: "Browse the full FineVines wholesale portfolio — filter by producer, varietal, " +
-					"region, vintage, or style across every wine currently in stock.",
-				Path: "/portfolio/",
-			},
-			Facets: buildFacets(s.Wines),
-			Wines:  s.Wines,
 		}},
 		{"news", "news", newsPage{
 			page: page{
@@ -296,9 +329,19 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		}
 	}
 
-	if err := writeSearchIndex(distDir, s.Wines); err != nil {
+	// The paginated portfolio + its compact catalog-index are rendered as
+	// their own unit: writeCatalogIndex must run first so the hashed index URL
+	// is known before the pages that embed it are rendered, and renderPortfolio
+	// contributes every /portfolio/ + /portfolio/page/N/ path to the sitemap.
+	indexURL, err := writeCatalogIndex(distDir, s.Wines)
+	if err != nil {
 		return err
 	}
+	portfolioPaths, err := renderPortfolio(tmpl, distDir, s, indexURL)
+	if err != nil {
+		return err
+	}
+	paths = append(paths, portfolioPaths...)
 
 	for _, w := range s.Wines {
 		data := winePage{
@@ -395,20 +438,65 @@ func firstNonEmpty(s, fallback string) string {
 	return fallback
 }
 
+// spaceJoin joins its non-empty, trimmed arguments with single spaces. Used
+// for a wine card's img alt text so a missing producer/vintage never leaves a
+// double space ("Bottle of  Pauillac 2018") — it mirrors the collapse
+// portfolio.js does client-side, keeping server and JS card markup identical.
+func spaceJoin(parts ...string) string {
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return strings.Join(out, " ")
+}
+
+// comma formats a non-negative integer with thousands separators (2665 →
+// "2,665"). The portfolio's server-rendered result counter uses it so the
+// first paint already reads "2,665 wines", matching what portfolio.js later
+// writes via Number.toLocaleString() — no 2665→2,665 flash on hydration.
+func comma(n int) string {
+	s := fmt.Sprintf("%d", n)
+	if n < 1000 {
+		return s
+	}
+	// Insert a comma every three digits from the right.
+	var b strings.Builder
+	pre := len(s) % 3
+	if pre > 0 {
+		b.WriteString(s[:pre])
+	}
+	for i := pre; i < len(s); i += 3 {
+		if b.Len() > 0 {
+			b.WriteByte(',')
+		}
+		b.WriteString(s[i : i+3])
+	}
+	return b.String()
+}
+
 // buildFacets computes, for each portfolio facet, the distinct values
 // present across wines — sorted for determinism (build's output must be
 // byte-identical for the same input; iterating a map without sorting would
 // break that). Order of the returned groups is the sidebar's display order.
 func buildFacets(wines []model.Wine) []facetGroup {
+	// Facets and their display order. `style` is dropped — it is empty on every
+	// wine in the real data — and `color` is dropped as a facet (only ~1% of
+	// wines carry one, too sparse to be a useful filter), though color is still
+	// shipped in the catalog-index for possible future use. `country` is added:
+	// it is populated on ~29% of wines and is a natural top-level browse axis.
+	// Empty values are skipped below, so the ~61% of wines with no producer
+	// simply don't contribute a producer value rather than a blank checkbox.
 	specs := []struct {
 		facet, label string
 		get          func(model.Wine) string
 	}{
 		{"producer", "Producer", func(w model.Wine) string { return w.Producer }},
-		{"varietal", "Varietal", func(w model.Wine) string { return w.Varietal }},
 		{"region", "Region", func(w model.Wine) string { return w.Region }},
+		{"varietal", "Varietal", func(w model.Wine) string { return w.Varietal }},
+		{"country", "Country", func(w model.Wine) string { return w.Country }},
 		{"vintage", "Vintage", func(w model.Wine) string { return w.Vintage }},
-		{"style", "Style", func(w model.Wine) string { return w.Style }},
 	}
 	groups := make([]facetGroup, len(specs))
 	for i, sp := range specs {
@@ -428,33 +516,165 @@ func buildFacets(wines []model.Wine) []facetGroup {
 	return groups
 }
 
-// writeSearchIndex writes dist/search-index.json, the browser-fetched index
-// portfolio.js filters against. Marshaled compact (json.Marshal, not
-// MarshalIndent) since it's fetched on every /portfolio/ visit: at catalog
-// scale (~5-10k wines) that's roughly 1-2MB, which is acceptable and
-// cacheable; if the catalog grows past ~3MB, Bunny's gzip handles it without
-// changes here. Entries follow wines' existing order (loadSite's file order,
-// not re-sorted) so the index lines up 1:1 with the portfolio grid's
-// server-rendered card order.
-func writeSearchIndex(distDir string, wines []model.Wine) error {
+// portfolioPageSize is how many wine cards each portfolio page renders, both
+// server-side (one document per page) and client-side (the JS engine's page
+// window). Kept in one place so the two sides can never disagree — it's echoed
+// into each page's data-page-size for portfolio.js to read.
+const portfolioPageSize = 48
+
+// writeCatalogIndex writes the compact, content-hashed catalog index the
+// browser fetches to drive client-side browsing, and returns its site-root
+// URL for the templates to embed.
+//
+// It replaces the old dist/search-index.json. Two deliberate changes: (1) it
+// lives under dist/assets/ with a sha256-derived filename
+// (catalog-index.<hash>.json) so Bunny can cache it immutably — the name only
+// changes when the bytes do, so a browser never serves a stale index against
+// fresh data; (2) it carries only browse fields (identity, classification,
+// thumbnail), never descriptions/tasting notes, keeping the download small.
+//
+// Marshaled compact (json.Marshal, not MarshalIndent) since it's fetched on
+// every first /portfolio/ visit; at ~2,600 wines this is a few hundred KB,
+// which Bunny gzips. Entries follow wines' order (already slug-sorted in
+// wines.json), so the index lines up with the server-rendered card order.
+func writeCatalogIndex(distDir string, wines []model.Wine) (string, error) {
 	entries := make([]indexEntry, len(wines))
 	for i, w := range wines {
 		entries[i] = indexEntry{
 			Slug:     w.Slug,
+			SKU:      w.SKU,
 			Producer: w.Producer,
 			Name:     w.Name,
 			Vintage:  w.Vintage,
-			Varietal: w.Varietal,
 			Region:   w.Region,
-			Style:    w.Style,
+			Varietal: w.Varietal,
+			Country:  w.Country,
+			Color:    w.Color,
 			Img:      "/" + w.ImagePath,
 		}
 	}
 	data, err := json.Marshal(entries)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return os.WriteFile(filepath.Join(distDir, "search-index.json"), data, 0o644)
+	// First 8 hex of sha256 is ample to make the URL change on any data change
+	// (collisions across a single site's builds are not a concern here).
+	sum := sha256.Sum256(data)
+	name := "catalog-index." + hex.EncodeToString(sum[:])[:8] + ".json"
+	dir := filepath.Join(distDir, "assets")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
+		return "", err
+	}
+	return "/assets/" + name, nil
+}
+
+// portfolioPageURL is the canonical site-root path for portfolio page n:
+// page 1 is the bare /portfolio/ (no /page/1/ variant, to avoid a duplicate
+// URL for the same content), every later page is /portfolio/page/N/.
+func portfolioPageURL(n int) string {
+	if n <= 1 {
+		return "/portfolio/"
+	}
+	return fmt.Sprintf("/portfolio/page/%d/", n)
+}
+
+// renderPortfolio renders the paginated catalog: one real-HTML document per
+// page of portfolioPageSize wines, each with server-rendered cards, facet
+// sidebar, sort control, and crawlable prev/next links. It returns every
+// rendered page's site-root path so Run can feed them all to the sitemap —
+// that is how a crawler discovers the whole catalog without executing JS.
+//
+// Facets are computed ONCE over the whole cleaned catalog (not per page): the
+// client engine filters against the full catalog-index, so the same complete
+// set of facet values must be offered on every page.
+func renderPortfolio(tmpl *template.Template, distDir string, s *site, indexURL string) ([]string, error) {
+	facets := buildFacets(s.Wines)
+	total := len(s.Wines)
+	pageCount := (total + portfolioPageSize - 1) / portfolioPageSize
+	if pageCount < 1 {
+		pageCount = 1 // always render at least /portfolio/, even with zero wines
+	}
+
+	const desc = "Browse the full FineVines wholesale portfolio — filter by producer, region, " +
+		"varietal, country, or vintage across every wine currently in stock."
+
+	var paths []string
+	for n := 1; n <= pageCount; n++ {
+		start := (n - 1) * portfolioPageSize
+		end := start + portfolioPageSize
+		if end > total {
+			end = total
+		}
+		var pageWines []model.Wine
+		if start < total {
+			pageWines = s.Wines[start:end]
+		}
+
+		// Page 1 keeps the plain "Portfolio" title; later pages carry a
+		// "— Page N of M" suffix so paginated URLs aren't near-duplicate titles.
+		title := "Portfolio — FineVines"
+		if n > 1 {
+			title = fmt.Sprintf("Portfolio — Page %d of %d — FineVines", n, pageCount)
+		}
+
+		rel := "portfolio"
+		if n > 1 {
+			rel = fmt.Sprintf("portfolio/page/%d", n)
+		}
+
+		prevURL := ""
+		if n > 1 {
+			prevURL = portfolioPageURL(n - 1)
+		}
+		nextURL := ""
+		if n < pageCount {
+			nextURL = portfolioPageURL(n + 1)
+		}
+
+		data := portfolioPage{
+			page: page{
+				site:        s,
+				Title:       title,
+				Description: desc,
+				Path:        portfolioPageURL(n),
+			},
+			Facets:    facets,
+			Wines:     pageWines,
+			IndexURL:  indexURL,
+			PageSize:  portfolioPageSize,
+			PageNum:   n,
+			PageCount: pageCount,
+			Total:     total,
+			PrevURL:   prevURL,
+			NextURL:   nextURL,
+		}
+		if err := renderPage(tmpl, distDir, rel, "portfolio", data); err != nil {
+			return nil, err
+		}
+		paths = append(paths, data.Path)
+	}
+	return paths, nil
+}
+
+// usableWines drops rows with an empty slug or empty name. The live
+// wines.json contains one such placeholder (the blank SKU-513001 record) that,
+// left in, sorts first, renders a broken/empty card, misaligns the catalog,
+// and would emit a dead /wines//  detail page. Filtering here — once, at the
+// single load point — means the portfolio pages, the catalog-index, the
+// per-wine detail loop, and the sitemap all draw from the same cleaned list
+// and can never disagree about what the catalog contains.
+func usableWines(wines []model.Wine) []model.Wine {
+	out := make([]model.Wine, 0, len(wines))
+	for _, w := range wines {
+		if strings.TrimSpace(w.Slug) == "" || strings.TrimSpace(w.Name) == "" {
+			continue
+		}
+		out = append(out, w)
+	}
+	return out
 }
 
 func loadSite(dataDir, baseURL, gaID string) (*site, error) {
@@ -462,7 +682,7 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := &site{Wines: wines, BaseURL: baseURL, GAID: gaID}
+	s := &site{Wines: usableWines(wines), BaseURL: baseURL, GAID: gaID}
 	// team.json is optional until seeded
 	if data, err := os.ReadFile(filepath.Join(dataDir, "team.json")); err == nil {
 		if err := jsonUnmarshal(data, &s.Team); err != nil {
@@ -523,6 +743,31 @@ func copyRedirectsJSON(distDir string) error {
 		return err
 	}
 	return os.WriteFile(filepath.Join(distDir, redirectsJSONName), data, 0o644)
+}
+
+// cleanDir empties dir of all its contents but leaves the directory itself in
+// place. It deliberately does NOT remove dir: on Windows a directory that any
+// process holds as its working directory (an open editor, a shell, an
+// antivirus scan) cannot be unlinked, so os.RemoveAll(dir) would fail the whole
+// build — whereas the files and subtrees inside it delete fine. A missing dir
+// is not an error (the first build has none); MkdirAll recreates as needed.
+func cleanDir(dir string) error {
+	if strings.TrimSpace(dir) == "" {
+		return errors.New("build: distDir must not be empty")
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	for _, e := range entries {
+		if err := os.RemoveAll(filepath.Join(dir, e.Name())); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func copyTree(src, dst string) error {

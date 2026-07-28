@@ -27,10 +27,10 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 	}
 	for _, want := range []string{
 		"<title>FineVines",
-		"Pouring elegance with a sommelier",                      // tagline present
+		"Pouring elegance with a sommelier", // tagline present
 		`rel="canonical" href="https://finevines.com/"`,
 		`href="/assets/css/site.css"`,
-		`href="/assets/img/favicon.ico"`,                         // favicon wired in base head
+		`href="/assets/img/favicon.ico"`,                            // favicon wired in base head
 		`<img src="/assets/img/finevines-logo.png" alt="FineVines"`, // real logo wordmark in header
 		// Social/link-preview meta: Open Graph, Twitter Card, and the mobile
 		// theme-color. og:image / twitter:image MUST be absolute (scrapers
@@ -58,15 +58,15 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 	// placeholders, and the static-year bottom bar (no runtime clock — must
 	// stay deterministic).
 	for _, want := range []string{
-		`class="footer-logo"`,                                           // logo lockup wraps the image
-		`>Explore</h2>`, `>Trade</h2>`, `>Contact</h2>`,                  // column headings
-		`href="https://www.instagram.com/finevineswine/"`,               // real Instagram
-		`href="https://twitter.com/finevineswine"`,                      // real X/Twitter
-		`href="https://www.linkedin.com/company/1291059"`,               // real LinkedIn
-		`Become a Customer`,                                             // trade CTA
-		`[Mailing address &mdash; to be confirmed]`,                     // placeholder, not fabricated
+		`class="footer-logo"`,                           // logo lockup wraps the image
+		`>Explore</h2>`, `>Trade</h2>`, `>Contact</h2>`, // column headings
+		`href="https://www.instagram.com/finevineswine/"`, // real Instagram
+		`href="https://twitter.com/finevineswine"`,        // real X/Twitter
+		`href="https://www.linkedin.com/company/1291059"`, // real LinkedIn
+		`Become a Customer`,                               // trade CTA
+		`[Mailing address &mdash; to be confirmed]`,       // placeholder, not fabricated
 		`Email: [to be confirmed]`,
-		`&copy; 2026 FineVines. All rights reserved.`,                   // static year, no clock
+		`&copy; 2026 FineVines. All rights reserved.`, // static year, no clock
 	} {
 		if !strings.Contains(string(home), want) {
 			t.Errorf("footer missing %q", want)
@@ -341,10 +341,27 @@ func TestPortfolioPage(t *testing.T) {
 		`class="facets-close"`,
 		`class="facets-backdrop"`,
 		`src="/assets/js/filters.js"`,
+		// New paginated-catalog hooks portfolio.js depends on: the content-
+		// hashed index URL + pageSize/page metadata on the grid, the sort
+		// select, the country facet (replaced style), the per-value count span,
+		// the empty state, and the crawlable pagination nav.
+		`data-index-url="/assets/catalog-index.`,
+		`data-page-size="48"`,
+		`data-page="1"`,
+		`data-page-count="1"`,
+		`id="portfolio-sort"`,
+		`data-facet="country"`,
+		`class="facet-count"`,
+		`id="portfolio-empty"`,
+		`class="pagination"`,
 	} {
 		if !strings.Contains(html, want) {
 			t.Errorf("portfolio missing hook %q", want)
 		}
+	}
+	// style was dropped as a facet — its checkbox must be gone.
+	if strings.Contains(html, `data-facet="style"`) {
+		t.Error("portfolio must not render the dropped 'style' facet")
 	}
 }
 
@@ -424,33 +441,77 @@ func TestAboutPage(t *testing.T) {
 	}
 }
 
-func TestSearchIndex(t *testing.T) {
+// TestCatalogIndex replaces the old search-index.json test. The compact
+// per-wine browse index now lives at dist/assets/catalog-index.<hash>.json:
+// content-hashed (so Bunny caches it immutably), compact-marshaled, and
+// carrying only browse fields — including the new sku/country/color keys and
+// NO style key (style is empty on every real wine, dropped from the schema).
+func TestCatalogIndex(t *testing.T) {
 	dist := t.TempDir()
 	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
 		t.Fatal(err)
 	}
-	data, err := os.ReadFile(filepath.Join(dist, "search-index.json"))
+	// The old flat dist/search-index.json must be gone.
+	if _, err := os.Stat(filepath.Join(dist, "search-index.json")); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("legacy dist/search-index.json should no longer be written, stat err = %v", err)
+	}
+
+	matches, err := filepath.Glob(filepath.Join(dist, "assets", "catalog-index.*.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("want exactly one content-hashed catalog-index, got %d: %v", len(matches), matches)
+	}
+	data, err := os.ReadFile(matches[0])
 	if err != nil {
 		t.Fatal(err)
 	}
 	if strings.Contains(string(data), "\n") {
-		t.Error("search-index.json should be compact (json.Marshal), not indented")
+		t.Error("catalog-index should be compact (json.Marshal), not indented")
 	}
 	var entries []map[string]json.RawMessage
 	if err := json.Unmarshal(data, &entries); err != nil {
-		t.Fatalf("search-index.json does not parse: %v", err)
+		t.Fatalf("catalog-index does not parse: %v", err)
 	}
 	if len(entries) != 3 {
 		t.Fatalf("want 3 entries, got %d", len(entries))
 	}
-	wantKeys := []string{"slug", "producer", "name", "vintage", "varietal", "region", "style", "img"}
+	wantKeys := []string{"slug", "sku", "producer", "name", "vintage", "region", "varietal", "country", "color", "img"}
 	for _, e := range entries {
 		for _, k := range wantKeys {
 			if _, ok := e[k]; !ok {
-				t.Errorf("search-index entry missing key %q: %v", k, e)
+				t.Errorf("catalog-index entry missing key %q: %v", k, e)
 			}
 		}
+		if _, ok := e["style"]; ok {
+			t.Errorf("catalog-index entry must not carry the dropped 'style' key: %v", e)
+		}
 	}
+	// The empty-slug placeholder must never reach the index — the first entry
+	// (index is slug-sorted) must have a real slug.
+	var first struct {
+		Slug string `json:"slug"`
+	}
+	if err := json.Unmarshal(mustFirstEntry(t, data), &first); err != nil {
+		t.Fatal(err)
+	}
+	if strings.TrimSpace(first.Slug) == "" {
+		t.Error("first catalog-index entry has an empty slug — the blank wine was not filtered out")
+	}
+}
+
+// mustFirstEntry returns the raw JSON of the first element of a JSON array.
+func mustFirstEntry(t *testing.T, data []byte) []byte {
+	t.Helper()
+	var raw []json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatal(err)
+	}
+	if len(raw) == 0 {
+		t.Fatal("catalog-index is empty")
+	}
+	return raw[0]
 }
 
 func TestSitemapListsEveryPage(t *testing.T) {

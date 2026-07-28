@@ -1,19 +1,33 @@
 {{/*
-  portfolio.html.tmpl — dist/portfolio/index.html: the full, crawlable wine
-  list (the SEO surface) plus the facet sidebar and search box that
-  assets/js/portfolio.js progressively enhances client-side.
+  portfolio.html.tmpl — dist/portfolio/index.html and dist/portfolio/page/N/
+  index.html: ONE paginated slice of the catalog (this page's 48 wine cards)
+  rendered as real, crawlable HTML, plus the facet sidebar, search box, sort
+  control, view toggle, and prev/next pagination that a no-JS visitor or a
+  crawler can walk the whole catalog with. assets/js/portfolio.js then
+  progressively takes over: it fetches the compact catalog-index and, from
+  then on, does ALL filtering/sorting/pagination client-side, keeping only ~48
+  cards in the DOM at a time (the old page pre-rendered all ~2,600 → 2MB HTML).
 
   Dot is a portfolioPage (build.go): the embedded `page` supplies
-  Title/Description/Path/BaseURL for head/header/footer, .Facets carries the
-  sidebar's filter groups (computed + sorted in Go), and .Wines is every
-  wine, rendered as real <li> cards — not assembled by JS.
+  Title/Description/Path/BaseURL for head/header/footer; .Facets are the
+  sidebar filter groups (computed + sorted in Go over the WHOLE catalog, not
+  just this page); .Wines is only THIS page's slice; and the pagination fields
+  (.PageNum/.PageCount/.Total/.PrevURL/.NextURL/.IndexURL/.PageSize) drive the
+  nav + the JS hand-off.
 
-  JS↔template hook contract with assets/js/portfolio.js (must match exactly
-  on both sides):
-    - grid:            <ul class="wine-grid">, one <li data-slug="..."> per wine
-    - facet checkbox:  <input data-facet="<facet>" value="<value>"> under .facet
-    - result counter:  #portfolio-count
+  JS↔template hook contract with assets/js/portfolio.js (must match exactly on
+  both sides — the JS reproduces the card markup below verbatim so its
+  client-rendered cards are indistinguishable from these server-rendered ones):
+    - grid:            <ul class="wine-grid"> carrying data-index-url /
+                       data-page-size / data-page / data-page-count
+    - card:            <li data-slug><a class="wine-card">…</a></li> (see below)
+    - facet checkbox:  <input data-facet="<facet>" value="<value>"> under .facet,
+                       with a sibling <span class="facet-count"> the JS fills
     - search box:      #portfolio-search
+    - sort select:     #portfolio-sort   (producer|name|vintage|region)
+    - result counter:  #portfolio-count
+    - pagination:      <nav class="pagination"> (JS rebuilds its contents)
+    - empty state:     #portfolio-empty (+ .portfolio-clear reset button)
 */}}
 {{define "portfolio"}}<!doctype html>
 <html lang="en">
@@ -27,7 +41,7 @@
     <div class="wrap">
       <span class="eyebrow">The Portfolio</span>
       <h1>Browse the catalog</h1>
-      <p class="lede">Every bottle currently in stock. Filter by producer, varietal, region, vintage, or style
+      <p class="lede">Every bottle currently in stock. Filter by producer, region, varietal, country, or vintage
         &mdash; or search the portfolio directly. What's listed reflects current wholesale availability.</p>
     </div>
   </section>
@@ -55,7 +69,12 @@
           <summary>{{.Label}}</summary>
           {{$facet := .Facet}}
           {{range .Values}}
-          <label><input type="checkbox" data-facet="{{$facet}}" value="{{.}}"> {{.}}</label>
+          {{/* .facet-count is filled by portfolio.js with the live count of
+               matching wines for this value given the OTHER active facets; it
+               stays empty (invisible) with JS off. The value text is a bare
+               flex item (no wrapping span) to keep this markup — repeated for
+               every facet value across the whole catalog — as lean as possible. */}}
+          <label><input type="checkbox" data-facet="{{$facet}}" value="{{.}}"> {{.}} <span class="facet-count" aria-hidden="true"></span></label>
           {{end}}
         </details>
         {{end}}
@@ -63,7 +82,7 @@
 
       <div>
         <div class="portfolio-toolbar">
-          <p id="portfolio-count">{{len .Wines}} wines</p>
+          <p id="portfolio-count">{{comma .Total}} wines</p>
           <div class="portfolio-toolbar-actions">
             {{/* Opens the .facets panel as an off-canvas drawer on ≤1024px;
                  display:none on desktop where the sidebar is always visible. */}}
@@ -71,32 +90,65 @@
               <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18v2.6l-7 7V21l-4-2v-5.4l-7-7V4Z"/></svg>
               Filters
             </button>
+            {{/* Sort control. Values are the portfolio.js sort keys; the JS
+                 re-sorts the whole result set (not just this page) and empty/NV
+                 vintages always sort last. With JS off the server order (by
+                 slug) stands and this control is inert. */}}
+            <label class="portfolio-sort">
+              <span class="portfolio-sort-label">Sort</span>
+              <select id="portfolio-sort" aria-label="Sort the portfolio">
+                <option value="producer">Producer</option>
+                <option value="name">Name</option>
+                <option value="vintage">Vintage</option>
+                <option value="region">Region</option>
+              </select>
+            </label>
             <div class="view-toggle" role="group" aria-label="Choose portfolio layout">
               <button type="button" class="view-toggle-btn is-active" data-view="cards" aria-pressed="true">Cards</button>
               <button type="button" class="view-toggle-btn" data-view="list" aria-pressed="false">List</button>
             </div>
           </div>
         </div>
-        <ul class="wine-grid view-cards" style="list-style:none;margin:0;padding:0;">
-          {{/* The <li> (not the .wine-card <a> inside it) is the element
-               portfolio.js toggles [hidden] on: it carries no display rule
-               of its own, so the browser's default `[hidden]{display:none}`
-               isn't overridden by .wine-card's `display:block`. */}}
+
+        <ul class="wine-grid view-cards" style="list-style:none;margin:0;padding:0;"
+            data-index-url="{{.IndexURL}}" data-page-size="{{.PageSize}}"
+            data-page="{{.PageNum}}" data-page-count="{{.PageCount}}">
+          {{/* One real <li><a> card per wine on THIS page. portfolio.js rebuilds
+               this exact structure client-side, so server- and JS-rendered
+               cards are byte-for-byte equivalent to the eye. The <li> (not the
+               inner <a>) is the paginated unit. */}}
           {{range .Wines}}
           <li data-slug="{{.Slug}}">
             <a class="wine-card" href="/wines/{{.Slug}}/">
               <div class="thumb">
-                <img src="/{{.ImagePath}}" alt="Bottle of {{.Producer}} {{.Name}} {{.Vintage}}" loading="lazy">
+                <img src="/{{.ImagePath}}" alt="Bottle of {{spaceJoin .Producer .Name .Vintage}}" loading="lazy">
               </div>
               <div class="body">
-                <span class="producer">{{.Producer}}</span>
-                <h3>{{.Name}} {{.Vintage}}</h3>
-                <span class="meta">{{.Region}} &middot; {{.Varietal}}</span>
+                {{if .Producer}}<span class="producer">{{.Producer}}</span>{{end}}
+                <h3>{{.Name}}{{if .Vintage}} {{.Vintage}}{{end}}</h3>
+                {{if or .Region .Varietal}}<span class="meta">{{.Region}}{{if and .Region .Varietal}} &middot; {{end}}{{.Varietal}}</span>{{end}}
               </div>
             </a>
           </li>
           {{end}}
         </ul>
+
+        {{/* Empty state — shown only by portfolio.js when a filter combination
+             matches nothing; hidden (and empty) for the server-rendered pages,
+             which always have wines. */}}
+        <p id="portfolio-empty" class="portfolio-empty" hidden>No wines match these filters.
+          <button type="button" class="portfolio-clear">Clear all filters</button></p>
+
+        {{/* Crawlable pagination. These real <a> links let a no-JS visitor or a
+             search crawler walk every page of the catalog; portfolio.js
+             rebuilds this nav's contents to page client-side (rel=prev/next are
+             preserved for both crawlers and the JS). A missing neighbour
+             renders as a disabled <span> so the control never dead-links. */}}
+        <nav class="pagination" aria-label="Portfolio pages">
+          {{if .PrevURL}}<a class="pagination-btn pagination-prev" rel="prev" href="{{.PrevURL}}">Previous</a>{{else}}<span class="pagination-btn pagination-prev is-disabled" aria-disabled="true">Previous</span>{{end}}
+          <span class="pagination-status">Page {{.PageNum}} of {{.PageCount}}</span>
+          {{if .NextURL}}<a class="pagination-btn pagination-next" rel="next" href="{{.NextURL}}">Next</a>{{else}}<span class="pagination-btn pagination-next is-disabled" aria-disabled="true">Next</span>{{end}}
+        </nav>
       </div>
     </div>
   </section>
