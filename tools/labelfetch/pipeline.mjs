@@ -255,7 +255,7 @@ async function readLabel(file) {
             {
               type: 'text',
               text:
-                'Transcribe the text printed on this wine bottle's label. ' +
+                'Transcribe the text printed on the label of this wine bottle. ' +
                 'Answer strictly as JSON: {"single_bottle":true|false,"label_text":"<every word you can read>"}. ' +
                 'Transcribe only what is actually legible in the image. If a line is too small or blurred to read, ' +
                 'leave it out rather than guessing. If there is no bottle, set single_bottle false.',
@@ -279,12 +279,60 @@ async function readLabel(file) {
   }
 }
 
+// reviewFlags lists the reasons a staged image might still be wrong, so a run
+// of two thousand yields a short list to check rather than a pile to trust.
+//
+// None is a rejection — the image already passed. These are the differences
+// between "verified" and "certain", recorded at the moment they are visible,
+// because at this scale nobody re-examines everything.
+function reviewFlags({ wine, name, label, viaVision, localReason, w, h, page }) {
+  const flags = [];
+
+  // Deliberately NOT flagged any more: "a vision model was involved". It fired
+  // on 433 of 504 images, and a flag that fires on nearly everything is the
+  // same as no flag. Vision now only READS the label — the identity decision
+  // is the same rule in both paths — so its involvement is not itself a doubt.
+  // What matters is whether the evidence is thin, which the flags below test.
+
+  const lab = normalize(label || '');
+  const want = tokens(name);
+  const missing = want.filter((x) => !lab.includes(x.slice(0, Math.max(4, x.length - 2))));
+  if (want.length && missing.length > want.length / 2) {
+    flags.push(`label missing most of the name (${missing.slice(0, 4).join(', ')})`);
+  }
+
+  // A label this short cannot have carried much evidence either way.
+  if (lab.replace(/\s+/g, '').length < 12) flags.push('almost nothing legible on the label');
+
+  const wantY = String(wine.vintage || '').match(/(19|20)\d\d/)?.[0];
+  const gotY = (label || '').match(/(19|20)\d\d/)?.[0];
+  if (wantY && gotY && wantY !== gotY) flags.push(`vintage on label is ${gotY}, catalog says ${wantY}`);
+
+  // Below this the label is unreadable on a detail page and the normalised
+  // 600x900 canvas is upscaling.
+  if (h && h < 500) flags.push(`low resolution (${w}x${h})`);
+
+  // The local shape check refused it and only the model's single-bottle call
+  // carried it through — worth an eye, unlike vision involvement in general.
+  if (viaVision && /clean background|multiple subjects|too wide|too narrow/.test(localReason || '')) {
+    flags.push(`shape disputed (local said: ${localReason})`);
+  }
+
+  return flags;
+}
+
 // verifyText applies the SAME identity rules to text the vision model read,
 // via the same binary. Returns the label text if it names the wine, else null.
 // One implementation of "is this the right wine" for both paths.
-async function verifyText(file, name, labelText) {
+async function verifyText(file, name, producer, labelText) {
   try {
-    const { stdout } = await run(VERIFIER, ['-json', '-img', file, '-name', name, '-label', labelText]);
+    // -single-bottle: the model already confirmed one bottle, so the local
+    // shape heuristic is not re-applied. Without this it re-refuses exactly
+    // the images this second opinion exists to reconsider.
+    const { stdout } = await run(VERIFIER, [
+      '-json', '-img', file, '-name', name, '-producer', producer || '',
+      '-label', labelText, '-single-bottle',
+    ]);
     return JSON.parse(stdout).accept ? labelText : null;
   } catch (e) {
     return null;
@@ -293,9 +341,9 @@ async function verifyText(file, name, labelText) {
 
 // verify shells out to the Go binary: single-bottle shape check, then OCR of
 // the label band against the catalog name.
-async function verify(file, name) {
+async function verify(file, name, producer) {
   try {
-    const { stdout } = await run(VERIFIER, ['-json', '-img', file, '-name', name]);
+    const { stdout } = await run(VERIFIER, ['-json', '-img', file, '-name', name, '-producer', producer || '']);
     return JSON.parse(stdout);
   } catch (e) {
     // A rejection exits non-zero but still prints its verdict.
@@ -386,7 +434,7 @@ for (const w of wines) {
     // with the bottle, and the bottle is frequently the second or third image.
     for (const got of cands) {
       await writeFile(dest, got.bytes);
-      const v = await verify(dest, name);
+      const v = await verify(dest, name, w.producer);
       if (v.accept) {
         rec.ok = true;
         rec.file = dest;
@@ -404,7 +452,7 @@ for (const w of wines) {
       if (USE_VISION && v.stage !== 'decode') {
         visionCalls++;
         const text = await readLabel(dest);
-        const vv = text ? await verifyText(dest, name, text) : null;
+        const vv = text ? await verifyText(dest, name, w.producer, text) : null;
         if (vv) {
           rec.ok = true;
           rec.file = dest;
@@ -415,7 +463,7 @@ for (const w of wines) {
           rec.verifiedBy = VISION_MODEL;
           rec.localReason = v.reason;
           rec.review = reviewFlags({
-            wine: w, name, label: vv.label_text, verifiedBy: VISION_MODEL,
+            wine: w, name, label: vv, viaVision: true,
             localReason: v.reason, w: got.w, h: got.h, page: src,
           });
           accepted++;

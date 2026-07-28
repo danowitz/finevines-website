@@ -364,6 +364,59 @@ type matchResult struct {
 }
 
 // match reports whether labelText names the wine called name.
+//
+// producer, when known, is what MUST be on the label. The rest of the name
+// corroborates but is not demanded, because a catalog name routinely carries
+// more than a bottle prints: importer shorthand, the DO or appellation from a
+// back label, a sub-region, a cuvée the front omits. Measured against real
+// labels, requiring every identifying word rejected correct images —
+// "Acentor Isaac Fernandez Seleccion Acentor Garnacha Do Calatayud" against a
+// label reading "ACENTOR GARNACHA", "1+1=3 NV Un Mes Un Fan Tres Cava Brut"
+// against "CAVA BRUT 1+1+3 METODO TRADICIONAL".
+//
+// Requiring the PRODUCER keeps every adversarial case refused — the Gros Frère
+// label still lacks "anne", the Gruaud Larose grand vin still lacks "sarget" —
+// while letting a label be shorter than a catalog row, which it usually is.
+func matchWithProducer(name, producer, labelText string, ix Index) matchResult {
+	if strings.TrimSpace(producer) == "" {
+		return match(name, labelText, ix)
+	}
+	got := words(labelText)
+	used := make([]bool, len(got))
+
+	r := matchResult{want: words(name)}
+	for _, w := range words(producer) {
+		if !ix.identifies(w) {
+			continue // a producer word shared with half the book proves nothing
+		}
+		r.identifying = append(r.identifying, w)
+	}
+	if len(r.identifying) == 0 {
+		// Nothing in the producer name distinguishes it; fall back to demanding
+		// the whole name rather than accepting on no evidence at all.
+		return match(name, labelText, ix)
+	}
+	for _, w := range r.identifying {
+		if i := findIn(w, got, used); i >= 0 {
+			used[i] = true
+			r.found = append(r.found, w)
+		} else {
+			r.missing = append(r.missing, w)
+		}
+	}
+	sort.Strings(r.found)
+	sort.Strings(r.missing)
+	if len(r.missing) != 0 {
+		return r
+	}
+	if c := ix.conflicts(name, got); c != "" {
+		r.conflict = c
+		return r
+	}
+	r.ok = true
+	return r
+}
+
 func match(name, labelText string, ix Index) matchResult {
 	want := words(name)
 	got := words(labelText)

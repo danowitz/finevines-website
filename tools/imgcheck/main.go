@@ -42,6 +42,13 @@ func main() {
 	// local OCR. The identity rules stay here either way, so both paths are
 	// judged by one tested implementation rather than two.
 	givenLabel := flag.String("label", "", "label text already read; skips local OCR")
+	// A caller that has independently established this is one bottle — a vision
+	// model reporting single_bottle — may say so. The local shape check is a
+	// heuristic over pixels and refuses gradients and unusual sweeps; without
+	// this flag it re-refuses everything the caller was trying to recover, and
+	// the second opinion can never be heard.
+	givenSingle := flag.Bool("single-bottle", false, "caller confirms one bottle; skips the local shape gate")
+	producer := flag.String("producer", "", "the wine's producer; when given, only its words are required")
 	flag.Parse()
 	if *imgPath == "" || *name == "" {
 		fmt.Fprintln(os.Stderr, "need -img and -name")
@@ -68,7 +75,7 @@ func main() {
 		fmt.Printf("shape     subjects=%d slim=%.2f fill=%.2f cleanBg=%v\n",
 			rep.Subjects, rep.Slimness, rep.Fill, rep.CleanBackground)
 	}
-	if !rep.SingleBottle {
+	if !rep.SingleBottle && !*givenSingle {
 		out.Stage, out.Reason = "shape", rep.Reason
 		emit(out, *asJSON)
 		os.Exit(1)
@@ -78,7 +85,11 @@ func main() {
 	// Crop to the label band before reading. The capsule carries foil lettering
 	// (often the producer's initials) and the punt catches background print;
 	// both add words that are not the label's.
-	band := imgcheck.LabelBand(rep.Box)
+	box := rep.Box
+	if box.Empty() {
+		box = img.Bounds()
+	}
+	band := imgcheck.LabelBand(box)
 
 	// Read the band at MORE THAN ONE SCALE and pool the words.
 	//
@@ -150,7 +161,7 @@ func main() {
 		}
 	}
 
-	m := match(*name, text, LoadIndex(*indexPath))
+	m := matchWithProducer(*name, *producer, text, LoadIndex(*indexPath))
 	out.Want, out.Found, out.Missing = m.identifying, m.found, m.missing
 	out.Stage = "label"
 	if !*asJSON {
