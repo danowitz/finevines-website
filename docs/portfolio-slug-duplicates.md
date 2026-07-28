@@ -1,673 +1,685 @@
-# Portfolio — duplicate-listing wines (shared catalog URL)
+# Fine Vines — duplicate catalog listings
 
-**73 slugs are shared by 2 or more listings (156 listings total).** On review, these are the *same wine* recorded under more than one item number (SKU) — typically a second pack/bottle size, or a data-entry variant where the producer name is split out of the description on one record but not the other. None are genuinely different wines. In the catalog they currently show as duplicate cards that all open the same detail page.
+73 wines appear more than once in the online catalog (156 item numbers). All are in stock and ready-to-sell. Pack notation is cases/size (`12/750` = twelve 750ml bottles, `6/1500` = six 1.5L magnums).
 
-**Question for Fine Vines:** for each group below, should the site show ONE listing (we hide the duplicate SKUs), or are these meant to be sold/shown separately (e.g. different sizes)? Full data in `portfolio-slug-duplicates.csv`.
+- **Different bottle size:** 52 · **6-pack vs 12-pack:** 3 · **Pure duplicates:** 18
 
-### Château Pibran Pauillac — 2 listings
+## DIFFERENT BOTTLE SIZE — 52 groups
 
-Shared URL: `/wines/chateau-pibran-pauillac-2018/`
+_these are different products — most likely keep both, labeled by size_
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 520432 |  | Château Pibran Pauillac | 2018 |  |  |
-| 520492 | Château Pibran | Pauillac | 2018 | Bordeaux |  |
+### Coastal Ridge — Chardonnay California 2023
 
-### Coastal Ridge — 2 listings
+`/wines/coastal-ridge-chardonnay-california-2023/`
 
-Shared URL: `/wines/coastal-ridge-chardonnay-california-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 571048 | 12/750 | 22.0 | yes |
+| 571053 | 6/1500 | 5.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 571048 | Coastal Ridge | Chardonnay California | 2023 | California | Chardonnay |
-| 571053 |  | Coastal Ridge Chardonnay California | 2023 |  |  |
+### Domaine Bastide Blanche Bandol Rose 2025
 
-### Ca'stele — 2 listings
+`/wines/domaine-bastide-blanche-bandol-rose-2025/`
 
-Shared URL: `/wines/ca-stele-nv-ca-stele-prosecco-doc/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 473943 | 12/750 | 13.0 | yes |
+| 473944 | 3/1500 | 6.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 397728 | Ca'stele | NV Ca'stele Prosecco DOC |  | Veneto | Glera |
-| 397731 | Ca'stele | NV Ca'stele Prosecco DOC |  |  |  |
+### Domaine Bruno Clair Bonnes Mares Grand Cru 2023
 
-### Château la Rose Pourret Saint Emilion Grand Cru — 2 listings
+`/wines/domaine-bruno-clair-bonnes-mares-grand-cru-2023/`
 
-Shared URL: `/wines/chateau-la-rose-pourret-saint-emilion-grand-cru-2019/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 714167 | 6/750 | 16.0 | yes |
+| 714168 | 3/1500 | 1.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 520660 |  | Château la Rose Pourret Saint Emilion Grand Cru | 2019 |  |  |
-| 520716 |  | Château la Rose Pourret Saint Emilion Grand Cru | 2019 |  |  |
+### Domaine des Comte Lafon Meursault 2023
 
-### Château Rauzan Segla Margaux — 3 listings
+`/wines/domaine-des-comte-lafon-meursault-2023/`
 
-Shared URL: `/wines/chateau-rauzan-segla-margaux-2019/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 714822 | 6/1500 | 1.0 | yes |
+| 714821 | 12/750 | 3.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 520731 |  | Château Rauzan Segla Margaux | 2019 |  |  |
-| 520732 |  | Château Rauzan Segla Margaux | 2019 |  |  |
-| 520713 |  | Château Rauzan Segla Margaux | 2019 |  |  |
+### Domaine des Comte Lafon Meursault Clos de la Barre 2023
 
-### Domaine Arnaud Lambert Cremant de Loire Rose — 2 listings
+`/wines/domaine-des-comte-lafon-meursault-clos-de-la-barre-2023/`
 
-Shared URL: `/wines/domaine-arnaud-lambert-cremant-de-loire-rose/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 714824 | 6/150 | 0.5 | yes |
+| 714823 | 12/750 | 6.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 730119 |  | Domaine Arnaud Lambert Cremant de Loire Rose |  |  |  |
-| 730135 |  | Domaine Arnaud Lambert Cremant de Loire Rose |  |  |  |
+### Domaine des Comte Lafon Volnay 1er Cru Santenots du Milieu 2023
 
-### Domaine Bastide Blanche Bandol Rose — 2 listings
+`/wines/domaine-des-comte-lafon-volnay-1er-cru-santenots-du-milieu-2023/`
 
-Shared URL: `/wines/domaine-bastide-blanche-bandol-rose-2025/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 714839 | 6/1500 | 0.5 | yes |
+| 714837 | 12/750 | 6.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 473943 |  | Domaine Bastide Blanche Bandol Rose | 2025 |  |  |
-| 473944 |  | Domaine Bastide Blanche Bandol Rose | 2025 |  |  |
+### Domaine Guy Bocard Bourgogne Cote D'or Chardonnay 2023
 
-### Domaine Bruno Clair Bonnes Mares Grand Cru — 2 listings
+`/wines/domaine-guy-bocard-bourgogne-cote-d-or-chardonnay-2023/`
 
-Shared URL: `/wines/domaine-bruno-clair-bonnes-mares-grand-cru-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 513722 | 12/750 | 18.0 | yes |
+| 513723 | 6/1500 | 1.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 714167 |  | Domaine Bruno Clair Bonnes Mares Grand Cru | 2023 |  |  |
-| 714168 |  | Domaine Bruno Clair Bonnes Mares Grand Cru | 2023 |  |  |
+### Domaine Guy Bocard Meursault Vieilles Vignes 2023
 
-### Domaine Bruno Colin Chassagne Montrachet 1er Cru en Remilly — 2 listings
+`/wines/domaine-guy-bocard-meursault-vieilles-vignes-2023/`
 
-Shared URL: `/wines/domaine-bruno-colin-chassagne-montrachet-1er-cru-en-remilly-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 513724 | 12/750 | 11.8 | yes |
+| 513725 | 6/1500 | 0.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 660925 |  | Domaine Bruno Colin Chassagne Montrachet 1er Cru en Remilly | 2023 |  |  |
-| 660918 |  | Domaine Bruno Colin Chassagne Montrachet 1er Cru en Remilly | 2023 |  |  |
+### Domaine Jean-Luc Burguet Gevrey Chambertin Mes Favorites Vieilles Vignes 2022
 
-### Domaine Bruno Colin Chassagne Montrachet 1er Cru la Maltroie Blanc — 2 listings
+`/wines/domaine-jean-luc-burguet-gevrey-chambertin-mes-favorites-vieilles-vignes-2022/`
 
-Shared URL: `/wines/domaine-bruno-colin-chassagne-montrachet-1er-cru-la-maltroie-blanc-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 713912 | 12/750 | 15.0 | yes |
+| 713913 | 6/1500 | 1.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 660917 |  | Domaine Bruno Colin Chassagne Montrachet 1er Cru la Maltroie Blanc | 2023 |  |  |
-| 660923 |  | Domaine Bruno Colin Chassagne Montrachet 1er Cru la Maltroie Blanc | 2023 |  |  |
+### Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode 2020
 
-### Domaine Bruno Colin Chassagne Montrachet 1er Cru les Chaumees — 2 listings
+`/wines/domaine-jean-marc-pavelot-savigny-les-beaune-1er-cru-la-dominode-2020/`
 
-Shared URL: `/wines/domaine-bruno-colin-chassagne-montrachet-1er-cru-les-chaumees-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 712033 | 12/750 | 6.0 | yes |
+| 712034 | 6/1.5 | 2.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 660922 |  | Domaine Bruno Colin Chassagne Montrachet 1er Cru les Chaumees | 2023 |  |  |
-| 660916 |  | Domaine Bruno Colin Chassagne Montrachet 1er Cru les Chaumees | 2023 |  |  |
+### Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode 2021
 
-### Domaine Bruno Colin Chassagne Montrachet Blanc — 2 listings
+`/wines/domaine-jean-marc-pavelot-savigny-les-beaune-1er-cru-la-dominode-2021/`
 
-Shared URL: `/wines/domaine-bruno-colin-chassagne-montrachet-blanc-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 712040 | 12/750 | 7.1 | yes |
+| 712041 | 6/1.5 | 2.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 660915 |  | Domaine Bruno Colin Chassagne Montrachet Blanc | 2023 |  |  |
-| 660921 |  | Domaine Bruno Colin Chassagne Montrachet Blanc | 2023 |  |  |
+### Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode 2022
 
-### Domaine des Comte Lafon Meursault — 2 listings
+`/wines/domaine-jean-marc-pavelot-savigny-les-beaune-1er-cru-la-dominode-2022/`
 
-Shared URL: `/wines/domaine-des-comte-lafon-meursault-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 712054 | 6/1.5 | 3.8 | yes |
+| 712053 | 12/750 | 7.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 714822 |  | Domaine des Comte Lafon Meursault | 2023 |  |  |
-| 714821 |  | Domaine des Comte Lafon Meursault | 2023 |  |  |
+### Domaine Jean-Marc Pavelot Savigny les Beaune 2019
 
-### Domaine des Comte Lafon Meursault Clos de la Barre — 2 listings
+`/wines/domaine-jean-marc-pavelot-savigny-les-beaune-2019/`
 
-Shared URL: `/wines/domaine-des-comte-lafon-meursault-clos-de-la-barre-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 712020 | 24/375 | 1.1 | yes |
+| 712019 | 12/750 | 0.3 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 714824 |  | Domaine des Comte Lafon Meursault Clos de la Barre | 2023 |  |  |
-| 714823 |  | Domaine des Comte Lafon Meursault Clos de la Barre | 2023 |  |  |
+### Domaine Jean-Marc Pavelot Savigny les Beaune 2021
 
-### Domaine des Comte Lafon Volnay 1er Cru Santenots du Milieu — 2 listings
+`/wines/domaine-jean-marc-pavelot-savigny-les-beaune-2021/`
 
-Shared URL: `/wines/domaine-des-comte-lafon-volnay-1er-cru-santenots-du-milieu-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 712036 | 12/750 | 52.6 | yes |
+| 712037 | 24/375 | 3.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 714839 |  | Domaine des Comte Lafon Volnay 1er Cru Santenots du Milieu | 2023 |  |  |
-| 714837 |  | Domaine des Comte Lafon Volnay 1er Cru Santenots du Milieu | 2023 |  |  |
+### Domaine Jean-Marc Pavelot Savigny les Beaune 2022
 
-### Domaine des Epeneaux Auxey Duresses Rouge — 2 listings
+`/wines/domaine-jean-marc-pavelot-savigny-les-beaune-2022/`
 
-Shared URL: `/wines/domaine-des-epeneaux-auxey-duresses-rouge-2020/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 712047 | 12/750 | 12.8 | yes |
+| 712048 | 24/375 | 2.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 712642* |  | Domaine des Epeneaux Auxey Duresses Rouge | 2020 |  |  |
-| 712646* |  | Domaine des Epeneaux Auxey Duresses Rouge | 2020 |  |  |
+### Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale 2022
 
-### Domaine des Epeneaux Pommard 1er Cru Clos des Epeneaux — 2 listings
+`/wines/domaine-jf-mugnier-nuits-saint-georges-1er-cru-clos-de-la-marechale-2022/`
 
-Shared URL: `/wines/domaine-des-epeneaux-pommard-1er-cru-clos-des-epeneaux-2020/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 711189 | 1/3000 | 2.0 | yes |
+| 711188 | 3/1500 | 0.3 | yes |
+| 711186 | 6/750 | 0.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 712649* |  | Domaine des Epeneaux Pommard 1er Cru Clos des Epeneaux | 2020 |  |  |
-| 712645* |  | Domaine des Epeneaux Pommard 1er Cru Clos des Epeneaux | 2020 |  |  |
+### Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale 2023
 
-### Domaine Guy Bocard Bourgogne Cote D'or Chardonnay — 2 listings
+`/wines/domaine-jf-mugnier-nuits-saint-georges-1er-cru-clos-de-la-marechale-2023/`
 
-Shared URL: `/wines/domaine-guy-bocard-bourgogne-cote-d-or-chardonnay-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 712184 | 1/3000 | 3.0 | yes |
+| 711199 | 12/375 | 1.4 | yes |
+| 711200 | 3/1500 | 7.0 | yes |
+| 711198 | 6/750 | 37.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 513722 |  | Domaine Guy Bocard Bourgogne Cote D'or Chardonnay | 2023 |  |  |
-| 513723 |  | Domaine Guy Bocard Bourgogne Cote D'or Chardonnay | 2023 |  |  |
+### Domaine Jl Chave Saint Joseph 2022
 
-### Domaine Guy Bocard Meursault Vieilles Vignes — 2 listings
+`/wines/domaine-jl-chave-saint-joseph-2022/`
 
-Shared URL: `/wines/domaine-guy-bocard-meursault-vieilles-vignes-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 540251 | 6/1500 | 1.5 | yes |
+| 540250 | 6/750 | 28.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 513724 |  | Domaine Guy Bocard Meursault Vieilles Vignes | 2023 |  |  |
-| 513725 |  | Domaine Guy Bocard Meursault Vieilles Vignes | 2023 |  |  |
+### Domaine Jl Chave Saint Joseph 2023
 
-### Domaine Jean-Luc Burguet Gevrey Chambertin Mes Favorites Vieilles Vignes — 2 listings
+`/wines/domaine-jl-chave-saint-joseph-2023/`
 
-Shared URL: `/wines/domaine-jean-luc-burguet-gevrey-chambertin-mes-favorites-vieilles-vignes-2022/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 540264 | 6/1500 | 1.0 | yes |
+| 540263 | 6/750 | 44.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 713912 |  | Domaine Jean-Luc Burguet Gevrey Chambertin Mes Favorites Vieilles Vignes | 2022 |  |  |
-| 713913 |  | Domaine Jean-Luc Burguet Gevrey Chambertin Mes Favorites Vieilles Vignes | 2022 |  |  |
+### Domaine Lafarge Vial Fleurie Joie du Palais 2020
 
-### Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode — 2 listings
+`/wines/domaine-lafarge-vial-fleurie-joie-du-palais-2020/`
 
-Shared URL: `/wines/domaine-jean-marc-pavelot-savigny-les-beaune-1er-cru-la-dominode-2020/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 700113 | 6/1500 | 1.0 | yes |
+| 700111 | 12/750 | 4.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 712033 |  | Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode | 2020 |  |  |
-| 712034 |  | Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode | 2020 |  |  |
+### Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Chezeaux 2020
 
-### Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode — 2 listings
+`/wines/domaine-lignier-michelot-morey-saint-denis-1er-cru-aux-chezeaux-2020/`
 
-Shared URL: `/wines/domaine-jean-marc-pavelot-savigny-les-beaune-1er-cru-la-dominode-2021/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 711574 | 3/1500 | 0.7 | yes |
+| 711566 | 12/750 | 1.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 712040 |  | Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode | 2021 |  |  |
-| 712041 |  | Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode | 2021 |  |  |
+### Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Chezeaux 2022
 
-### Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode — 2 listings
+`/wines/domaine-lignier-michelot-morey-saint-denis-1er-cru-aux-chezeaux-2022/`
 
-Shared URL: `/wines/domaine-jean-marc-pavelot-savigny-les-beaune-1er-cru-la-dominode-2022/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 716002 | 3/1500 | 2.0 | yes |
+| 711596 | 12/750 | 4.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 712054 |  | Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode | 2022 |  |  |
-| 712053 |  | Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode | 2022 |  |  |
+### Domaine Lignier-Michelot Morey Saint Denis 1er Cru Faconnieres 2023
 
-### Domaine Jean-Marc Pavelot Savigny les Beaune — 2 listings
+`/wines/domaine-lignier-michelot-morey-saint-denis-1er-cru-faconnieres-2023/`
 
-Shared URL: `/wines/domaine-jean-marc-pavelot-savigny-les-beaune-2019/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 716012 | 12/750 | 10.0 | yes |
+| 716013 | 3/1500 | 3.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 712020 |  | Domaine Jean-Marc Pavelot Savigny les Beaune | 2019 |  |  |
-| 712019 |  | Domaine Jean-Marc Pavelot Savigny les Beaune | 2019 |  |  |
+### Domaine Lignier-Michelot Morey Saint Denis 1er Cru les Chenevery 2022
 
-### Domaine Jean-Marc Pavelot Savigny les Beaune — 2 listings
+`/wines/domaine-lignier-michelot-morey-saint-denis-1er-cru-les-chenevery-2022/`
 
-Shared URL: `/wines/domaine-jean-marc-pavelot-savigny-les-beaune-2021/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 716003 | 3/1500 | 2.0 | yes |
+| 711599 | 12/750 | 3.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 712036 |  | Domaine Jean-Marc Pavelot Savigny les Beaune | 2021 |  |  |
-| 712037 |  | Domaine Jean-Marc Pavelot Savigny les Beaune | 2021 |  |  |
+### Domaine Paul Jaboulet Aine Hermitage la Chapelle 2020
 
-### Domaine Jean-Marc Pavelot Savigny les Beaune — 2 listings
+`/wines/domaine-paul-jaboulet-aine-hermitage-la-chapelle-2020/`
 
-Shared URL: `/wines/domaine-jean-marc-pavelot-savigny-les-beaune-2022/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 541091* | 1/3000 | 2.0 | yes |
+| 541090* | 3/1500 | 2.7 | yes |
+| 541089* | 6/750 | 22.3 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 712047 |  | Domaine Jean-Marc Pavelot Savigny les Beaune | 2022 |  |  |
-| 712048 |  | Domaine Jean-Marc Pavelot Savigny les Beaune | 2022 |  |  |
+### Domaine Paul Prieur Sancerre Monts Damnes 2022
 
-### Domaine Jean Noel Gagnard Chassagne Montrachet 1er Cru les Chaumees — 2 listings
+`/wines/domaine-paul-prieur-sancerre-monts-damnes-2022/`
 
-Shared URL: `/wines/domaine-jean-noel-gagnard-chassagne-montrachet-1er-cru-les-chaumees-2018/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 534022 | 6/1500 | 3.0 | yes |
+| 534021 | 12/750 | 26.1 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 712988 |  | Domaine Jean Noel Gagnard Chassagne Montrachet 1er Cru les Chaumees | 2018 |  |  |
-| 712995 |  | Domaine Jean Noel Gagnard Chassagne Montrachet 1er Cru les Chaumees | 2018 |  |  |
+### Domaine Paul Prieur Sancerre Rouge les Pichons 2022
 
-### Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale — 3 listings
+`/wines/domaine-paul-prieur-sancerre-rouge-les-pichons-2022/`
 
-Shared URL: `/wines/domaine-jf-mugnier-nuits-saint-georges-1er-cru-clos-de-la-marechale-2022/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 534027 | 12/750 | 3.0 | yes |
+| 534028 | 6/1500 | 1.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 711189 |  | Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale | 2022 |  |  |
-| 711188 |  | Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale | 2022 |  |  |
-| 711186 |  | Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale | 2022 |  |  |
+### Domaine Rapet Pernand Vergelesses Blanc 1er Cru sous Fretille 2022
 
-### Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale — 4 listings
+`/wines/domaine-rapet-pernand-vergelesses-blanc-1er-cru-sous-fretille-2022/`
 
-Shared URL: `/wines/domaine-jf-mugnier-nuits-saint-georges-1er-cru-clos-de-la-marechale-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 410347 | 3/1500 | 0.7 | yes |
+| 410346 | 12/750 | 1.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 712184 |  | Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale | 2023 |  |  |
-| 711199 |  | Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale | 2023 |  |  |
-| 711200 |  | Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale | 2023 |  |  |
-| 711198 |  | Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale | 2023 |  |  |
+### Domaine Serol Cote Roannaise Rouge chez Coste 2020
 
-### Domaine Jl Chave Saint Joseph — 2 listings
+`/wines/domaine-serol-cote-roannaise-rouge-chez-coste-2020/`
 
-Shared URL: `/wines/domaine-jl-chave-saint-joseph-2022/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 740019 | 3/1500 | 1.0 | yes |
+| 740018 | 12/750 | 3.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 540251 |  | Domaine Jl Chave Saint Joseph | 2022 |  |  |
-| 540250 |  | Domaine Jl Chave Saint Joseph | 2022 |  |  |
+### Domaine Servin Chablis les Pargues 2023
 
-### Domaine Jl Chave Saint Joseph — 2 listings
+`/wines/domaine-servin-chablis-les-pargues-2023/`
 
-Shared URL: `/wines/domaine-jl-chave-saint-joseph-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 412658 | 12/750 | 19.0 | yes |
+| 412657 | 12/375 | 9.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 540264 |  | Domaine Jl Chave Saint Joseph | 2023 |  |  |
-| 540263 |  | Domaine Jl Chave Saint Joseph | 2023 |  |  |
+### Heritiers Comte Lafon Macon Milly Clos du Four 2023
 
-### Domaine Lafarge Vial Fleurie Joie du Palais — 2 listings
+`/wines/heritiers-comte-lafon-macon-milly-clos-du-four-2023/`
 
-Shared URL: `/wines/domaine-lafarge-vial-fleurie-joie-du-palais-2020/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 111250 | 12/750 | 18.9 | yes |
+| 111251 | 6/1500 | 1.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 700113 |  | Domaine Lafarge Vial Fleurie Joie du Palais | 2020 |  |  |
-| 700111 |  | Domaine Lafarge Vial Fleurie Joie du Palais | 2020 |  |  |
+### Heritiers Comte Lafon Macon Milly Lamartine 2024
 
-### Domaine Lafarge Vial Fleurie Joie du Palais — 2 listings
+`/wines/heritiers-comte-lafon-macon-milly-lamartine-2024/`
 
-Shared URL: `/wines/domaine-lafarge-vial-fleurie-joie-du-palais-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 111257 | 12/750 | 40.0 | yes |
+| 111258 | 6/1500 | 1.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 700128 |  | Domaine Lafarge Vial Fleurie Joie du Palais | 2023 |  |  |
-| 700124 |  | Domaine Lafarge Vial Fleurie Joie du Palais | 2023 |  |  |
+### Heritiers Comte Lafon Saint Veran 2023
 
-### Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Chezeaux — 2 listings
+`/wines/heritiers-comte-lafon-saint-veran-2023/`
 
-Shared URL: `/wines/domaine-lignier-michelot-morey-saint-denis-1er-cru-aux-chezeaux-2020/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 111254 | 12/750 | 16.0 | yes |
+| 111255 | 6/1500 | 2.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 711574 |  | Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Chezeaux | 2020 |  |  |
-| 711566 |  | Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Chezeaux | 2020 |  |  |
+### Heritiers Comte Lafon Vire-Clesse 2023
 
-### Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Chezeaux — 2 listings
+`/wines/heritiers-comte-lafon-vire-clesse-2023/`
 
-Shared URL: `/wines/domaine-lignier-michelot-morey-saint-denis-1er-cru-aux-chezeaux-2022/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 111252 | 12/750 | 10.0 | yes |
+| 111253 | 6/1500 | 1.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 716002 |  | Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Chezeaux | 2022 |  |  |
-| 711596 |  | Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Chezeaux | 2022 |  |  |
+### Jc Ramonet Chassagne Montrachet Rouge 2021
 
-### Domaine Lignier-Michelot Morey Saint Denis 1er Cru Faconnieres — 2 listings
+`/wines/jc-ramonet-chassagne-montrachet-rouge-2021/`
 
-Shared URL: `/wines/domaine-lignier-michelot-morey-saint-denis-1er-cru-faconnieres-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 512233 | 24/375 | 1.8 | yes |
+| 512232 | 12/750 | 2.2 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 716012 |  | Domaine Lignier-Michelot Morey Saint Denis 1er Cru Faconnieres | 2023 |  |  |
-| 716013 |  | Domaine Lignier-Michelot Morey Saint Denis 1er Cru Faconnieres | 2023 |  |  |
+### Domaine Lamarche la Grande Rue Grand Cru Monopole 2017
 
-### Domaine Lignier-Michelot Morey Saint Denis 1er Cru les Chenevery — 2 listings
+`/wines/lamarche-domaine-lamarche-la-grande-rue-grand-cru-monopole-2017/`
 
-Shared URL: `/wines/domaine-lignier-michelot-morey-saint-denis-1er-cru-les-chenevery-2022/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 210655 | 6/1.5 | 0.8 | yes |
+| 210654 | 6/750 | 2.7 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 716003 |  | Domaine Lignier-Michelot Morey Saint Denis 1er Cru les Chenevery | 2022 |  |  |
-| 711599 |  | Domaine Lignier-Michelot Morey Saint Denis 1er Cru les Chenevery | 2022 |  |  |
+### Domaine Lignier-Michelot Clos de la Roche Grand Cru 2017
 
-### Domaine Paul Jaboulet Aine Hermitage la Chapelle — 3 listings
+`/wines/lignier-michelot-domaine-lignier-michelot-clos-de-la-roche-grand-cru-2017/`
 
-Shared URL: `/wines/domaine-paul-jaboulet-aine-hermitage-la-chapelle-2020/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 711534 | 3/1.5 | 1.0 | yes |
+| 711532 | 6/750 | 3.7 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 541091* |  | Domaine Paul Jaboulet Aine Hermitage la Chapelle | 2020 |  |  |
-| 541090* |  | Domaine Paul Jaboulet Aine Hermitage la Chapelle | 2020 |  |  |
-| 541089* |  | Domaine Paul Jaboulet Aine Hermitage la Chapelle | 2020 |  |  |
+### Lignier Michelot — Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Genavrieres 2021
 
-### Domaine Paul Prieur Sancerre Monts Damnes — 2 listings
+`/wines/lignier-michelot-domaine-lignier-michelot-morey-saint-denis-1er-cru-aux-genavrieres-2021/`
 
-Shared URL: `/wines/domaine-paul-prieur-sancerre-monts-damnes-2022/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 711588 | 3/1500 | 1.0 | yes |
+| 711581 | 12/750 | 4.9 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 534022 |  | Domaine Paul Prieur Sancerre Monts Damnes | 2022 |  |  |
-| 534021 |  | Domaine Paul Prieur Sancerre Monts Damnes | 2022 |  |  |
+### NV Manotsuru Bulzai Ginjo Sake
 
-### Domaine Paul Prieur Sancerre Rouge les Pichons — 2 listings
+`/wines/manotsuru-nv-manotsuru-bulzai-ginjo-sake/`
 
-Shared URL: `/wines/domaine-paul-prieur-sancerre-rouge-les-pichons-2022/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 603409* | 12/720 | 2.6 | yes |
+| 603406* | 12/300 | 8.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 534027 |  | Domaine Paul Prieur Sancerre Rouge les Pichons | 2022 |  |  |
-| 534028 |  | Domaine Paul Prieur Sancerre Rouge les Pichons | 2022 |  |  |
+### NV Manotsuru Countless Visions Nigori Sake
 
-### Domaine Rapet Pernand Vergelesses Blanc 1er Cru sous Fretille — 2 listings
+`/wines/manotsuru-nv-manotsuru-countless-visions-nigori-sake/`
 
-Shared URL: `/wines/domaine-rapet-pernand-vergelesses-blanc-1er-cru-sous-fretille-2022/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 603413* | 12/720 | 6.2 | yes |
+| 603407* | 12/300 | 12.1 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 410347 |  | Domaine Rapet Pernand Vergelesses Blanc 1er Cru sous Fretille | 2022 |  |  |
-| 410346 |  | Domaine Rapet Pernand Vergelesses Blanc 1er Cru sous Fretille | 2022 |  |  |
+### NV Manotsuru Crane Junmai Sake
 
-### Domaine Serol Cote Roannaise Rouge chez Coste — 2 listings
+`/wines/manotsuru-nv-manotsuru-crane-junmai-sake/`
 
-Shared URL: `/wines/domaine-serol-cote-roannaise-rouge-chez-coste-2020/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 603404* | 12/300 | 5.0 | yes |
+| 603411* | 12/720 | 3.3 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 740019 |  | Domaine Serol Cote Roannaise Rouge chez Coste | 2020 |  |  |
-| 740018 |  | Domaine Serol Cote Roannaise Rouge chez Coste | 2020 |  |  |
+### NV Manotsuru Demon Slayer Tokubetsu Honjozo Sake
 
-### Domaine Servin Chablis les Pargues — 2 listings
+`/wines/manotsuru-nv-manotsuru-demon-slayer-tokubetsu-honjozo-sake/`
 
-Shared URL: `/wines/domaine-servin-chablis-les-pargues-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 603412* | 12/720 | 3.3 | yes |
+| 603405* | 12/300 | 47.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 412658 |  | Domaine Servin Chablis les Pargues | 2023 |  |  |
-| 412657 |  | Domaine Servin Chablis les Pargues | 2023 |  |  |
+### NV Champagne Jose Dhondt Brut Blanc de Blancs
 
-### Henri Bourgeois Pouilly Fume — 2 listings
+`/wines/nv-champagne-jose-dhondt-brut-blanc-de-blancs/`
 
-Shared URL: `/wines/henri-bourgeois-pouilly-fume-2024/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 750127 | 12/375 | 19.0 | yes |
+| 750126 | 12/750 | 1.5 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 530155 |  | Henri Bourgeois Pouilly Fume | 2024 |  |  |
-| 530166 |  | Henri Bourgeois Pouilly Fume | 2024 |  |  |
+### Domaine Rapet Corton Charlemagne Grand Cru 2023
 
-### Heritiers Comte Lafon Macon Milly Clos du Four — 2 listings
+`/wines/rapet-domaine-rapet-corton-charlemagne-grand-cru-2023/`
 
-Shared URL: `/wines/heritiers-comte-lafon-macon-milly-clos-du-four-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 410358 | 3/1500 | 1.0 | yes |
+| 410357 | 6/750 | 3.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 111250 |  | Heritiers Comte Lafon Macon Milly Clos du Four | 2023 |  |  |
-| 111251 |  | Heritiers Comte Lafon Macon Milly Clos du Four | 2023 |  |  |
+### Domaine Rapet Pernand Vergelesses Blanc 1er Cru sous Fretille 2023
 
-### Heritiers Comte Lafon Macon Milly Lamartine — 2 listings
+`/wines/rapet-domaine-rapet-pernand-vergelesses-blanc-1er-cru-sous-fretille-2023/`
 
-Shared URL: `/wines/heritiers-comte-lafon-macon-milly-lamartine-2024/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 410356 | 3/1500 | 1.0 | yes |
+| 410355 | 12/750 | 2.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 111257 |  | Heritiers Comte Lafon Macon Milly Lamartine | 2024 |  |  |
-| 111258 |  | Heritiers Comte Lafon Macon Milly Lamartine | 2024 |  |  |
+### Rocca Di Montegrossi — Chianti Classico Gran Selezione Vigneto San Marcellino 2018
 
-### Heritiers Comte Lafon Saint Veran — 2 listings
+`/wines/rocca-di-montegrossi-chianti-classico-gran-selezione-vigneto-san-marcellino-2018/`
 
-Shared URL: `/wines/heritiers-comte-lafon-saint-veran-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 398039 | 1/3000 | 1.0 | yes |
+| 398038 | 3/1500 | 6.0 | yes |
+| 398037* | 12/750 | 56.3 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 111254 |  | Heritiers Comte Lafon Saint Veran | 2023 |  |  |
-| 111255 |  | Heritiers Comte Lafon Saint Veran | 2023 |  |  |
+### Rocca Di Montegrossi — Toscana Rosso Geremia 2018
 
-### Heritiers Comte Lafon Vire-Clesse — 2 listings
+`/wines/rocca-di-montegrossi-toscana-rosso-geremia-2018/`
 
-Shared URL: `/wines/heritiers-comte-lafon-vire-clesse-2023/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 398042 | 3/1500 | 4.0 | yes |
+| 398041 | 12/750 | 45.0 | yes |
+| 398043 | 1/3000 | 2.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 111252 |  | Heritiers Comte Lafon Vire-Clesse | 2023 |  |  |
-| 111253 |  | Heritiers Comte Lafon Vire-Clesse | 2023 |  |  |
+### Rocca Di Montegrossi — Toscana Rosso Geremia IGT 2017
 
-### Jc Ramonet Chassagne Montrachet Rouge — 2 listings
+`/wines/rocca-di-montegrossi-toscana-rosso-geremia-igt-2017/`
 
-Shared URL: `/wines/jc-ramonet-chassagne-montrachet-rouge-2021/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 398033 | 3/1500 | 3.0 | yes |
+| 398032 | 12/750 | 8.0 | yes |
+| 398034 | 1/3000 | 1.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 512233 |  | Jc Ramonet Chassagne Montrachet Rouge | 2021 |  |  |
-| 512232 |  | Jc Ramonet Chassagne Montrachet Rouge | 2021 |  |  |
+### Vice Versa — Wines Beckstoffer Dr Crane Cabernet Sauvignon 2023
 
-### Lamarche — 2 listings
+`/wines/vice-versa-wines-beckstoffer-dr-crane-cabernet-sauvignon-2023/`
 
-Shared URL: `/wines/lamarche-domaine-lamarche-la-grande-rue-grand-cru-monopole-2017/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 501926* | 12/750 | 2.0 | yes |
+| 501930* | 1/1500 | 1.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 210655 | Lamarche | Domaine Lamarche la Grande Rue Grand Cru Monopole | 2017 | Burgundy - C d Nuits | Pinot Noir |
-| 210654 | Lamarche | Domaine Lamarche la Grande Rue Grand Cru Monopole | 2017 | Burgundy - C d Nuits | Pinot Noir |
+### Vice Versa — Wines Beckstoffer Las Piedras Cabernet Sauvignon 2023
 
-### Lignier-Michelot — 2 listings
+`/wines/vice-versa-wines-beckstoffer-las-piedras-cabernet-sauvignon-2023/`
 
-Shared URL: `/wines/lignier-michelot-domaine-lignier-michelot-clos-de-la-roche-grand-cru-2017/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 501925* | 12/750 | 2.0 | yes |
+| 501929* | 1/1500 | 1.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 711534 | Lignier-Michelot | Domaine Lignier-Michelot Clos de la Roche Grand Cru | 2017 | Burgundy - C d Nuits | Pinot Noir |
-| 711532 | Lignier-Michelot | Domaine Lignier-Michelot Clos de la Roche Grand Cru | 2017 | Burgundy - C d Nuits | Pinot Noir |
+### Vice Versa — Wines Spinning Plates Cabernet Sauvignon 2023
 
-### Lignier Michelot — 2 listings
+`/wines/vice-versa-wines-spinning-plates-cabernet-sauvignon-2023/`
 
-Shared URL: `/wines/lignier-michelot-domaine-lignier-michelot-morey-saint-denis-1er-cru-aux-genavrieres-2021/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 501922* | 1/3000 | 1.0 | yes |
+| 501920* | 12/750 | 8.5 | yes |
+| 501921* | 1/1500 | 3.0 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 711588 | Lignier Michelot | Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Genavrieres | 2021 | Burgundy | Pinot Noir |
-| 711581 | Lignier Michelot | Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Genavrieres | 2021 | Burgundy | Pinot Noir |
+### Virgile Lignier-Michelot Clos de la Roche Grand Cru 2018
 
-### Maison Morey-Blanc Saint Romain sous le Chateau — 2 listings
+`/wines/virgile-lignier-michelot-clos-de-la-roche-grand-cru-2018/`
 
-Shared URL: `/wines/maison-morey-blanc-saint-romain-sous-le-chateau-2020/`
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 711547 | 3/1.5 | 1.0 | yes |
+| 711545 | 6/750 | 5.8 | yes |
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 713602 |  | Maison Morey-Blanc Saint Romain sous le Chateau | 2020 |  |  |
-| 713625 |  | Maison Morey-Blanc Saint Romain sous le Chateau | 2020 |  |  |
+## 6-PACK vs 12-PACK — 3 groups
 
-### Manotsuru — 2 listings
+_same bottle in a different case count — decide whether both should list_
 
-Shared URL: `/wines/manotsuru-nv-manotsuru-bulzai-ginjo-sake/`
+### Château la Rose Pourret Saint Emilion Grand Cru 2019
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 603409* | Manotsuru | NV Manotsuru Bulzai Ginjo Sake |  |  |  |
-| 603406* | Manotsuru | NV Manotsuru Bulzai Ginjo Sake |  |  |  |
+`/wines/chateau-la-rose-pourret-saint-emilion-grand-cru-2019/`
 
-### Manotsuru — 2 listings
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 520660 | 6/750 | 41.0 | yes |
+| 520716 | 12/750 | 80.0 | yes |
 
-Shared URL: `/wines/manotsuru-nv-manotsuru-countless-visions-nigori-sake/`
+### Château Rauzan Segla Margaux 2019
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 603413* | Manotsuru | NV Manotsuru Countless Visions Nigori Sake |  |  |  |
-| 603407* | Manotsuru | NV Manotsuru Countless Visions Nigori Sake |  |  |  |
+`/wines/chateau-rauzan-segla-margaux-2019/`
 
-### Manotsuru — 2 listings
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 520731 | 6/750 | 8.0 | yes |
+| 520732 | 12/750 | 5.0 | yes |
+| 520713 | 12/750 | 3.0 | yes |
 
-Shared URL: `/wines/manotsuru-nv-manotsuru-crane-junmai-sake/`
+### Margaux de Brane Margaux 2022
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 603404* | Manotsuru | NV Manotsuru Crane Junmai Sake |  |  |  |
-| 603411* | Manotsuru | NV Manotsuru Crane Junmai Sake |  |  |  |
+`/wines/margaux-de-brane-margaux-2022/`
 
-### Manotsuru — 2 listings
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 520738 | 6/750 | 15.0 | yes |
+| 520735 | 12/750 | 9.5 | yes |
 
-Shared URL: `/wines/manotsuru-nv-manotsuru-demon-slayer-tokubetsu-honjozo-sake/`
+## PURE DUPLICATES — 18 groups
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 603412* | Manotsuru | NV Manotsuru Demon Slayer Tokubetsu Honjozo Sake |  |  |  |
-| 603405* | Manotsuru | NV Manotsuru Demon Slayer Tokubetsu Honjozo Sake |  |  |  |
+_genuinely the same product twice — safe to show once_
 
-### Margaux de Brane Margaux — 2 listings
+### NV Ca'stele Prosecco DOC
 
-Shared URL: `/wines/margaux-de-brane-margaux-2022/`
+`/wines/ca-stele-nv-ca-stele-prosecco-doc/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 520738 |  | Margaux de Brane Margaux | 2022 |  |  |
-| 520735 |  | Margaux de Brane Margaux | 2022 |  |  |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 397728 | 12/750 | 5.6 | yes |
+| 397731 | 12/750 | 100.0 | yes |
 
-### NV Bonnamy Cremant de Loire Blanc Brut — 2 listings
+### Château Pibran Pauillac 2018
 
-Shared URL: `/wines/nv-bonnamy-cremant-de-loire-blanc-brut/`
+`/wines/chateau-pibran-pauillac-2018/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 531242 |  | NV Bonnamy Cremant de Loire Blanc Brut |  |  |  |
-| 531244 |  | NV Bonnamy Cremant de Loire Blanc Brut |  |  |  |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 520432 | 6/750 | 0.2 | yes |
+| 520492 | 6/750 | 56.8 | yes |
 
-### NV Bonnamy Cremant de Loire Rose Brut — 2 listings
+### Domaine Arnaud Lambert Cremant de Loire Rose
 
-Shared URL: `/wines/nv-bonnamy-cremant-de-loire-rose-brut/`
+`/wines/domaine-arnaud-lambert-cremant-de-loire-rose/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 531245 |  | NV Bonnamy Cremant de Loire Rose Brut |  |  |  |
-| 531243 |  | NV Bonnamy Cremant de Loire Rose Brut |  |  |  |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 730119 | 12/750 | 0.8 | yes |
+| 730135 | 12/750 | 26.9 | yes |
 
-### NV Champagne Jose Dhondt Brut Blanc de Blancs — 2 listings
+### Domaine Bruno Colin Chassagne Montrachet 1er Cru en Remilly 2023
 
-Shared URL: `/wines/nv-champagne-jose-dhondt-brut-blanc-de-blancs/`
+`/wines/domaine-bruno-colin-chassagne-montrachet-1er-cru-en-remilly-2023/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 750127 |  | NV Champagne Jose Dhondt Brut Blanc de Blancs |  |  |  |
-| 750126 |  | NV Champagne Jose Dhondt Brut Blanc de Blancs |  |  |  |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 660925 | 6/750 | 2.0 | yes |
+| 660918 | 6/750 | 3.0 | yes |
 
-### Rapet — 2 listings
+### Domaine Bruno Colin Chassagne Montrachet 1er Cru la Maltroie Blanc 2023
 
-Shared URL: `/wines/rapet-domaine-rapet-corton-charlemagne-grand-cru-2023/`
+`/wines/domaine-bruno-colin-chassagne-montrachet-1er-cru-la-maltroie-blanc-2023/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 410358 | Rapet | Domaine Rapet Corton Charlemagne Grand Cru | 2023 | Burgundy | Chardonnay |
-| 410357 | Rapet | Domaine Rapet Corton Charlemagne Grand Cru | 2023 | Burgundy | Chardonnay |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 660917 | 6/750 | 4.0 | yes |
+| 660923 | 6/750 | 0.8 | yes |
 
-### Rapet — 2 listings
+### Domaine Bruno Colin Chassagne Montrachet 1er Cru les Chaumees 2023
 
-Shared URL: `/wines/rapet-domaine-rapet-pernand-vergelesses-blanc-1er-cru-sous-fretille-2023/`
+`/wines/domaine-bruno-colin-chassagne-montrachet-1er-cru-les-chaumees-2023/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 410356 | Rapet | Domaine Rapet Pernand Vergelesses Blanc 1er Cru sous Fretille | 2023 | Burgundy | Chardonnay |
-| 410355 | Rapet | Domaine Rapet Pernand Vergelesses Blanc 1er Cru sous Fretille | 2023 | Burgundy | Chardonnay |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 660922 | 6/750 | 1.8 | yes |
+| 660916 | 6/750 | 1.0 | yes |
 
-### Rocca Di Montegrossi — 3 listings
+### Domaine Bruno Colin Chassagne Montrachet Blanc 2023
 
-Shared URL: `/wines/rocca-di-montegrossi-chianti-classico-gran-selezione-vigneto-san-marcellino-2018/`
+`/wines/domaine-bruno-colin-chassagne-montrachet-blanc-2023/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 398039 | Rocca Di Montegrossi | Chianti Classico Gran Selezione Vigneto San Marcellino | 2018 | Tuscany | Sangiovese |
-| 398038 | Rocca Di Montegrossi | Chianti Classico Gran Selezione Vigneto San Marcellino | 2018 | Tuscany | Sangiovese |
-| 398037* | Rocca Di Montegrossi | Chianti Classico Gran Selezione Vigneto San Marcellino | 2018 | Tuscany | Sangiovese |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 660915 | 6/750 | 4.0 | yes |
+| 660921 | 6/750 | 6.0 | yes |
 
-### Rocca Di Montegrossi — 3 listings
+### Domaine des Epeneaux Auxey Duresses Rouge 2020
 
-Shared URL: `/wines/rocca-di-montegrossi-toscana-rosso-geremia-2018/`
+`/wines/domaine-des-epeneaux-auxey-duresses-rouge-2020/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 398042 | Rocca Di Montegrossi | Toscana Rosso Geremia | 2018 | Tuscany | Cabernet / Merlot |
-| 398041 | Rocca Di Montegrossi | Toscana Rosso Geremia | 2018 | Tuscany | Cabernet / Merlot |
-| 398043 | Rocca Di Montegrossi | Toscana Rosso Geremia | 2018 | Tuscany | Cabernet / Merlot |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 712642* | 6/750 | 10.0 | yes |
+| 712646* | 6/750 | 3.0 | yes |
 
-### Rocca Di Montegrossi — 3 listings
+### Domaine des Epeneaux Pommard 1er Cru Clos des Epeneaux 2020
 
-Shared URL: `/wines/rocca-di-montegrossi-toscana-rosso-geremia-igt-2017/`
+`/wines/domaine-des-epeneaux-pommard-1er-cru-clos-des-epeneaux-2020/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 398033 | Rocca Di Montegrossi | Toscana Rosso Geremia IGT | 2017 | Tuscany | Cabernet / Merlot |
-| 398032 | Rocca Di Montegrossi | Toscana Rosso Geremia IGT | 2017 | Tuscany | Cabernet / Merlot |
-| 398034 | Rocca Di Montegrossi | Toscana Rosso Geremia IGT | 2017 | Tuscany | Cabernet / Merlot |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 712649* | 6/750 | 11.0 | yes |
+| 712645* | 6/750 | 14.0 | yes |
 
-### Serol — 2 listings
+### Domaine Jean Noel Gagnard Chassagne Montrachet 1er Cru les Chaumees 2018
 
-Shared URL: `/wines/serol-domaine-serol-turbullent-petillant-rose/`
+`/wines/domaine-jean-noel-gagnard-chassagne-montrachet-1er-cru-les-chaumees-2018/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 740012 | Serol | Domaine Serol Turbullent Petillant Rose |  | Loire | Gamay Saint Romain |
-| 740008 | Serol | Domaine Serol Turbullent Petillant Rose |  | Loire | Gamay Saint Romain |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 712988 | 12/750 | 2.0 | yes |
+| 712995 | 12/750 | 3.8 | yes |
 
-### Subirats — 2 listings
+### Domaine Lafarge Vial Fleurie Joie du Palais 2023
 
-Shared URL: `/wines/subirats-nv-conde-de-subirats-cava-brut-rose/`
+`/wines/domaine-lafarge-vial-fleurie-joie-du-palais-2023/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 620304 | Subirats | NV Conde de Subirats Cava Brut Rose |  | Penedes | Macabeo / Garnacha |
-| 620302 | Subirats | NV Conde de Subirats Cava Brut Rose |  | Penedes | Tempranillo / Macabeo |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 700128 | 12/750 | 6.0 | yes |
+| 700124 | 12/750 | 3.8 | yes |
 
-### Vice Versa — 2 listings
+### Henri Bourgeois Pouilly Fume 2024
 
-Shared URL: `/wines/vice-versa-wines-beckstoffer-dr-crane-cabernet-sauvignon-2023/`
+`/wines/henri-bourgeois-pouilly-fume-2024/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 501926* | Vice Versa | Wines Beckstoffer Dr Crane Cabernet Sauvignon | 2023 |  |  |
-| 501930* | Vice Versa | Wines Beckstoffer Dr Crane Cabernet Sauvignon | 2023 |  |  |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 530155 | 12/750 | 3.0 | yes |
+| 530166 | 12/750 | 39.0 | yes |
 
-### Vice Versa — 2 listings
+### Maison Morey-Blanc Saint Romain sous le Chateau 2020
 
-Shared URL: `/wines/vice-versa-wines-beckstoffer-las-piedras-cabernet-sauvignon-2023/`
+`/wines/maison-morey-blanc-saint-romain-sous-le-chateau-2020/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 501925* | Vice Versa | Wines Beckstoffer Las Piedras Cabernet Sauvignon | 2023 |  |  |
-| 501929* | Vice Versa | Wines Beckstoffer Las Piedras Cabernet Sauvignon | 2023 |  |  |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 713602 | 12/750 | 4.5 | yes |
+| 713625 | 12/750 | 0.4 | yes |
 
-### Vice Versa — 3 listings
+### NV Bonnamy Cremant de Loire Blanc Brut
 
-Shared URL: `/wines/vice-versa-wines-spinning-plates-cabernet-sauvignon-2023/`
+`/wines/nv-bonnamy-cremant-de-loire-blanc-brut/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 501922* | Vice Versa | Wines Spinning Plates Cabernet Sauvignon | 2023 |  |  |
-| 501920* | Vice Versa | Wines Spinning Plates Cabernet Sauvignon | 2023 |  |  |
-| 501921* | Vice Versa | Wines Spinning Plates Cabernet Sauvignon | 2023 |  |  |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 531242 | 12/750 | 19.8 | yes |
+| 531244 | 12/750 | 110.0 | yes |
 
-### Virgile Lignier-Michelot Clos de la Roche Grand Cru — 2 listings
+### NV Bonnamy Cremant de Loire Rose Brut
 
-Shared URL: `/wines/virgile-lignier-michelot-clos-de-la-roche-grand-cru-2018/`
+`/wines/nv-bonnamy-cremant-de-loire-rose-brut/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 711547 |  | Virgile Lignier-Michelot Clos de la Roche Grand Cru | 2018 |  |  |
-| 711545 |  | Virgile Lignier-Michelot Clos de la Roche Grand Cru | 2018 |  |  |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 531245 | 12/750 | 55.0 | yes |
+| 531243 | 12/750 | 11.1 | yes |
 
-### W23 Domaine Arnaud Lambert Cremant de Loire Blanc — 3 listings
+### Domaine Serol Turbullent Petillant Rose
 
-Shared URL: `/wines/w23-domaine-arnaud-lambert-cremant-de-loire-blanc/`
+`/wines/serol-domaine-serol-turbullent-petillant-rose/`
 
-| SKU | Producer | Name | Vintage | Region | Varietal |
-|---|---|---|---|---|---|
-| 730141 |  | W23 Domaine Arnaud Lambert Cremant de Loire Blanc |  |  |  |
-| 730145 |  | W23 Domaine Arnaud Lambert Cremant de Loire Blanc |  |  |  |
-| 730140 |  | W23 Domaine Arnaud Lambert Cremant de Loire Blanc |  |  |  |
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 740012 | 12/750 | 12.5 | yes |
+| 740008 | 12/750 | 0.8 | yes |
+
+### NV Conde de Subirats Cava Brut Rose
+
+`/wines/subirats-nv-conde-de-subirats-cava-brut-rose/`
+
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 620304 | 12/750 | 20.0 | yes |
+| 620302 | 12/750 | 5.0 | yes |
+
+### W23 Domaine Arnaud Lambert Cremant de Loire Blanc
+
+`/wines/w23-domaine-arnaud-lambert-cremant-de-loire-blanc/`
+
+| SKU | Pack | On-hand | Ready |
+|---|---|---|---|
+| 730141 | 12/750 | 55.0 | yes |
+| 730145 | 12/750 | 56.0 | yes |
+| 730140 | 12/750 | 31.9 | yes |
 

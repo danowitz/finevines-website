@@ -1,0 +1,325 @@
+FINE VINES — DUPLICATE CATALOG LISTINGS
+73 wines currently appear more than once in the online catalog (156 item numbers total).
+Every one of them is in stock and marked ready-to-sell. They fall into three cases:
+  - DIFFERENT BOTTLE SIZE: 52
+  - 6-PACK vs 12-PACK: 3
+  - PURE DUPLICATES: 18
+
+Pack notation: cases/size, e.g. 12/750 = twelve 750ml bottles, 6/1500 = six 1.5L magnums.
+
+==================================================================
+DIFFERENT BOTTLE SIZE (e.g. 750ml vs 1.5L magnum) — 52
+(these are different products — most likely keep both, labeled by size)
+==================================================================
+
+Coastal Ridge — Chardonnay California 2023
+   SKU 571048    12/750    on-hand 22.0
+   SKU 571053    6/1500    on-hand 5.0
+
+Domaine Bastide Blanche Bandol Rose 2025
+   SKU 473943    12/750    on-hand 13.0
+   SKU 473944    3/1500    on-hand 6.0
+
+Domaine Bruno Clair Bonnes Mares Grand Cru 2023
+   SKU 714167    6/750     on-hand 16.0
+   SKU 714168    3/1500    on-hand 1.0
+
+Domaine des Comte Lafon Meursault 2023
+   SKU 714822    6/1500    on-hand 1.0
+   SKU 714821    12/750    on-hand 3.0
+
+Domaine des Comte Lafon Meursault Clos de la Barre 2023
+   SKU 714824    6/150     on-hand 0.5
+   SKU 714823    12/750    on-hand 6.0
+
+Domaine des Comte Lafon Volnay 1er Cru Santenots du Milieu 2023
+   SKU 714839    6/1500    on-hand 0.5
+   SKU 714837    12/750    on-hand 6.0
+
+Domaine Guy Bocard Bourgogne Cote D'or Chardonnay 2023
+   SKU 513722    12/750    on-hand 18.0
+   SKU 513723    6/1500    on-hand 1.0
+
+Domaine Guy Bocard Meursault Vieilles Vignes 2023
+   SKU 513724    12/750    on-hand 11.8
+   SKU 513725    6/1500    on-hand 0.8
+
+Domaine Jean-Luc Burguet Gevrey Chambertin Mes Favorites Vieilles Vignes 2022
+   SKU 713912    12/750    on-hand 15.0
+   SKU 713913    6/1500    on-hand 1.8
+
+Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode 2020
+   SKU 712033    12/750    on-hand 6.0
+   SKU 712034    6/1.5     on-hand 2.0
+
+Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode 2021
+   SKU 712040    12/750    on-hand 7.1
+   SKU 712041    6/1.5     on-hand 2.0
+
+Domaine Jean-Marc Pavelot Savigny les Beaune 1ER Cru la Dominode 2022
+   SKU 712054    6/1.5     on-hand 3.8
+   SKU 712053    12/750    on-hand 7.8
+
+Domaine Jean-Marc Pavelot Savigny les Beaune 2019
+   SKU 712020    24/375    on-hand 1.1
+   SKU 712019    12/750    on-hand 0.3
+
+Domaine Jean-Marc Pavelot Savigny les Beaune 2021
+   SKU 712036    12/750    on-hand 52.6
+   SKU 712037    24/375    on-hand 3.0
+
+Domaine Jean-Marc Pavelot Savigny les Beaune 2022
+   SKU 712047    12/750    on-hand 12.8
+   SKU 712048    24/375    on-hand 2.8
+
+Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale 2022
+   SKU 711189    1/3000    on-hand 2.0
+   SKU 711188    3/1500    on-hand 0.3
+   SKU 711186    6/750     on-hand 0.8
+
+Domaine Jf Mugnier Nuits Saint Georges 1er Cru Clos de la Marechale 2023
+   SKU 712184    1/3000    on-hand 3.0
+   SKU 711199    12/375    on-hand 1.4
+   SKU 711200    3/1500    on-hand 7.0
+   SKU 711198    6/750     on-hand 37.0
+
+Domaine Jl Chave Saint Joseph 2022
+   SKU 540251    6/1500    on-hand 1.5
+   SKU 540250    6/750     on-hand 28.0
+
+Domaine Jl Chave Saint Joseph 2023
+   SKU 540264    6/1500    on-hand 1.0
+   SKU 540263    6/750     on-hand 44.0
+
+Domaine Lafarge Vial Fleurie Joie du Palais 2020
+   SKU 700113    6/1500    on-hand 1.0
+   SKU 700111    12/750    on-hand 4.0
+
+Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Chezeaux 2020
+   SKU 711574    3/1500    on-hand 0.7
+   SKU 711566    12/750    on-hand 1.0
+
+Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Chezeaux 2022
+   SKU 716002    3/1500    on-hand 2.0
+   SKU 711596    12/750    on-hand 4.0
+
+Domaine Lignier-Michelot Morey Saint Denis 1er Cru Faconnieres 2023
+   SKU 716012    12/750    on-hand 10.0
+   SKU 716013    3/1500    on-hand 3.0
+
+Domaine Lignier-Michelot Morey Saint Denis 1er Cru les Chenevery 2022
+   SKU 716003    3/1500    on-hand 2.0
+   SKU 711599    12/750    on-hand 3.8
+
+Domaine Paul Jaboulet Aine Hermitage la Chapelle 2020
+   SKU 541091*   1/3000    on-hand 2.0
+   SKU 541090*   3/1500    on-hand 2.7
+   SKU 541089*   6/750     on-hand 22.3
+
+Domaine Paul Prieur Sancerre Monts Damnes 2022
+   SKU 534022    6/1500    on-hand 3.0
+   SKU 534021    12/750    on-hand 26.1
+
+Domaine Paul Prieur Sancerre Rouge les Pichons 2022
+   SKU 534027    12/750    on-hand 3.0
+   SKU 534028    6/1500    on-hand 1.0
+
+Domaine Rapet Pernand Vergelesses Blanc 1er Cru sous Fretille 2022
+   SKU 410347    3/1500    on-hand 0.7
+   SKU 410346    12/750    on-hand 1.8
+
+Domaine Serol Cote Roannaise Rouge chez Coste 2020
+   SKU 740019    3/1500    on-hand 1.0
+   SKU 740018    12/750    on-hand 3.8
+
+Domaine Servin Chablis les Pargues 2023
+   SKU 412658    12/750    on-hand 19.0
+   SKU 412657    12/375    on-hand 9.0
+
+Heritiers Comte Lafon Macon Milly Clos du Four 2023
+   SKU 111250    12/750    on-hand 18.9
+   SKU 111251    6/1500    on-hand 1.8
+
+Heritiers Comte Lafon Macon Milly Lamartine 2024
+   SKU 111257    12/750    on-hand 40.0
+   SKU 111258    6/1500    on-hand 1.0
+
+Heritiers Comte Lafon Saint Veran 2023
+   SKU 111254    12/750    on-hand 16.0
+   SKU 111255    6/1500    on-hand 2.0
+
+Heritiers Comte Lafon Vire-Clesse 2023
+   SKU 111252    12/750    on-hand 10.0
+   SKU 111253    6/1500    on-hand 1.0
+
+Jc Ramonet Chassagne Montrachet Rouge 2021
+   SKU 512233    24/375    on-hand 1.8
+   SKU 512232    12/750    on-hand 2.2
+
+Domaine Lamarche la Grande Rue Grand Cru Monopole 2017
+   SKU 210655    6/1.5     on-hand 0.8
+   SKU 210654    6/750     on-hand 2.7
+
+Domaine Lignier-Michelot Clos de la Roche Grand Cru 2017
+   SKU 711534    3/1.5     on-hand 1.0
+   SKU 711532    6/750     on-hand 3.7
+
+Lignier Michelot — Domaine Lignier-Michelot Morey Saint Denis 1er Cru aux Genavrieres 2021
+   SKU 711588    3/1500    on-hand 1.0
+   SKU 711581    12/750    on-hand 4.9
+
+NV Manotsuru Bulzai Ginjo Sake
+   SKU 603409*   12/720    on-hand 2.6
+   SKU 603406*   12/300    on-hand 8.8
+
+NV Manotsuru Countless Visions Nigori Sake
+   SKU 603413*   12/720    on-hand 6.2
+   SKU 603407*   12/300    on-hand 12.1
+
+NV Manotsuru Crane Junmai Sake
+   SKU 603404*   12/300    on-hand 5.0
+   SKU 603411*   12/720    on-hand 3.3
+
+NV Manotsuru Demon Slayer Tokubetsu Honjozo Sake
+   SKU 603412*   12/720    on-hand 3.3
+   SKU 603405*   12/300    on-hand 47.8
+
+NV Champagne Jose Dhondt Brut Blanc de Blancs
+   SKU 750127    12/375    on-hand 19.0
+   SKU 750126    12/750    on-hand 1.5
+
+Domaine Rapet Corton Charlemagne Grand Cru 2023
+   SKU 410358    3/1500    on-hand 1.0
+   SKU 410357    6/750     on-hand 3.0
+
+Domaine Rapet Pernand Vergelesses Blanc 1er Cru sous Fretille 2023
+   SKU 410356    3/1500    on-hand 1.0
+   SKU 410355    12/750    on-hand 2.0
+
+Rocca Di Montegrossi — Chianti Classico Gran Selezione Vigneto San Marcellino 2018
+   SKU 398039    1/3000    on-hand 1.0
+   SKU 398038    3/1500    on-hand 6.0
+   SKU 398037*   12/750    on-hand 56.3
+
+Rocca Di Montegrossi — Toscana Rosso Geremia 2018
+   SKU 398042    3/1500    on-hand 4.0
+   SKU 398041    12/750    on-hand 45.0
+   SKU 398043    1/3000    on-hand 2.0
+
+Rocca Di Montegrossi — Toscana Rosso Geremia IGT 2017
+   SKU 398033    3/1500    on-hand 3.0
+   SKU 398032    12/750    on-hand 8.0
+   SKU 398034    1/3000    on-hand 1.0
+
+Vice Versa — Wines Beckstoffer Dr Crane Cabernet Sauvignon 2023
+   SKU 501926*   12/750    on-hand 2.0
+   SKU 501930*   1/1500    on-hand 1.0
+
+Vice Versa — Wines Beckstoffer Las Piedras Cabernet Sauvignon 2023
+   SKU 501925*   12/750    on-hand 2.0
+   SKU 501929*   1/1500    on-hand 1.0
+
+Vice Versa — Wines Spinning Plates Cabernet Sauvignon 2023
+   SKU 501922*   1/3000    on-hand 1.0
+   SKU 501920*   12/750    on-hand 8.5
+   SKU 501921*   1/1500    on-hand 3.0
+
+Virgile Lignier-Michelot Clos de la Roche Grand Cru 2018
+   SKU 711547    3/1.5     on-hand 1.0
+   SKU 711545    6/750     on-hand 5.8
+
+==================================================================
+6-PACK vs 12-PACK (same bottle, different case pack) — 3
+(same bottle in a different case count — decide whether both should list)
+==================================================================
+
+Château la Rose Pourret Saint Emilion Grand Cru 2019
+   SKU 520660    6/750     on-hand 41.0
+   SKU 520716    12/750    on-hand 80.0
+
+Château Rauzan Segla Margaux 2019
+   SKU 520731    6/750     on-hand 8.0
+   SKU 520732    12/750    on-hand 5.0
+   SKU 520713    12/750    on-hand 3.0
+
+Margaux de Brane Margaux 2022
+   SKU 520738    6/750     on-hand 15.0
+   SKU 520735    12/750    on-hand 9.5
+
+==================================================================
+PURE DUPLICATES (identical size and pack, two item numbers) — 18
+(genuinely the same product twice — safe to show once)
+==================================================================
+
+NV Ca'stele Prosecco DOC
+   SKU 397728    12/750    on-hand 5.6
+   SKU 397731    12/750    on-hand 100.0
+
+Château Pibran Pauillac 2018
+   SKU 520432    6/750     on-hand 0.2
+   SKU 520492    6/750     on-hand 56.8
+
+Domaine Arnaud Lambert Cremant de Loire Rose
+   SKU 730119    12/750    on-hand 0.8
+   SKU 730135    12/750    on-hand 26.9
+
+Domaine Bruno Colin Chassagne Montrachet 1er Cru en Remilly 2023
+   SKU 660925    6/750     on-hand 2.0
+   SKU 660918    6/750     on-hand 3.0
+
+Domaine Bruno Colin Chassagne Montrachet 1er Cru la Maltroie Blanc 2023
+   SKU 660917    6/750     on-hand 4.0
+   SKU 660923    6/750     on-hand 0.8
+
+Domaine Bruno Colin Chassagne Montrachet 1er Cru les Chaumees 2023
+   SKU 660922    6/750     on-hand 1.8
+   SKU 660916    6/750     on-hand 1.0
+
+Domaine Bruno Colin Chassagne Montrachet Blanc 2023
+   SKU 660915    6/750     on-hand 4.0
+   SKU 660921    6/750     on-hand 6.0
+
+Domaine des Epeneaux Auxey Duresses Rouge 2020
+   SKU 712642*   6/750     on-hand 10.0
+   SKU 712646*   6/750     on-hand 3.0
+
+Domaine des Epeneaux Pommard 1er Cru Clos des Epeneaux 2020
+   SKU 712649*   6/750     on-hand 11.0
+   SKU 712645*   6/750     on-hand 14.0
+
+Domaine Jean Noel Gagnard Chassagne Montrachet 1er Cru les Chaumees 2018
+   SKU 712988    12/750    on-hand 2.0
+   SKU 712995    12/750    on-hand 3.8
+
+Domaine Lafarge Vial Fleurie Joie du Palais 2023
+   SKU 700128    12/750    on-hand 6.0
+   SKU 700124    12/750    on-hand 3.8
+
+Henri Bourgeois Pouilly Fume 2024
+   SKU 530155    12/750    on-hand 3.0
+   SKU 530166    12/750    on-hand 39.0
+
+Maison Morey-Blanc Saint Romain sous le Chateau 2020
+   SKU 713602    12/750    on-hand 4.5
+   SKU 713625    12/750    on-hand 0.4
+
+NV Bonnamy Cremant de Loire Blanc Brut
+   SKU 531242    12/750    on-hand 19.8
+   SKU 531244    12/750    on-hand 110.0
+
+NV Bonnamy Cremant de Loire Rose Brut
+   SKU 531245    12/750    on-hand 55.0
+   SKU 531243    12/750    on-hand 11.1
+
+Domaine Serol Turbullent Petillant Rose
+   SKU 740012    12/750    on-hand 12.5
+   SKU 740008    12/750    on-hand 0.8
+
+NV Conde de Subirats Cava Brut Rose
+   SKU 620304    12/750    on-hand 20.0
+   SKU 620302    12/750    on-hand 5.0
+
+W23 Domaine Arnaud Lambert Cremant de Loire Blanc
+   SKU 730141    12/750    on-hand 55.0
+   SKU 730145    12/750    on-hand 56.0
+   SKU 730140    12/750    on-hand 31.9
