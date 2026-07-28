@@ -10,9 +10,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/gritautomation/finevines-website/internal/model"
 )
 
 func TestRunGeneratesHomeAndContact(t *testing.T) {
@@ -354,6 +357,20 @@ func TestPortfolioPage(t *testing.T) {
 		`class="facet-count"`,
 		`id="portfolio-empty"`,
 		`class="pagination"`,
+		// Filter rail (issue #4). portfolio.js wires the whole rail by
+		// DELEGATION off these data-attributes, because value rows are
+		// re-rendered on every query — so each of these is a hard contract.
+		`data-facet-group="producer"`,
+		`data-facet-values="producer"`,
+		`data-facet-filter="producer"`,
+		`class="facet-row"`,
+		`class="facet-label"`,
+		`class="facet-total"`,
+		`class="facet-selected"`,
+		`id="portfolio-chips"`,
+		`class="facets-apply"`,
+		// Vintage is a chip grid, and the big groups ship collapsed.
+		`class="facet-values is-grid"`,
 	} {
 		if !strings.Contains(html, want) {
 			t.Errorf("portfolio missing hook %q", want)
@@ -363,6 +380,23 @@ func TestPortfolioPage(t *testing.T) {
 	if strings.Contains(html, `data-facet="style"`) {
 		t.Error("portfolio must not render the dropped 'style' facet")
 	}
+
+	// The seed is capped. This is the page-weight guarantee: the old rail put
+	// every one of 577 facet values on all ~56 paginated pages, ~40% of the
+	// bytes. A regression here would be invisible to every other assertion.
+	if n := strings.Count(html, `data-facet="producer"`); n > facetSeedSize {
+		t.Errorf("producer facet rendered %d values, want at most %d", n, facetSeedSize)
+	}
+	// The big groups must arrive COLLAPSED. <details open> on producer is
+	// exactly the state this work exists to remove.
+	if strings.Contains(html, `data-big="1" open>`) {
+		t.Error("big facet groups must not render <details open>")
+	}
+	// NOTE: the "show all N" expander is deliberately NOT asserted here. This
+	// fixture holds three wines, so no group exceeds the seed and rendering an
+	// expander would be the bug. HasMore() is covered by
+	// TestBuildFacetsRanksAndSeeds, and the real control is exercised against
+	// the full 2,665-wine build in tests/e2e/filter-rail.test.js.
 }
 
 func TestNewsPages(t *testing.T) {
@@ -619,4 +653,231 @@ func hashTree(t *testing.T, root string) map[string]string {
 		t.Fatal(err)
 	}
 	return hashes
+}
+
+// TestBuildGeneratesMissingLabels covers the rule that lets the ~2,200
+// generated label SVGs stay OUT of source control: whatever is missing from
+// assets/, the build reproduces into dist/, so the site never ships a broken
+// image. Before this, only `enrich` called label.Generate, so the SVGs had to
+// be committed or a fresh clone built a site full of broken <img>s.
+func TestBuildGeneratesMissingLabels(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// The fixture's three wines all point at images that do NOT exist under
+	// assets/img/wines/, one per extension.
+	svg := filepath.Join(dist, "assets", "img", "wines", "cd5678.svg")
+	got, err := os.ReadFile(svg)
+	if err != nil {
+		t.Fatalf("build must generate the missing label SVG: %v", err)
+	}
+	if !bytes.HasPrefix(bytes.TrimSpace(got), []byte("<svg")) {
+		t.Errorf("generated label is not an SVG document, starts: %.40q", got)
+	}
+	// It must be the wine's OWN label, not a placeholder.
+	if !bytes.Contains(got, []byte("DOMAINE PETIT-CLOS")) {
+		t.Error("generated label does not carry the wine's producer")
+	}
+
+	// A missing .jpg/.webp is a data error (a photo we expected is gone) and
+	// must stay visible, not be papered over with a generated vector label.
+	for _, name := range []string{"ef9012.jpg", "ab1234.webp"} {
+		if _, err := os.Stat(filepath.Join(dist, "assets", "img", "wines", name)); !os.IsNotExist(err) {
+			t.Errorf("build must not synthesise %s in place of a missing photo", name)
+		}
+	}
+}
+
+// TestEnsureLabelsNeverOverwrites protects the 478 real bottle photographs
+// matched from the old site: a file that is already there is the source of
+// truth and must survive the build untouched.
+func TestEnsureLabelsNeverOverwrites(t *testing.T) {
+	dist := t.TempDir()
+	rel := filepath.Join("assets", "img", "wines", "keep.svg")
+	if err := os.MkdirAll(filepath.Join(dist, "assets", "img", "wines"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	sentinel := []byte("<svg><!-- the real one --></svg>")
+	if err := os.WriteFile(filepath.Join(dist, rel), sentinel, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	wines := []model.Wine{{
+		Slug: "keep", SKU: "K1", Producer: "Keeper", Name: "Cuvee",
+		ImagePath: "assets/img/wines/keep.svg",
+	}}
+	if err := ensureLabels(dist, wines); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(dist, rel))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, sentinel) {
+		t.Errorf("ensureLabels overwrote an existing image:\n got %q\nwant %q", got, sentinel)
+	}
+}
+
+// wineWith builds a minimal wine carrying just the facet fields under test.
+func wineWith(slug, producer, region, varietal, country, vintage string) model.Wine {
+	return model.Wine{
+		Slug: slug, Name: slug, Producer: producer, Region: region,
+		Varietal: varietal, Country: country, Vintage: vintage,
+	}
+}
+
+// TestBuildFacetsRanksAndSeeds covers the rule that makes a 310-value group
+// usable: the server emits only the highest-count values, ranked, with the
+// full total carried separately for the header and the expander.
+func TestBuildFacetsRanksAndSeeds(t *testing.T) {
+	// 3 Lamy, 2 Roulot, 1 each for 14 others => 16 distinct producers, so the
+	// seed must cut at facetSeedSize (12) and Total must still report 16.
+	var wines []model.Wine
+	add := func(n int, producer string) {
+		for i := 0; i < n; i++ {
+			wines = append(wines, wineWith(fmt.Sprintf("%s-%d", producer, i), producer, "Burgundy", "Chardonnay", "France", "2021"))
+		}
+	}
+	add(3, "Lamy")
+	add(2, "Roulot")
+	for i := 0; i < 14; i++ {
+		add(1, fmt.Sprintf("Small%02d", i))
+	}
+
+	groups := buildFacets(wines)
+
+	// Display order is the sidebar's order and is part of the contract.
+	var order []string
+	for _, g := range groups {
+		order = append(order, g.Facet)
+	}
+	if want := []string{"producer", "region", "varietal", "vintage", "country"}; !reflect.DeepEqual(order, want) {
+		t.Fatalf("facet order = %v, want %v", order, want)
+	}
+
+	producer := groups[0]
+	if producer.Total != 16 {
+		t.Errorf("Total = %d, want 16 (the whole catalog, not the seed)", producer.Total)
+	}
+	if len(producer.Values) != facetSeedSize {
+		t.Errorf("seeded %d values, want %d", len(producer.Values), facetSeedSize)
+	}
+	if !producer.HasMore() {
+		t.Error("HasMore must be true when the catalog holds more than the seed")
+	}
+	// Ranked by count desc: the two multi-wine producers lead.
+	if producer.Values[0].Value != "Lamy" || producer.Values[0].Count != 3 {
+		t.Errorf("first value = %+v, want Lamy/3", producer.Values[0])
+	}
+	if producer.Values[1].Value != "Roulot" || producer.Values[1].Count != 2 {
+		t.Errorf("second value = %+v, want Roulot/2", producer.Values[1])
+	}
+	// Ties break alphabetically — the tiebreak that makes the ordering total,
+	// and therefore the build deterministic.
+	for i := 2; i < len(producer.Values)-1; i++ {
+		a, b := producer.Values[i], producer.Values[i+1]
+		if a.Count == b.Count && a.Value >= b.Value {
+			t.Errorf("tie at %d not broken alphabetically: %q then %q", i, a.Value, b.Value)
+		}
+	}
+
+	// Small groups are never capped and carry every value.
+	country := groups[4]
+	if country.Total != 1 || len(country.Values) != 1 {
+		t.Errorf("country = %d values / total %d, want 1/1", len(country.Values), country.Total)
+	}
+	if country.HasMore() {
+		t.Error("a fully-seeded group must not offer an expander")
+	}
+}
+
+// TestBuildFacetsGroupFlags pins the first-paint behaviour: the big groups
+// arrive collapsed (the whole point of the change) and vintage reads as a
+// newest-first grid rather than a popularity ranking.
+func TestBuildFacetsGroupFlags(t *testing.T) {
+	wines := []model.Wine{
+		wineWith("a", "P1", "R1", "V1", "France", "2019"),
+		wineWith("b", "P1", "R1", "V1", "France", "2021"),
+		wineWith("c", "P2", "R2", "V2", "Italy", "2020"),
+		// An empty value must never become a checkbox.
+		wineWith("d", "", "", "", "", ""),
+	}
+	byFacet := map[string]facetGroup{}
+	for _, g := range buildFacets(wines) {
+		byFacet[g.Facet] = g
+	}
+
+	for _, facet := range []string{"producer", "region", "varietal"} {
+		g := byFacet[facet]
+		if !g.Big {
+			t.Errorf("%s should be a big group", facet)
+		}
+		if g.Open {
+			t.Errorf("%s must ship COLLAPSED — an expanded 310-item list is the bug", facet)
+		}
+	}
+	for _, facet := range []string{"vintage", "country"} {
+		if g := byFacet[facet]; !g.Open {
+			t.Errorf("%s should ship expanded", facet)
+		}
+	}
+
+	vintage := byFacet["vintage"]
+	if !vintage.Grid {
+		t.Error("vintage should render as a grid")
+	}
+	// Newest first, and 2021 (count 1) ahead of 2019 (count 1) is chronology
+	// not ranking — the assertion that would fail if vintage were count-sorted.
+	var years []string
+	for _, v := range vintage.Values {
+		years = append(years, v.Value)
+	}
+	if want := []string{"2021", "2020", "2019"}; !reflect.DeepEqual(years, want) {
+		t.Errorf("vintages = %v, want %v (newest first)", years, want)
+	}
+
+	// The blank wine contributed nothing anywhere.
+	for facet, g := range byFacet {
+		for _, v := range g.Values {
+			if v.Value == "" {
+				t.Errorf("%s emitted an empty facet value", facet)
+			}
+		}
+	}
+}
+
+// TestBuildFacetsLabels covers the copy that has to state the FULL total, not
+// the twelve on screen — otherwise the control understates what it reaches.
+func TestBuildFacetsLabels(t *testing.T) {
+	var wines []model.Wine
+	for i := 0; i < 1500; i++ {
+		wines = append(wines, wineWith(fmt.Sprintf("w%d", i), fmt.Sprintf("P%04d", i), "R", "V", "France", "2021"))
+	}
+	g := buildFacets(wines)[0]
+	if got, want := g.Placeholder(), "Filter 1,500 producers…"; got != want {
+		t.Errorf("Placeholder() = %q, want %q", got, want)
+	}
+	if got, want := g.ExpandLabel(), "Show all 1,500 producers"; got != want {
+		t.Errorf("ExpandLabel() = %q, want %q", got, want)
+	}
+}
+
+// TestBuildFacetsIsDeterministic guards the ordering tiebreak directly. Go
+// randomises map iteration, so a ranking keyed only on count would shuffle
+// tied values between builds and break byte-identical output.
+func TestBuildFacetsIsDeterministic(t *testing.T) {
+	var wines []model.Wine
+	for i := 0; i < 40; i++ {
+		// Every producer has exactly one wine — all ties, worst case.
+		wines = append(wines, wineWith(fmt.Sprintf("w%d", i), fmt.Sprintf("P%02d", i), "R", "V", "France", "2021"))
+	}
+	first := buildFacets(wines)
+	for i := 0; i < 20; i++ {
+		if got := buildFacets(wines); !reflect.DeepEqual(got, first) {
+			t.Fatalf("buildFacets is not deterministic across runs (iteration %d)", i)
+		}
+	}
 }

@@ -16,7 +16,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gritautomation/finevines-website/internal/label"
 	"github.com/gritautomation/finevines-website/internal/model"
+	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
 
 // redirectsJSONName is the file redirects.Save writes at the repo root
@@ -160,9 +162,57 @@ func (w winePage) LDProps() []ldProp {
 // engine filters against the full catalog-index, so every possible facet
 // value must be offered on every page.
 type facetGroup struct {
-	Facet  string
-	Label  string
-	Values []string
+	Facet string
+	Label string
+	// Values is the SEED only — the top facetSeedSize values by wine count for
+	// a Big group, or every value for a small one. It is not the whole set.
+	// portfolio.js rebuilds each group from the catalog-index once it loads,
+	// which is where the remaining ~493 values come from. Seeding rather than
+	// emitting all 577 values on all ~56 paginated pages is what takes the
+	// portfolio page from ~147KB to under 100KB; the values themselves lose no
+	// crawlable surface, since every producer/region/varietal already appears
+	// as body text on its own /wines/<slug>/ page.
+	Values []facetValue
+	// Total is the number of DISTINCT values across the whole catalog, not the
+	// number seeded. It drives the group header's count and the "Show all N
+	// producers" expander label before the JS has loaded.
+	Total int
+	// Big marks a group large enough to need a filter-within-group search box
+	// and a top-N expander (producer/region/varietal).
+	Big bool
+	// Grid renders the group as a compact chip grid rather than a checkbox
+	// list — vintage, where the values are all four characters wide.
+	Grid bool
+	// Open is the <details open> state on first paint. The big groups start
+	// collapsed: an expanded 310-item producer list is the thing this whole
+	// change exists to remove.
+	Open bool
+}
+
+// Placeholder is the filter-within-group input's placeholder, e.g.
+// "Filter 310 producers…". It states the FULL total, not the seeded 12, so the
+// control tells the visitor what searching it will actually reach.
+func (g facetGroup) Placeholder() string {
+	return fmt.Sprintf("Filter %s %ss…", comma(g.Total), strings.ToLower(g.Label))
+}
+
+// ExpandLabel is the "Show all 310 producers" expander text for the no-JS /
+// pre-hydration state. portfolio.js rewrites it with the count AVAILABLE under
+// the current filters as soon as it loads.
+func (g facetGroup) ExpandLabel() string {
+	return fmt.Sprintf("Show all %s %ss", comma(g.Total), strings.ToLower(g.Label))
+}
+
+// HasMore reports whether the catalog holds more values than this group seeded,
+// i.e. whether the expander is meaningful at all.
+func (g facetGroup) HasMore() bool { return g.Total > len(g.Values) }
+
+// facetValue is one selectable value plus how many wines carry it across the
+// whole catalog. The count drives the seed's ranking; portfolio.js overwrites
+// the rendered number with a live, filter-aware count as soon as it loads.
+type facetValue struct {
+	Value string
+	Count int
 }
 
 // newsPage carries the full news list (already newest-first, from loadSite)
@@ -262,6 +312,9 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		return err
 	}
 	if err := copyTree(assetsDir, filepath.Join(distDir, "assets")); err != nil {
+		return err
+	}
+	if err := ensureLabels(distDir, s.Wines); err != nil {
 		return err
 	}
 	if err := copyRedirectsJSON(distDir); err != nil {
@@ -476,6 +529,65 @@ func comma(n int) string {
 	return b.String()
 }
 
+// ensureLabels writes a generated château-style label SVG into dist for every
+// wine whose ImagePath has no file behind it, and returns once dist can render
+// the catalog with no broken image.
+//
+// This makes the ~2,200 generated labels a genuine BUILD ARTIFACT rather than
+// committed source. Before this, only `enrich` ever called label.Generate
+// (internal/enrich/images.go), so a fresh clone without the SVGs checked in
+// built a site full of broken images — which is why they were checked in at
+// all. Now they can be gitignored: build reproduces any that are absent.
+//
+// It writes into distDir, never back into assetsDir. A build must not mutate
+// its own source tree — that would make the second of two identical builds
+// take a different path through this function than the first.
+//
+// Only genuinely missing files are generated, so a real bottle photograph (the
+// 478 .jpg entries matched from the old site) is never overwritten by a
+// generated label. label.Generate is deterministic — the same wine always
+// yields byte-identical SVG, with no clock and no randomness — so this
+// preserves TestBuildIsDeterministic.
+func ensureLabels(distDir string, wines []model.Wine) error {
+	for _, w := range wines {
+		rel := strings.TrimPrefix(w.ImagePath, "/")
+		if rel == "" {
+			continue
+		}
+		dst := filepath.Join(distDir, filepath.FromSlash(rel))
+		if _, err := os.Stat(dst); err == nil {
+			continue // already present (copied from assets/), leave it alone
+		} else if !os.IsNotExist(err) {
+			return err
+		}
+		// Only ever synthesise an SVG label. A missing .jpg means a photo we
+		// expected is genuinely gone, and silently writing a vector label in
+		// its place would hide that; the wine's imagePath needs correcting in
+		// the data instead.
+		if !strings.EqualFold(filepath.Ext(dst), ".svg") {
+			continue
+		}
+		if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+			return err
+		}
+		svg := label.Generate(salesforce.WineRaw{
+			SKU:         w.SKU,
+			Producer:    w.Producer,
+			Name:        w.Name,
+			Vintage:     w.Vintage,
+			Varietal:    w.Varietal,
+			Region:      w.Region,
+			Country:     w.Country,
+			Appellation: w.Appellation,
+			Style:       w.Style,
+		})
+		if err := os.WriteFile(dst, svg, 0o644); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // buildFacets computes, for each portfolio facet, the distinct values
 // present across wines — sorted for determinism (build's output must be
 // byte-identical for the same input; iterating a map without sorting would
@@ -488,33 +600,72 @@ func buildFacets(wines []model.Wine) []facetGroup {
 	// it is populated on ~29% of wines and is a natural top-level browse axis.
 	// Empty values are skipped below, so the ~61% of wines with no producer
 	// simply don't contribute a producer value rather than a blank checkbox.
+	//
+	// big  → gets a filter box and a "show all" expander, and is seeded with
+	//        only the top facetSeedSize values.
+	// grid → renders as a chip grid instead of a checkbox list.
+	// open → starts expanded. Only the two small groups do; the big ones are
+	//        collapsed, which is the point of the change.
 	specs := []struct {
-		facet, label string
-		get          func(model.Wine) string
+		facet, label    string
+		big, grid, open bool
+		get             func(model.Wine) string
 	}{
-		{"producer", "Producer", func(w model.Wine) string { return w.Producer }},
-		{"region", "Region", func(w model.Wine) string { return w.Region }},
-		{"varietal", "Varietal", func(w model.Wine) string { return w.Varietal }},
-		{"country", "Country", func(w model.Wine) string { return w.Country }},
-		{"vintage", "Vintage", func(w model.Wine) string { return w.Vintage }},
+		{facet: "producer", label: "Producer", big: true, get: func(w model.Wine) string { return w.Producer }},
+		{facet: "region", label: "Region", big: true, get: func(w model.Wine) string { return w.Region }},
+		{facet: "varietal", label: "Varietal", big: true, get: func(w model.Wine) string { return w.Varietal }},
+		{facet: "vintage", label: "Vintage", grid: true, open: true, get: func(w model.Wine) string { return w.Vintage }},
+		{facet: "country", label: "Country", open: true, get: func(w model.Wine) string { return w.Country }},
 	}
 	groups := make([]facetGroup, len(specs))
 	for i, sp := range specs {
-		seen := make(map[string]bool)
-		var values []string
+		counts := make(map[string]int)
 		for _, w := range wines {
-			v := sp.get(w)
-			if v == "" || seen[v] {
-				continue
+			if v := sp.get(w); v != "" {
+				counts[v]++
 			}
-			seen[v] = true
-			values = append(values, v)
 		}
-		sort.Strings(values)
-		groups[i] = facetGroup{Facet: sp.facet, Label: sp.label, Values: values}
+		values := make([]facetValue, 0, len(counts))
+		for v, n := range counts {
+			values = append(values, facetValue{Value: v, Count: n})
+		}
+
+		// Rank by count desc, then value asc. The second key is not cosmetic:
+		// Go randomises map iteration and sort.Slice is not stable, so without
+		// a TOTAL order two builds of identical data would emit different
+		// orderings and break TestBuildIsDeterministic.
+		sort.Slice(values, func(a, b int) bool {
+			if values[a].Count != values[b].Count {
+				return values[a].Count > values[b].Count
+			}
+			return values[a].Value < values[b].Value
+		})
+		// Vintage reads as a chronology, not a popularity list — newest first.
+		if sp.grid {
+			sort.Slice(values, func(a, b int) bool { return values[a].Value > values[b].Value })
+		}
+
+		total := len(values)
+		if sp.big && total > facetSeedSize {
+			values = values[:facetSeedSize]
+		}
+		groups[i] = facetGroup{
+			Facet:  sp.facet,
+			Label:  sp.label,
+			Values: values,
+			Total:  total,
+			Big:    sp.big,
+			Grid:   sp.grid,
+			Open:   sp.open,
+		}
 	}
 	return groups
 }
+
+// facetSeedSize is how many values a Big facet group renders server-side. It
+// must match the TOP_N default in assets/js/portfolio.js, or the list would
+// visibly re-length the moment the catalog-index lands.
+const facetSeedSize = 12
 
 // portfolioPageSize is how many wine cards each portfolio page renders, both
 // server-side (one document per page) and client-side (the JS engine's page

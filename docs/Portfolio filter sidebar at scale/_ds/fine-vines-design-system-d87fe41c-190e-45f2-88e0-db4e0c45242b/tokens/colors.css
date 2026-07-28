@@ -1,0 +1,88 @@
+/* ── Fine Vines · Color tokens ─────────────────────────────────────────
+   A warm, old-world wine palette anchored on the logo's vine-magenta and
+   vineyard-olive. Deep bordeaux carries large brand fields; brass is the
+   metallic accent; parchment & cork are the warm neutral ground; near-black
+   ink is text. Cool grays are avoided on purpose — every neutral is warm.
+   ───────────────────────────────────────────────────────────────────── */
+:root {
+  /* — Brand: Vine magenta (logo "FINE") — */
+  --magenta-900: #4d0530;
+  --magenta-700: #6d0945;
+  --magenta-600: #83064f;   /* logo color, sampled */
+  --magenta-500: #9c2a68;
+  --magenta-300: #c878a1;
+
+  /* — Brand: Bordeaux (deep wine, primary field) — */
+  --bordeaux-950: #2a0a13;
+  --bordeaux-900: #3d0e1c;
+  --bordeaux-800: #531427;
+  --bordeaux-700: #6b1630;  /* primary */
+  --bordeaux-600: #862240;
+  --bordeaux-300: #c98a9b;
+
+  /* — Brand: Vineyard (logo "VINES" olive → deeper leaf green) — */
+  --olive-600: #909020;     /* logo color, sampled */
+  --olive-500: #a3a432;
+  --olive-300: #c9cb7e;
+  --vineyard-800: #2f3d22;
+  --vineyard-700: #46582f;
+  --vineyard-600: #5c7140;
+
+  /* — Brass / gold (metallic accent) — */
+  --brass-700: #8a6a2f;
+  --brass-600: #a9853d;
+  --brass-500: #c2a14e;     /* primary brass */
+  --brass-300: #ddc489;
+  --brass-100: #f1e6c9;
+
+  /* — Warm neutrals: parchment, cork, ink — */
+  --parchment-50: #faf6ee;  /* page ground */
+  --parchment-100: #f4ece0;
+  --parchment-200: #ece0cd;
+  --cork-300: #d8c6a8;
+  --cork-400: #c4ad88;
+  --cork-500: #a98f68;
+  --cork-600: #87714f;
+  --ink-900: #1c1410;       /* near-black, warm */
+  --ink-800: #2c211a;
+  --ink-700: #43352a;
+  --ink-500: #6e5d4e;
+  --ink-300: #9c8c7c;
+  --white: #ffffff;
+
+  /* — Semantic / status — */
+  --success: #4a6a2f;
+  --warning: #b07a1f;
+  --danger:  #9a2b2b;
+  --info:    #4a5a72;
+
+  /* ── Semantic aliases — use these in product UI ── */
+  --color-primary: var(--bordeaux-700);
+  --color-primary-strong: var(--bordeaux-900);
+  --color-primary-hover: var(--bordeaux-800);
+  --color-accent: var(--magenta-600);
+  --color-accent-vine: var(--olive-600);
+  --color-metal: var(--brass-500);
+
+  --bg-page: var(--parchment-50);
+  --bg-raised: var(--white);
+  --bg-sunken: var(--parchment-100);
+  --bg-inverse: var(--bordeaux-900);
+  --surface-card: var(--white);
+  --surface-card-alt: var(--parchment-100);
+
+  --text-strong: var(--ink-900);
+  --text-body: var(--ink-800);
+  --text-muted: var(--ink-500);
+  --text-faint: var(--ink-300);
+  --text-on-dark: var(--parchment-50);
+  --text-on-dark-muted: #d8c2a6;
+  --text-link: var(--bordeaux-700);
+
+  --border-hairline: #e4d8c6;
+  --border-default: #d8c6a8;
+  --border-strong: var(--cork-500);
+  --border-on-dark: rgba(241,230,201,0.22);
+
+  --focus-ring: var(--brass-500);
+}

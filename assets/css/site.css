@@ -69,6 +69,20 @@
   --ink-strong: var(--ink-900);
   --ink-soft: var(--ink-500);
 
+  /* Semantic aliases for the portfolio filter rail. The rail was designed
+     against the Fine Vines design-system tokens (docs/Portfolio filter sidebar
+     at scale/), which name text and border ROLES rather than raw scale steps.
+     Mapping them once here keeps that vocabulary without a second palette. */
+  --cork-300: #d8c6a8;
+  --cork-500: #a98f68;
+  --text-strong: var(--ink-900);
+  --text-body: var(--ink-700);
+  --text-muted: var(--ink-500);
+  --text-faint: var(--ink-300);
+  --border-hairline: var(--parchment-200);
+  --border-default: var(--cork-300);
+  --border-strong: var(--cork-500);
+
   --serif-display: 'Cormorant Garamond', 'Hoefler Text', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
   --serif-text: 'EB Garamond', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
   --sans: 'Archivo', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -243,13 +257,98 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .facets h3 { font-size: 12.5px; font-family: var(--sans); font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--gold-dark); margin: 0 0 10px; }
 .facets input[type=search] { width: 100%; font-family: var(--sans); font-size: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--parchment-50); color: var(--ink-800); }
 .facets input[type=search]:focus { outline: none; border-color: var(--gold); }
-.facet-group { margin: 0 0 6px; border-top: 1px solid var(--line); padding-top: 12px; margin-top: 16px; }
-.facet-group summary { font-family: var(--sans); font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-700); cursor: pointer; list-style: none; padding: 2px 0 8px; }
+/* ---- Portfolio filter rail --------------------------------------------
+   Collapsible groups, each showing its twelve highest-count values with a
+   filter box to reach the rest. The previous rail printed all 577 values flat
+   and expanded. Value rows are re-rendered by portfolio.js on every query, so
+   every selector here must work against freshly-created DOM — nothing may
+   depend on load-time state. */
+
+/* Selected-value summary. Hidden until portfolio.js puts a chip in it. */
+.facet-chips { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 12px; }
+.facet-chips[hidden] { display: none; }
+.facet-chips-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 9px; }
+.facet-chips-title { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-dark); }
+.facet-clear { all: unset; cursor: pointer; font-family: var(--serif-text); font-size: 13px; color: var(--text-muted); }
+.facet-clear:hover { color: var(--wine); box-shadow: inset 0 -1px 0 var(--gold); }
+.facet-clear:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.facet-chips-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.facet-chip { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; background: var(--wine); color: var(--parchment-50); border: none; border-radius: 2px; padding: 5px 8px; font-family: var(--sans); font-size: 11.5px; letter-spacing: .02em; }
+.facet-chip:hover { background: var(--bordeaux-800); }
+.facet-chip:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.facet-chip-x { color: var(--brass-300); font-size: 11px; }
+
+/* Group */
+.facet-group { border-top: 1px solid var(--line); margin: 0; padding: 13px 0; }
+.facet-group summary { display: flex; align-items: center; gap: 7px; cursor: pointer; list-style: none; padding: 2px 0; font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--text-strong); }
 .facet-group summary::-webkit-details-marker { display: none; }
-.facet-group summary::after { content: "+"; float: right; color: var(--gold-dark); font-weight: 400; }
-.facet-group[open] summary::after { content: "\2212"; }
-.facet-group label { display: flex; align-items: center; gap: 8px; font-family: var(--sans); font-size: 13.5px; color: var(--ink-700); padding: 4px 0; cursor: pointer; }
-.facet-group input[type=checkbox] { accent-color: var(--wine); }
+.facet-group summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.facet-group.has-selection summary .facet-name { color: var(--wine); }
+/* Catalog-wide value count; portfolio.js rewrites it to "still available". */
+.facet-total { font-size: 11px; font-weight: 400; letter-spacing: 0; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+/* Selection badge — how a COLLAPSED group announces that it is filtering. */
+.facet-selected { margin-left: auto; font-size: 10px; letter-spacing: .1em; font-weight: 700; color: var(--parchment-50); background: var(--gold-dark); border-radius: 2px; padding: 2px 5px; }
+.facet-selected[hidden] { display: none; }
+.facet-group summary::after { content: "\25be"; margin-left: auto; color: var(--gold-dark); font-size: 11px; transition: transform 120ms ease; }
+/* With a badge present the caret sits beside it, not pushed to the far edge. */
+.facet-selected:not([hidden]) + .facet-name ~ ::after { margin-left: 0; }
+.facet-group summary:has(.facet-selected:not([hidden]))::after { margin-left: 0; }
+.facet-group[open] summary::after { transform: rotate(180deg); }
+.facet-body { padding-top: 11px; }
+
+/* Filter-within-group */
+.facet-filter { width: 100%; height: 38px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--border-default); border-radius: 2px; background: #fff; font-family: var(--sans); font-size: 14px; color: var(--text-body); }
+.facet-filter:focus { outline: none; border-color: var(--gold); }
+.facet-meta { display: flex; align-items: center; justify-content: space-between; margin: 7px 2px; }
+.facet-match { font-family: var(--serif-text); font-size: 11.5px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.facet-sort { all: unset; cursor: pointer; font-family: var(--sans); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--gold-dark); }
+.facet-sort:hover { color: var(--wine); }
+.facet-sort:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Value rows */
+.facet-values { display: flex; flex-direction: column; gap: 1px; }
+/* Only an expanded or searched list scrolls; at rest twelve rows just sit there. */
+.facet-values.is-scrolling { max-height: 296px; overflow-y: auto; padding-right: 4px; }
+.facet-values.is-scrolling::-webkit-scrollbar { width: 8px; }
+.facet-values.is-scrolling::-webkit-scrollbar-thumb { background: var(--cork-300); border-radius: 4px; }
+.facet-values.is-scrolling::-webkit-scrollbar-track { background: transparent; }
+.facet-row { position: relative; display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 8px; border-radius: 2px; font-family: var(--serif-text); font-size: 14px; line-height: 1.25; color: var(--text-body); }
+.facet-row:hover { background: var(--parchment-100); }
+.facet-row.is-checked { background: rgba(194, 161, 78, .14); box-shadow: inset 2px 0 0 var(--gold); color: var(--text-strong); font-weight: 600; }
+.facet-row.is-checked:hover { background: rgba(194, 161, 78, .2); }
+/* A selected value whose count fell to zero: dimmed, but fully interactive —
+   it is the only way to undo that selection from within the rail. */
+.facet-row.is-empty { opacity: .5; }
+/* The real checkbox stays the focusable, clickable, screen-reader-announced
+   control; .facet-box is only its painted stand-in. */
+.facet-row input[type=checkbox] { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.facet-box { width: 15px; height: 15px; flex: none; border-radius: 2px; border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1; color: var(--parchment-50); transition: all 120ms ease; }
+.facet-row.is-checked .facet-box { border-color: var(--wine); background: var(--wine); }
+.facet-row.is-checked .facet-box::after { content: "\2713"; }
+.facet-row input[type=checkbox]:focus-visible ~ .facet-box { outline: 2px solid var(--gold); outline-offset: 2px; }
+.facet-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.facet-count { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-faint); }
+.facet-row.is-checked .facet-count { color: var(--wine); }
+
+/* Vintage reads as a year grid — every value is four characters wide, so one
+   per line would waste the whole rail. */
+.facet-values.is-grid { flex-direction: row; flex-wrap: wrap; gap: 5px; }
+.facet-values.is-grid .facet-row { width: 68px; box-sizing: border-box; justify-content: center; gap: 6px; padding: 4px 7px; border: 1px solid var(--border-default); font-family: var(--sans); font-size: 12px; }
+.facet-values.is-grid .facet-row.is-checked { background: var(--wine); border-color: var(--wine); color: var(--parchment-50); box-shadow: none; }
+.facet-values.is-grid .facet-row.is-checked .facet-count { color: var(--brass-300); }
+.facet-values.is-grid .facet-box { display: none; }
+.facet-values.is-grid .facet-label { flex: none; }
+
+/* Expander & empty state */
+.facet-expander { all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer; margin-top: 9px; padding: 6px 8px; border-top: 1px solid var(--border-hairline); font-family: var(--serif-text); font-size: 13px; color: var(--wine); }
+.facet-expander:hover { background: var(--parchment-100); }
+.facet-expander:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.facet-expander[hidden] { display: none; }
+.facet-empty { font-family: var(--serif-text); font-size: 13px; color: var(--text-muted); margin: 6px 2px 2px; }
+.facet-empty[hidden] { display: none; }
+
+/* Drawer footer. Desktop never shows it; the ≤1024px block reveals it. */
+.facets-drawer-foot { display: none; }
 
 /* Cards view (default): a responsive grid. `grid-auto-rows: 1fr` sizes every
    implicit row track equally, so cards in the same row share the tallest
@@ -645,6 +744,31 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   }
   .facets-close:hover { color: var(--wine); border-color: var(--brass-300); }
   .facets-close:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
+
+  /* Sticky "Show N wines" footer. Filtering is already live as you tap, so
+     this commits nothing — it exists so you can see the size of what you have
+     built before dismissing the panel, which is the whole legibility problem
+     with filtering on a phone. It sticks to the bottom of the scrolling drawer
+     rather than sitting at the end of a long list of groups. */
+  .facets-drawer-foot {
+    display: block;
+    position: sticky;
+    bottom: 0;
+    margin: 14px -20px -22px;
+    padding: 12px 20px;
+    background: #fff;
+    border-top: 1px solid var(--line);
+  }
+  .facets-apply {
+    width: 100%;
+    padding: 12px;
+    font-family: var(--sans); font-size: 11px; font-weight: 700;
+    letter-spacing: .16em; text-transform: uppercase;
+    color: var(--parchment-50); background: var(--wine);
+    border: none; border-radius: 8px; cursor: pointer;
+  }
+  .facets-apply:hover { background: var(--bordeaux-800); }
+  .facets-apply:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
   /* Body scroll lock while the drawer is open. */
   body.drawer-open { overflow: hidden; }

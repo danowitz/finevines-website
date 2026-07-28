@@ -1,0 +1,40 @@
+/* ── Fine Vines · Effects: radii, borders, shadows, motion ─────────────
+   Restrained, editorial. Small radii (this is print-inspired, not app-y).
+   Shadows are warm-tinted and soft — never cool gray. A hairline cork
+   border is the default object boundary; brass underlines mark links.
+   ───────────────────────────────────────────────────────────────────── */
+:root {
+  /* radii — small & classic */
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /* border widths */
+  --border-w: 1px;
+  --border-w-thick: 2px;
+
+  /* warm-tinted shadows (brown, not gray) */
+  --shadow-xs: 0 1px 2px rgba(44, 25, 16, 0.06);
+  --shadow-sm: 0 2px 6px rgba(44, 25, 16, 0.08);
+  --shadow-md: 0 6px 18px rgba(44, 25, 16, 0.10);
+  --shadow-lg: 0 18px 44px rgba(44, 25, 16, 0.16);
+  --shadow-inset-hairline: inset 0 0 0 1px var(--border-hairline);
+
+  /* focus */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  /* motion — measured, no bounce */
+  --ease-standard: cubic-bezier(0.32, 0.08, 0.24, 1); /* @kind other */
+  --ease-out: cubic-bezier(0.16, 0.84, 0.34, 1); /* @kind other */
+  --dur-fast: 120ms;  /* @kind other */
+  --dur-base: 220ms;  /* @kind other */
+  --dur-slow: 420ms;  /* @kind other */
+
+  /* warm image treatment overlay (vineyard-at-sunset feel) */
+  --img-warm-overlay: linear-gradient(180deg, rgba(42,10,19,0) 35%, rgba(42,10,19,0.72) 100%); /* @kind other */
+  --img-tint: linear-gradient(0deg, rgba(107,22,48,0.12), rgba(194,161,78,0.10));
+}
