@@ -38,6 +38,10 @@ func main() {
 	keep := flag.Bool("keep-crop", false, "keep the cropped label band for inspection")
 	asJSON := flag.Bool("json", false, "emit a machine-readable verdict on stdout")
 	indexPath := flag.String("index", "data/token-index.json", "token index from tools/tokenindex")
+	// -label supplies label text read elsewhere (a vision model) and skips the
+	// local OCR. The identity rules stay here either way, so both paths are
+	// judged by one tested implementation rather than two.
+	givenLabel := flag.String("label", "", "label text already read; skips local OCR")
 	flag.Parse()
 	if *imgPath == "" || *name == "" {
 		fmt.Fprintln(os.Stderr, "need -img and -name")
@@ -94,6 +98,10 @@ func main() {
 		scales = append(scales, 3)
 	}
 	var texts []string
+	if *givenLabel != "" {
+		texts = append(texts, *givenLabel)
+		scales = nil
+	}
 	for _, scale := range scales {
 		crop := image.NewRGBA(image.Rect(0, 0, band.Dx()*scale, band.Dy()*scale))
 		for y := 0; y < crop.Bounds().Dy(); y++ {

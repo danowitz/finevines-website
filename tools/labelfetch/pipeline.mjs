@@ -224,21 +224,24 @@ async function bestImageOn(page, url) {
   return out;
 }
 
-// askVision is the SECOND CHANCE for a candidate the local verifier refused.
+// readLabel uses a vision model as a BETTER OCR — not as a judge.
 //
-// A fallback, not a replacement, because the two fail differently and the
-// local check is free. Measured on the wines a run missed, vision recovered 5
-// of 7 — images that genuinely were the right wine but had been rejected
-// either because the background was a gradient rather than a sweep, or because
-// OCR could not read a label the model reads easily ("Domaine Jean-Louis Chave
-// Saint Joseph", "Vinha Pan").
+// It was a judge first: the wine's name went into the prompt and the model
+// answered whether the image matched. That was wrong, and measurably so. Of
+// 451 images it accepted, 83 came back with label_text EXACTLY equal to the
+// name it had been given — the model repeating the question instead of reading
+// the bottle. Local OCR echoed the query 0 times out of 71, because it cannot:
+// it never sees the name.
 //
-// gpt-4.1-nano by measurement, not reputation: on a balanced set of 13 correct
-// and 13 deliberately mislabelled pairs it scored 96% — the best of seven
-// models tried AND the cheapest, at $0.0002 an image. Every model tested got
-// the safety-critical half perfect (zero wrong wines accepted), so the choice
-// came down to how many CORRECT wines each wrongly refused.
-async function askVision(file, name) {
+// So the name is no longer in the prompt. The model is asked only what is
+// printed on the label, and the identity decision goes through the same
+// match() the local path uses. That removes the echo channel entirely, keeps
+// one tested set of identity rules instead of two, and makes every acceptance
+// auditable against text that demonstrably came from the image.
+//
+// gpt-4.1-nano by measurement: best of seven models benchmarked, and cheapest,
+// at $0.0002 an image.
+async function readLabel(file) {
   const b64 = (await readFile(file)).toString('base64');
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -252,13 +255,13 @@ async function askVision(file, name) {
             {
               type: 'text',
               text:
-                `A wholesale wine catalog needs a photograph of:\n\n  ${name}\n\n` +
-                `Answer strictly as JSON: {"single_bottle":true|false,"label_text":"<text on label>","is_this_wine":true|false}\n` +
-                `"is_this_wine" is true ONLY if this is that producer's wine. A different producer from ` +
-                `the same region or vineyard is NOT a match. Unreadable label means false.`,
+                'Transcribe the text printed on this wine bottle's label. ' +
+                'Answer strictly as JSON: {"single_bottle":true|false,"label_text":"<every word you can read>"}. ' +
+                'Transcribe only what is actually legible in the image. If a line is too small or blurred to read, ' +
+                'leave it out rather than guessing. If there is no bottle, set single_bottle false.',
             },
-            // detail:low costs a fraction of high and is ample — the question
-            // is whose name is on the label, not how the foil is embossed.
+            // detail:low costs a fraction of high and is ample for reading a
+            // label's largest lines, which are the identifying ones.
             { type: 'image_url', image_url: { url: 'data:image/png;base64,' + b64, detail: 'low' } },
           ],
         },
@@ -270,53 +273,22 @@ async function askVision(file, name) {
   const j = await res.json();
   try {
     const v = JSON.parse((j.choices?.[0]?.message?.content || '').replace(/^```(?:json)?|```$/gm, '').trim());
-    return v && v.is_this_wine && v.single_bottle ? v : null;
+    return v && v.single_bottle && v.label_text ? String(v.label_text) : null;
   } catch {
     return null;
   }
 }
 
-// reviewFlags lists the reasons a staged image might be wrong, so a run of two
-// thousand produces a short list to check rather than a pile to trust.
-//
-// None of these is a rejection — the image already passed verification. They
-// are the differences between "verified" and "certain", and they are recorded
-// because at this scale nobody will re-examine everything, so the doubts have
-// to be written down at the moment they are visible.
-function reviewFlags({ wine, name, label, verifiedBy, localReason, w, h, page }) {
-  const flags = [];
-
-  // The local check refused this and only a model overruled it. That recovered
-  // 11 correct images on the sample, but it is the weaker of the two paths and
-  // worth a human glance.
-  if (verifiedBy) flags.push(`vision-only (local said: ${localReason || 'rejected'})`);
-
-  const lab = normalize(label || '');
-  const want = tokens(name);
-  const missing = want.filter((x) => !lab.includes(x.slice(0, Math.max(4, x.length - 2))));
-  // The producer's own words are the identity. Missing several means the match
-  // rested on the appellation, which every neighbouring grower shares.
-  if (want.length && missing.length > want.length / 2) {
-    flags.push(`label missing most of the name (${missing.join(', ')})`);
+// verifyText applies the SAME identity rules to text the vision model read,
+// via the same binary. Returns the label text if it names the wine, else null.
+// One implementation of "is this the right wine" for both paths.
+async function verifyText(file, name, labelText) {
+  try {
+    const { stdout } = await run(VERIFIER, ['-json', '-img', file, '-name', name, '-label', labelText]);
+    return JSON.parse(stdout).accept ? labelText : null;
+  } catch (e) {
+    return null;
   }
-
-  // A different vintage of the same wine is usually the same artwork, so it is
-  // accepted — but the catalog will be showing a year the bottle does not.
-  const wantY = String(wine.vintage || '').match(/(19|20)\d\d/)?.[0];
-  const gotY = (label || '').match(/(19|20)\d\d/)?.[0];
-  if (wantY && gotY && wantY !== gotY) flags.push(`vintage on label is ${gotY}, catalog says ${wantY}`);
-
-  // Below this the label is unreadable on a detail page, and the normalised
-  // 600x900 canvas will be upscaling.
-  if (h && h < 500) flags.push(`low resolution (${w}x${h})`);
-
-  // NOT flagged: coming from a retailer rather than the producer's own site.
-  // It fired on 5 of 6 images in a trial, because almost every source is a
-  // retailer — and a flag that fires on everything is the same as no flag. A
-  // retailer's product shot is normally correct; the doubts worth a human's
-  // time are the four above, which are about THIS image rather than its host.
-
-  return flags;
 }
 
 // verify shells out to the Go binary: single-bottle shape check, then OCR of
@@ -427,17 +399,19 @@ for (const w of wines) {
         accepted++;
         break;
       }
-      // Second chance before writing this candidate off.
+      // Second chance: re-read the label with a better OCR, then apply the
+      // SAME identity rules. Vision supplies evidence; it does not decide.
       if (USE_VISION && v.stage !== 'decode') {
         visionCalls++;
-        const vv = await askVision(dest, name);
+        const text = await readLabel(dest);
+        const vv = text ? await verifyText(dest, name, text) : null;
         if (vv) {
           rec.ok = true;
           rec.file = dest;
           rec.page = src;
           rec.image = got.src;
           rec.size = `${got.w}x${got.h}`;
-          rec.label = vv.label_text;
+          rec.label = vv;
           rec.verifiedBy = VISION_MODEL;
           rec.localReason = v.reason;
           rec.review = reviewFlags({

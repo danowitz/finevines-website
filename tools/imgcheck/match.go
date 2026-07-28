@@ -220,17 +220,51 @@ func isYear(w string) bool {
 // Deduplication matters: without it "Château Canon Pecresse Canon-Fronsac"
 // asked for "canon" twice, and a single "CANON" on a Château Canon label
 // satisfied both, counting one word as two independent matches.
+// bookkeeping words that appear in catalog names but never on a bottle:
+// company forms, internal codes and merchandising labels. Requiring them
+// guarantees a rejection no image can satisfy. Measured against the run's
+// recorded misses, these accounted for a steady share of them.
+var catalogNoise = map[string]bool{
+	"sarl": true, "sas": true, "sa": true, "gmbh": true, "srl": true,
+	"spa": true, "llc": true, "inc": true, "ltd": true, "bv": true,
+	"proprietary": true, "brand": true, "hold": true, "gm": true,
+	"placeholder": true, "quickbooks": true, "syncing": true,
+}
+
 func words(s string) []string {
 	seen := map[string]bool{}
 	var out []string
 	for _, w := range strings.Fields(normalize(s)) {
-		if len(w) < 2 || isYear(w) || seen[w] {
+		if len(w) < 2 || isYear(w) || seen[w] || catalogNoise[w] {
+			continue
+		}
+		// An internal code — a letter run welded to digits, like "bcl11" — is
+		// never printed on a label.
+		if hasDigit(w) && hasLetter(w) && len(w) >= 4 {
 			continue
 		}
 		seen[w] = true
 		out = append(out, w)
 	}
 	return out
+}
+
+func hasDigit(s string) bool {
+	for _, c := range s {
+		if c >= '0' && c <= '9' {
+			return true
+		}
+	}
+	return false
+}
+
+func hasLetter(s string) bool {
+	for _, c := range s {
+		if c >= 'a' && c <= 'z' {
+			return true
+		}
+	}
+	return false
 }
 
 func editDistance(a, b string) int {
