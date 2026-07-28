@@ -36,6 +36,7 @@ import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { openBrowser } from '../../tests/helpers/browser.js';
 import { blockedBy } from './sources.mjs';
+import { tokens, normalize } from './match.mjs';
 
 const run = promisify(execFile);
 
@@ -275,6 +276,49 @@ async function askVision(file, name) {
   }
 }
 
+// reviewFlags lists the reasons a staged image might be wrong, so a run of two
+// thousand produces a short list to check rather than a pile to trust.
+//
+// None of these is a rejection — the image already passed verification. They
+// are the differences between "verified" and "certain", and they are recorded
+// because at this scale nobody will re-examine everything, so the doubts have
+// to be written down at the moment they are visible.
+function reviewFlags({ wine, name, label, verifiedBy, localReason, w, h, page }) {
+  const flags = [];
+
+  // The local check refused this and only a model overruled it. That recovered
+  // 11 correct images on the sample, but it is the weaker of the two paths and
+  // worth a human glance.
+  if (verifiedBy) flags.push(`vision-only (local said: ${localReason || 'rejected'})`);
+
+  const lab = normalize(label || '');
+  const want = tokens(name);
+  const missing = want.filter((x) => !lab.includes(x.slice(0, Math.max(4, x.length - 2))));
+  // The producer's own words are the identity. Missing several means the match
+  // rested on the appellation, which every neighbouring grower shares.
+  if (want.length && missing.length > want.length / 2) {
+    flags.push(`label missing most of the name (${missing.join(', ')})`);
+  }
+
+  // A different vintage of the same wine is usually the same artwork, so it is
+  // accepted — but the catalog will be showing a year the bottle does not.
+  const wantY = String(wine.vintage || '').match(/(19|20)\d\d/)?.[0];
+  const gotY = (label || '').match(/(19|20)\d\d/)?.[0];
+  if (wantY && gotY && wantY !== gotY) flags.push(`vintage on label is ${gotY}, catalog says ${wantY}`);
+
+  // Below this the label is unreadable on a detail page, and the normalised
+  // 600x900 canvas will be upscaling.
+  if (h && h < 500) flags.push(`low resolution (${w}x${h})`);
+
+  // NOT flagged: coming from a retailer rather than the producer's own site.
+  // It fired on 5 of 6 images in a trial, because almost every source is a
+  // retailer — and a flag that fires on everything is the same as no flag. A
+  // retailer's product shot is normally correct; the doubts worth a human's
+  // time are the four above, which are about THIS image rather than its host.
+
+  return flags;
+}
+
 // verify shells out to the Go binary: single-bottle shape check, then OCR of
 // the label band against the catalog name.
 async function verify(file, name) {
@@ -379,6 +423,7 @@ for (const w of wines) {
         rec.size = `${got.w}x${got.h}`;
         rec.label = v.label;
         rec.matched = v.found;
+        rec.review = reviewFlags({ wine: w, name, label: v.label, w: got.w, h: got.h, page: src });
         accepted++;
         break;
       }
@@ -395,6 +440,10 @@ for (const w of wines) {
           rec.label = vv.label_text;
           rec.verifiedBy = VISION_MODEL;
           rec.localReason = v.reason;
+          rec.review = reviewFlags({
+            wine: w, name, label: vv.label_text, verifiedBy: VISION_MODEL,
+            localReason: v.reason, w: got.w, h: got.h, page: src,
+          });
           accepted++;
           visionRecovered++;
           break;
@@ -417,7 +466,7 @@ for (const w of wines) {
   }
 
   manifest[w.slug] = rec;
-  const mark = rec.ok ? 'OK  ' : 'MISS';
+  const mark = rec.ok ? (rec.review?.length ? 'OK? ' : 'OK  ') : 'MISS';
   console.log(`${mark} ${name.slice(0, 56).padEnd(56)} ${rec.ok ? new URL(rec.page).host : (rec.tried[0]?.why || rec.error || 'no candidates')}`);
   if (VERBOSE && rec.ok) console.log(`       label: ${rec.label?.slice(0, 90)}`);
   if (VERBOSE && !rec.ok) rec.tried.forEach((t) => console.log(`       tried ${new URL(t.src).host}: ${t.why}`));
@@ -438,4 +487,8 @@ if (Object.keys(rejectReasons).length) {
 if (USE_VISION) {
   console.log(`vision: ${visionCalls} calls, recovered ${visionRecovered} the local verifier had refused`);
 }
+const flagged = Object.values(manifest).filter((r) => r.ok && r.review?.length).length;
+const clean = Object.values(manifest).filter((r) => r.ok && !r.review?.length).length;
+console.log(`confidence: ${clean} clean, ${flagged} flagged for review  (OK? rows above)`);
 console.log(`images -> ${OUT_DIR}/   manifest -> ${MANIFEST}`);
+console.log('review sheet: node tools/labelfetch/review.mjs');
