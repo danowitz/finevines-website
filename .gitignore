@@ -176,3 +176,6 @@ out-*.json
 # gitignore does not untrack. None is referenced by a current wine — they are
 # orphans due a separate cleanup.
 assets/img/wines/*.svg
+
+# bottlecomp scratch output (tools/bottlecomp -outdir)
+out-bottle/
