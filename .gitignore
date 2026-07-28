@@ -179,3 +179,6 @@ assets/img/wines/*.svg
 
 # bottlecomp scratch output (tools/bottlecomp -outdir)
 out-bottle/
+
+# Staged bottle photographs from tools/labelfetch (review before importing)
+data/fetched-images/
