@@ -182,3 +182,7 @@ out-bottle/
 
 # Staged bottle photographs from tools/labelfetch (review before importing)
 data/fetched-images/
+
+# Verifier/normaliser binaries (built from tools/)
+imgcheck.exe
+imgnorm.exe

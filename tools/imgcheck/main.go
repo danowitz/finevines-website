@@ -36,6 +36,7 @@ func main() {
 	imgPath := flag.String("img", "", "candidate image (required)")
 	name := flag.String("name", "", "the wine's name, as the catalog has it (required)")
 	keep := flag.Bool("keep-crop", false, "keep the cropped label band for inspection")
+	asJSON := flag.Bool("json", false, "emit a machine-readable verdict on stdout")
 	flag.Parse()
 	if *imgPath == "" || *name == "" {
 		fmt.Fprintln(os.Stderr, "need -img and -name")
@@ -44,16 +45,27 @@ func main() {
 
 	img, err := load(*imgPath)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		// An undecodable candidate is a rejection, not a crash. Retailers serve
+		// AVIF, SVG and the occasional truncated file, and a pipeline driving
+		// thousands of these needs a verdict it can record — not a dead
+		// subprocess it has to special-case.
+		emit(verdict{Stage: "decode", Reason: "cannot decode image: " + err.Error()}, *asJSON)
 		os.Exit(1)
 	}
 
 	// --- stage 1 -------------------------------------------------------------
 	rep := imgcheck.Analyze(img, imgcheck.Defaults())
-	fmt.Printf("shape     subjects=%d slim=%.2f fill=%.2f cleanBg=%v\n",
-		rep.Subjects, rep.Slimness, rep.Fill, rep.CleanBackground)
+	out := verdict{
+		Subjects: rep.Subjects, Slimness: rep.Slimness,
+		Fill: rep.Fill, CleanBackground: rep.CleanBackground,
+	}
+	if !*asJSON {
+		fmt.Printf("shape     subjects=%d slim=%.2f fill=%.2f cleanBg=%v\n",
+			rep.Subjects, rep.Slimness, rep.Fill, rep.CleanBackground)
+	}
 	if !rep.SingleBottle {
-		fmt.Printf("VERDICT   reject — %s\n", rep.Reason)
+		out.Stage, out.Reason = "shape", rep.Reason
+		emit(out, *asJSON)
 		os.Exit(1)
 	}
 
@@ -111,7 +123,10 @@ func main() {
 		texts = append(texts, t)
 	}
 	text := strings.Join(texts, " ")
-	fmt.Printf("label     %q\n", truncate(strings.Join(strings.Fields(text), " "), 90))
+	out.Label = strings.Join(strings.Fields(text), " ")
+	if !*asJSON {
+		fmt.Printf("label     %q\n", truncate(out.Label, 90))
+	}
 
 	// A source watermark is not a wine word — and republishing another
 	// company's branded image is its own problem, so surface it explicitly
@@ -120,22 +135,60 @@ func main() {
 	// cropping to the label deliberately excludes exactly the region a source
 	// brand occupies, so checking `text` here would never find one.
 	if wm := watermarkOf(img); wm != "" {
-		fmt.Printf("WARNING   image carries a %q watermark\n", wm)
+		out.Watermark = wm
+		if !*asJSON {
+			fmt.Printf("WARNING   image carries a %q watermark\n", wm)
+		}
 	}
 
 	m := match(*name, text)
-	fmt.Printf("match     %d/%d words found: %v", len(m.found), len(m.want), m.found)
-	if len(m.missing) > 0 {
-		fmt.Printf("   MISSING: %v", m.missing)
+	out.Want, out.Found, out.Missing = m.want, m.found, m.missing
+	out.Stage = "label"
+	if !*asJSON {
+		fmt.Printf("match     %d/%d words found: %v", len(m.found), len(m.want), m.found)
+		if len(m.missing) > 0 {
+			fmt.Printf("   MISSING: %v", m.missing)
+		}
+		fmt.Println()
 	}
-	fmt.Println()
-
 	if m.ok {
+		out.Accept = true
+		emit(out, *asJSON)
+		return
+	}
+	out.Reason = "the label does not name this wine"
+	emit(out, *asJSON)
+	os.Exit(1)
+}
+
+// verdict is the machine-readable result. The pipeline driving this is
+// JavaScript (it owns the browser); the image analysis is Go. JSON is the seam.
+type verdict struct {
+	Accept          bool     `json:"accept"`
+	Stage           string   `json:"stage"` // where it stopped: shape | label
+	Reason          string   `json:"reason,omitempty"`
+	Subjects        int      `json:"subjects"`
+	Slimness        float64  `json:"slimness"`
+	Fill            float64  `json:"fill"`
+	CleanBackground bool     `json:"cleanBackground"`
+	Label           string   `json:"label,omitempty"`
+	Want            []string `json:"want,omitempty"`
+	Found           []string `json:"found,omitempty"`
+	Missing         []string `json:"missing,omitempty"`
+	Watermark       string   `json:"watermark,omitempty"`
+}
+
+func emit(v verdict, asJSON bool) {
+	if asJSON {
+		b, _ := json.Marshal(v)
+		fmt.Println(string(b))
+		return
+	}
+	if v.Accept {
 		fmt.Println("VERDICT   accept")
 		return
 	}
-	fmt.Println("VERDICT   reject — the label does not name this wine")
-	os.Exit(1)
+	fmt.Printf("VERDICT   reject — %s\n", v.Reason)
 }
 
 func load(p string) (image.Image, error) {
