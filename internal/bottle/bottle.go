@@ -532,17 +532,37 @@ func Composite(base, label image.Image, area Area, light Lighting, o Options) (*
 			sh = o.shade(theta)
 		}
 
+		// Glass to show wherever the new label does not reach, sampled just
+		// outside the original label's footprint in this same column so it
+		// carries the bottle's own colour and vertical gradient.
+		aboveGlass := sampleClamped(base, x, top-2)
+		belowGlass := sampleClamped(base, x, bot+2)
+
 		for y := top; y <= bot; y++ {
 			if y < bb.Min.Y || y >= bb.Max.Y {
 				continue
 			}
 			v := ((float64(y-top)+0.5)/colH)*vScale + vOffset
+
+			// Outside the label's own extent, paint GLASS rather than clamping
+			// to the label's edge row.
+			//
+			// Clamping filled the whole footprint with paper, and since the
+			// catalog's scans average 2:1 landscape while the footprint they
+			// land in is near-square, that meant a correctly-proportioned label
+			// surrounded by a huge blank slab — reading as one oversized empty
+			// sticker rather than a label on a bottle. A real label of the
+			// wrong size simply covers less of the glass, so that is what is
+			// drawn.
 			if v < 0 {
-				v = 0
+				out.SetRGBA(x, y, aboveGlass)
+				continue
 			}
 			if v > 1 {
-				v = 1
+				out.SetRGBA(x, y, belowGlass)
+				continue
 			}
+
 			px := bilinear(label,
 				float64(lb.Min.X)+u*float64(lb.Dx()-1),
 				float64(lb.Min.Y)+v*float64(lb.Dy()-1))
@@ -555,4 +575,26 @@ func Composite(base, label image.Image, area Area, light Lighting, o Options) (*
 		}
 	}
 	return out, nil
+}
+
+// sampleClamped reads base at (x, y), clamping to its bounds, and returns the
+// pixel as 8-bit RGBA. Used to pick up the glass just outside the label's
+// footprint, where a y a couple of pixels past the edge may fall off the image
+// on a tightly-cropped base.
+func sampleClamped(base image.Image, x, y int) color.RGBA {
+	b := base.Bounds()
+	if x < b.Min.X {
+		x = b.Min.X
+	}
+	if x >= b.Max.X {
+		x = b.Max.X - 1
+	}
+	if y < b.Min.Y {
+		y = b.Min.Y
+	}
+	if y >= b.Max.Y {
+		y = b.Max.Y - 1
+	}
+	r, g, bl, a := base.At(x, y).RGBA()
+	return color.RGBA{uint8(r / 257), uint8(g / 257), uint8(bl / 257), uint8(a / 257)}
 }
