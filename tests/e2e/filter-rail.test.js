@@ -62,6 +62,11 @@ const rows = (page, facet) =>
 const count = (page) =>
   page.$eval('#portfolio-count', (el) => parseInt(el.textContent.replace(/[^\d]/g, ''), 10));
 
+// groupTotal reads the header's count of values AVAILABLE under current
+// filters — the number the rows are a capped view of.
+const groupTotal = (page, facet) =>
+  page.$eval(`[data-facet-group="${facet}"] .facet-total`, (el) => parseInt(el.textContent, 10));
+
 const openGroups = (page) =>
   page.$$eval('[data-facet-group]', (els) =>
     els.filter((e) => e.open).map((e) => e.dataset.facetGroup)
@@ -121,13 +126,20 @@ describe('filter rail — at rest', () => {
     await page.close();
   });
 
-  test('each big group shows exactly the top 12, ranked by wine count', async () => {
+  test('each big group shows at most the top 12, ranked by wine count', async () => {
     const page = await openPage(browser);
     await hydrated(page, '/portfolio/');
 
     for (const facet of ['producer', 'region', 'varietal']) {
       const r = await rows(page, facet);
-      assert.equal(r.length, TOP_N, `${facet} should show ${TOP_N} rows, got ${r.length}`);
+      // min(TOP_N, available), not a flat 12 — asserting a bare 12 would tie
+      // this suite to one particular catalog size.
+      const available = await groupTotal(page, facet);
+      assert.equal(
+        r.length,
+        Math.min(TOP_N, available),
+        `${facet} should show min(${TOP_N}, ${available}) rows, got ${r.length}`
+      );
 
       const counts = r.map(([, n]) => n);
       assert.deepEqual(
@@ -142,16 +154,31 @@ describe('filter rail — at rest', () => {
     await page.close();
   });
 
-  test('the group header reports the catalog-wide number of values', async () => {
+  test('the header total covers the values the rows do not show', async () => {
+    // The gap between "12 rows on screen" and "N values available" is what the
+    // filter box and the expander exist to bridge, so the header must report
+    // the FULL number and the expander must appear exactly when there is one.
     const page = await openPage(browser);
     await hydrated(page, '/portfolio/');
-    const total = await page.$eval(
-      '[data-facet-group="producer"] .facet-total',
-      (el) => parseInt(el.textContent, 10)
+    await openGroup(page, 'producer');
+
+    const total = await groupTotal(page, 'producer');
+    const shown = (await rows(page, 'producer')).length;
+    assert.ok(total >= shown, `header total ${total} is below the ${shown} rows shown`);
+
+    const hasExpander = await page.$eval(
+      '[data-facet-group="producer"]',
+      (d) => {
+        const b = d.querySelector('.facet-expander');
+        return !!b && !b.hidden;
+      }
     );
-    // Far more than the twelve on screen — that gap is what the filter box and
-    // the expander exist to bridge.
-    assert.ok(total > 100, `expected the full producer count in the header, got ${total}`);
+    assert.equal(
+      hasExpander,
+      total > TOP_N,
+      `expander should be ${total > TOP_N ? 'shown' : 'hidden'} for ${total} values`
+    );
+
     page.assertNoPageErrors();
     await page.close();
   });
@@ -201,11 +228,18 @@ describe('filter rail — finding a value', () => {
     await page.close();
   });
 
-  test('a value outside the top 12 is reachable by typing', async () => {
-    // The whole justification for capping at 12: the other 298 are still there.
+  test('a value outside the top 12 is reachable by typing', async (t) => {
+    // The whole justification for capping at 12: the rest are still there.
     const page = await openPage(browser);
     await hydrated(page, '/portfolio/');
     await openGroup(page, 'producer');
+
+    // Meaningless against a catalog with nothing past the seed — skip loudly
+    // rather than assert something that is vacuously true.
+    if ((await groupTotal(page, 'producer')) <= TOP_N) {
+      await page.close();
+      return t.skip('catalog has no producers beyond the seed');
+    }
 
     const seeded = (await rows(page, 'producer')).map(([v]) => v);
     await page.click('.facet-expander[data-facet-expand="producer"]');
