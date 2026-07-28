@@ -37,6 +37,7 @@ func main() {
 	name := flag.String("name", "", "the wine's name, as the catalog has it (required)")
 	keep := flag.Bool("keep-crop", false, "keep the cropped label band for inspection")
 	asJSON := flag.Bool("json", false, "emit a machine-readable verdict on stdout")
+	indexPath := flag.String("index", "data/token-index.json", "token index from tools/tokenindex")
 	flag.Parse()
 	if *imgPath == "" || *name == "" {
 		fmt.Fprintln(os.Stderr, "need -img and -name")
@@ -141,11 +142,11 @@ func main() {
 		}
 	}
 
-	m := match(*name, text)
-	out.Want, out.Found, out.Missing = m.want, m.found, m.missing
+	m := match(*name, text, LoadIndex(*indexPath))
+	out.Want, out.Found, out.Missing = m.identifying, m.found, m.missing
 	out.Stage = "label"
 	if !*asJSON {
-		fmt.Printf("match     %d/%d words found: %v", len(m.found), len(m.want), m.found)
+		fmt.Printf("match     %d/%d identifying words found: %v", len(m.found), len(m.identifying), m.found)
 		if len(m.missing) > 0 {
 			fmt.Printf("   MISSING: %v", m.missing)
 		}
