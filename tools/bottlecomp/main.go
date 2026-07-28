@@ -48,23 +48,31 @@ func main() {
 		fail("base: %v", err)
 	}
 
-	area, err := bottle.DetectLabelArea(base)
-	if err != nil {
-		fail("%v — pick a base whose label is a bright block against dark glass", err)
-	}
 	opts := bottle.Defaults()
-	opts.SpecularAt = bottle.DetectHighlight(base, area)
 	if *arc > 0 {
 		opts.Arc = *arc
 	}
+	// The wrap arc shapes the footprint's edges, so detection needs it too.
+	area, err := bottle.DetectLabelArea(base, opts.Arc)
+	if err != nil {
+		fail("%v — pick a base whose label is a bright block against dark glass", err)
+	}
+	// Measure the base's own lighting once; every label reuses it.
+	light := bottle.MeasureLighting(base, area)
 
 	if *inspect {
 		b := base.Bounds()
 		fmt.Printf("base      %dx%d\n", b.Dx(), b.Dy())
+		r := area.Bounds()
 		fmt.Printf("label area x=%d..%d y=%d..%d  (%dx%d, %.0f%% of width)\n",
-			area.Min.X, area.Max.X, area.Min.Y, area.Max.Y,
-			area.Dx(), area.Dy(), 100*float64(area.Dx())/float64(b.Dx()))
-		fmt.Printf("highlight  %.2f across the label\n", opts.SpecularAt)
+			r.Min.X, r.Max.X, r.Min.Y, r.Max.Y,
+			r.Dx(), r.Dy(), 100*float64(r.Dx())/float64(b.Dx()))
+		// How far the elliptical edges bow between the sides and the centre.
+		n := area.Cols()
+		fmt.Printf("edge bow   top %+dpx, bottom %+dpx over %d columns\n",
+			area.Top[n/2]-area.Top[n/20], area.Bot[n/2]-area.Bot[n/20], n)
+		fmt.Printf("lighting   paper %.2f, %d columns measured, usable=%v\n",
+			light.Paper, len(light.Level), light.Ok())
 		return
 	}
 
@@ -73,7 +81,7 @@ func main() {
 		if *outPath == "" {
 			fail("need -out with -label")
 		}
-		if err := one(base, area, opts, *labelPath, *outPath, *quality); err != nil {
+		if err := one(base, area, light, opts, *labelPath, *outPath, *quality); err != nil {
 			fail("%v", err)
 		}
 		fmt.Println("wrote", *outPath)
@@ -96,7 +104,7 @@ func main() {
 		var ok, skipped int
 		for _, n := range names {
 			dst := filepath.Join(*outDir, strings.TrimSuffix(filepath.Base(n), ".jpg")+".jpg")
-			if err := one(base, area, opts, n, dst, *quality); err != nil {
+			if err := one(base, area, light, opts, n, dst, *quality); err != nil {
 				fmt.Fprintf(os.Stderr, "skip %s: %v\n", filepath.Base(n), err)
 				skipped++
 				continue
@@ -110,12 +118,12 @@ func main() {
 	}
 }
 
-func one(base image.Image, area image.Rectangle, o bottle.Options, labelPath, outPath string, q int) error {
+func one(base image.Image, area bottle.Area, light bottle.Lighting, o bottle.Options, labelPath, outPath string, q int) error {
 	label, err := load(labelPath)
 	if err != nil {
 		return err
 	}
-	img, err := bottle.Composite(base, label, area, o)
+	img, err := bottle.Composite(base, label, area, light, o)
 	if err != nil {
 		return err
 	}

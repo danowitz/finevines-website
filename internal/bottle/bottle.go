@@ -23,6 +23,7 @@ import (
 	"image"
 	"image/color"
 	"math"
+	"sort"
 )
 
 // Options tunes the projection. The zero value is not useful; use Defaults.
@@ -32,18 +33,11 @@ type Options struct {
 	// label, so a little over half the circumference faces the camera. Larger
 	// values compress the label's edges harder.
 	Arc float64
-	// Ambient is the light the label receives regardless of facing (bounce off
-	// the shooting table and fill cards). Without it the label's edges crush to
-	// black and the wrap reads as a dent rather than a curve.
+	// Ambient is the light the label receives regardless of facing, used only
+	// by the synthetic fallback when no lighting could be measured off the
+	// base. Without it the label's edges crush to black and the wrap reads as
+	// a dent rather than a curve.
 	Ambient float64
-	// SpecularAt is where the highlight sits across the label, 0 (left edge) to
-	// 1 (right). It should match the highlight already on the bottle's glass —
-	// DetectHighlight reads that off the base photograph.
-	SpecularAt float64
-	// SpecularWidth is the highlight's falloff as a fraction of label width.
-	SpecularWidth float64
-	// SpecularGain is how bright the highlight blows out, 0 for none.
-	SpecularGain float64
 	// StretchToFill scales the label to fill the whole label area, ignoring its
 	// own proportions. Almost never what you want: the catalog's label scans
 	// average 2:1 landscape while the area they land in is near-square, so
@@ -58,11 +52,8 @@ type Options struct {
 // lit from the left, which is what the catalog's usable bases are.
 func Defaults() Options {
 	return Options{
-		Arc:           2.30,
-		Ambient:       0.62,
-		SpecularAt:    0.30,
-		SpecularWidth: 0.13,
-		SpecularGain:  0.30,
+		Arc:     2.30,
+		Ambient: 0.62,
 	}
 }
 
@@ -94,14 +85,14 @@ func luma(c color.Color) float64 {
 // The returned rectangle is where a NEW label must be drawn. It does not need
 // to be pixel-exact against the old one, because the new label is composited
 // opaquely over it; it needs to be no smaller, or the old label peeks out.
-func DetectLabelArea(img image.Image) (image.Rectangle, error) {
+func DetectLabelArea(img image.Image, arc float64) (Area, error) {
 	b := img.Bounds()
 	if b.Empty() {
-		return image.Rectangle{}, ErrEmptyImage
+		return Area{}, ErrEmptyImage
 	}
 
-	// The bottle's horizontal extent: columns whose darkest pixel is clearly
-	// darker than the background. Glass is dark, the sweep is not.
+	// 1. The bottle's horizontal extent: columns holding a pixel clearly darker
+	//    than the background sweep.
 	left, right := -1, -1
 	for x := b.Min.X; x < b.Max.X; x++ {
 		darkest := 1.0
@@ -118,16 +109,17 @@ func DetectLabelArea(img image.Image) (image.Rectangle, error) {
 		}
 	}
 	if left < 0 || right-left < 16 {
-		return image.Rectangle{}, ErrNoLabelArea
+		return Area{}, ErrNoLabelArea
 	}
 
-	// Score rows on the bottle's centre band only.
+	// 2. The label band, scored on the bottle's centre columns only — the white
+	//    sweep and the glass rim both out-score paper if they are included.
 	bw := right - left
 	cx0, cx1 := left+bw*3/10, right-bw*3/10
 	rowLuma := make([]float64, b.Dy())
 	for y := b.Min.Y; y < b.Max.Y; y++ {
 		var sum float64
-		var n int
+		n := 0
 		for x := cx0; x < cx1; x++ {
 			sum += luma(img.At(x, y))
 			n++
@@ -136,100 +128,268 @@ func DetectLabelArea(img image.Image) (image.Rectangle, error) {
 			rowLuma[y-b.Min.Y] = sum / float64(n)
 		}
 	}
-
-	// Search the lower 65% of the frame: a Burgundy bottle's label sits well
-	// below the shoulder, and the capsule up top is bright enough to win a
-	// naive whole-frame search.
-	start := b.Dy() * 35 / 100
-	var bestTop, bestBot int
-	var inRun bool
-	var runTop int
+	// Search the lower 65%: the capsule is bright enough to win a naive
+	// whole-frame search, and no wine label sits above the shoulder.
+	from := b.Dy() * 35 / 100
+	var bandTop, bandBot, runTop int
+	inRun := false
 	const bright = 0.55
-	for y := start; y < b.Dy(); y++ {
+	for y := from; y < b.Dy(); y++ {
 		if rowLuma[y] > bright {
 			if !inRun {
 				inRun, runTop = true, y
 			}
-			if y-runTop > bestBot-bestTop {
-				bestTop, bestBot = runTop, y
+			if y-runTop > bandBot-bandTop {
+				bandTop, bandBot = runTop, y
 			}
 		} else {
 			inRun = false
 		}
 	}
-	if bestBot-bestTop < b.Dy()/20 {
-		return image.Rectangle{}, ErrNoLabelArea
+	if bandBot-bandTop < b.Dy()/20 {
+		return Area{}, ErrNoLabelArea
 	}
+	bandTop += b.Min.Y
+	bandBot += b.Min.Y
 
-	// Horizontal extent of the label within those rows, again by brightness.
+	// 3. The label's column range, judged on rows from the MIDDLE THIRD of the
+	//    band. Those rows are unambiguously label, so a column either shows
+	//    paper there or it is past the label's border — no interference from
+	//    the punt below or the shoulder above.
+	const edge = 0.30
+	q0 := bandTop + (bandBot-bandTop)/3
+	q1 := bandBot - (bandBot-bandTop)/3
 	lx, rx := -1, -1
 	for x := left; x <= right; x++ {
-		var sum float64
-		n := 0
-		for y := bestTop; y <= bestBot; y++ {
-			sum += luma(img.At(x, b.Min.Y+y))
-			n++
+		lit := 0
+		for y := q0; y <= q1; y++ {
+			if luma(img.At(x, y)) > edge {
+				lit++
+			}
 		}
-		if n > 0 && sum/float64(n) > bright {
+		if lit > (q1-q0)/2 {
 			if lx < 0 {
 				lx = x
 			}
 			rx = x
 		}
 	}
-	if lx < 0 || rx-lx < 16 {
-		return image.Rectangle{}, ErrNoLabelArea
+	if lx < 0 || rx-lx < 32 {
+		return Area{}, ErrNoLabelArea
 	}
-	return image.Rect(lx, b.Min.Y+bestTop, rx+1, b.Min.Y+bestBot+1), nil
+
+	// 4. Sample the top and bottom edge in a few columns at the label's centre
+	//    and at each shoulder, then take medians. Sampling rather than scanning
+	//    every column is the point: the fit needs two robust estimates, not a
+	//    thousand fragile ones.
+	span := rx - lx
+	sampleEdges := func(from, to int) (topMed, botMed int, ok bool) {
+		var tops, bots []int
+		for x := from; x <= to; x++ {
+			// Walk outward from the band's middle so ink inside the label can
+			// never be mistaken for its edge.
+			mid := (bandTop + bandBot) / 2
+			t, bo := mid, mid
+			for y := mid; y >= bandTop-(bandBot-bandTop)/3 && y >= b.Min.Y; y-- {
+				if luma(img.At(x, y)) > edge {
+					t = y
+				} else if t-y > 6 {
+					break // six consecutive dark rows: the paper has ended
+				}
+			}
+			for y := mid; y <= bandBot+(bandBot-bandTop)/3 && y < b.Max.Y; y++ {
+				if luma(img.At(x, y)) > edge {
+					bo = y
+				} else if y-bo > 6 {
+					break
+				}
+			}
+			if bo > t {
+				tops = append(tops, t)
+				bots = append(bots, bo)
+			}
+		}
+		if len(tops) < 3 {
+			return 0, 0, false
+		}
+		return medianInt(tops), medianInt(bots), true
+	}
+
+	cTop, cBot, okC := sampleEdges(lx+span*45/100, lx+span*55/100)
+	sTop, sBot, okS := sampleEdges(lx+span*2/100, lx+span*8/100)
+	eTop, eBot, okE := sampleEdges(lx+span*92/100, lx+span*98/100)
+	if !okC {
+		return Area{}, ErrNoLabelArea
+	}
+
+	// 5. The bow is how far the edge rises between centre and shoulder. Average
+	//    both shoulders when available; a base cropped tight on one side still
+	//    fits from the other.
+	bowTop, bowBot, n := 0, 0, 0
+	if okS {
+		bowTop += cTop - sTop
+		bowBot += cBot - sBot
+		n++
+	}
+	if okE {
+		bowTop += cTop - eTop
+		bowBot += cBot - eBot
+		n++
+	}
+	if n > 0 {
+		bowTop /= n
+		bowBot /= n
+	}
+	// The shoulder samples sit ~5% inside the label's edge, where the arc has
+	// only reached part of its full offset — so the raw difference understates
+	// the bow. Scale by the model's own factor at the sampling position to
+	// recover the value AT the edge. Measured on the synthetic base this is the
+	// difference between a bow of 6 and the true 8, which is exactly the couple
+	// of pixels of original label that survive in the corner.
+	if k := bowFactor(0.05, arc); k > 0.05 {
+		bowTop = int(math.Round(float64(bowTop) / k))
+		bowBot = int(math.Round(float64(bowBot) / k))
+	}
+
+	// A negative bow would mean the edge falls away at the sides, which no
+	// cylinder does; treat it as an unreliable measurement and go flat.
+	if bowTop < 0 {
+		bowTop = 0
+	}
+	if bowBot < 0 {
+		bowBot = 0
+	}
+
+	// Pad outward by a pixel. The estimates come from medians and thresholds,
+	// so they can land a pixel inside the true edge — and the two failure modes
+	// are not symmetric: overshooting paints label over the darkest part of the
+	// glass, where it is invisible, while undershooting leaves a lit strip of
+	// the original label on show.
+	return NewArea(lx-1, rx+2, cTop-1, cBot+1, bowTop, bowBot, arc), nil
 }
 
-// DetectHighlight returns where the specular highlight sits across the bottle,
-// as a fraction of the label area's width. Reading it off the base rather than
-// assuming it means a bottle lit from the right composites correctly without
-// anyone re-tuning constants.
+// Lighting is how brightly the base photograph lights its label, measured
+// column by column across the label area.
 //
-// It samples the glass ABOVE the label, where the surface is unbroken — the
-// label itself carries text, and text would drag the measurement around.
-func DetectHighlight(img image.Image, area image.Rectangle) float64 {
-	band := area.Dy() / 3
-	y1 := area.Min.Y - area.Dy()/8
-	y0 := y1 - band
-	if y0 < img.Bounds().Min.Y {
-		return 0.5
-	}
-	// Skip the outer 15% each side. A bottle photographed against white has a
-	// bright refractive rim at both edges of the glass that easily out-scores
-	// the broad specular we actually want to reproduce — take the rim and every
-	// composited label gets lit from whichever edge happened to be brighter.
-	inset := area.Dx() * 15 / 100
-	best, bestX := -1.0, area.Min.X+inset
-	for x := area.Min.X + inset; x < area.Max.X-inset; x++ {
-		var sum float64
-		n := 0
-		for y := y0; y < y1; y++ {
-			sum += luma(img.At(x, y))
-			n++
-		}
-		if n > 0 && sum/float64(n) > best {
-			best, bestX = sum/float64(n), x
-		}
-	}
-	if area.Dx() == 0 {
-		return 0.5
-	}
-	return float64(bestX-area.Min.X) / float64(area.Dx())
+// This replaces modelling the light. A synthetic cosine falloff has to guess
+// the lamp positions, the fill, the table bounce and the glass's own
+// refraction, and it guesses badly: measured against a real studio shot, the
+// synthetic version rendered a label at a flat 255 where the photograph's own
+// label sits around 200 and falls to 160 at its shaded edge. The result read
+// as a sticker pasted over the bottle.
+//
+// The old label is itself a photograph of exactly how this bottle is lit, so
+// the light is simply read off it. Whatever the photographer did — a
+// hard key from the left, a big soft box, a bounce card — comes across for
+// free, and a differently-lit base needs no constants retuned.
+type Lighting struct {
+	// X0 is the column Level[0] corresponds to.
+	X0 int
+	// Level is the paper luminance, 0..1, one entry per column.
+	Level []float64
+	// Paper is the representative lit-paper level across the whole label, used
+	// to normalise an incoming label to the same exposure.
+	Paper float64
 }
 
-// shade returns the light reaching the label at angle theta from the bottle's
-// facing normal, plus a specular term at u (0..1 across the label).
-func (o Options) shade(theta, u float64) float64 {
-	// Lambertian falloff as the glass curves away from the light.
-	s := o.Ambient + (1-o.Ambient)*math.Cos(theta)
-	if o.SpecularGain > 0 && o.SpecularWidth > 0 {
-		d := (u - o.SpecularAt) / o.SpecularWidth
-		s += o.SpecularGain * math.Exp(-d*d)
+// Ok reports whether the measurement is usable.
+func (l Lighting) Ok() bool { return len(l.Level) > 0 && l.Paper > 0.05 }
+
+// at returns the light at column x, clamped to the measured range.
+func (l Lighting) at(x int) float64 {
+	i := x - l.X0
+	if i < 0 {
+		i = 0
 	}
-	return s
+	if i >= len(l.Level) {
+		i = len(l.Level) - 1
+	}
+	return l.Level[i]
+}
+
+// percentile returns the p-th (0..1) percentile of vs. vs is sorted in place.
+func percentile(vs []float64, p float64) float64 {
+	if len(vs) == 0 {
+		return 0
+	}
+	sort.Float64s(vs)
+	i := int(p * float64(len(vs)-1))
+	return vs[i]
+}
+
+// MeasureLighting reads the per-column illumination off the base's existing
+// label.
+//
+// Each column is reduced by a high PERCENTILE rather than a mean, because a
+// wine label is mostly paper interrupted by text: a mean is dragged down
+// wherever a line of serif type happens to fall, which would stamp the old
+// label's wording into the new one as horizontal banding. The 80th percentile
+// tracks the paper and steps over the ink.
+//
+// The profile is then smoothed, since even a percentile wobbles where a column
+// runs down the stem of a capital.
+func MeasureLighting(base image.Image, area Area) Lighting {
+	if area.Empty() {
+		return Lighting{}
+	}
+	raw := make([]float64, area.Cols())
+	for i := 0; i < area.Cols(); i++ {
+		x := area.X0 + i
+		top, bot := area.Top[i], area.Bot[i]
+		col := make([]float64, 0, bot-top+1)
+		for y := top; y <= bot; y++ {
+			col = append(col, luma(base.At(x, y)))
+		}
+		raw[i] = percentile(col, 0.80)
+	}
+
+	// Smooth over ~5% of the label's width.
+	win := area.Cols() / 20
+	if win < 1 {
+		win = 1
+	}
+	sm := make([]float64, len(raw))
+	for i := range raw {
+		lo, hi := i-win, i+win
+		if lo < 0 {
+			lo = 0
+		}
+		if hi >= len(raw) {
+			hi = len(raw) - 1
+		}
+		var sum float64
+		for j := lo; j <= hi; j++ {
+			sum += raw[j]
+		}
+		sm[i] = sum / float64(hi-lo+1)
+	}
+
+	return Lighting{
+		X0:    area.X0,
+		Level: sm,
+		Paper: percentile(append([]float64(nil), sm...), 0.85),
+	}
+}
+
+// paperLevel estimates a label image's own lit-paper luminance, so it can be
+// normalised to the base's exposure. Sampled on a grid — reading every pixel
+// of a 3000px scan to find one number is wasted work.
+func paperLevel(img image.Image) float64 {
+	b := img.Bounds()
+	stepX, stepY := b.Dx()/64+1, b.Dy()/64+1
+	vs := make([]float64, 0, 4096)
+	for y := b.Min.Y; y < b.Max.Y; y += stepY {
+		for x := b.Min.X; x < b.Max.X; x += stepX {
+			vs = append(vs, luma(img.At(x, y)))
+		}
+	}
+	return percentile(vs, 0.85)
+}
+
+// shade is the synthetic fallback, used only when the base's own lighting
+// could not be measured. Lambertian falloff as the glass curves away.
+func (o Options) shade(theta float64) float64 {
+	return o.Ambient + (1-o.Ambient)*math.Cos(theta)
 }
 
 // bilinear samples src at fractional (fx, fy) in its own coordinate space.
@@ -290,19 +450,19 @@ func clamp8(v float64) uint8 {
 // walking across the destination in equal steps and solving θ = asin(...)
 // gives the label coordinate to sample — which is why type crowds together
 // towards the label's edges exactly as it does on a real bottle.
-func Composite(base, label image.Image, area image.Rectangle, o Options) (*image.RGBA, error) {
+// light is measured off the base once with MeasureLighting; pass a zero
+// Lighting to fall back to the synthetic cosine model.
+func Composite(base, label image.Image, area Area, light Lighting, o Options) (*image.RGBA, error) {
 	bb := base.Bounds()
 	lb := label.Bounds()
 	if bb.Empty() || lb.Empty() {
 		return nil, ErrEmptyImage
 	}
-	area = area.Intersect(bb)
-	if area.Empty() {
+	if area.Empty() || !area.Bounds().Overlaps(bb) {
 		return nil, ErrNoLabelArea
 	}
 
 	out := image.NewRGBA(bb)
-	// Copy the base first; only the label area is overwritten below.
 	for y := bb.Min.Y; y < bb.Max.Y; y++ {
 		for x := bb.Min.X; x < bb.Max.X; x++ {
 			r, g, b, a := base.At(x, y).RGBA()
@@ -310,54 +470,82 @@ func Composite(base, label image.Image, area image.Rectangle, o Options) (*image
 		}
 	}
 
-	half := math.Sin(o.Arc / 2)
-	w := float64(area.Dx())
-	h := float64(area.Dy())
-
-	// Vertical mapping. Filling the area stretches a 2:1 label into a near
-	// square; instead the label keeps its aspect, is centred, and the leftover
-	// rows clamp to its top and bottom edges (blank paper on a wine label).
-	//
-	// The label is fitted by the area's width measured along the GLASS, not
-	// across the screen: the wrap compresses the visible width by the ratio of
-	// chord to arc, so fitting to the flat screen width would leave the label
-	// noticeably too short once curved.
-	arcRatio := o.Arc / (2 * half) // > 1: the label's real width exceeds the chord
-	vScale := 1.0
-	vOffset := 0.0
-	if !o.StretchToFill {
-		labelAspect := float64(lb.Dy()) / float64(lb.Dx())
-		drawn := w * arcRatio * labelAspect // the label's height at true aspect
-		vScale = h / drawn
-		vOffset = 0.5 - 0.5*vScale
+	// Normalise the incoming label to the base's exposure. A scan's paper is
+	// often pure 255 while a photographed label sits nearer 200; dropped in
+	// unscaled it clips to flat white and reads as a sticker rather than paper
+	// lit by the same lamps as the glass around it.
+	paper := paperLevel(label)
+	if paper < 0.05 {
+		paper = 1 // a near-black label: leave it alone rather than amplify noise
 	}
 
-	for y := area.Min.Y; y < area.Max.Y; y++ {
-		v := ((float64(y-area.Min.Y)+0.5)/h)*vScale + vOffset
-		if v < 0 {
-			v = 0
-		}
-		if v > 1 {
-			v = 1
-		}
-		for x := area.Min.X; x < area.Max.X; x++ {
-			// Screen position across the label, -0.5 .. +0.5.
-			s := (float64(x-area.Min.X)+0.5)/w - 0.5
-			sinTheta := 2 * s * half
-			if sinTheta < -1 || sinTheta > 1 {
-				continue
-			}
-			theta := math.Asin(sinTheta)
-			u := 0.5 + theta/o.Arc
-			if u < 0 || u > 1 {
-				continue
-			}
+	half := math.Sin(o.Arc / 2)
+	w := float64(area.Cols())
+	arcRatio := o.Arc / (2 * half) // the label's true width exceeds the visible chord
 
+	// Vertical fit. The label keeps its own proportions unless told otherwise:
+	// the catalog's scans average 2:1 landscape and the area they land in is
+	// near-square, so filling stretches every serif. Height is taken at the
+	// centre column and measured against the label's ARC length rather than the
+	// visible chord — fitting to screen width leaves it visibly short once
+	// curved.
+	vScale, vOffset := 1.0, 0.0
+	if !o.StretchToFill {
+		labelAspect := float64(lb.Dy()) / float64(lb.Dx())
+		drawn := w * arcRatio * labelAspect
+		if h := float64(area.centreHeight()); h > 0 && drawn > 0 {
+			vScale = h / drawn
+			vOffset = 0.5 - 0.5*vScale
+		}
+	}
+
+	for i := 0; i < area.Cols(); i++ {
+		x := area.X0 + i
+		if x < bb.Min.X || x >= bb.Max.X {
+			continue
+		}
+		// Screen position across the label, -0.5 .. +0.5.
+		sx := (float64(i)+0.5)/w - 0.5
+		sinTheta := 2 * sx * half
+		if sinTheta < -1 || sinTheta > 1 {
+			continue
+		}
+		theta := math.Asin(sinTheta)
+		u := 0.5 + theta/o.Arc
+		if u < 0 || u > 1 {
+			continue
+		}
+
+		// This column's own top and bottom — the elliptical edge. Filling
+		// between them is what both covers the original label completely and
+		// gives the composite a curved boundary instead of a straight one.
+		top, bot := area.colAt(x)
+		colH := float64(bot - top + 1)
+		if colH <= 0 {
+			continue
+		}
+
+		var sh float64
+		if light.Ok() {
+			sh = light.at(x) / paper
+		} else {
+			sh = o.shade(theta)
+		}
+
+		for y := top; y <= bot; y++ {
+			if y < bb.Min.Y || y >= bb.Max.Y {
+				continue
+			}
+			v := ((float64(y-top)+0.5)/colH)*vScale + vOffset
+			if v < 0 {
+				v = 0
+			}
+			if v > 1 {
+				v = 1
+			}
 			px := bilinear(label,
 				float64(lb.Min.X)+u*float64(lb.Dx()-1),
 				float64(lb.Min.Y)+v*float64(lb.Dy()-1))
-
-			sh := o.shade(theta, (float64(x-area.Min.X)+0.5)/w)
 			out.SetRGBA(x, y, color.RGBA{
 				clamp8(float64(px.R) * sh),
 				clamp8(float64(px.G) * sh),
