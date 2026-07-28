@@ -31,9 +31,12 @@ data/wines.json
 go build -o imgcheck.exe ./tools/imgcheck     # verifier
 go build -o imgnorm.exe  ./tools/imgnorm      # normaliser
 
-node tools/labelfetch/pipeline.mjs --n 20 --missing   # try 20 wines
-node tools/labelfetch/pipeline.mjs --all --missing    # every wine lacking a photo
-node tools/labelfetch/pipeline.mjs --slug <slug>      # one wine, verbose
+node tools/labelfetch/pipeline.mjs --n 20 --missing --vision   # try 20 wines
+node tools/labelfetch/pipeline.mjs --all --missing --vision    # everything
+node tools/labelfetch/pipeline.mjs --slug <slug> --vision      # one wine, verbose
+
+# --vision is opt-in and needs OPENAI_API_KEY in .env. Without it the pipeline
+# still runs, at 65% instead of 100%.
 
 node tools/labelfetch/import.mjs                      # dry run
 node tools/labelfetch/import.mjs --apply              # write
@@ -46,21 +49,58 @@ matches turned out wrong.
 
 ## Measured
 
-On a 20-wine sample of the catalog's un-photographed wines: **13/20 accepted
-(65%)**, all 13 confirmed by eye to be the correct wine, single bottle, clean
-background, no watermark.
+On a 20-wine sample of the catalog's un-photographed wines:
 
-Progression while building it, each step a fix to a specific defect:
+| configuration | accepted | cost |
+|---|---|---|
+| local verifier only | 13/20 (65%) | $0 |
+| **with vision fallback** | **20/20 (100%)** | **~$0.005 per 20 wines** |
+
+Every accepted image was checked by eye and by the label text read off it.
+Two are imperfect rather than wrong: Chakana returned "Estate Selection Malbec"
+for a catalog row reading "Estate Red" (same producer and tier, almost
+certainly the same wine under a fuller name), and Marcel Deiss returned a 2019
+for a 2020 — bottle artwork rarely changes by vintage, but it is a mismatch.
+
+Progression while building it, each step a fix to a specific defect found by
+running it:
 
 | | accepted | what changed |
 |---|---|---|
 | first run | 25% | — |
-| | 35% | stopped fetching images through a canvas (see below) |
+| | 35% | stopped fetching images through a canvas |
 | | 40% | accepted square images; verified every candidate, not just the largest |
-| | **65%** | transcoded non-JPEG/PNG; widened from 3 candidate pages to 5 |
+| | 65% | transcoded non-JPEG/PNG; widened from 3 candidate pages to 5 |
+| | **100%** | vision fallback on candidates the local verifier refused |
 
-Rejections on the final run, all correct: 19 photographed scenes, 13 subjects
-too wide for a bottle, 8 multipacks, 10 labels that named a different wine.
+## Which model, and what it costs
+
+Seven vision models were benchmarked on a BALANCED set — every verified image
+paired once with its own wine's name and once with a different wine's name, so
+a model that always answers yes scores 50%.
+
+| model | accuracy | wrongly accepted | wrongly rejected | $/image | $/2,187 wines |
+|---|---|---|---|---|---|
+| **gpt-4.1-nano** | **96%** | 0 | 1 | $0.00020 | **$0.44** |
+| gpt-5.4-nano | 73% | 0 | 7 | $0.00023 | $0.51 |
+| gpt-5-nano | 94% | 0 | 1 | $0.00041 | $0.89 |
+| gpt-4o-mini | 81% | 0 | 5 | $0.00047 | $1.02 |
+| gpt-4.1-mini | 88% | 0 | 3 | $0.00058 | $1.27 |
+| gpt-4.1 | 92% | 0 | 2 | $0.00078 | $1.71 |
+| gpt-5.4-mini | 92% | 0 | 2 | $0.00091 | $2.00 |
+
+`gpt-4.1-nano` is both the most accurate and the cheapest, so it is the
+default. Prices from developers.openai.com/api/docs/pricing, fetched
+2026-07-28; token counts are measured from the API's own usage figures.
+
+**Every model got the safety-critical half perfect** — none accepted a single
+mislabelled pair. They differ only in how many CORRECT wines they wrongly
+refuse, which costs coverage, not correctness. `gpt-5-nano` also returned
+unparseable output on 8 of 26 calls and spent 22k tokens reasoning; it is not a
+candidate despite the headline accuracy.
+
+Vision is a FALLBACK, not the verifier. It is called only on candidates the
+free local check refused, so a run of 20 wines cost 24 calls rather than 60+.
 
 ## Why each stage is the way it is
 
@@ -108,6 +148,12 @@ Bordeaux and a Burgundy sit at the same scale.
   the canvas's, so let it decide.
 - **An undecodable candidate is a rejection, not a crash.** Retailers serve
   AVIF, SVG and truncated files.
+- **Never take an image from the search results page.** A run followed a
+  redirect back to the engine and lifted a thumbnail off the SERP — a picture
+  of an unrelated wine with no product page behind it. The vision model then
+  judged it on its own merits and accepted an Australian Shiraz for a
+  Portuguese white. Search engines are for discovery only; they are in the
+  blocked-source list.
 - **A "hit rate" is not an accuracy rate.** The first measurement of this work
   reported 90% found and was 67% correct. Always confirm what was found is the
   wine that was asked for.
@@ -116,8 +162,6 @@ Bordeaux and a Burgundy sit at the same scale.
 
 - **Spirits are excluded.** 46 catalog items are whisky, gin, cider and the
   like; wine search will not find them and they need a different source.
-- **7 of 20 still miss.** Mostly pages where no candidate downloaded at all.
-  More candidate pages would raise it further at the cost of run time.
 - **A few sources shoot on cream rather than white**, so the normalised canvas
   shows a slightly different ground. Visible only side by side.
 - **Copyright.** The client accepted the risk of sourcing images by web search

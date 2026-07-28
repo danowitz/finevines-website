@@ -59,6 +59,13 @@ const opt = (k, d) => {
   return i >= 0 ? args[i + 1] : d;
 };
 const VERBOSE = has('verbose') || opt('slug', '') !== '';
+// Vision fallback is opt-in: the pipeline runs without an API key, just at a
+// lower recovery rate.
+const USE_VISION = has('vision');
+const VISION_MODEL = opt('vision-model', 'gpt-4.1-nano');
+let VISION_KEY = '';
+let visionCalls = 0;
+let visionRecovered = 0;
 
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
@@ -119,6 +126,11 @@ async function discover(page, query) {
       return m ? decodeURIComponent(m[1]) : h;
     })
     .filter((h) => h.startsWith('http') && !blockedBy(h));
+
+  // Never treat the search engine's own page as a product page. Its results
+  // are wrapped in redirects that can resolve back to the engine, and a
+  // results page is wall-to-wall thumbnails of OTHER wines.
+  links = links.filter((h) => !/duckduckgo|bing\.com|google\.|yandex|ecosia/i.test(new URL(h).host));
 
   // A producer's own site first. It is unbranded, high resolution, and cannot
   // be showing a different grower's bottle.
@@ -211,6 +223,58 @@ async function bestImageOn(page, url) {
   return out;
 }
 
+// askVision is the SECOND CHANCE for a candidate the local verifier refused.
+//
+// A fallback, not a replacement, because the two fail differently and the
+// local check is free. Measured on the wines a run missed, vision recovered 5
+// of 7 — images that genuinely were the right wine but had been rejected
+// either because the background was a gradient rather than a sweep, or because
+// OCR could not read a label the model reads easily ("Domaine Jean-Louis Chave
+// Saint Joseph", "Vinha Pan").
+//
+// gpt-4.1-nano by measurement, not reputation: on a balanced set of 13 correct
+// and 13 deliberately mislabelled pairs it scored 96% — the best of seven
+// models tried AND the cheapest, at $0.0002 an image. Every model tested got
+// the safety-critical half perfect (zero wrong wines accepted), so the choice
+// came down to how many CORRECT wines each wrongly refused.
+async function askVision(file, name) {
+  const b64 = (await readFile(file)).toString('base64');
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + VISION_KEY },
+    body: JSON.stringify({
+      model: VISION_MODEL,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text:
+                `A wholesale wine catalog needs a photograph of:\n\n  ${name}\n\n` +
+                `Answer strictly as JSON: {"single_bottle":true|false,"label_text":"<text on label>","is_this_wine":true|false}\n` +
+                `"is_this_wine" is true ONLY if this is that producer's wine. A different producer from ` +
+                `the same region or vineyard is NOT a match. Unreadable label means false.`,
+            },
+            // detail:low costs a fraction of high and is ample — the question
+            // is whose name is on the label, not how the foil is embossed.
+            { type: 'image_url', image_url: { url: 'data:image/png;base64,' + b64, detail: 'low' } },
+          ],
+        },
+      ],
+      max_completion_tokens: 800,
+    }),
+  });
+  if (!res.ok) return null;
+  const j = await res.json();
+  try {
+    const v = JSON.parse((j.choices?.[0]?.message?.content || '').replace(/^```(?:json)?|```$/gm, '').trim());
+    return v && v.is_this_wine && v.single_bottle ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 // verify shells out to the Go binary: single-bottle shape check, then OCR of
 // the label band against the catalog name.
 async function verify(file, name) {
@@ -251,6 +315,15 @@ if (only) {
 if (!wines.length) {
   console.error('no wines selected');
   process.exit(2);
+}
+
+if (USE_VISION) {
+  VISION_KEY = (await readFile('.env', 'utf8')).match(/^OPENAI_API_KEY=(.*)$/m)?.[1]?.trim() || '';
+  if (!VISION_KEY) {
+    console.error('--vision needs OPENAI_API_KEY in .env');
+    process.exit(2);
+  }
+  console.log(`vision fallback: ${VISION_MODEL}`);
 }
 
 await mkdir(OUT_DIR, { recursive: true });
@@ -309,6 +382,24 @@ for (const w of wines) {
         accepted++;
         break;
       }
+      // Second chance before writing this candidate off.
+      if (USE_VISION && v.stage !== 'decode') {
+        visionCalls++;
+        const vv = await askVision(dest, name);
+        if (vv) {
+          rec.ok = true;
+          rec.file = dest;
+          rec.page = src;
+          rec.image = got.src;
+          rec.size = `${got.w}x${got.h}`;
+          rec.label = vv.label_text;
+          rec.verifiedBy = VISION_MODEL;
+          rec.localReason = v.reason;
+          accepted++;
+          visionRecovered++;
+          break;
+        }
+      }
       rec.tried.push({ src: got.src, why: v.reason || 'rejected', stage: v.stage, missing: v.missing });
       rejectReasons[v.reason || 'unknown'] = (rejectReasons[v.reason || 'unknown'] || 0) + 1;
     }
@@ -343,5 +434,8 @@ if (Object.keys(rejectReasons).length) {
   for (const [why, n] of Object.entries(rejectReasons).sort((a, b) => b[1] - a[1])) {
     console.log(`  ${String(n).padStart(3)}  ${why}`);
   }
+}
+if (USE_VISION) {
+  console.log(`vision: ${visionCalls} calls, recovered ${visionRecovered} the local verifier had refused`);
 }
 console.log(`images -> ${OUT_DIR}/   manifest -> ${MANIFEST}`);

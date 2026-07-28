@@ -29,6 +29,21 @@ export const BLOCKED = [
   'shutterstock',
   'istockphoto',
   'dreamstime',
+  // Search engines are for DISCOVERY, never for images. A results page is
+  // covered in thumbnails of other wines, and taking one produces a candidate
+  // with no product page behind it and no relationship to the query beyond
+  // having appeared near it. This is not hypothetical: a run took a thumbnail
+  // off a results page and a vision model then judged it on its own merits and
+  // accepted an Australian Shiraz for a Portuguese white — the exact silent
+  // substitution the whole verification chain exists to prevent, let in
+  // through the back door.
+  'duckduckgo',
+  'bing.com',
+  'google.com',
+  'gstatic.com',
+  'googleusercontent',
+  'yandex',
+  'ecosia',
 ];
 
 // hostOf returns the lowercase host of a URL, or '' if it will not parse.
