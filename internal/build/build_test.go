@@ -1233,3 +1233,125 @@ func globOne(t *testing.T, pattern string) string {
 	}
 	return matches[0]
 }
+
+// writeJSON marshals v and writes it to path, failing the test on error. Used
+// to build ad-hoc redirect-map fixtures without going through the production
+// Save helpers.
+func writeJSON(t *testing.T, path string, v any) {
+	t.Helper()
+	data, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestMergeRedirects_UnionWithLifecycleWinningConflicts is the focused unit
+// test of the merge contract dist/redirects.json now has: the old-site crawl
+// map (produced by `finevines redirects`) and the lifecycle map (produced by
+// enrich as wines are renamed/delisted) are unioned, with the lifecycle entry
+// winning on any overlapping key — it is newer knowledge about OUR OWN URLs,
+// while the crawl map only speculates about old-site paths. mergeRedirects
+// takes its source paths as parameters (rather than the package-level
+// redirectsJSONName constant resolved against the process cwd) specifically
+// so this test can use ordinary temp-dir fixtures instead of writing into the
+// real repo root or chdir'ing the test process.
+func TestMergeRedirects_UnionWithLifecycleWinningConflicts(t *testing.T) {
+	dir := t.TempDir()
+	crawlPath := filepath.Join(dir, "crawl-redirects.json")
+	lifecyclePath := filepath.Join(dir, "lifecycle-redirects.json")
+	writeJSON(t, crawlPath, map[string]string{
+		"/old-page.html": "/portfolio/",
+		"/wines/shared/": "/crawl-target/",
+	})
+	writeJSON(t, lifecyclePath, map[string]string{
+		"/wines/renamed-old/": "/wines/renamed-new/",
+		"/wines/shared/":      "/wines/lifecycle-wins/",
+	})
+
+	distDir := t.TempDir()
+	if err := mergeRedirects(distDir, crawlPath, lifecyclePath); err != nil {
+		t.Fatal(err)
+	}
+
+	var got map[string]string
+	if err := json.Unmarshal([]byte(readFile(t, filepath.Join(distDir, "redirects.json"))), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got["/old-page.html"] != "/portfolio/" {
+		t.Error("crawl entries must survive the merge")
+	}
+	if got["/wines/renamed-old/"] != "/wines/renamed-new/" {
+		t.Error("lifecycle entries must be merged in")
+	}
+	if got["/wines/shared/"] != "/wines/lifecycle-wins/" {
+		t.Error("on conflict the lifecycle entry must win (it is newer knowledge)")
+	}
+}
+
+// TestMergeRedirects_MissingFilesTolerated covers the three absence
+// combinations a from-scratch checkout can hit: neither file exists yet (no
+// `finevines redirects` run, no lifecycle events yet — write nothing), only
+// the lifecycle map exists (a brand-new site with no old-site crawl to
+// honor), and only the crawl map exists (covered implicitly by every other
+// build_test.go case that never creates a lifecycle-redirects.json).
+func TestMergeRedirects_MissingFilesTolerated(t *testing.T) {
+	dir := t.TempDir()
+	missingCrawl := filepath.Join(dir, "nope-crawl.json")
+	missingLifecycle := filepath.Join(dir, "nope-lifecycle.json")
+
+	distDir := t.TempDir()
+	if err := mergeRedirects(distDir, missingCrawl, missingLifecycle); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(distDir, "redirects.json")); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("expected no redirects.json written when no sources exist, stat err = %v", err)
+	}
+
+	lifecyclePath := filepath.Join(dir, "lifecycle-redirects.json")
+	writeJSON(t, lifecyclePath, map[string]string{"/wines/x/": "/wines/y/"})
+	distDir2 := t.TempDir()
+	if err := mergeRedirects(distDir2, missingCrawl, lifecyclePath); err != nil {
+		t.Fatal(err)
+	}
+	var got map[string]string
+	if err := json.Unmarshal([]byte(readFile(t, filepath.Join(distDir2, "redirects.json"))), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got["/wines/x/"] != "/wines/y/" {
+		t.Error("lifecycle-only source must still be published when the crawl map is absent")
+	}
+}
+
+// TestBuild_MergesLifecycleRedirectsIntoDist is the light integration
+// assertion that Run wires dataDir through to mergeRedirects correctly: a
+// data/lifecycle-redirects.json alongside ordinary testdata ends up unioned
+// into dist/redirects.json by a full Run. (The crawl-map side of the union is
+// exercised by TestMergeRedirects_UnionWithLifecycleWinningConflicts above,
+// not here — the crawl map is read from the literal redirectsJSONName path
+// resolved against the process's cwd, i.e. this package's directory during
+// `go test`, and no fixture should plant a file there.)
+func TestBuild_MergesLifecycleRedirectsIntoDist(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	writeJSON(t, filepath.Join(data, "lifecycle-redirects.json"), map[string]string{
+		"/wines/renamed-old/": "/wines/renamed-new/",
+	})
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	var got map[string]string
+	if err := json.Unmarshal([]byte(readFile(t, filepath.Join(dist, "redirects.json"))), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got["/wines/renamed-old/"] != "/wines/renamed-new/" {
+		t.Errorf("dist/redirects.json missing lifecycle entry from a full Run, got %v", got)
+	}
+}

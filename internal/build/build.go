@@ -23,13 +23,14 @@ import (
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
 
-// redirectsJSONName is the file redirects.Save writes at the repo root
+// redirectsJSONName is both the file redirects.Save writes at the repo root
 // (internal/redirects/mapping.go's Save, invoked from cmd/finevines's
-// runRedirects) — the SAME location copyRedirectsJSON looks for it here.
-// `finevines build` and `finevines redirects` are both always run from the
-// repo root (cmd/finevines/main.go's runBuild/runRedirects pass bare
-// relative paths like "data" and "redirects.json"), so reading this literal
-// name from the process's cwd is the correct, consistent lookup.
+// runRedirects — the SAME location mergeRedirects is pointed at it here) and
+// the filename it's published under in dist/. `finevines build` and
+// `finevines redirects` are both always run from the repo root
+// (cmd/finevines/main.go's runBuild/runRedirects pass bare relative paths
+// like "data" and "redirects.json"), so reading this literal name from the
+// process's cwd is the correct, consistent lookup.
 const redirectsJSONName = "redirects.json"
 
 // site is the seam between loadSite (producer) and every page template
@@ -394,7 +395,9 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	if err := ensureLabels(distDir, labelWines); err != nil {
 		return err
 	}
-	if err := copyRedirectsJSON(distDir); err != nil {
+	// dist/redirects.json = old-site crawl map ∪ lifecycle map. See
+	// mergeRedirects for the missing-file tolerance and conflict rule.
+	if err := mergeRedirects(distDir, redirectsJSONName, filepath.Join(dataDir, "lifecycle-redirects.json")); err != nil {
 		return err
 	}
 
@@ -1193,27 +1196,56 @@ func renderPage(tmpl *template.Template, distDir, rel, name string, data any) er
 	return tmpl.ExecuteTemplate(f, name, data)
 }
 
-// copyRedirectsJSON copies redirects.json from the process's current
-// working directory (repo root) into dist/, so the deployed Edge
-// middleware (internal/redirects/middleware.ts.tmpl) — which fetches
-// /redirects.json from the live site at runtime — actually finds the
-// generated redirect map instead of 404ing into an effectively empty one.
-// Without this, every 301 discovered by `finevines redirects` would
-// silently no-op at launch: redirects.Save writes redirects.json to the
-// repo root, but nothing else ever put it into dist/, and deploy.Run only
-// uploads dist/.
+// mergeRedirects publishes dist/redirects.json as the union of every source
+// path given, so the deployed Edge middleware
+// (internal/redirects/middleware.ts.tmpl) — which fetches /redirects.json
+// from the live site at runtime — actually finds the generated redirect map
+// instead of 404ing into an effectively empty one.
 //
-// A from-scratch checkout (or one that hasn't run `redirects` yet) has no
-// redirects.json — that is not an error, just nothing to copy.
-func copyRedirectsJSON(distDir string) error {
-	data, err := os.ReadFile(redirectsJSONName)
-	if errors.Is(err, fs.ErrNotExist) {
+// In production this is called with two sources: the old-site crawl map
+// (redirectsJSONName, written by redirects.Save at the repo root) and the
+// lifecycle map (data/lifecycle-redirects.json, maintained by enrich as
+// wines are renamed or delisted). Sources are applied in order, later
+// sources overwriting earlier ones on a key conflict — since lifecycle is
+// passed last, its entries win: it is newer knowledge about OUR OWN URLs,
+// while the crawl map only speculates about old-site paths.
+//
+// Each source is individually optional (a from-scratch checkout, or one
+// that hasn't run `redirects` or delisted anything yet, has neither file) —
+// a missing source is not an error, just nothing to contribute. If no
+// source contributes anything, nothing is written, matching the old
+// copy-only behavior on a missing file.
+//
+// Sources are accepted as explicit paths (rather than this function
+// resolving redirectsJSONName against the process's cwd itself) so callers
+// — tests included — can point it at arbitrary fixture locations instead of
+// planting files at the process's real working directory.
+func mergeRedirects(distDir string, sources ...string) error {
+	merged := map[string]string{}
+	for _, src := range sources {
+		data, err := os.ReadFile(src)
+		if errors.Is(err, fs.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		m := map[string]string{}
+		if err := json.Unmarshal(data, &m); err != nil {
+			return fmt.Errorf("parse %s: %w", src, err)
+		}
+		for k, v := range m {
+			merged[k] = v
+		}
+	}
+	if len(merged) == 0 {
 		return nil
 	}
+	data, err := json.MarshalIndent(merged, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(distDir, redirectsJSONName), data, 0o644)
+	return os.WriteFile(filepath.Join(distDir, redirectsJSONName), append(data, '\n'), 0o644)
 }
 
 // cleanDir empties dir of all its contents but leaves the directory itself in
