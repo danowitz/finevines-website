@@ -330,12 +330,21 @@ function reviewFlags({ wine, name, label, viaVision, localReason, w, h, page }) 
 // One implementation of "is this the right wine" for both paths.
 async function verifyText(file, name, producer, labelText) {
   try {
-    // -single-bottle: the model already confirmed one bottle, so the local
-    // shape heuristic is not re-applied. Without this it re-refuses exactly
-    // the images this second opinion exists to reconsider.
+    // NOTE: -single-bottle is deliberately NOT passed.
+    //
+    // It was, briefly, so a model reporting single_bottle could overturn the
+    // local shape check. Reviewing the results killed the idea: it let through
+    // a photograph of a plated steak with a bottle in the background, and a
+    // close-up of grapes on the vine with no bottle at all. In both the local
+    // check had said "a photographed scene, not a product shot" and been
+    // exactly right.
+    //
+    // Whether an image is one bottle on a sweep is a fact about pixels, and the
+    // thing that measures pixels decides it. The model is allowed to overturn
+    // the LABEL reading, which is where it is genuinely better.
     const { stdout } = await run(VERIFIER, [
       '-json', '-img', file, '-name', name, '-producer', producer || '',
-      '-label', labelText, '-single-bottle',
+      '-label', labelText,
     ]);
     return JSON.parse(stdout).accept ? labelText : null;
   } catch (e) {
@@ -456,8 +465,14 @@ for (const w of wines) {
       // SAME identity rules. Vision supplies evidence; it does not decide.
       if (USE_VISION && v.stage !== 'decode') {
         visionCalls++;
-        const text = await readLabel(dest);
-        const vv = text ? await verifyText(dest, name, w.producer, text) : null;
+        // Only reconsider a LABEL refusal. A shape refusal stands: see
+        // verifyText. And an empty read is not evidence — a wine was accepted
+        // on a picture of grapes with nothing legible on it because a blank
+        // string was allowed through here.
+        const text = v.stage === 'label' ? await readLabel(dest) : null;
+        const vv = text && text.trim().length >= 3
+          ? await verifyText(dest, name, w.producer, text)
+          : null;
         if (vv) {
           rec.ok = true;
           rec.file = dest;

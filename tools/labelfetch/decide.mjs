@@ -38,6 +38,62 @@ if (!decisionsPath) {
   process.exit(2);
 }
 
+// A pasted URL is fetched with a real browser, like the pipeline does: many
+// image hosts return 403 to a plain request and 200 to Chrome.
+let browser = null, page = null;
+async function fetchImage(url) {
+  if (!page) {
+    const { openBrowser } = await import('../../tests/helpers/browser.js');
+    browser = await openBrowser();
+    page = await browser.newPage();
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+    );
+  }
+  try {
+    const res = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    if (!res || !res.ok()) return null;
+    const buf = await res.buffer();
+    if (!buf || buf.length < 2000) return null;
+    const isJPEG = buf[0] === 0xff && buf[1] === 0xd8;
+    const isPNG = buf[0] === 0x89 && buf[1] === 0x50;
+    if (isJPEG || isPNG) return buf;
+    // Anything else — webp, avif — is transcoded in the browser, which already
+    // has decoders Go's standard library does not.
+    const png = await page.evaluate((d) => new Promise((ok) => {
+      const i = new Image();
+      i.onload = () => { const c = document.createElement('canvas');
+        c.width = i.naturalWidth; c.height = i.naturalHeight;
+        c.getContext('2d').drawImage(i, 0, 0); ok(c.toDataURL('image/png')); };
+      i.onerror = () => ok(null);
+      i.src = d;
+      setTimeout(() => ok(null), 12000);
+    }), 'data:application/octet-stream;base64,' + buf.toString('base64'));
+    return png ? Buffer.from(png.split(',')[1], 'base64') : null;
+  } catch { return null; }
+}
+
+// Shape only. The reviewer has already decided this is the right WINE; what
+// still has to hold is that it is a usable product photograph.
+async function checkShape(file) {
+  const { execFile } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const run = promisify(execFile);
+  try {
+    const { stdout } = await run('imgcheck.exe', ['-json', '-img', file, '-name', 'x', '-label', 'x']);
+    const v = JSON.parse(stdout);
+    return { ok: true, label: v.label };
+  } catch (e) {
+    try {
+      const v = JSON.parse(e.stdout);
+      // A label mismatch is expected and irrelevant here; a SHAPE refusal is not.
+      return v.stage === 'shape' || v.stage === 'decode'
+        ? { ok: false, reason: v.reason }
+        : { ok: true, label: v.label };
+    } catch { return { ok: false, reason: 'verifier failed' }; }
+  }
+}
+
 const decisions = JSON.parse(await readFile(decisionsPath, 'utf8'));
 const manifest = JSON.parse(await readFile(MANIFEST, 'utf8'));
 const slugs = Object.keys(decisions);
@@ -47,7 +103,7 @@ if (!slugs.length) {
   process.exit(0);
 }
 
-let swapped = 0, rejected = 0, unknown = 0;
+let swapped = 0, rejected = 0, unknown = 0, pasted = 0, failed = 0;
 for (const slug of slugs) {
   const rec = manifest[slug];
   const choice = decisions[slug];
@@ -64,6 +120,32 @@ for (const slug of slugs) {
       // found here rather than treating it as never attempted.
       rec.humanRejected = true;
       rec.review = ['rejected by review — none of the candidates was this wine'];
+    }
+    continue;
+  }
+
+  // A pasted URL: the reviewer found the picture themselves. It still goes
+  // through the same fetch, shape check and normalisation as anything the
+  // pipeline found — a human choosing the image is not a reason to skip
+  // checking that it is one bottle on a clean background.
+  if (/^https?:\/\//i.test(choice)) {
+    pasted++;
+    console.log(`  PASTE  ${rec.name}
+            <- ${choice.slice(0, 78)}`);
+    if (apply) {
+      const got = await fetchImage(choice);
+      if (!got) { console.log('            FAILED to fetch'); failed++; pasted--; continue; }
+      const dest = join('data/fetched-images', slug + '.png');
+      await writeFile(dest, got);
+      const v = await checkShape(dest);
+      if (!v.ok) { console.log(`            REFUSED: ${v.reason}`); await unlink(dest).catch(() => {}); failed++; pasted--; continue; }
+      rec.ok = true;
+      rec.file = dest;
+      rec.page = choice;
+      rec.label = v.label || '';
+      rec.verifiedBy = 'human (pasted URL)';
+      rec.review = [];
+      delete rec.humanRejected;
     }
     continue;
   }
@@ -90,6 +172,7 @@ for (const slug of slugs) {
   }
 }
 
+if (browser) await browser.close();
 if (apply) await writeFile(MANIFEST, JSON.stringify(manifest, null, 1));
 
 console.log(`\n${slugs.length} decisions: ${swapped} swapped, ${rejected} marked wrong${unknown ? `, ${unknown} unrecognised` : ''}`);

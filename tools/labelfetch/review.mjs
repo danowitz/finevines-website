@@ -15,6 +15,7 @@
 //
 //   node tools/labelfetch/review.mjs      -> out-bottle/review.html + .csv
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 
 const MANIFEST = 'data/fetched-images/manifest.json';
@@ -30,13 +31,19 @@ const wines = new Map(
 );
 
 const all = Object.values(manifest);
-const ok = all.filter((r) => r.ok && r.file);
+// The sheet is built while the pipeline may still be writing, and images get
+// removed when a rule tightens. A record whose file is gone must not become a
+// broken picture — that reads as a fetch failure rather than the bookkeeping
+// lag it is.
+const onDisk = (f) => !!f && existsSync(f);
+const ok = all.filter((r) => r.ok && onDisk(r.file));
+const stale = all.filter((r) => r.ok && !onDisk(r.file)).length;
 const flagged = ok.filter((r) => r.review?.length);
 const clean = ok.filter((r) => !r.review?.length);
 // A wine that found nothing but has candidates on disk is the best possible
 // use of this page: nothing is proposed, and the alternatives are one click away.
-const missedWithOptions = all.filter((r) => !r.ok && r.alternates?.length);
-const missedBare = all.filter((r) => !r.ok && !r.alternates?.length);
+const missedWithOptions = all.filter((r) => !r.ok && (r.alternates || []).some((a) => onDisk(a.file)));
+const missedBare = all.filter((r) => !r.ok && !(r.alternates || []).some((a) => onDisk(a.file)));
 
 await mkdir('out-bottle', { recursive: true });
 
@@ -63,7 +70,7 @@ const searchURL = (w, r) =>
 
 const card = (r, { chosen }) => {
   const w = wines.get(r.slug) || {};
-  const alts = r.alternates || [];
+  const alts = (r.alternates || []).filter((a) => onDisk(a.file));
   const title = [w.producer, w.name].filter(Boolean).join(' — ') || r.name;
   const opt = (file, page, why, label, i) => `
       <label class="opt">
@@ -89,6 +96,9 @@ const card = (r, { chosen }) => {
         <input type="radio" name="${esc(r.slug)}" value="__none__">
         <span class="opt-none">&#10007; wrong<br>none of these</span>
         <a class="opt-search" href="${esc(searchURL(w, r))}" target="_blank" rel="noopener">search images &rarr;</a>
+        <input class="opt-url" type="url" placeholder="paste image URL"
+               data-slug="${esc(r.slug)}"
+               title="Right-click an image in the search results, Copy image address, paste here. It is fetched, checked and normalised like any other candidate.">
       </label>
     </div>
   </figure>`;
@@ -128,6 +138,9 @@ const html = `<!doctype html>
   .opt.wrong:has(input:checked) { border-color: #9a2b2b; background: #fdf0f0; }
   .opt-none { font-size: 11px; color: #6e5d4e; }
   .opt-search { font-size: 11px; color: #6b1630; }
+  .opt-url { width: 100%; box-sizing: border-box; margin-top: 4px; font-size: 10px;
+             padding: 4px; border: 1px solid #d8c6a8; border-radius: 3px; }
+  .opt-url:focus { outline: 2px solid #c2a14e; }
   #bar { position: fixed; left: 0; right: 0; bottom: 0; background: #2a0a13; color: #f4ece0;
          padding: 12px 24px; display: flex; gap: 18px; align-items: center; font-size: 13px; }
   #bar button { font: inherit; padding: 7px 16px; border: 0; border-radius: 4px;
@@ -141,7 +154,8 @@ const html = `<!doctype html>
   ${clean.length} unflagged &middot; <b>${missedWithOptions.length}</b> found nothing but have candidates &middot;
   ${missedBare.length} found nothing at all
 </p>
-<p class="sum">Mark anything wrong with <b>&#10007; wrong</b>, or pick a better candidate where one is offered.
+<p class="sum">Mark anything wrong with <b>&#10007; wrong</b>, pick a better candidate where one is offered, or
+<b>paste an image URL</b> you found yourself — right-click an image in the search results, Copy image address, paste.
 Only what you change is recorded. Then <b>Download decisions</b> and run
 <code>node tools/labelfetch/decide.mjs --apply</code>.</p>
 <p class="sum"><b>text on bottle</b> is what OCR actually read off that picture — it is the evidence
@@ -164,11 +178,32 @@ ${missedBare.length ? `<h2>No candidates at all — ${missedBare.length}</h2><p 
 const chosen = {};
 const initial = {};
 document.querySelectorAll('input[type=radio]:checked').forEach(i => initial[i.name] = i.value);
+const count = () => document.getElementById('n').textContent = Object.keys(chosen).length;
 document.addEventListener('change', e => {
-  if (e.target.type !== 'radio') return;
-  if (e.target.value === initial[e.target.name]) delete chosen[e.target.name];
-  else chosen[e.target.name] = e.target.value;
-  document.getElementById('n').textContent = Object.keys(chosen).length;
+  if (e.target.type === 'radio') {
+    if (e.target.value === initial[e.target.name]) delete chosen[e.target.name];
+    else chosen[e.target.name] = e.target.value;
+    count();
+    return;
+  }
+  // A pasted URL is a stronger statement than "wrong": it says use THIS one.
+  // It also selects the tile, so the card reads as decided at a glance.
+  if (e.target.classList.contains('opt-url')) {
+    const slug = e.target.dataset.slug;
+    const v = e.target.value.trim();
+    if (v) {
+      chosen[slug] = v;
+      e.target.closest('.opt').querySelector('input[type=radio]').checked = true;
+    } else if (chosen[slug] && /^https?:/.test(chosen[slug])) {
+      delete chosen[slug];
+    }
+    count();
+  }
+});
+// Paste alone should count, without needing to leave the field.
+document.addEventListener('paste', e => {
+  const t = e.target;
+  if (t.classList && t.classList.contains('opt-url')) setTimeout(() => t.dispatchEvent(new Event('change', {bubbles:true})), 0);
 });
 function save() {
   const blob = new Blob([JSON.stringify(chosen, null, 1)], {type: 'application/json'});
@@ -196,6 +231,7 @@ await writeFile(OUT_CSV, csv);
 
 const withAlts = ok.filter((r) => r.alternates?.length).length;
 console.log(`${ok.length} staged  ${flagged.length} flagged  ${clean.length} unflagged`);
+if (stale) console.log(`${stale} records skipped — their image file is no longer on disk`);
 console.log(`${missedWithOptions.length} found nothing but have candidates to choose from`);
 console.log(`${withAlts} accepted images have alternates offered`);
 console.log(`\n${OUT_HTML}\n${OUT_CSV}`);
