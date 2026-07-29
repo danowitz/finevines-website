@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -519,7 +520,23 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 			return err
 		}
 	}
+	// Delisted wines render AFTER active ones, so a slug shared between an
+	// active and a delisted wine (a data anomaly — e.g. two Salesforce rows
+	// that normalize to the same producer/name/vintage) must not let the
+	// OutOfStock delisted page clobber the active page just written to the
+	// same dist/wines/<slug>/ directory. The active page always wins; the
+	// collision is logged so it surfaces as a data problem to fix, not
+	// silently swallowed.
+	activeSlugs := make(map[string]bool, len(s.Wines))
+	for _, w := range s.Wines {
+		activeSlugs[w.Slug] = true
+	}
 	for _, w := range s.Delisted {
+		if activeSlugs[w.Slug] {
+			log.Printf("build: skipping delisted wine %s (SKU %s) — slug %q is already claimed by an active wine",
+				w.ID, w.SKU, w.Slug)
+			continue
+		}
 		if err := renderWine(w, true); err != nil {
 			return err
 		}

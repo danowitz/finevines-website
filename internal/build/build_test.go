@@ -214,10 +214,10 @@ func mustAbs(t *testing.T, rel string) string {
 
 // chdir switches the test process's working directory to dir for the
 // duration of the calling test, restoring the original directory via
-// t.Cleanup. Needed because copyRedirectsJSON reads "redirects.json"
-// relative to the process's cwd — matching where redirects.Save writes it
-// (repo root) and where cmd/finevines's runBuild/runRedirects always
-// operate from.
+// t.Cleanup. Needed because mergeRedirects (via Run's redirectsJSONName
+// argument) reads "redirects.json" relative to the process's cwd — matching
+// where redirects.Save writes it (repo root) and where cmd/finevines's
+// runBuild/runRedirects always operate from.
 func chdir(t *testing.T, dir string) {
 	t.Helper()
 	orig, err := os.Getwd()
@@ -1205,6 +1205,44 @@ func TestBuild_UnavailableWineHasPageButIsHiddenFromBrowse(t *testing.T) {
 	// published page, not a second-class one.
 	if _, err := os.Stat(filepath.Join(dist, "assets", "img", "wines", "b.svg")); err != nil {
 		t.Errorf("delisted wine's label image was not generated: %v", err)
+	}
+}
+
+// TestBuild_CollidingSlugActivePageWins guards the render-order hazard noted
+// in the delisting-lifecycle review: delisted wines render AFTER active
+// ones (see Run's renderWine loop), so if a slug were ever shared between an
+// active and a delisted wine (a data anomaly, but not one build should ever
+// let corrupt the site), a naive render order would let the OutOfStock
+// delisted page silently clobber the active page written moments before.
+// The active page must always win; the collision is logged, not
+// overwritten.
+func TestBuild_CollidingSlugActivePageWins(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		{ID: "SF-ACTIVE", SKU: "AA1111", Producer: "Alpha", Name: "Shared Red", Vintage: "2021",
+			Slug: "collision-slug", Description: "active wine", ImagePath: "assets/img/wines/a.svg"},
+		{ID: "SF-DELISTED", SKU: "BB2222", Producer: "Alpha", Name: "Shared Red", Vintage: "2021",
+			Slug: "collision-slug", Description: "delisted wine", ImagePath: "assets/img/wines/b.svg",
+			Status: model.StatusUnavailable, DelistedAt: "2026-07-01T00:00:00Z"},
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	page := readFile(t, filepath.Join(dist, "wines", "collision-slug", "index.html"))
+	if !strings.Contains(page, `"availability": "https://schema.org/InStock"`) {
+		t.Error("the active wine's page must win a slug collision, not be clobbered by the delisted one")
+	}
+	if strings.Contains(page, "currently unavailable") {
+		t.Error("the active wine's page must not carry the delisted-wine unavailable notice")
 	}
 }
 
