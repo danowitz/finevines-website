@@ -1199,6 +1199,13 @@ func TestBuild_UnavailableWineHasPageButIsHiddenFromBrowse(t *testing.T) {
 	if !strings.Contains(active, `"availability": "https://schema.org/InStock"`) {
 		t.Error("active page must remain InStock")
 	}
+
+	// 4. The delisted wine's own page still gets its no-broken-image label
+	// fallback generated, same as an active wine — its detail page is a real
+	// published page, not a second-class one.
+	if _, err := os.Stat(filepath.Join(dist, "assets", "img", "wines", "b.svg")); err != nil {
+		t.Errorf("delisted wine's label image was not generated: %v", err)
+	}
 }
 
 // readFile reads path and fails the test on error, returning the contents as

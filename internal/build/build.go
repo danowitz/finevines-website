@@ -386,7 +386,12 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		}
 		*fp.dst = url
 	}
-	if err := ensureLabels(distDir, s.Wines); err != nil {
+	// Delisted wines still render their own detail page (see the render loop
+	// below), so they need the same no-broken-image fallback as active wines.
+	labelWines := make([]model.Wine, 0, len(s.Wines)+len(s.Delisted))
+	labelWines = append(labelWines, s.Wines...)
+	labelWines = append(labelWines, s.Delisted...)
+	if err := ensureLabels(distDir, labelWines); err != nil {
 		return err
 	}
 	if err := copyRedirectsJSON(distDir); err != nil {
