@@ -577,7 +577,7 @@ func spaceJoin(parts ...string) string {
 // availability renders a wine card's trade availability line from the on-hand
 // bottle count and the case pack the product name encodes (12 when it doesn't
 // say): "74 bottles · 6 cs + 2"; a holding short of one full case reads
-// "3 bottles — broken case". Composed HERE, once, and shipped verbatim in both
+// "3 bottles · broken case". Composed HERE, once, and shipped verbatim in both
 // the server-rendered cards and the catalog-index (indexEntry.Avail) so
 // portfolio.js never re-derives it — the two renderings must stay identical.
 func availability(w model.Wine) string {
@@ -593,7 +593,7 @@ func availability(w model.Wine) string {
 	pack := catalog.PackOf(w)
 	cs, rem := b/pack, b%pack
 	if cs == 0 {
-		return s + " — broken case"
+		return s + " · broken case"
 	}
 	s += fmt.Sprintf(" · %d cs", cs)
 	if rem > 0 {
