@@ -121,6 +121,14 @@ type Wine struct {
 	Name       string `json:"name"`
 	Vintage    string `json:"vintage"`
 	StockQty   int    `json:"stockQty"`
+	// StockCases is the on-hand quantity in CASES, verbatim from Salesforce
+	// (FV_OnHand_Qty__c) — fractional part = a broken case. StockQty above is
+	// its ceiled shadow (kept for the eligibility test and for older data
+	// written before this field existed). See catalog.OnHandCases.
+	StockCases float64 `json:"stockCases,omitempty"`
+	// CasePack is bottles-per-case from Salesforce (FV_Bottles_Per_Case__c).
+	// 0 = unknown; catalog.PackOf falls back to name parsing, then 12.
+	CasePack int `json:"casePack,omitempty"`
 
 	// Classification.
 	Varietal    string `json:"varietal"`
