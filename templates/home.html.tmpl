@@ -8,17 +8,61 @@
 <main>
   <section class="home-hero">
     <div class="wrap">
-      <span class="eyebrow">Wholesale Wine &amp; Spirits &middot; Chicagoland</span>
-      <h1>Pouring elegance with a sommelier's touch.</h1>
-      <p class="lede">FineVines is a licensed wholesale distributor bringing a hand-selected portfolio of wine
-        and spirits to Illinois restaurants, retailers, and hospitality tables. Sourced with care, stored
-        with precision, and poured with a sommelier's instinct for the right bottle at the right moment.</p>
-      <p>
-        <a class="btn btn-primary" href="/portfolio/">Browse the Portfolio</a>
-        <a class="btn btn-ghost" href="/contact/">Get in Touch</a>
-      </p>
+      <div class="home-hero-copy">
+        <span class="eyebrow">Wholesale Wine &amp; Spirits &middot; Chicagoland</span>
+        <h1>Pouring elegance with a sommelier's touch.</h1>
+        <p class="lede">FineVines is a licensed wholesale distributor bringing a hand-selected portfolio of wine
+          and spirits to Illinois restaurants, retailers, and hospitality tables. Sourced with care, stored
+          with precision, and poured with a sommelier's instinct for the right bottle at the right moment.</p>
+        <p class="hero-actions">
+          <a class="btn btn-primary" href="/portfolio/">Browse the Portfolio</a>
+          <a class="btn btn-ghost" href="/contact/">Get in Touch</a>
+        </p>
+      </div>
+      <figure class="home-hero-media">
+        <img src="/assets/opt/pour-hero.jpg" alt="Wine being poured for service" width="900" height="1200"
+          loading="eager" fetchpriority="high">
+      </figure>
     </div>
   </section>
+
+  {{if .FeaturedWines}}<section class="wrap home-featured">
+    <div class="home-section-heading">
+      <div>
+        <span class="eyebrow">The Heart of What We Do</span>
+        <h2>Bottles Chosen with Purpose</h2>
+      </div>
+      <a class="text-link" href="/portfolio/">Explore the full portfolio &rarr;</a>
+    </div>
+    <ul class="wine-grid view-cards home-wine-grid">
+      {{range .FeaturedWines}}<li>
+        <a class="wine-card" href="/wines/{{.Slug}}/">
+          <div class="thumb">
+            <img src="/{{.ImagePath}}" alt="Bottle of {{spaceJoin .Producer .Name .Vintage}}" loading="lazy">
+          </div>
+          <div class="body">
+            {{if .Producer}}<span class="producer">{{.Producer}}</span>{{end}}
+            <h3>{{.Name}}{{if .Vintage}} {{.Vintage}}{{end}}</h3>
+            {{if or .Region .Varietal}}<span class="meta">{{.Region}}{{if and .Region .Varietal}} &middot; {{end}}{{.Varietal}}</span>{{end}}
+          </div>
+        </a>
+      </li>{{end}}
+    </ul>
+  </section>{{end}}
+
+  {{if .FeaturedProducers}}<section class="wrap home-producers">
+    <span class="eyebrow">Families Behind the Bottles</span>
+    <h2>Relationships Built at the Source</h2>
+    <p class="lede">FineVines represents producers whose work belongs on thoughtful lists and discerning shelves.
+      Explore the families and estates represented in the current portfolio.</p>
+    <div class="producer-grid">
+      {{range .FeaturedProducers}}<a class="producer-card" href="{{.URL}}">
+        <span class="producer-name">{{.Name}}</span>
+        <span class="producer-meta">{{if .Region}}{{.Region}} &middot; {{end}}{{.CountLabel}}</span>
+        <span class="producer-arrow" aria-hidden="true">&rarr;</span>
+      </a>{{end}}
+    </div>
+  </section>{{end}}
 
   <section class="wrap">
     <span class="eyebrow">Featured Regions</span>
@@ -37,17 +81,19 @@
   <section class="wrap">
     <span class="eyebrow">News &amp; Events</span>
     <h2>From the Tasting Room</h2>
+    {{if .LatestNews}}
     <div class="news-list">
       {{range .LatestNews}}<article class="news-item">
         <div class="date">{{.Date}}</div>
         <div>
           <h3><a href="/news/{{.Slug}}/">{{.Title}}</a></h3>
-          <p class="excerpt">{{.Body}}</p>
+          <p class="excerpt">{{excerpt .Body 200}}</p>
           <span class="category">{{.Category}}</span>
         </div>
       </article>
       {{end}}
     </div>
+    {{else}}{{template "news-empty" .}}{{end}}
   </section>
 </main>
 {{template "footer" .}}

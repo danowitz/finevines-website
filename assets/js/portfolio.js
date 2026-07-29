@@ -67,6 +67,10 @@
     }
     var key = (sort === 'name' || sort === 'region') ? sort : 'producer';
     return function (a, b) {
+      // Wines missing the sort field go LAST (matching the vintage rule) —
+      // otherwise "sort by producer" leads with every producerless wine.
+      var ae = !a[key], be = !b[key];
+      if (ae !== be) return ae ? 1 : -1;
       var r = c.compare(a[key] || '', b[key] || '');
       return r !== 0 ? r : c.compare(a.name, b.name);
     };
@@ -217,6 +221,7 @@
   var facetsEl = document.querySelector('#portfolio-facets');
   var chipsEl = document.querySelector('#portfolio-chips');
   var applyCountEl = document.querySelector('.facets-apply-count');
+  var railCountEl = document.querySelector('.facets-count');
 
   // TOP_N must equal facetSeedSize in internal/build/build.go. The server seeds
   // each big group with exactly this many values; if the two disagreed the list
@@ -336,13 +341,29 @@
       body.appendChild(producer);
     }
     var h3 = document.createElement('h3');
-    h3.textContent = spaceJoin(w.name, w.vintage);
+    h3.textContent = w.name;
+    if (w.vintage) {
+      // The vintage rides in its own de-emphasized span (see the template).
+      h3.appendChild(document.createTextNode(' '));
+      var vint = document.createElement('span');
+      vint.className = 'vintage';
+      vint.textContent = w.vintage;
+      h3.appendChild(vint);
+    }
     body.appendChild(h3);
     if (w.region || w.varietal) {
       var meta = document.createElement('span');
       meta.className = 'meta';
       meta.textContent = (w.region && w.varietal) ? (w.region + ' · ' + w.varietal) : (w.region || w.varietal);
       body.appendChild(meta);
+    }
+    if (w.avail) {
+      // Pre-composed by build.go and shipped in the catalog-index — never
+      // derived here, so server- and JS-rendered cards stay identical.
+      var avail = document.createElement('span');
+      avail.className = 'avail';
+      avail.textContent = w.avail;
+      body.appendChild(avail);
     }
 
     a.appendChild(thumb);
@@ -632,6 +653,7 @@
 
     if (emptyEl) emptyEl.hidden = result.total !== 0;
     if (countEl) countEl.textContent = result.total.toLocaleString() + ' wines';
+    if (railCountEl) railCountEl.textContent = result.total.toLocaleString() + ' wines';
     renderRail(result.facetCounts, result.total);
     renderPagination(result.page, result.pageCount);
   }

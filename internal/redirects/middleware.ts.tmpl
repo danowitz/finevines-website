@@ -131,7 +131,11 @@ BunnySDK.net.http
     // the old URL had one), then fall back to pathname alone.
     const target = redirects.get(withQuery) ?? redirects.get(url.pathname);
 
-    if (target) {
+    // Never 301 a URL to itself: MapURLs already drops identity pairs at
+    // generation time, but this map is fetched at runtime and could be
+    // stale or hand-edited — a self-target here would be an infinite
+    // redirect loop on a live page, so guard again at the point of use.
+    if (target && target !== withQuery && target !== url.pathname) {
       return new Response(null, {
         status: 301,
         headers: { Location: target },

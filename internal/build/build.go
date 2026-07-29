@@ -11,11 +11,13 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
+	"github.com/gritautomation/finevines-website/internal/catalog"
 	"github.com/gritautomation/finevines-website/internal/label"
 	"github.com/gritautomation/finevines-website/internal/model"
 	"github.com/gritautomation/finevines-website/internal/salesforce"
@@ -38,12 +40,23 @@ type site struct {
 	Wines   []model.Wine
 	News    []model.NewsPost
 	Team    []model.TeamMember
+	Content model.SiteContent
 	BaseURL string
 	// GAID is the Google Analytics 4 measurement ID (G-XXXXXXXXXX), promoted
 	// through page's embedded *site so base.html.tmpl's head can emit the
 	// gtag snippet. Empty by default (analytics off) — which keeps the build
 	// output deterministic and byte-identical unless a real ID is configured.
 	GAID string
+	// Content-hashed URLs for the fixed CSS/JS assets (fingerprintAsset).
+	// site.css etc. are referenced from every page; serving them unversioned
+	// means a CDN keeps handing out the old stylesheet against new HTML after
+	// a deploy (and the portfolio JS↔template hook contract breaks the same
+	// way). Hashing the filename makes each deploy self-busting, like the
+	// catalog-index.
+	CSSURL         string
+	NavJSURL       string
+	PortfolioJSURL string
+	FiltersJSURL   string
 }
 
 // page is the template data shared by every page: the site's data plus this
@@ -112,7 +125,20 @@ func (p page) pagePath() string { return p.Path }
 // top of the shared page contract.
 type homePage struct {
 	page
-	LatestNews []model.NewsPost
+	LatestNews        []model.NewsPost
+	FeaturedWines     []model.Wine
+	FeaturedProducers []featuredProducer
+}
+
+// featuredProducer is the compact, derived homepage view of one producer.
+// It deliberately uses catalog facts only; the site does not invent producer
+// biographies before FineVines supplies them.
+type featuredProducer struct {
+	Name       string
+	Region     string
+	Count      int
+	CountLabel string
+	URL        string
 }
 
 // winePage carries one wine plus the shared page contract (Title/Description/
@@ -285,6 +311,9 @@ type indexEntry struct {
 	Country  string `json:"country"`
 	Color    string `json:"color"`
 	Img      string `json:"img"`
+	// Avail is the pre-composed availability line ("74 bottles · 6 cs + 2");
+	// see availability(). Empty when out of stock.
+	Avail string `json:"avail,omitempty"`
 }
 
 func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error {
@@ -298,6 +327,8 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		"hasPrefix":  strings.HasPrefix,
 		"comma":      comma,
 		"spaceJoin":  spaceJoin,
+		"avail":      availability,
+		"initials":   initials,
 	}).ParseGlob(filepath.Join(templatesDir, "*.tmpl"))
 	if err != nil {
 		return err
@@ -314,6 +345,24 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	if err := copyTree(assetsDir, filepath.Join(distDir, "assets")); err != nil {
 		return err
 	}
+	// Fingerprint the fixed CSS/JS AFTER the tree copy (it renames the copies
+	// in dist/, never touches assetsDir) and BEFORE any page renders, so every
+	// template sees the hashed URLs.
+	for _, fp := range []struct {
+		rel string
+		dst *string
+	}{
+		{"css/site.css", &s.CSSURL},
+		{"js/nav.js", &s.NavJSURL},
+		{"js/portfolio.js", &s.PortfolioJSURL},
+		{"js/filters.js", &s.FiltersJSURL},
+	} {
+		url, err := fingerprintAsset(distDir, fp.rel)
+		if err != nil {
+			return err
+		}
+		*fp.dst = url
+	}
 	if err := ensureLabels(distDir, s.Wines); err != nil {
 		return err
 	}
@@ -325,6 +374,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	if len(latestNews) > 3 {
 		latestNews = latestNews[:3]
 	}
+	featuredWines := selectFeaturedWines(s.Wines, s.Content.FeaturedWineSlugs, 4)
 
 	pages := []struct {
 		rel, tmpl string
@@ -338,7 +388,9 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 					"elegance with a sommelier's touch across Chicagoland's restaurants and retailers.",
 				Path: "/",
 			},
-			LatestNews: latestNews,
+			LatestNews:        latestNews,
+			FeaturedWines:     featuredWines,
+			FeaturedProducers: featuredProducers(s.Wines, featuredWines),
 		}},
 		{"contact", "contact", page{
 			site:  s,
@@ -482,6 +534,23 @@ func excerpt(body string, maxLen int) string {
 	return strings.TrimSpace(cut) + "…"
 }
 
+// initials returns a compact monogram for a team member without a portrait.
+// It uses the first and last whitespace-separated name parts so middle names
+// and initials do not make the fallback visually noisy.
+func initials(name string) string {
+	parts := strings.Fields(name)
+	if len(parts) == 0 {
+		return ""
+	}
+	first := []rune(parts[0])
+	out := string(first[0])
+	if len(parts) > 1 {
+		last := []rune(parts[len(parts)-1])
+		out += string(last[0])
+	}
+	return strings.ToUpper(out)
+}
+
 // firstNonEmpty returns s if it is non-empty, else fallback. Used for a
 // page's meta description when the wine record itself has none.
 func firstNonEmpty(s, fallback string) string {
@@ -503,6 +572,34 @@ func spaceJoin(parts ...string) string {
 		}
 	}
 	return strings.Join(out, " ")
+}
+
+// availability renders a wine card's trade availability line from the on-hand
+// bottle count and the case pack the product name encodes (12 when it doesn't
+// say): "74 bottles · 6 cs + 2"; a holding short of one full case reads
+// "3 bottles — broken case". Composed HERE, once, and shipped verbatim in both
+// the server-rendered cards and the catalog-index (indexEntry.Avail) so
+// portfolio.js never re-derives it — the two renderings must stay identical.
+func availability(w model.Wine) string {
+	b := w.StockQty
+	if b <= 0 {
+		return ""
+	}
+	unit := "bottles"
+	if b == 1 {
+		unit = "bottle"
+	}
+	s := fmt.Sprintf("%s %s", comma(b), unit)
+	pack := catalog.PackOf(w)
+	cs, rem := b/pack, b%pack
+	if cs == 0 {
+		return s + " — broken case"
+	}
+	s += fmt.Sprintf(" · %d cs", cs)
+	if rem > 0 {
+		s += fmt.Sprintf(" + %d", rem)
+	}
+	return s
 }
 
 // comma formats a non-negative integer with thousands separators (2665 →
@@ -702,6 +799,7 @@ func writeCatalogIndex(distDir string, wines []model.Wine) (string, error) {
 			Country:  w.Country,
 			Color:    w.Color,
 			Img:      "/" + w.ImagePath,
+			Avail:    availability(w),
 		}
 	}
 	data, err := json.Marshal(entries)
@@ -720,6 +818,27 @@ func writeCatalogIndex(distDir string, wines []model.Wine) (string, error) {
 		return "", err
 	}
 	return "/assets/" + name, nil
+}
+
+// fingerprintAsset renames dist/assets/<rel> to carry the first 8 hex of its
+// content's sha256 (site.css → site.<hash>.css) and returns the hashed
+// site-relative URL. Same scheme and rationale as the catalog-index: the CDN
+// can cache the file immutably because any content change changes the URL.
+// It operates on the copy in dist/ only — the source assets/ tree keeps its
+// stable, un-hashed filenames.
+func fingerprintAsset(distDir, rel string) (string, error) {
+	src := filepath.Join(distDir, "assets", filepath.FromSlash(rel))
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(data)
+	ext := filepath.Ext(rel)
+	hashed := strings.TrimSuffix(rel, ext) + "." + hex.EncodeToString(sum[:])[:8] + ext
+	if err := os.Rename(src, filepath.Join(distDir, "assets", filepath.FromSlash(hashed))); err != nil {
+		return "", err
+	}
+	return "/assets/" + hashed, nil
 }
 
 // portfolioPageURL is the canonical site-root path for portfolio page n:
@@ -833,7 +952,11 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := &site{Wines: usableWines(wines), BaseURL: baseURL, GAID: gaID}
+	content, err := model.LoadSiteContent(filepath.Join(dataDir, "site.json"))
+	if err != nil {
+		return nil, fmt.Errorf("load site content: %w", err)
+	}
+	s := &site{Wines: usableWines(wines), Content: content, BaseURL: baseURL, GAID: gaID}
 	// team.json is optional until seeded
 	if data, err := os.ReadFile(filepath.Join(dataDir, "team.json")); err == nil {
 		if err := jsonUnmarshal(data, &s.Team); err != nil {
@@ -858,6 +981,96 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 	}
 	sort.Slice(s.News, func(i, j int) bool { return s.News[i].Date > s.News[j].Date }) // newest first
 	return s, nil
+}
+
+// selectFeaturedWines resolves the hand-curated slug list, then fills any
+// vacancy deterministically from the live catalog. The fallback keeps the
+// homepage intact when a featured SKU drops out of stock during a nightly
+// Salesforce sync; unique producers are preferred for visual variety.
+func selectFeaturedWines(wines []model.Wine, slugs []string, limit int) []model.Wine {
+	if limit <= 0 {
+		return nil
+	}
+	bySlug := make(map[string]model.Wine, len(wines))
+	for _, wine := range wines {
+		bySlug[wine.Slug] = wine
+	}
+	selected := make([]model.Wine, 0, limit)
+	seenSlugs := make(map[string]bool, limit)
+	seenProducers := make(map[string]bool, limit)
+	add := func(wine model.Wine) bool {
+		if len(selected) == limit || wine.Slug == "" || wine.ImagePath == "" || seenSlugs[wine.Slug] {
+			return false
+		}
+		selected = append(selected, wine)
+		seenSlugs[wine.Slug] = true
+		if wine.Producer != "" {
+			seenProducers[wine.Producer] = true
+		}
+		return true
+	}
+	for _, slug := range slugs {
+		if wine, ok := bySlug[slug]; ok {
+			add(wine)
+		}
+	}
+	for _, wine := range wines {
+		if len(selected) == limit {
+			break
+		}
+		if wine.Producer == "" || seenProducers[wine.Producer] || !isRasterImage(wine.ImagePath) {
+			continue
+		}
+		add(wine)
+	}
+	for _, wine := range wines {
+		if len(selected) == limit {
+			break
+		}
+		if wine.Producer == "" || seenProducers[wine.Producer] {
+			continue
+		}
+		add(wine)
+	}
+	for _, wine := range wines {
+		if len(selected) == limit {
+			break
+		}
+		add(wine)
+	}
+	return selected
+}
+
+// featuredProducers turns the featured bottle selection into the homepage's
+// producer-family cards. Counts and regions come from the current catalog, so
+// the section stays factual and updates with the same nightly data as browse.
+func featuredProducers(wines, featured []model.Wine) []featuredProducer {
+	counts := make(map[string]int)
+	for _, wine := range wines {
+		if wine.Producer != "" {
+			counts[wine.Producer]++
+		}
+	}
+	out := make([]featuredProducer, 0, len(featured))
+	seen := make(map[string]bool, len(featured))
+	for _, wine := range featured {
+		if wine.Producer == "" || seen[wine.Producer] {
+			continue
+		}
+		seen[wine.Producer] = true
+		countLabel := fmt.Sprintf("%d current listings", counts[wine.Producer])
+		if counts[wine.Producer] == 1 {
+			countLabel = "1 current listing"
+		}
+		out = append(out, featuredProducer{
+			Name:       wine.Producer,
+			Region:     wine.Region,
+			Count:      counts[wine.Producer],
+			CountLabel: countLabel,
+			URL:        "/portfolio/?producer=" + url.QueryEscape(wine.Producer),
+		})
+	}
+	return out
 }
 
 func renderPage(tmpl *template.Template, distDir, rel, name string, data any) error {

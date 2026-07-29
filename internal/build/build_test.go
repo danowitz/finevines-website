@@ -18,7 +18,7 @@ import (
 	"github.com/gritautomation/finevines-website/internal/model"
 )
 
-func TestRunGeneratesHomeAndContact(t *testing.T) {
+func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 	dist := t.TempDir()
 	err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", "")
 	if err != nil {
@@ -31,8 +31,14 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 	for _, want := range []string{
 		"<title>FineVines",
 		"Pouring elegance with a sommelier", // tagline present
+		`src="/assets/opt/pour-hero.jpg"`,
+		`alt="Wine being poured for service"`,
+		`The Heart of What We Do`,
+		`Families Behind the Bottles`,
+		`href="/wines/hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021/"`,
+		`href="/portfolio/?producer=Hubert&#43;Lamy"`,
 		`rel="canonical" href="https://finevines.com/"`,
-		`href="/assets/css/site.css"`,
+		`href="/assets/css/site.`,
 		`href="/assets/img/favicon.ico"`,                            // favicon wired in base head
 		`<img src="/assets/img/finevines-logo.png" alt="FineVines"`, // real logo wordmark in header
 		// Social/link-preview meta: Open Graph, Twitter Card, and the mobile
@@ -57,8 +63,8 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 
 	// Enterprise footer: the real colored logo image (on a light chip for
 	// legibility on the dark bordeaux band, per the client QA fix), all four
-	// column headings, the real social handles, the clearly-marked contact
-	// placeholders, and the static-year bottom bar (no runtime clock — must
+	// column headings, the real social handles, the verified contact details,
+	// and the static-year bottom bar (no runtime clock — must
 	// stay deterministic).
 	for _, want := range []string{
 		`class="footer-logo"`,                           // logo lockup wraps the image
@@ -67,8 +73,11 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 		`href="https://twitter.com/finevineswine"`,        // real X/Twitter
 		`href="https://www.linkedin.com/company/1291059"`, // real LinkedIn
 		`Become a Customer`,                               // trade CTA
-		`[Mailing address &mdash; to be confirmed]`,       // placeholder, not fabricated
-		`Email: [to be confirmed]`,
+		`2725 Thomas St`,
+		`Melrose Park, IL 60160`,
+		`href="tel:&#43;17083436702"`,
+		`Fax: <a href="tel:&#43;17083436536">(708) 343-6536</a>`,
+		`href="mailto:info@finevines.com"`,
 		`&copy; 2026 FineVines. All rights reserved.`, // static year, no clock
 	} {
 		if !strings.Contains(string(home), want) {
@@ -91,23 +100,49 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 		`aria-controls="site-nav"`,
 		`aria-expanded="false"`,
 		`id="site-nav"`,
-		`src="/assets/js/nav.js"`,
+		`src="/assets/js/nav.`,
 	} {
 		if !strings.Contains(string(home), want) {
 			t.Errorf("header nav toggle missing %q", want)
 		}
 	}
 	// No fabricated contact data may reappear in the footer.
-	for _, bad := range []string{"@finevines.com", "(847)", "(630)", "(773)"} {
+	for _, bad := range []string{"[to be confirmed]", "(847)", "(630)", "(773)"} {
 		if strings.Contains(string(home), bad) {
 			t.Errorf("footer must not contain fabricated contact detail %q", bad)
 		}
 	}
-	if _, err := os.Stat(filepath.Join(dist, "contact", "index.html")); err != nil {
-		t.Error("contact page missing")
+	cssMatches, err := filepath.Glob(filepath.Join(dist, "assets", "css", "site.*.css"))
+	if err != nil {
+		t.Fatal(err)
 	}
-	if _, err := os.Stat(filepath.Join(dist, "assets", "css", "site.css")); err != nil {
-		t.Error("assets not copied into dist")
+	if len(cssMatches) != 1 {
+		t.Errorf("want exactly one fingerprinted site stylesheet, got %v", cssMatches)
+	}
+}
+
+func TestRunGeneratesContactFromSiteContent(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	contact, err := os.ReadFile(filepath.Join(dist, "contact", "index.html"))
+	if err != nil {
+		t.Fatal("contact page missing:", err)
+	}
+	for _, want := range []string{
+		"2725 Thomas St",
+		"Melrose Park, IL 60160",
+		`href="tel:&#43;17083436702"`,
+		`href="tel:&#43;17083436536"`,
+		`href="mailto:info@finevines.com"`,
+	} {
+		if !strings.Contains(string(contact), want) {
+			t.Errorf("contact page missing verified detail %q", want)
+		}
+	}
+	if strings.Contains(string(contact), "[to be confirmed]") {
+		t.Error("contact page must not publish confirmation placeholders")
 	}
 }
 
@@ -326,7 +361,7 @@ func TestPortfolioPage(t *testing.T) {
 		`data-facet="producer"`,
 		`id="portfolio-count"`,
 		`id="portfolio-search"`,
-		`src="/assets/js/portfolio.js"`,
+		`src="/assets/js/portfolio.`,
 		`class="page-hero"`, // signature bordeaux hero band on section pages
 		// Cards | List view toggle control + the grid's default view class
 		// that portfolio.js swaps between (facet filtering works in both).
@@ -343,7 +378,7 @@ func TestPortfolioPage(t *testing.T) {
 		`id="portfolio-facets"`,
 		`class="facets-close"`,
 		`class="facets-backdrop"`,
-		`src="/assets/js/filters.js"`,
+		`src="/assets/js/filters.`,
 		// New paginated-catalog hooks portfolio.js depends on: the content-
 		// hashed index URL + pageSize/page metadata on the grid, the sort
 		// select, the country facet (replaced style), the per-value count span,
@@ -399,7 +434,7 @@ func TestPortfolioPage(t *testing.T) {
 	// the full 2,665-wine build in tests/e2e/filter-rail.test.js.
 }
 
-func TestNewsPages(t *testing.T) {
+func TestNewsPagesAndHomeDigest(t *testing.T) {
 	dist := t.TempDir()
 	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
 		t.Fatal(err)
@@ -427,6 +462,17 @@ func TestNewsPages(t *testing.T) {
 	}
 	if !strings.Contains(landingHTML, "…") {
 		t.Error("news landing excerpt should be truncated with a trailing ellipsis")
+	}
+	home, err := os.ReadFile(filepath.Join(dist, "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	homeHTML := string(home)
+	if strings.Contains(homeHTML, "Light bites will be served") {
+		t.Error("home news digest should be truncated, not the full multi-paragraph body")
+	}
+	if !strings.Contains(homeHTML, "…") {
+		t.Error("home news digest should be truncated with a trailing ellipsis")
 	}
 
 	post, err := os.ReadFile(filepath.Join(dist, "news", "spring-portfolio-tasting", "index.html"))
@@ -468,9 +514,68 @@ func TestAboutPage(t *testing.T) {
 		"Founder &amp; President",
 		"Barbara Fultz",
 		"Office Manager",
+		`class="team-monogram"`,
+		`>GM</span>`,
+		`>BF</span>`,
+		`href="mailto:george@finevines.com"`,
+		`href="mailto:barb@finevines.com"`,
 	} {
 		if !strings.Contains(html, want) {
 			t.Errorf("about page missing %q", want)
+		}
+	}
+	for _, internal := range []string{"confirm email", "barbara@finevines.com"} {
+		if strings.Contains(html, internal) {
+			t.Errorf("about page leaked internal or superseded roster data %q", internal)
+		}
+	}
+}
+
+func TestNewsPagesEmptyState(t *testing.T) {
+	dataDir := t.TempDir()
+	for _, name := range []string{"wines.json", "team.json", "site.json"} {
+		data, err := os.ReadFile(filepath.Join("testdata", name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dataDir, name), data, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.Mkdir(filepath.Join(dataDir, "news"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(dataDir, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{
+		filepath.Join(dist, "index.html"),
+		filepath.Join(dist, "news", "index.html"),
+	} {
+		page, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(page), "Fresh notes from the FineVines trade team are on the way.") {
+			t.Errorf("%s missing the news empty state", path)
+		}
+	}
+}
+
+func TestInitials(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		want string
+	}{
+		{name: "George Molitor", want: "GM"},
+		{name: "Barbara Fultz", want: "BF"},
+		{name: "Connie", want: "C"},
+		{name: "  ", want: ""},
+	} {
+		if got := initials(tc.name); got != tc.want {
+			t.Errorf("initials(%q) = %q, want %q", tc.name, got, tc.want)
 		}
 	}
 }
@@ -879,5 +984,37 @@ func TestBuildFacetsIsDeterministic(t *testing.T) {
 		if got := buildFacets(wines); !reflect.DeepEqual(got, first) {
 			t.Fatalf("buildFacets is not deterministic across runs (iteration %d)", i)
 		}
+	}
+}
+
+func TestFeaturedHomepageSelectionFallsBackWithoutRepeatingProducers(t *testing.T) {
+	wines := []model.Wine{
+		{Slug: "a", Producer: "Alpha", ImagePath: "assets/a.jpg", Region: "Burgundy"},
+		{Slug: "b", Producer: "Alpha", ImagePath: "assets/b.jpg", Region: "Burgundy"},
+		{Slug: "c", Producer: "Cellar C", ImagePath: "assets/c.png", Region: "Piedmont"},
+		{Slug: "d", Producer: "Domaine D", ImagePath: "assets/d.svg", Region: "Rhône Valley"},
+	}
+	got := selectFeaturedWines(wines, []string{"missing", "b"}, 3)
+	if len(got) != 3 {
+		t.Fatalf("featured wines = %+v, want three", got)
+	}
+	if want := []string{"b", "c", "d"}; !reflect.DeepEqual(
+		[]string{got[0].Slug, got[1].Slug, got[2].Slug}, want,
+	) {
+		t.Fatalf("featured slugs = %v, want %v", got, want)
+	}
+
+	producers := featuredProducers(wines, got)
+	if len(producers) != 3 {
+		t.Fatalf("featured producers = %+v, want three unique producers", producers)
+	}
+	if producers[0].Count != 2 || producers[0].URL != "/portfolio/?producer=Alpha" {
+		t.Errorf("Alpha producer card = %+v", producers[0])
+	}
+	if producers[2].CountLabel != "1 current listing" {
+		t.Errorf("singular producer count = %q", producers[2].CountLabel)
+	}
+	if producers[1].URL != "/portfolio/?producer=Cellar+C" {
+		t.Errorf("producer URL should be query encoded, got %q", producers[1].URL)
 	}
 }

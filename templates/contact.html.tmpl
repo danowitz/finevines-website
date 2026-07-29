@@ -25,13 +25,16 @@
     <hr class="rule-gold">
 
     <h2>Warehouse &amp; Office</h2>
-    <p><em>[Mailing address &mdash; to be confirmed by FineVines]</em></p>
+    <address class="contact-address">
+      {{.Content.Contact.Street}}<br>
+      {{.Content.Contact.CityStateZIP}}
+    </address>
 
     <h2>Contact</h2>
-    <p>
-      Phone: <em>[to be confirmed]</em><br>
-      Fax: <em>[to be confirmed]</em><br>
-      Email: <em>[to be confirmed]</em>
+    <p class="contact-links">
+      Phone: <a href="tel:{{.Content.Contact.PhoneHref}}">{{.Content.Contact.PhoneDisplay}}</a><br>
+      Fax: <a href="tel:{{.Content.Contact.FaxHref}}">{{.Content.Contact.FaxDisplay}}</a><br>
+      Email: <a href="mailto:{{.Content.Contact.Email}}">{{.Content.Contact.Email}}</a>
     </p>
 
     <h2>Your Sales Representative</h2>

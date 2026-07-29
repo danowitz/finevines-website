@@ -49,6 +49,43 @@ func TestLoadWinesMissingFileReturnsEmpty(t *testing.T) {
 	}
 }
 
+func TestLoadSiteContentRequiresCompleteContact(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "site.json")
+	valid := `{
+		"contact": {
+			"street": "2725 Thomas St",
+			"cityStateZip": "Melrose Park, IL 60160",
+			"phoneDisplay": "(708) 343-6702",
+			"phoneHref": "+17083436702",
+			"faxDisplay": "(708) 343-6536",
+			"faxHref": "+17083436536",
+			"email": "info@finevines.com"
+		},
+		"contactConfirmed": false,
+		"teamEmailsConfirmed": false,
+		"featuredWineSlugs": ["featured-wine"]
+	}`
+	if err := os.WriteFile(path, []byte(valid), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	content, err := LoadSiteContent(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if content.Contact.FaxHref != "+17083436536" || len(content.FeaturedWineSlugs) != 1 {
+		t.Fatalf("site content lost data: %+v", content)
+	}
+
+	incomplete := `{"contact":{"street":"2725 Thomas St"}}`
+	if err := os.WriteFile(path, []byte(incomplete), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := LoadSiteContent(path); err == nil {
+		t.Error("incomplete site contact should be rejected")
+	}
+}
+
 // TestSaveWinesIsAtomic guards the crash-safety checkpointing enrich relies
 // on: SaveWines must write via a temp file + rename, not a plain
 // os.WriteFile, so a crash mid-write can never leave a truncated

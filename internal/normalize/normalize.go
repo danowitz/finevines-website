@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	vintagePrefix = regexp.MustCompile(`^L?\d{2}\s+`)          // "14 …", "L17 …"
-	packSuffix    = regexp.MustCompile(`\s+\d+/[\d.]+\*?\s*$`) // "12/750", "1/3.0", "6/750*"
+	vintagePrefix = regexp.MustCompile(`^(?:L?\d{2}|NV)\s+`) // "14 …", "L17 …", "NV …"
+	packToken     = regexp.MustCompile(`\s+\d+/[\d.]+`)      // "12/750", "1/3.0", "3/1.5L", "24/375 CANS"
 	trailingStar  = regexp.MustCompile(`[.*]+\s*$`)
 	digitRe       = regexp.MustCompile(`\d`)
 )
@@ -57,26 +57,39 @@ func Text(s string) string {
 // IsTradeName reports whether desc looks like Salesforce trade shorthand (and
 // therefore should be normalized).
 func IsTradeName(desc string) bool {
-	return vintagePrefix.MatchString(desc) || packSuffix.MatchString(desc)
+	return vintagePrefix.MatchString(desc) || packToken.MatchString(desc)
 }
 
 // WineName derives a presentable wine name from a terse trade description,
-// dropping the vintage prefix, the pack/size suffix, and the leading brand
-// tokens (which the description repeats), then expanding a few abbreviations
-// and title-casing. Already-clean names are returned unchanged.
+// dropping the vintage prefix, the pack-size token and everything after it,
+// and the leading brand tokens (which the description repeats), then expanding
+// a few abbreviations and title-casing. Already-clean names are returned
+// unchanged.
 func WineName(desc, brand string) string {
 	if !IsTradeName(desc) {
 		return strings.TrimSpace(desc)
 	}
 	s := vintagePrefix.ReplaceAllString(desc, "")
-	s = packSuffix.ReplaceAllString(s, "")
+	s = truncateAtPack(s)
 	s = trailingStar.ReplaceAllString(s, "")
 	s = stripLeadingBrand(strings.TrimSpace(s), brand)
 	if s == "" {
 		s = vintagePrefix.ReplaceAllString(desc, "") // fall back rather than blank
-		s = packSuffix.ReplaceAllString(s, "")
+		s = truncateAtPack(s)
 	}
 	return titleCase(strings.TrimSpace(s))
+}
+
+// truncateAtPack cuts the name at the first pack-size token. Surveyed against
+// the full live roster (2026-07-29): nothing after a pack token is ever
+// wine-name content — only unit words ("L", "ML", "CANS", "LITER"),
+// warehouse hold/ops notes ("HOLD FOR …", "GM HOLD"), asterisks, or a
+// duplicated pack token.
+func truncateAtPack(s string) string {
+	if loc := packToken.FindStringIndex(s); loc != nil {
+		return s[:loc[0]]
+	}
+	return s
 }
 
 // Producer normalizes a brand: "LAST, FIRST" → "First Last", ALL-CAPS or

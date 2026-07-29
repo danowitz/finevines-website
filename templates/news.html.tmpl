@@ -32,6 +32,7 @@
   </section>
 
   <section class="wrap">
+    {{if .Posts}}
     <div class="news-list">
       {{range .Posts}}<article class="news-item">
         <div class="date">{{.Date}}</div>
@@ -43,6 +44,7 @@
       </article>
       {{end}}
     </div>
+    {{else}}{{template "news-empty" .}}{{end}}
   </section>
 </main>
 {{template "footer" .}}

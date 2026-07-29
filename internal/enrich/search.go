@@ -232,6 +232,9 @@ func parseEnrichResult(raw []byte) (EnrichResult, error) {
 	if i, j := strings.IndexByte(s, '{'), strings.LastIndexByte(s, '}'); i >= 0 && j > i {
 		s = s[i : j+1]
 	}
+	// Models slip non-breaking spaces (U+00A0, narrow U+202F) into text
+	// fields; fold them to plain spaces once here so every field is covered.
+	s = strings.NewReplacer("\u00a0", " ", "\u202f", " ").Replace(s)
 	var out EnrichResult
 	if err := json.Unmarshal([]byte(s), &out); err != nil {
 		return EnrichResult{}, err

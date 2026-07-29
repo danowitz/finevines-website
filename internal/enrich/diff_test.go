@@ -50,6 +50,7 @@ func TestDiffRoster_UnchangedGoesToKeepWithEnrichmentFieldsIntact(t *testing.T) 
 		SourceHash:     SourceHash(raw),
 		SKU:            "EF9012",
 		Producer:       "Chateau Y",
+		StockQty:       20,
 		Description:    "a beautifully balanced wine",
 		SommelierNotes: "notes of cherry and oak",
 		ImagePath:      "images/wines/chateau-y-ef9012.jpg",
@@ -67,6 +68,38 @@ func TestDiffRoster_UnchangedGoesToKeepWithEnrichmentFieldsIntact(t *testing.T) 
 	}
 	if !reflect.DeepEqual(d.Keep[0], prev) {
 		t.Fatalf("Keep must carry over the existing wine verbatim, got %+v, want %+v", d.Keep[0], prev)
+	}
+}
+
+func TestDiffRoster_StockOnlyChangeGoesToKeepWithRefreshedQty(t *testing.T) {
+	// Stock movement is excluded from SourceHash, so a stock-only change must
+	// NOT re-enrich — but the kept wine must carry the CURRENT quantity, not
+	// the stale one, since wines.json stores it.
+	raw := salesforce.WineRaw{ID: "SF-8", SKU: "QR5566", Producer: "Chateau Y", Vintage: "2019", StockQty: 3}
+	prev := model.Wine{
+		ID:          "SF-8",
+		SourceHash:  SourceHash(raw),
+		SKU:         "QR5566",
+		Producer:    "Chateau Y",
+		Vintage:     "2019",
+		StockQty:    20, // stale: sold down to 3 since the last run
+		Description: "a beautifully balanced wine",
+		Slug:        "chateau-y-qr5566",
+	}
+
+	d := DiffRoster([]salesforce.WineRaw{raw}, []model.Wine{prev})
+
+	if len(d.Enrich) != 0 {
+		t.Fatalf("stock-only change must not re-enrich, got Enrich=%+v", d.Enrich)
+	}
+	if len(d.Keep) != 1 {
+		t.Fatalf("want 1 wine in Keep, got %+v", d.Keep)
+	}
+	if d.Keep[0].StockQty != 3 {
+		t.Errorf("kept wine must carry the roster's current stock (3), got %d", d.Keep[0].StockQty)
+	}
+	if d.Keep[0].Description != "a beautifully balanced wine" {
+		t.Errorf("kept wine must retain its enrichment fields, got %+v", d.Keep[0])
 	}
 }
 

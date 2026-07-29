@@ -62,7 +62,11 @@ of these come from the Bunny.net account dashboard once FineVines has a Bunny.ne
 
 **Site**
 - `FINEVINES_SITE_BASE_URL` — optional; the site's public URL (`https://finevines.com`). Leave blank and the
-  tool defaults to that address.
+  tool defaults to that address. Set this explicitly to the staging URL for a staging deployment.
+
+Before the first production deploy, George must confirm the public contact details and all team email addresses.
+After that approval, set `contactConfirmed` and `teamEmailsConfirmed` to `true` in `data\site.json`. Until both
+flags are true, `finevines deploy` refuses to publish to `finevines.com`; staging deploys remain available.
 
 If any required value for a given command is missing, that command stops immediately and prints exactly which
 one is missing — it won't run half-configured.
@@ -183,6 +187,8 @@ or publishes anything half-finished.
 - **`data\news\` and `data\team.json`** — these are Barbara's (or whoever's) to manage, and normally you'll
   never open them directly — you'll use the two Claude skills described below, which edit them for you through
   a conversation.
+- **`data\site.json`** — GRIT owns the public contact details, client-confirmation flags, and curated homepage
+  wine list. Change the confirmation flags only after explicit client approval.
 - **`data\wines.json`** — this file is entirely machine-owned by `enrich`. Never hand-edit it — any manual
   change will simply be overwritten (or fought with) on the next `enrich` run, since it works by comparing
   what's in Salesforce to what's already in this file.

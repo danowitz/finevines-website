@@ -17,6 +17,8 @@ type Config struct {
 	BunnyAPIKey, BunnyPullZoneID                        string
 	BunnyScriptID                                       string // Edge Scripting compute script ID (redirect middleware)
 	SiteBaseURL                                         string // e.g. https://finevines.com
+	OldSiteURL                                          string // FINEVINES_OLD_SITE_URL: the legacy site redirects.Discover crawls; defaults to SiteBaseURL (identical in production, where FineVines keeps its domain — they only differ while the new site is staged on a test domain and the old site still lives on the real one)
+	RedirectsMapURL                                     string // FINEVINES_REDIRECTS_MAP_URL: where the deployed Edge middleware fetches redirects.json at runtime. Defaults to SiteBaseURL+"/redirects.json", but that default DOES NOT WORK on Bunny: an edge script cannot fetch a custom hostname served by its own pull zone (the request loops back into the edge and dies in the TLS handshake — verified live 2026-07-29, error "received corrupt message of type InvalidContentType"). Set this to the pull zone's *.b-cdn.net default hostname (e.g. https://finevines-com.b-cdn.net/redirects.json), which the same probe confirmed works from inside the isolate.
 	GAID                                                string // Google Analytics 4 measurement ID (G-XXXXXXXXXX); empty disables analytics
 	SFMock                                              bool   // FINEVINES_SF_MOCK: read the embedded sample roster instead of a live Salesforce org
 	ManualEnrichDir                                     string // FINEVINES_MANUAL_ENRICH_DIR: enrich from hand-authored <SKU>.json files instead of OpenAI (billing-pending stopgap)
@@ -43,6 +45,7 @@ func Load(envPath string) (Config, error) {
 		}
 		return fileVals[key]
 	}
+	siteBaseURL := orDefault(get("FINEVINES_SITE_BASE_URL"), "https://finevines.com")
 	return Config{
 		SFBaseURL:            get("FINEVINES_SF_BASE_URL"),
 		SFClientID:           get("FINEVINES_SF_CLIENT_ID"),
@@ -58,7 +61,9 @@ func Load(envPath string) (Config, error) {
 		BunnyAPIKey:          get("FINEVINES_BUNNY_API_KEY"),
 		BunnyPullZoneID:      get("FINEVINES_BUNNY_PULL_ZONE_ID"),
 		BunnyScriptID:        get("FINEVINES_BUNNY_SCRIPT_ID"),
-		SiteBaseURL:          orDefault(get("FINEVINES_SITE_BASE_URL"), "https://finevines.com"),
+		SiteBaseURL:          siteBaseURL,
+		OldSiteURL:           orDefault(get("FINEVINES_OLD_SITE_URL"), siteBaseURL),
+		RedirectsMapURL:      orDefault(get("FINEVINES_REDIRECTS_MAP_URL"), strings.TrimRight(siteBaseURL, "/")+"/redirects.json"),
 		GAID:                 get("FINEVINES_GA_ID"),
 		SFMock:               truthy(get("FINEVINES_SF_MOCK")),
 		ManualEnrichDir:      get("FINEVINES_MANUAL_ENRICH_DIR"),

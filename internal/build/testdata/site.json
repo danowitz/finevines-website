@@ -1,0 +1,17 @@
+{
+  "contact": {
+    "street": "2725 Thomas St",
+    "cityStateZip": "Melrose Park, IL 60160",
+    "phoneDisplay": "(708) 343-6702",
+    "phoneHref": "+17083436702",
+    "faxDisplay": "(708) 343-6536",
+    "faxHref": "+17083436536",
+    "email": "info@finevines.com"
+  },
+  "contactConfirmed": false,
+  "teamEmailsConfirmed": false,
+  "featuredWineSlugs": [
+    "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021",
+    "domaine-petit-clos-cotes-du-rhone-villages-2022"
+  ]
+}

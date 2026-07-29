@@ -207,7 +207,7 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 
 // enrichOne does the actual per-wine work for one Diff.Enrich row: text
 // enrichment, then image resolution (passing the matching previous wine, if
-// any, so a producer-supplied image is preserved), then assembling the
+// any, so a real image is preserved — see hasRealImage), then assembling the
 // resulting model.Wine. It is called concurrently by up to enrichWorkers
 // goroutines; existingByID is read-only for the duration of Run's worker
 // phase, so no synchronization is needed around it.
@@ -239,14 +239,17 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 	}
 	slug := model.Slugify(producer, name, vintage)
 
-	// Image chain: a manually producer-supplied image (from a prior run) is kept
-	// as-is; otherwise try a REAL image — FineVines' own old-site photo, then a
-	// found web image — downloaded and self-hosted under the SEO slug; failing
-	// that, ResolveImage generates a photo or writes the guaranteed SVG-label
-	// floor. A download failure is logged and falls through, never fatal.
+	// Image chain: a REAL image the catalog already holds (producer-supplied,
+	// old-site, scraped — anything a human verified or that came from a real
+	// photograph) is kept as-is; a re-enrich refreshes TEXT, it never trades a
+	// real photograph for a generated one. Otherwise try a real image —
+	// FineVines' own old-site photo, then a found web image — downloaded and
+	// self-hosted under the SEO slug; failing that, ResolveImage generates a
+	// photo or writes the guaranteed SVG-label floor. A download failure is
+	// logged and falls through, never fatal.
 	var imagePath, imageSource, imageSourceURL string
 	switch {
-	case prev != nil && prev.ImageSource == model.ImageProducerSupplied:
+	case hasRealImage(prev):
 		imagePath, imageSource, imageSourceURL = prev.ImagePath, prev.ImageSource, prev.ImageSourceURL
 	default:
 		if url, src := imageCandidate(raw.SKU, res.ImageURL, oldImages); url != "" {

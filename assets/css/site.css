@@ -237,13 +237,45 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .page-hero .btn-ghost:hover { background: rgba(241, 230, 201, .12); color: #fff; }
 
 /* ---- Home hero -------------------------------------------------------- */
-.home-hero { background: var(--hero-band); color: var(--parchment-100); border-bottom: 1px solid var(--bordeaux-950); }
-.home-hero .wrap { padding-top: 76px; padding-bottom: 84px; }
+.home-hero { background: var(--hero-band); color: var(--parchment-100); border-bottom: 1px solid var(--bordeaux-950); overflow: hidden; }
+.home-hero .wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
+  gap: clamp(40px, 6vw, 76px);
+  align-items: center;
+  padding-top: 64px;
+  padding-bottom: 70px;
+}
 .home-hero .eyebrow { color: var(--brass-300); }
 .home-hero h1 { color: #fff; max-width: 16ch; }
 .home-hero .lede { color: var(--brass-100); max-width: 56ch; margin-bottom: 30px; }
+.home-hero .hero-actions { margin: 0; }
 .home-hero .btn-ghost { border-color: var(--brass-300); color: var(--brass-100); }
 .home-hero .btn-ghost:hover { background: rgba(241, 230, 201, .12); color: #fff; }
+.home-hero-media {
+  position: relative;
+  min-height: 460px;
+  max-height: 590px;
+  margin: 0;
+  align-self: stretch;
+  overflow: hidden;
+  border: 1px solid rgba(221, 196, 137, .42);
+  border-radius: 2px;
+  box-shadow: 0 30px 70px -32px rgba(0, 0, 0, .72);
+}
+.home-hero-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 8px rgba(42, 10, 19, .16);
+  pointer-events: none;
+}
+.home-hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 43%;
+}
 
 /* ---- Region row (home) ------------------------------------------------ */
 .region-row { font-family: var(--serif-display); font-size: 24px; color: var(--bordeaux-800); display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; margin-top: 14px; }
@@ -251,12 +283,108 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .region-row a:hover { color: var(--wine); text-decoration: underline; text-decoration-color: var(--gold); }
 .region-row .sep { color: var(--brass-500); }
 
+/* ---- Homepage portfolio / producer features -------------------------- */
+.home-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.home-section-heading h2 { margin-bottom: 0; }
+.text-link {
+  flex: 0 0 auto;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--wine);
+  text-decoration: none;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--gold);
+}
+.text-link:hover { color: var(--bordeaux-800); border-bottom-color: var(--wine); }
+.wine-grid.view-cards.home-wine-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.home-wine-grid .wine-card .thumb { height: 310px; }
+.home-wine-grid .wine-card h3 { font-size: 18px; }
+.producer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+.producer-card {
+  position: relative;
+  display: flex;
+  min-height: 146px;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+  background: var(--bordeaux-950);
+  border: 1px solid var(--bordeaux-800);
+  color: var(--parchment-50);
+  text-decoration: none;
+  box-shadow: 0 20px 34px -28px rgba(42, 10, 19, .75);
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.producer-card:hover {
+  color: #fff;
+  border-color: var(--gold);
+  transform: translateY(-3px);
+  box-shadow: 0 24px 42px -26px rgba(42, 10, 19, .8);
+}
+.producer-name {
+  display: block;
+  padding-right: 28px;
+  font-family: var(--serif-display);
+  font-size: 24px;
+  line-height: 1.05;
+}
+.producer-meta {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--sans);
+  font-size: 10px;
+  line-height: 1.45;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--brass-300);
+}
+.producer-arrow {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: var(--gold);
+  font-size: 22px;
+}
+
 /* ---- Portfolio: facet sidebar + wine grid ----------------------------- */
-.portfolio-layout { display: grid; grid-template-columns: 244px 1fr; gap: 44px; align-items: start; }
-.facets { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 20px; position: sticky; top: 20px; box-shadow: 0 14px 34px -26px rgba(61, 14, 28, .4); }
-.facets h3 { font-size: 12.5px; font-family: var(--sans); font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--gold-dark); margin: 0 0 10px; }
-.facets input[type=search] { width: 100%; font-family: var(--sans); font-size: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--parchment-50); color: var(--ink-800); }
-.facets input[type=search]:focus { outline: none; border-color: var(--gold); }
+.portfolio-layout { display: grid; grid-template-columns: 288px 1fr; gap: 44px; align-items: start; }
+/* The rail sits directly on the parchment page — no card chrome. (The ≤1024px
+   block below re-surfaces it as an off-canvas drawer.) */
+.facets { position: sticky; top: 24px; }
+
+/* Rail header: "Refine" + the live result count (portfolio.js keeps the count
+   in sync with the filters). The ✕ exists only for the mobile drawer. */
+.facets-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-hairline); }
+.facets-title { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--text-strong); }
+.facets-count { font-family: var(--serif-text); font-size: 13px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.facets-close { display: none; }
+
+/* Search inputs share one look: a quiet magnifier, white field, square corners.
+   Wraps both the portfolio-wide search box and each group's filter-within. */
+.facet-search { position: relative; }
+.facet-search::before { content: "\2315"; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--cork-500); font-size: 15px; line-height: 1; pointer-events: none; }
+.facets input[type=search] { width: 100%; height: 40px; font-family: var(--sans); font-size: 14px; padding: 0 12px 0 30px; border: 1px solid var(--border-default); border-radius: 2px; background: #fff; color: var(--text-body); }
+.facets input[type=search]:focus { border-color: var(--gold); }
+.facets input[type=search]:focus-visible { outline: 2px solid var(--wine); outline-offset: 1px; }
+.facets > .facet-search { margin-top: 14px; }
 /* ---- Portfolio filter rail --------------------------------------------
    Collapsible groups, each showing its twelve highest-count values with a
    filter box to reach the rest. The previous rail printed all 577 values flat
@@ -271,21 +399,21 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .facet-chips-title { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-dark); }
 .facet-clear { all: unset; cursor: pointer; font-family: var(--serif-text); font-size: 13px; color: var(--text-muted); }
 .facet-clear:hover { color: var(--wine); box-shadow: inset 0 -1px 0 var(--gold); }
-.facet-clear:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.facet-clear:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
 .facet-chips-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .facet-chip { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; background: var(--wine); color: var(--parchment-50); border: none; border-radius: 2px; padding: 5px 8px; font-family: var(--sans); font-size: 11.5px; letter-spacing: .02em; }
 .facet-chip:hover { background: var(--bordeaux-800); }
-.facet-chip:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.facet-chip:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
 .facet-chip-x { color: var(--brass-300); font-size: 11px; }
 
 /* Group */
 .facet-group { border-top: 1px solid var(--line); margin: 0; padding: 13px 0; }
 .facet-group summary { display: flex; align-items: center; gap: 7px; cursor: pointer; list-style: none; padding: 2px 0; font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--text-strong); }
 .facet-group summary::-webkit-details-marker { display: none; }
-.facet-group summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.facet-group summary:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
 .facet-group.has-selection summary .facet-name { color: var(--wine); }
 /* Catalog-wide value count; portfolio.js rewrites it to "still available". */
-.facet-total { font-size: 11px; font-weight: 400; letter-spacing: 0; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.facet-total { font-size: 11px; font-weight: 400; letter-spacing: 0; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 /* Selection badge — how a COLLAPSED group announces that it is filtering. */
 .facet-selected { margin-left: auto; font-size: 10px; letter-spacing: .1em; font-weight: 700; color: var(--parchment-50); background: var(--gold-dark); border-radius: 2px; padding: 2px 5px; }
 .facet-selected[hidden] { display: none; }
@@ -296,14 +424,14 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .facet-group[open] summary::after { transform: rotate(180deg); }
 .facet-body { padding-top: 11px; }
 
-/* Filter-within-group */
-.facet-filter { width: 100%; height: 38px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--border-default); border-radius: 2px; background: #fff; font-family: var(--sans); font-size: 14px; color: var(--text-body); }
-.facet-filter:focus { outline: none; border-color: var(--gold); }
-.facet-meta { display: flex; align-items: center; justify-content: space-between; margin: 7px 2px; }
-.facet-match { font-family: var(--serif-text); font-size: 11.5px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
-.facet-sort { all: unset; cursor: pointer; font-family: var(--sans); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--gold-dark); }
-.facet-sort:hover { color: var(--wine); }
-.facet-sort:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* Filter-within-group — sizing/chrome comes from the shared
+   `.facets input[type=search]` rule above. */
+.facet-body .facet-search { margin-bottom: 9px; }
+.facet-meta { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 7px; }
+.facet-match { font-family: var(--serif-text); font-size: 11.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.facet-sort { all: unset; cursor: pointer; font-family: var(--sans); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--wine); }
+.facet-sort:hover { color: var(--bordeaux-800); box-shadow: inset 0 -1px 0 var(--gold); }
+.facet-sort:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
 
 /* Value rows */
 .facet-values { display: flex; flex-direction: column; gap: 1px; }
@@ -318,22 +446,22 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .facet-row.is-checked:hover { background: rgba(194, 161, 78, .2); }
 /* A selected value whose count fell to zero: dimmed, but fully interactive —
    it is the only way to undo that selection from within the rail. */
-.facet-row.is-empty { opacity: .5; }
+.facet-row.is-empty { opacity: .42; }
 /* The real checkbox stays the focusable, clickable, screen-reader-announced
    control; .facet-box is only its painted stand-in. */
 .facet-row input[type=checkbox] { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
 .facet-box { width: 15px; height: 15px; flex: none; border-radius: 2px; border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1; color: var(--parchment-50); transition: all 120ms ease; }
 .facet-row.is-checked .facet-box { border-color: var(--wine); background: var(--wine); }
 .facet-row.is-checked .facet-box::after { content: "\2713"; }
-.facet-row input[type=checkbox]:focus-visible ~ .facet-box { outline: 2px solid var(--gold); outline-offset: 2px; }
+.facet-row input[type=checkbox]:focus-visible ~ .facet-box { outline: 2px solid var(--wine); outline-offset: 2px; }
 .facet-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.facet-count { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-faint); }
+.facet-count { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-muted); }
 .facet-row.is-checked .facet-count { color: var(--wine); }
 
 /* Vintage reads as a year grid — every value is four characters wide, so one
    per line would waste the whole rail. */
 .facet-values.is-grid { flex-direction: row; flex-wrap: wrap; gap: 5px; }
-.facet-values.is-grid .facet-row { width: 68px; box-sizing: border-box; justify-content: center; gap: 6px; padding: 4px 7px; border: 1px solid var(--border-default); font-family: var(--sans); font-size: 12px; }
+.facet-values.is-grid .facet-row { width: 66px; box-sizing: border-box; justify-content: center; gap: 6px; padding: 4px 7px; border: 1px solid var(--border-default); font-family: var(--sans); font-size: 12px; }
 .facet-values.is-grid .facet-row.is-checked { background: var(--wine); border-color: var(--wine); color: var(--parchment-50); box-shadow: none; }
 .facet-values.is-grid .facet-row.is-checked .facet-count { color: var(--brass-300); }
 .facet-values.is-grid .facet-box { display: none; }
@@ -342,7 +470,7 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 /* Expander & empty state */
 .facet-expander { all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer; margin-top: 9px; padding: 6px 8px; border-top: 1px solid var(--border-hairline); font-family: var(--serif-text); font-size: 13px; color: var(--wine); }
 .facet-expander:hover { background: var(--parchment-100); }
-.facet-expander:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.facet-expander:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
 .facet-expander[hidden] { display: none; }
 .facet-empty { font-family: var(--serif-text); font-size: 13px; color: var(--text-muted); margin: 6px 2px 2px; }
 .facet-empty[hidden] { display: none; }
@@ -386,30 +514,51 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   padding: 24px 26px 20px;
   border-bottom: 1px solid var(--line);
 }
-.wine-card .thumb img { width: auto; max-width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 18px 24px rgba(42, 10, 19, .28)); }
-.wine-card .body { padding: 18px 20px 22px; flex: 1 1 auto; }
-.wine-card .producer { display: block; font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--gold-dark); margin-bottom: 7px; }
-.wine-card h3 { font-size: 21px; margin: 0 0 6px; color: var(--ink-strong); }
-.wine-card .meta { font-family: var(--sans); font-size: 12.5px; letter-spacing: .02em; color: var(--ink-soft); }
+/* multiply melts the stark white rectangle of real product-shot photos into
+   the parchment gradient; the dark bottles (SVG or photo) are unaffected. */
+.wine-card .thumb img { width: auto; max-width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; filter: drop-shadow(0 18px 24px rgba(42, 10, 19, .28)); }
+/* Card body type (matches the design-system WineCard in docs/Portfolio filter
+   sidebar at scale/): quiet sans eyebrow, the wine name in the TEXT serif —
+   EB Garamond holds its legibility at card sizes where the display face
+   (Cormorant) goes thin — vintage de-emphasized, meta + availability in small
+   sans. Flex column so the availability line pins to the card's bottom edge
+   and reads as one aligned row across the grid. */
+.wine-card .body { padding: 16px 16px 18px; flex: 1 1 auto; display: flex; flex-direction: column; gap: 6px; }
+/* brass-700, not gold-dark: at this size the lighter brass reads 3.4:1 on the
+   white card — below AA for small text. */
+.wine-card .producer { display: block; font-family: var(--sans); font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--brass-700); margin: 0; }
+.wine-card h3 { font-family: var(--serif-text); font-size: 17px; font-weight: 500; line-height: 1.3; margin: 0; color: var(--text-strong); }
+.wine-card h3 .vintage { color: var(--text-muted); font-weight: 400; }
+.wine-card .meta { font-family: var(--sans); font-size: 12.5px; letter-spacing: .02em; color: var(--text-muted); line-height: 1.4; }
+.wine-card .avail { margin-top: auto; padding-top: 4px; font-family: var(--sans); font-size: 11.5px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
 
-/* Portfolio toolbar: results count + (mobile Filters button) + Cards|List toggle */
-.portfolio-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.portfolio-toolbar #portfolio-count { margin: 0; }
+/* Portfolio toolbar: results count + (mobile Filters button) + Cards|List toggle.
+   The count is the results header — display serif, sitting on a hairline. */
+.portfolio-toolbar { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 14px; border-bottom: 1px solid var(--border-hairline); margin-bottom: 20px; }
+.portfolio-toolbar #portfolio-count {
+  margin: 0;
+  font-family: var(--serif-display);
+  font-size: 26px;
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+}
 .portfolio-toolbar-actions { display: inline-flex; align-items: center; gap: 12px; }
 
 /* Off-canvas filter drawer chrome. On desktop the .facets sidebar is static
    and always visible, so the mobile Filters button, drawer header (title + ×),
    and backdrop are all hidden here; the ≤1024px block below turns them on. */
 .filters-toggle { display: none; }
-.facets-drawer-head { display: none; }
-.facets-backdrop { position: fixed; inset: 0; z-index: 55; background: rgba(28, 20, 16, .5); }
-.view-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+.facets-backdrop { position: fixed; inset: 0; z-index: 55; background: rgba(42, 10, 19, .5); }
+.view-toggle { display: inline-flex; border: 1px solid var(--border-default); border-radius: 2px; overflow: hidden; background: #fff; }
+/* 34px inside the wrapper's 1px borders = 36px overall — the same height as
+   the sort <select> beside it, so the toolbar reads as one row of controls. */
 .view-toggle-btn {
+  height: 34px; display: inline-flex; align-items: center;
   font-family: var(--sans); font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--ink-700); background: transparent; border: 0; padding: 8px 16px; cursor: pointer;
+  color: var(--ink-700); background: transparent; border: 0; padding: 0 16px; cursor: pointer;
   transition: background .15s ease, color .15s ease;
 }
-.view-toggle-btn + .view-toggle-btn { border-left: 1px solid var(--line); }
+.view-toggle-btn + .view-toggle-btn { border-left: 1px solid var(--border-default); }
 .view-toggle-btn:hover { color: var(--wine); }
 .view-toggle-btn.is-active { background: var(--wine); color: var(--parchment-50); }
 .view-toggle-btn:focus-visible { outline: 2px solid var(--wine); outline-offset: -2px; }
@@ -418,13 +567,14 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
    the brass/parchment toolbar chrome (view toggle, filters button). */
 .portfolio-sort { display: inline-flex; align-items: center; gap: 8px; }
 .portfolio-sort-label {
-  font-family: var(--sans); font-size: 11.5px; font-weight: 700; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--ink-soft);
+  font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--text-muted);
 }
 .portfolio-sort select {
+  height: 36px;
   font-family: var(--sans); font-size: 12.5px; font-weight: 600; letter-spacing: .02em;
-  color: var(--ink-700); background: #fff; border: 1px solid var(--line); border-radius: 8px;
-  padding: 8px 30px 8px 12px; cursor: pointer; -webkit-appearance: none; appearance: none;
+  color: var(--ink-700); background: #fff; border: 1px solid var(--border-default); border-radius: 2px;
+  padding: 0 30px 0 12px; cursor: pointer; -webkit-appearance: none; appearance: none;
   /* Brass chevron, inlined so the control needs no image request. */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a9853d' d='M6 8.5 1.5 4h9z'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 11px center;
@@ -432,18 +582,6 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 }
 .portfolio-sort select:hover { color: var(--wine); border-color: var(--brass-300); }
 .portfolio-sort select:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
-
-/* Facet value counts: portfolio.js writes the live match count into the
-   trailing .facet-count span (pushed to the right of the checkbox row) and
-   flags values that would return nothing given the other active filters with
-   .is-empty, which dims the whole label. Tabular figures keep the column of
-   counts optically aligned. */
-.facet-count {
-  margin-left: auto; padding-left: 8px;
-  font-family: var(--sans); font-size: 11px; font-weight: 600;
-  color: var(--ink-soft); font-variant-numeric: tabular-nums;
-}
-.facet-group label.is-empty { opacity: .42; }
 
 /* Empty state: shown by portfolio.js only when a filter combination matches
    nothing (the server-rendered pages always have wines). */
@@ -516,7 +654,7 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .wine-grid.view-list .wine-card .body {
   display: grid;
   grid-template-columns: 1fr auto;
-  grid-template-areas: "producer meta" "name meta";
+  grid-template-areas: "producer meta" "name meta" "avail meta";
   align-items: center;
   column-gap: 24px;
   row-gap: 1px;
@@ -527,6 +665,7 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .wine-grid.view-list .wine-card .producer { grid-area: producer; margin: 0 0 1px; }
 .wine-grid.view-list .wine-card h3 { grid-area: name; margin: 0; font-size: 17px; line-height: 1.2; }
 .wine-grid.view-list .wine-card .meta { grid-area: meta; text-align: right; white-space: nowrap; }
+.wine-grid.view-list .wine-card .avail { grid-area: avail; margin: 1px 0 0; padding: 0; }
 
 /* ---- Wine detail: two-column ------------------------------------------ */
 .wine-detail { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 52px; align-items: start; }
@@ -584,6 +723,7 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .news-item h3 a:hover { color: var(--wine); }
 .news-item .excerpt { color: var(--ink-700); margin-bottom: 0; }
 .news-item .category { display: inline-block; font-family: var(--sans); font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--vineyard-700); background: var(--olive-tag-bg); border-radius: 20px; padding: 3px 10px; margin-top: 12px; }
+.news-empty { color: var(--ink-700); font-style: italic; margin: 8px 0 0; }
 .news-post-photo { width: 100%; border-radius: var(--radius); margin: 26px 0; box-shadow: 0 26px 56px -30px rgba(61, 14, 28, .4); }
 .news-body { max-width: 68ch; }
 .news-body p { font-size: 20px; }
@@ -591,11 +731,31 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 /* ---- Team grid -------------------------------------------------------- */
 .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 8px; }
 .team-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 24px 24px; text-align: center; box-shadow: 0 14px 34px -28px rgba(61, 14, 28, .5); }
-.team-card img, .team-card svg { width: 96px; height: 96px; margin: 0 auto 14px; border-radius: 50%; object-fit: cover; display: block; }
+.team-card img, .team-card svg, .team-monogram { width: 96px; height: 96px; margin: 0 auto 14px; border-radius: 50%; object-fit: cover; display: block; }
+.team-monogram {
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 35% 28%, var(--bordeaux-700), var(--bordeaux-950));
+  border: 1px solid var(--brass-500);
+  color: var(--brass-100);
+  font-family: var(--serif-display);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  line-height: 1;
+  box-shadow: 0 12px 24px -18px rgba(42, 10, 19, .8);
+}
 .team-card .name { font-family: var(--serif-display); font-size: 23px; font-weight: 600; color: var(--ink-strong); line-height: 1.1; }
 .team-card .role { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--gold-dark); margin: 6px 0 12px; }
 .team-card p { font-family: var(--serif-text); font-style: italic; font-size: 16px; color: var(--ink-700); line-height: 1.45; margin: 0 0 14px; max-width: none; }
 .team-card .email { font-family: var(--sans); font-size: 13px; color: var(--wine); border-top: 1px solid var(--line); padding-top: 12px; word-break: break-all; text-decoration: none; display: block; }
+@media (min-width: 1025px) {
+  .team-card:last-child:nth-child(3n + 1) { grid-column: 2; }
+}
+
+/* ---- Contact ---------------------------------------------------------- */
+.contact-address { font-style: normal; color: var(--ink-700); margin: 0 0 28px; }
+.contact-links a { font-family: var(--sans); font-size: .82em; font-weight: 600; }
 
 /* ---- Footer ----------------------------------------------------------- */
 .site-footer {
@@ -687,6 +847,9 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   .team-grid { grid-template-columns: repeat(2, 1fr); }
   .wine-detail { grid-template-columns: 1fr; gap: 36px; }
   .portfolio-layout { grid-template-columns: 1fr; }
+  /* Two-up cards at tablet width would otherwise render 400px+ bottle thumbs
+     (3:4 of a ~320px column) — cap them at desktop scale. */
+  .portfolio-layout .wine-grid.view-cards .wine-card .thumb { aspect-ratio: auto; height: 300px; }
 
   /* Footer: brand full-width on top, then Explore/Trade/Contact in an even
      three-column grid — tight and balanced, no orphaned/half-empty column. */
@@ -698,77 +861,102 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
      button opens it. Selecting facets still filters live (portfolio.js is
      untouched); results stay visible behind the semi-transparent backdrop. */
   .filters-toggle {
-    display: inline-flex; align-items: center; gap: 7px;
+    height: 36px; display: inline-flex; align-items: center; gap: 7px;
     font-family: var(--sans); font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-    color: var(--ink-700); background: #fff; border: 1px solid var(--line); border-radius: 8px;
-    padding: 8px 15px; cursor: pointer;
+    color: var(--ink-700); background: #fff; border: 1px solid var(--border-default); border-radius: 2px;
+    padding: 0 15px; cursor: pointer;
     transition: color .15s ease, border-color .15s ease;
   }
   .filters-toggle:hover { color: var(--wine); border-color: var(--brass-300); }
   .filters-toggle:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
   .filters-toggle svg { flex: 0 0 auto; }
 
+  /* The drawer slides in from the RIGHT on the parchment surface (matching
+     docs/Portfolio filter sidebar at scale/): border-left, quiet ✕, and the
+     rail header's live count gives way to the sticky "Show N wines" CTA. */
   .facets {
     position: fixed;
-    top: 0; left: 0; bottom: 0;
+    top: 0; right: 0; bottom: 0;
     z-index: 60;
-    width: min(320px, 86vw);
-    max-width: 320px;
+    width: min(332px, 86vw);
     height: 100%;
     margin: 0;
-    border: 0;
-    border-right: 1px solid var(--line);
-    border-radius: 0;
+    padding: 18px 16px;
+    background: var(--cream);
+    border-left: 1px solid var(--border-default);
+    /* Flex column so the "Show N wines" foot can push to the drawer's bottom
+       edge (margin-top: auto) when the collapsed groups don't fill the panel —
+       position: sticky alone leaves it floating mid-panel over empty cream. */
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    transform: translateX(-100%);
-    transition: transform .28s ease;
+    transform: translateX(100%);
+    /* visibility delays until the slide-out completes; while closed it takes
+       the drawer's ~100 focusable controls out of the tab order (an off-screen
+       transform alone leaves them tabbable — a keyboard trap). */
+    visibility: hidden;
+    transition: transform .28s ease, visibility 0s .28s;
     box-shadow: 0 0 44px -6px rgba(42, 10, 19, .55);
   }
-  .facets.is-open { transform: translateX(0); }
+  .facets.is-open { transform: translateX(0); visibility: visible; transition: transform .28s ease; }
 
-  .facets-drawer-head {
-    display: flex; align-items: center; justify-content: space-between;
-    margin: 0 0 14px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--line);
-  }
-  .facets-drawer-title { font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-700); }
+  /* In the drawer the ✕ replaces the header count. */
+  .facets-count { display: none; }
   .facets-close {
-    width: 34px; height: 34px; padding: 0;
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 24px; line-height: 1;
-    color: var(--ink-700); background: var(--parchment-50);
-    border: 1px solid var(--line); border-radius: 8px; cursor: pointer;
-    transition: color .15s ease, border-color .15s ease;
+    all: unset;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 19px; line-height: 1;
+    color: var(--text-muted);
+    /* 44px hit area; negative margins keep the ✕ visually where it was. */
+    width: 44px; height: 44px;
+    margin: -12px -14px -12px 0;
   }
-  .facets-close:hover { color: var(--wine); border-color: var(--brass-300); }
+  .facets-close:hover { color: var(--wine); }
   .facets-close:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
+
+  /* Finger-sized rows inside the drawer. The desktop rail keeps its dense
+     pointer-sized spacing; here every primary target reaches ~44px. */
+  .facet-group { padding: 6px 0; }
+  .facet-group summary { padding: 12px 0; min-height: 44px; box-sizing: border-box; }
+  .facet-row { padding: 11px 8px; }
+  .facet-values { gap: 2px; }
+  .facet-values.is-grid .facet-row { padding: 10px 7px; }
+  .facet-sort { padding: 10px 0; }
+  .facet-expander { padding: 12px 8px; }
+  /* Keep the last group's tail clear of the sticky footer. */
+  .facets .facet-group:last-of-type { margin-bottom: 10px; }
 
   /* Sticky "Show N wines" footer. Filtering is already live as you tap, so
      this commits nothing — it exists so you can see the size of what you have
      built before dismissing the panel, which is the whole legibility problem
      with filtering on a phone. It sticks to the bottom of the scrolling drawer
      rather than sitting at the end of a long list of groups. */
+  /* Scroll container + flex: children must never shrink, or the groups would
+     compress instead of overflowing into scroll. */
+  .facets > * { flex-shrink: 0; }
   .facets-drawer-foot {
     display: block;
     position: sticky;
     bottom: 0;
-    margin: 14px -20px -22px;
-    padding: 12px 20px;
-    background: #fff;
-    border-top: 1px solid var(--line);
+    margin: auto -16px -18px;
+    padding: 12px 16px;
+    background: var(--cream);
+    border-top: 1px solid var(--border-hairline);
   }
   .facets-apply {
     width: 100%;
-    padding: 12px;
+    height: 44px;
+    padding: 0 12px;
     font-family: var(--sans); font-size: 11px; font-weight: 700;
     letter-spacing: .16em; text-transform: uppercase;
     color: var(--parchment-50); background: var(--wine);
-    border: none; border-radius: 8px; cursor: pointer;
+    border: none; border-radius: 2px; cursor: pointer;
   }
   .facets-apply:hover { background: var(--bordeaux-800); }
-  .facets-apply:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .facets-apply:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
 
   /* Body scroll lock while the drawer is open. */
   body.drawer-open { overflow: hidden; }
@@ -794,13 +982,75 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   }
   .site-nav a[aria-current="page"] { border-bottom-color: var(--parchment-200); color: var(--wine); }
   .site-nav .btn-cta { margin: 14px 0 4px; text-align: center; padding: 13px 20px; border-radius: 4px; }
+  .wine-grid.view-cards.home-wine-grid,
+  .producer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* sm — single-column phones */
+@media (max-width: 768px) {
+  .home-hero .wrap { grid-template-columns: 1fr; gap: 36px; }
+  .home-hero-media { min-height: 0; max-height: none; aspect-ratio: 4 / 5; }
+}
+
 @media (max-width: 640px) {
   .wrap { padding-inline: 20px; }
   body { font-size: 17px; }
-  .wine-grid.view-cards { grid-template-columns: 1fr; }
+
+  /* Tighter vertical rhythm: desktop section/hero padding eats half a phone
+     viewport before any wine is visible. */
+  section.wrap { padding-block: 34px 46px; }
+  section.wrap + section.wrap { padding-top: 38px; }
+  .page-hero .wrap { padding-top: 28px; padding-bottom: 32px; }
+  .lede { font-size: 18px; }
+  .home-section-heading { display: block; }
+  .home-section-heading .text-link { display: inline-block; margin-top: 16px; }
+  .home-wine-grid .wine-card .thumb { height: 240px; }
+  .producer-grid { grid-template-columns: 1fr; }
+  .producer-card { min-height: 122px; }
+
+  /* Cards: two-up and compact. A single full-width card put a ~440px-tall
+     bottle on screen — one wine per viewport. Two tighter columns keep the
+     card treatment while showing 4–6 wines per screen. */
+  .wine-grid { gap: 14px 12px; }
+  .wine-grid.view-cards { grid-template-columns: repeat(2, 1fr); }
+  /* Fixed thumb height instead of 3:4 — the ratio made image:text 69:31 and
+     pushed every wine name below the fold. (Selector mirrors the ≤1024 tablet
+     cap so this later rule wins at phone width.) */
+  .wine-card .thumb { padding: 14px 14px 10px; }
+  .portfolio-layout .wine-grid.view-cards .wine-card .thumb { aspect-ratio: auto; height: 190px; }
+  .wine-card .thumb img { filter: drop-shadow(0 10px 14px rgba(42, 10, 19, .24)); }
+  .wine-card .body { padding: 11px 12px 14px; }
+  .wine-card .producer { font-size: 9.5px; letter-spacing: .11em; }
+  .wine-card h3 { font-size: 15px; line-height: 1.25; }
+  .wine-card .meta { font-size: 11px; }
+  .wine-card .avail { font-size: 10.5px; }
+
+  /* Toolbar: count on its own line, then a full-width control grid —
+     Filters and the Cards|List toggle share a row, Sort spans beneath.
+     The inline space-between row left dead space and undersized tap
+     targets once it wrapped on a phone. */
+  .portfolio-toolbar { row-gap: 12px; }
+  .portfolio-toolbar #portfolio-count { flex: 1 1 100%; }
+  .portfolio-toolbar-actions {
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  /* One shared height and corner radius across the cluster — three controls
+     at 36/39/40px with mixed 8px/2px radii read as clutter, not chrome. */
+  .filters-toggle { grid-column: 1; grid-row: 1; justify-content: center; padding-block: 0; }
+  .view-toggle { grid-column: 2; grid-row: 1; display: flex; }
+  /* height:100% overrides the desktop buttons' fixed 34px — inside the 44px
+     mobile cluster the active fill must reach the toggle's full height. */
+  .view-toggle-btn { flex: 1 1 0; padding: 0 8px; height: 100%; }
+  .portfolio-sort { grid-column: 1 / -1; grid-row: 2; }
+  .portfolio-sort select { flex: 1 1 auto; width: 100%; padding-block: 0; }
+  .filters-toggle, .view-toggle, .portfolio-sort select { height: 44px; border-radius: 2px; }
+
+  .pagination { margin-top: 34px; padding-top: 24px; gap: 12px; }
+  .pagination-btn { padding-block: 12px; }
+
   .team-grid { grid-template-columns: 1fr; }
   .news-item { grid-template-columns: 1fr; gap: 8px; }
   .wine-detail .facts { grid-template-columns: 1fr; }
@@ -819,6 +1069,12 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
     row-gap: 2px;
   }
   .wine-grid.view-list .wine-card .meta { text-align: left; white-space: normal; }
+}
+
+/* Top of the phone band (520–640px): two compact columns balloon here —
+   three keep the thumbs at true phone scale. */
+@media (min-width: 520px) and (max-width: 640px) {
+  .wine-grid.view-cards { grid-template-columns: repeat(3, 1fr); }
 }
 
 /* ---- Responsive hardening: prevent horizontal overflow on mobile -------- */

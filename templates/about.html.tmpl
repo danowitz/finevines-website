@@ -45,10 +45,9 @@
     <h2>Who You&rsquo;ll Talk To</h2>
     <div class="team-grid">
       {{range .Team}}<div class="team-card">
-        {{if .PhotoPath}}<img src="/{{.PhotoPath}}" alt="Portrait of {{.Name}}">{{end}}
+        {{if .PhotoPath}}<img src="/{{.PhotoPath}}" alt="Portrait of {{.Name}}">{{else}}<span class="team-monogram" aria-hidden="true">{{initials .Name}}</span>{{end}}
         <div class="name">{{.Name}}</div>
         <div class="role">{{.Role}}</div>
-        {{if .Note}}<p>{{.Note}}</p>{{end}}
         <a class="email" href="mailto:{{.Email}}">{{.Email}}</a>
       </div>
       {{end}}

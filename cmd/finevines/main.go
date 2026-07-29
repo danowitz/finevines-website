@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -92,7 +93,7 @@ func runBuild(cfg config.Config) error {
 // consider adding a temporary "LIMIT 25" to that query to eyeball output
 // before running against the full catalog.
 func runEnrich(cfg config.Config) error {
-	// The generation APIs (text + image) are always required; the Salesforce
+	// The text-enrichment API is always required; the Salesforce
 	// credentials are required only for a live roster pull. In mock mode
 	// (FINEVINES_SF_MOCK) the roster comes from the embedded sample instead,
 	// so those three SF vars are skipped — this is how the generation pipeline
@@ -110,7 +111,6 @@ func runEnrich(cfg config.Config) error {
 	if cfg.ManualEnrichDir == "" {
 		requiredEnv = append(requiredEnv,
 			struct{ name, value string }{"OPENAI_API_KEY", cfg.OpenAIAPIKey},
-			struct{ name, value string }{"FINEVINES_GEMINI_API_KEY", cfg.GeminiAPIKey},
 		)
 	}
 	if !cfg.SFMock {
@@ -150,7 +150,17 @@ func runEnrich(cfg config.Config) error {
 		imgs = enrich.LabelOnlyProvider{}
 	} else {
 		enr = enrich.NewOpenAIEnricher(cfg.OpenAIAPIKey, cfg.OpenAIModel, "", http.DefaultClient)
-		imgs = enrich.NewImagenClient(cfg.GeminiAPIKey, cfg.ImageModel, "", http.DefaultClient)
+		// Image *generation* is optional: without FINEVINES_GEMINI_API_KEY the
+		// chain still runs — kept real images, old-site photos, and web-found
+		// images all work; only the generated-photo rung is skipped, and such
+		// wines get the guaranteed SVG label instead (.env.example: Imagen is
+		// being migrated to gpt-image-1, so the key is often absent).
+		if cfg.GeminiAPIKey == "" {
+			log.Printf("enrich: FINEVINES_GEMINI_API_KEY not set — skipping photo generation, wines without a real image get the SVG label")
+			imgs = enrich.LabelOnlyProvider{}
+		} else {
+			imgs = enrich.NewImagenClient(cfg.GeminiAPIKey, cfg.ImageModel, "", http.DefaultClient)
+		}
 	}
 
 	// Old-site image manifest (tools/oldimages): SKU -> FineVines' own photo,
@@ -214,9 +224,16 @@ func runRedirects(cfg config.Config, args []string) error {
 		return err
 	}
 
-	oldPaths, err := redirects.Discover(context.Background(), cfg.SiteBaseURL, log.Printf)
+	// Crawl target and redirects.json host are DIFFERENT config values:
+	// OldSiteURL is where the legacy pages live (always the real
+	// finevines.com), SiteBaseURL is where the rebuilt site — and its
+	// deployed redirects.json — is served. In production both are the same
+	// domain (OldSiteURL defaults to SiteBaseURL), but while the new site
+	// is staged on a test domain, crawling SiteBaseURL would map the NEW
+	// site's own URLs onto themselves instead of discovering legacy ones.
+	oldPaths, err := redirects.Discover(context.Background(), cfg.OldSiteURL, log.Printf)
 	if err != nil {
-		return fmt.Errorf("redirects: discover %s: %w", cfg.SiteBaseURL, err)
+		return fmt.Errorf("redirects: discover %s: %w", cfg.OldSiteURL, err)
 	}
 
 	// A from-scratch checkout (no enrich run yet) has no data/wines.json —
@@ -292,11 +309,14 @@ func runRedirects(cfg config.Config, args []string) error {
 		}
 	}
 
-	// FineVines keeps its domain, so cfg.SiteBaseURL doubles as both the
-	// old-site crawl target (Discover, above) and — after cutover — the
-	// new site's own host, which is where the deployed redirects.json the
-	// middleware fetches at runtime will live.
-	redirectsURL := strings.TrimRight(cfg.SiteBaseURL, "/") + "/redirects.json"
+	// The middleware fetches redirects.json from cfg.RedirectsMapURL at
+	// runtime — deploy uploads it as an ordinary dist/ asset. This must be
+	// the pull zone's *.b-cdn.net hostname, NOT the site's custom domain:
+	// an edge script cannot fetch a custom hostname served by its own pull
+	// zone (see the RedirectsMapURL field comment in internal/config for
+	// the live-verified failure). The old-site crawl above used
+	// cfg.OldSiteURL — a third, also distinct, URL.
+	redirectsURL := cfg.RedirectsMapURL
 
 	script, err := redirects.GenerateMiddleware(redirectsURL)
 	if err != nil {
@@ -331,6 +351,14 @@ const deployWorkers = 16
 // upload-succeeds and purge-skipped-on-no-op-or-failure invariants: they're
 // what make a `deploy` re-run after a partial failure safe to just retry.
 func runDeploy(cfg config.Config) error {
+	content, err := model.LoadSiteContent("data/site.json")
+	if err != nil {
+		return fmt.Errorf("deploy: load data/site.json: %w", err)
+	}
+	if err := validateClientContentForDeploy(cfg.SiteBaseURL, content); err != nil {
+		return err
+	}
+
 	requiredEnv := []struct{ name, value string }{
 		{"FINEVINES_BUNNY_STORAGE_ZONE", cfg.BunnyStorageZone},
 		{"FINEVINES_BUNNY_STORAGE_KEY", cfg.BunnyStorageKey},
@@ -348,4 +376,33 @@ func runDeploy(cfg config.Config) error {
 		cfg.BunnyAPIKey, cfg.BunnyPullZoneID, http.DefaultClient)
 
 	return deploy.Run(context.Background(), client, "dist", ".bunny-manifest.json", deployWorkers, log.Printf)
+}
+
+// validateClientContentForDeploy prevents candidate contact details or team
+// emails from reaching the production domain before the client has explicitly
+// approved them. A staging build/deploy remains available by setting an
+// explicit non-production FINEVINES_SITE_BASE_URL.
+func validateClientContentForDeploy(baseURL string, content model.SiteContent) error {
+	parsed, err := url.Parse(baseURL)
+	if err != nil || parsed.Scheme == "" || parsed.Hostname() == "" {
+		return fmt.Errorf("deploy: FINEVINES_SITE_BASE_URL must be an absolute URL, got %q", baseURL)
+	}
+	host := strings.ToLower(strings.TrimSuffix(parsed.Hostname(), "."))
+	if host != "finevines.com" && host != "www.finevines.com" {
+		return nil
+	}
+	var pending []string
+	if !content.ContactConfirmed {
+		pending = append(pending, "contact details")
+	}
+	if !content.TeamEmailsConfirmed {
+		pending = append(pending, "team email addresses")
+	}
+	if len(pending) > 0 {
+		return fmt.Errorf(
+			"deploy: production blocked until client confirms %s; then set the corresponding confirmation flags in data/site.json",
+			strings.Join(pending, " and "),
+		)
+	}
+	return nil
 }

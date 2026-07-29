@@ -145,6 +145,19 @@ func SizeOf(w model.Wine) Size {
 	return Size{ML: 750, Label: "750ml"}
 }
 
+// PackOf returns the bottles-per-case a row's name encodes (12/750, 6/1.5L),
+// or the trade-standard 12 when the name doesn't say. Same masking rule as
+// SizeOf: a vintage range like 2018/2019 must never be read as a pack.
+func PackOf(w model.Wine) int {
+	name := yearRE.ReplaceAllStringFunc(w.Name, func(string) string { return "yyyy" })
+	if m := packSize.FindStringSubmatch(name); m != nil {
+		if n, err := strconv.Atoi(m[1]); err == nil && n > 0 {
+			return n
+		}
+	}
+	return 12
+}
+
 // CuveeName strips everything that identifies a SHIPMENT rather than a wine:
 // the vintage, the case format, the trade's asterisks and hold markers.
 func CuveeName(w model.Wine) string {

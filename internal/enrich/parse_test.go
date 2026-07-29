@@ -41,6 +41,18 @@ func TestParseEnrichResult(t *testing.T) {
 	if _, err := parseEnrichResult([]byte(`not json`)); err == nil {
 		t.Error("non-JSON must error")
 	}
+
+	// Models slip non-breaking spaces (U+00A0, narrow U+202F) into text
+	// fields (a live run returned "Barbera d'Asti DOCG" glued with U+00A0);
+	// they must be folded to plain spaces in every field.
+	nbsp := "{\"description\":\"Ripe\u00a0cherry\u202ffruit.\",\"appellation\":\"Barbera\u00a0d'Asti\u00a0DOCG\"}"
+	got, err = parseEnrichResult([]byte(nbsp))
+	if err != nil {
+		t.Fatalf("parse nbsp: %v", err)
+	}
+	if got.Description != "Ripe cherry fruit." || got.Appellation != "Barbera d'Asti DOCG" {
+		t.Errorf("NBSP not folded: desc=%q appellation=%q", got.Description, got.Appellation)
+	}
 }
 
 // stubEnricher returns a fixed EnrichResult, for exercising enrichOne's mapping.
