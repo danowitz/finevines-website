@@ -421,7 +421,7 @@
     var label = document.createElement('label');
     label.className = 'facet-row' + (row.checked ? ' is-checked' : '') +
       (row.count === 0 && !row.checked ? ' is-empty' : '');
-    label.title = row.value + ' — ' + row.count + (row.count === 1 ? ' wine' : ' wines');
+    label.title = row.value + ': ' + row.count + (row.count === 1 ? ' wine' : ' wines');
 
     var box = document.createElement('input');
     box.type = 'checkbox';

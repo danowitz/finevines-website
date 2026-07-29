@@ -333,7 +333,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		{"", "home", homePage{
 			page: page{
 				site:  s,
-				Title: "FineVines — Wholesale Wine & Spirits, Chicagoland",
+				Title: "FineVines - Wholesale Wine & Spirits, Chicagoland",
 				Description: "FineVines is a licensed wholesale distributor of wine and spirits, pouring " +
 					"elegance with a sommelier's touch across Chicagoland's restaurants and retailers.",
 				Path: "/",
@@ -342,15 +342,15 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		}},
 		{"contact", "contact", page{
 			site:  s,
-			Title: "Contact — FineVines",
-			Description: "Reach the FineVines trade team — wholesale wine and spirits distribution for " +
+			Title: "Contact - FineVines",
+			Description: "Reach the FineVines trade team: wholesale wine and spirits distribution for " +
 				"licensed Illinois retailers, restaurants, and hospitality accounts.",
 			Path: "/contact/",
 		}},
 		{"news", "news", newsPage{
 			page: page{
 				site:        s,
-				Title:       "News & Events — FineVines",
+				Title:       "News & Events - FineVines",
 				Description: "Tastings, allocations, and news from the FineVines trade team.",
 				Path:        "/news/",
 			},
@@ -363,8 +363,8 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		// page-embedding contract in the doc comment above).
 		{"about", "about", page{
 			site:  s,
-			Title: "About — FineVines",
-			Description: "A service company, first and last — meet the FineVines sales, warehouse, and " +
+			Title: "About - FineVines",
+			Description: "A service company, first and last. Meet the FineVines sales, warehouse, and " +
 				"support team.",
 			Path: "/about/",
 		}},
@@ -400,7 +400,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		data := winePage{
 			page: page{
 				site:        s,
-				Title:       fmt.Sprintf("%s %s %s — FineVines", w.Producer, w.Name, w.Vintage),
+				Title:       fmt.Sprintf("%s %s %s - FineVines", w.Producer, w.Name, w.Vintage),
 				Description: firstNonEmpty(w.Description, w.Producer+" "+w.Name),
 				Path:        "/wines/" + w.Slug + "/",
 			},
@@ -422,7 +422,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		data := newsPostPage{
 			page: page{
 				site:        s,
-				Title:       n.Title + " — FineVines",
+				Title:       n.Title + " - FineVines",
 				Description: excerpt(n.Body, 160),
 				Path:        "/news/" + n.Slug + "/",
 			},
@@ -749,7 +749,7 @@ func renderPortfolio(tmpl *template.Template, distDir string, s *site, indexURL 
 		pageCount = 1 // always render at least /portfolio/, even with zero wines
 	}
 
-	const desc = "Browse the full FineVines wholesale portfolio — filter by producer, region, " +
+	const desc = "Browse the full FineVines wholesale portfolio. Filter by producer, region, " +
 		"varietal, country, or vintage across every wine currently in stock."
 
 	var paths []string
@@ -765,10 +765,10 @@ func renderPortfolio(tmpl *template.Template, distDir string, s *site, indexURL 
 		}
 
 		// Page 1 keeps the plain "Portfolio" title; later pages carry a
-		// "— Page N of M" suffix so paginated URLs aren't near-duplicate titles.
-		title := "Portfolio — FineVines"
+		// "- Page N of M" suffix so paginated URLs aren't near-duplicate titles.
+		title := "Portfolio - FineVines"
 		if n > 1 {
-			title = fmt.Sprintf("Portfolio — Page %d of %d — FineVines", n, pageCount)
+			title = fmt.Sprintf("Portfolio - Page %d of %d - FineVines", n, pageCount)
 		}
 
 		rel := "portfolio"
