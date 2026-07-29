@@ -560,6 +560,73 @@ func TestRun_ResumeAfterPartialRun(t *testing.T) {
 	}
 }
 
+// TestRun_DelistLifecycle exercises Run's lifecycle wiring end to end: an
+// out-of-stock wine is retained unavailable with its enrichment intact, a
+// withheld (ready-to-sell=false) wine is dropped entirely and gains a
+// portfolio redirect, and a re-enriched wine whose slug changed leaves a 301
+// from its old URL to the new one.
+func TestRun_DelistLifecycle(t *testing.T) {
+	dir := t.TempDir()
+	dataPath := filepath.Join(dir, "wines.json")
+	imgDir := filepath.Join(dir, "img")
+
+	// Roster: SF-OOS is out of stock but otherwise fine; SF-HIDE is
+	// withheld (ready-to-sell false); SF-RENAME is in stock with a CHANGED
+	// name (hash mismatch -> re-enriched -> new slug).
+	rawOOS := salesforce.WineRaw{ID: "SF-OOS", SKU: "AA1111", Producer: "Alpha", Name: "Old Vine Red", StockQty: 0, ReadyToSell: true}
+	rawHide := salesforce.WineRaw{ID: "SF-HIDE", SKU: "BB2222", Producer: "Beta", Name: "Hidden Cuvee", StockQty: 9, ReadyToSell: false}
+	rawRename := salesforce.WineRaw{ID: "SF-REN", SKU: "CC3333", Producer: "Gamma", Name: "New Name Blanc", Vintage: "2021", StockQty: 4, ReadyToSell: true}
+
+	seed := []model.Wine{
+		{ID: "SF-OOS", SKU: "AA1111", Slug: "alpha-old-vine-red", SourceHash: SourceHash(rawOOS), Description: "keep me"},
+		{ID: "SF-HIDE", SKU: "BB2222", Slug: "beta-hidden-cuvee", SourceHash: "whatever", Description: "hide me"},
+		{ID: "SF-REN", SKU: "CC3333", Slug: "gamma-old-name-blanc-2021", SourceHash: "stale", Description: "rename me"},
+	}
+	if err := model.SaveWines(dataPath, seed); err != nil {
+		t.Fatal(err)
+	}
+
+	src := &fakeSource{roster: []salesforce.WineRaw{rawOOS, rawHide, rawRename}}
+	if err := Run(context.Background(), src, &fakeTexts{}, &fakeImages{}, nil, dataPath, imgDir, t.Logf); err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	got, err := model.LoadWines(dataPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	byID := map[string]model.Wine{}
+	for _, w := range got {
+		byID[w.ID] = w
+	}
+
+	// SF-OOS survives as unavailable with its enrichment intact.
+	oos, ok := byID["SF-OOS"]
+	if !ok || oos.Status != model.StatusUnavailable || oos.Description != "keep me" {
+		t.Errorf("SF-OOS must be retained unavailable with text intact, got %+v", oos)
+	}
+	// SF-HIDE is gone entirely.
+	if _, ok := byID["SF-HIDE"]; ok {
+		t.Error("withheld SF-HIDE must be dropped from the catalog")
+	}
+
+	redirects, err := LoadLifecycleRedirects(filepath.Join(dir, "lifecycle-redirects.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if redirects["/wines/beta-hidden-cuvee/"] != "/portfolio/" {
+		t.Errorf("dropped wine must gain a portfolio redirect, got %v", redirects)
+	}
+	// SF-REN was re-enriched under a new slug; the old URL must 301 to it.
+	ren := byID["SF-REN"]
+	if ren.Slug == "" || ren.Slug == "gamma-old-name-blanc-2021" {
+		t.Fatalf("SF-REN should have a new slug, got %q", ren.Slug)
+	}
+	if redirects["/wines/gamma-old-name-blanc-2021/"] != "/wines/"+ren.Slug+"/" {
+		t.Errorf("slug rename must 301 old->new, got %v", redirects)
+	}
+}
+
 // TestRun_ResolveImageFilesystemErrorAbortsRun confirms the one class of
 // error ResolveImage can return (a filesystem failure, per its doc comment)
 // is treated as fatal by Run rather than logged-and-skipped like a text

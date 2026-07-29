@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -123,9 +124,25 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 		existingByID[w.ID] = w
 	}
 
+	eligibleIDs := make(map[string]bool, len(eligible))
+	for _, w := range eligible {
+		eligibleIDs[w.ID] = true
+	}
+
 	diff := DiffRoster(eligible, existing)
 	log("enrich: %d roster rows, %d eligible, %d need enrichment, %d unchanged",
 		len(rawRoster), len(eligible), len(diff.Enrich), len(diff.Keep))
+
+	unavailable, drops := Delist(existing, rawRoster, eligibleIDs, nowUTC())
+
+	redirectsPath := filepath.Join(filepath.Dir(dataPath), "lifecycle-redirects.json")
+	lifecycle, err := LoadLifecycleRedirects(redirectsPath)
+	if err != nil {
+		return fmt.Errorf("enrich: load %s: %w", redirectsPath, err)
+	}
+	for from, to := range drops {
+		lifecycle[from] = to
+	}
 
 	jobs := make(chan salesforce.WineRaw, len(diff.Enrich))
 	for _, raw := range diff.Enrich {
@@ -157,7 +174,8 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 	completions := 0
 
 	save := func() error {
-		return model.SaveWines(dataPath, buildSnapshot(enriched, diff, existingByID, attempted))
+		snap := buildSnapshot(enriched, diff, existingByID, attempted)
+		return model.SaveWines(dataPath, append(snap, unavailable...))
 	}
 
 	for res := range results {
@@ -178,6 +196,11 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 				res.raw.Producer, res.raw.Name, res.raw.SKU, res.err)
 			droppedCount++
 		default:
+			// A re-enriched wine whose slug changed leaves a 301 behind so
+			// the old URL keeps working (and keeps its search ranking).
+			if prev, ok := existingByID[res.raw.ID]; ok && prev.Slug != "" && prev.Slug != res.wine.Slug {
+				lifecycle["/wines/"+prev.Slug+"/"] = "/wines/" + res.wine.Slug + "/"
+			}
 			enriched = append(enriched, res.wine)
 			enrichedCount++
 			if res.wine.ImageSource == model.ImageGeneratedLabel {
@@ -196,8 +219,17 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 		return fmt.Errorf("enrich: final save: %w", err)
 	}
 
-	log("enrich: complete — enriched %d, kept %d, dropped %d, label-fallbacks %d",
-		enrichedCount, len(diff.Keep), droppedCount, labelFallbacks)
+	finalWines := append(buildSnapshot(enriched, diff, existingByID, attempted), unavailable...)
+	liveSlugs := make(map[string]bool, len(finalWines))
+	for _, w := range finalWines {
+		liveSlugs[w.Slug] = true
+	}
+	if err := SaveLifecycleRedirects(redirectsPath, CollapseRedirects(lifecycle, liveSlugs)); err != nil {
+		return fmt.Errorf("enrich: save %s: %w", redirectsPath, err)
+	}
+
+	log("enrich: complete — enriched %d, kept %d, unavailable %d, delisted %d, dropped %d, label-fallbacks %d",
+		enrichedCount, len(diff.Keep), len(unavailable), len(drops), droppedCount, labelFallbacks)
 
 	if fatalErr != nil {
 		return fmt.Errorf("enrich: aborted after filesystem error (partial progress saved to %s): %w", dataPath, fatalErr)

@@ -147,6 +147,27 @@ func TestDiffRoster_ProducerSuppliedWithChangedHashGoesToEnrich(t *testing.T) {
 	}
 }
 
+func TestDiffRoster_KeepClearsUnavailableStatus(t *testing.T) {
+	// A wine that went unavailable and is now back in the eligible roster
+	// must come back ACTIVE: status and stamp cleared, stock refreshed.
+	raw := salesforce.WineRaw{ID: "SF-9", SKU: "ZZ9999", StockQty: 6}
+	prev := model.Wine{ID: "SF-9", SKU: "ZZ9999", SourceHash: SourceHash(raw),
+		Status: model.StatusUnavailable, DelistedAt: "2026-06-01T00:00:00Z"}
+
+	d := DiffRoster([]salesforce.WineRaw{raw}, []model.Wine{prev})
+
+	if len(d.Keep) != 1 {
+		t.Fatalf("want 1 kept, got %+v", d)
+	}
+	if d.Keep[0].Status != "" || d.Keep[0].DelistedAt != "" {
+		t.Errorf("reactivated wine must be active again, got status=%q delistedAt=%q",
+			d.Keep[0].Status, d.Keep[0].DelistedAt)
+	}
+	if d.Keep[0].StockQty != 6 {
+		t.Errorf("stock not refreshed: %d", d.Keep[0].StockQty)
+	}
+}
+
 func TestDiffRoster_DoesNotMutateInputs(t *testing.T) {
 	raw := salesforce.WineRaw{ID: "SF-6", SKU: "KL1122", Producer: "Clos A", StockQty: 3}
 	prev := model.Wine{ID: "SF-7", SourceHash: SourceHash(salesforce.WineRaw{ID: "SF-7"}), SKU: "MN3344"}
