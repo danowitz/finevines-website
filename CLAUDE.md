@@ -61,6 +61,9 @@ artifacts, and are complete/self-contained on their own.
   through the proposal's copy and cover design — keep using it if writing further client-facing material.
   **Never use the word "trade" in client-facing copy** (directed 2026-07-29 — it isn't George's vocabulary; the
   whole site was swept). Say "wholesale", "our accounts", "the business", or name the audience directly.
+  **No addresses on the site** (directed 2026-07-29): no street address, no city/ZIP, no P.O. Box, and no fax
+  number anywhere — footer, contact page, JSON-LD, catalog data. Public contact is phone + email only. Guarded
+  by build/model tests and the `nonWine` eligibility rule (a "REMIT TO" memo row once leaked the P.O. Box).
 - **The "About Us" page keeps Fine Vines' own existing copy voice** ("A service company, first and last...") rather
   than being rewritten from scratch.
 - **Real team roster** (confirmed, use these — not placeholders): George Molitor (Founder & President), Connie
