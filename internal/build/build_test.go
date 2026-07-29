@@ -1137,3 +1137,92 @@ func TestHomeHotSellersOmittedWhenAbsentOrThin(t *testing.T) {
 		t.Errorf("home renders hot-sellers section from a ranking with only one resolvable wine")
 	}
 }
+
+// TestBuild_UnavailableWineHasPageButIsHiddenFromBrowse guards the delisting
+// lifecycle's build-side contract: a wine with Status ==
+// model.StatusUnavailable keeps its own detail page (so any search ranking it
+// earned survives the stock-out) rendered with an OutOfStock JSON-LD offer
+// and a visible unavailable notice, but is otherwise invisible — dropped from
+// the sitemap, the portfolio grid, and the compact catalog-index JSON that
+// feeds client-side search/filters. An active wine alongside it is
+// unaffected and still asserts InStock.
+func TestBuild_UnavailableWineHasPageButIsHiddenFromBrowse(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		{ID: "SF-1", SKU: "AA1111", Producer: "Alpha", Name: "Active Red", Vintage: "2021",
+			Slug: "alpha-active-red-2021", Description: "d", ImagePath: "assets/img/wines/a.svg"},
+		{ID: "SF-2", SKU: "BB2222", Producer: "Beta", Name: "Gone Blanc", Vintage: "2020",
+			Slug: "beta-gone-blanc-2020", Description: "d", ImagePath: "assets/img/wines/b.svg",
+			Status: model.StatusUnavailable, DelistedAt: "2026-07-01T00:00:00Z"},
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. The unavailable wine still gets a page...
+	page := readFile(t, filepath.Join(dist, "wines", "beta-gone-blanc-2020", "index.html"))
+	if !strings.Contains(page, "currently unavailable") {
+		t.Error("unavailable page must say so")
+	}
+	if !strings.Contains(page, `"availability": "https://schema.org/OutOfStock"`) {
+		t.Error("unavailable page must carry OutOfStock JSON-LD")
+	}
+
+	// 2. ...but is absent from sitemap, portfolio, and the catalog index.
+	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
+	if strings.Contains(sitemap, "beta-gone-blanc-2020") {
+		t.Error("unavailable wine must not be in the sitemap")
+	}
+	if !strings.Contains(sitemap, "alpha-active-red-2021") {
+		t.Error("active wine must still be in the sitemap")
+	}
+	portfolio := readFile(t, filepath.Join(dist, "portfolio", "index.html"))
+	if strings.Contains(portfolio, "beta-gone-blanc-2020") {
+		t.Error("unavailable wine must not appear on the portfolio grid")
+	}
+	// The compact catalog index feeds client-side search/filters.
+	idx := globOne(t, filepath.Join(dist, "assets", "catalog-index*.json"))
+	if strings.Contains(readFile(t, idx), "beta-gone-blanc-2020") {
+		t.Error("unavailable wine must not be in the catalog index")
+	}
+
+	// 3. Active wine's page asserts InStock unchanged.
+	active := readFile(t, filepath.Join(dist, "wines", "alpha-active-red-2021", "index.html"))
+	if !strings.Contains(active, `"availability": "https://schema.org/InStock"`) {
+		t.Error("active page must remain InStock")
+	}
+}
+
+// readFile reads path and fails the test on error, returning the contents as
+// a string for strings.Contains checks against rendered dist/ output.
+func readFile(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
+}
+
+// globOne resolves pattern to exactly one file (e.g. the content-hashed
+// catalog-index.<hash>.json) and fails the test if zero or more than one
+// match, since a hashed filename can't be predicted ahead of the build.
+func globOne(t *testing.T, pattern string) string {
+	t.Helper()
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("glob %q: want exactly one match, got %v", pattern, matches)
+	}
+	return matches[0]
+}

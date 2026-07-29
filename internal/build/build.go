@@ -37,11 +37,20 @@ const redirectsJSONName = "redirects.json"
 // Wines/News/Team from here to add the portfolio, wine-detail, news, and
 // about pages without changing this struct's shape.
 type site struct {
-	Wines   []model.Wine
-	News    []model.NewsPost
-	Team    []model.TeamMember
-	Content model.SiteContent
-	BaseURL string
+	Wines []model.Wine
+	// Delisted holds unavailable wines (model.StatusUnavailable) split out of
+	// Wines at load time: they still render their own detail page (any search
+	// ranking they earned survives the stock-out) but must never appear on any
+	// browse surface. Because every existing consumer of Wines — the
+	// portfolio, facets, catalog index, search, sitemap, featured picks, and
+	// hot-sellers — was written before this field existed, none of them need
+	// to change: Wines being active-only excludes Delisted wines BY
+	// CONSTRUCTION rather than by each consumer remembering to filter.
+	Delisted []model.Wine
+	News     []model.NewsPost
+	Team     []model.TeamMember
+	Content  model.SiteContent
+	BaseURL  string
 	// GAID is the Google Analytics 4 measurement ID (G-XXXXXXXXXX), promoted
 	// through page's embedded *site so base.html.tmpl's head can emit the
 	// gtag snippet. Empty by default (analytics off) — which keeps the build
@@ -157,6 +166,11 @@ type featuredProducer struct {
 type winePage struct {
 	page
 	Wine model.Wine
+	// Unavailable marks a delisted (model.StatusUnavailable) wine's own
+	// detail page: still rendered (any search ranking it earned survives the
+	// stock-out) but with the JSON-LD offer flipped to OutOfStock and a
+	// visible unavailable notice in place of the normal availability markup.
+	Unavailable bool
 }
 
 // ldProp is one schema.org PropertyValue (name/value) for the wine's Product
@@ -462,7 +476,12 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	}
 	paths = append(paths, portfolioPaths...)
 
-	for _, w := range s.Wines {
+	// renderWine renders one wine's detail page. Both active and delisted
+	// wines get a page (see winePage.Unavailable's doc comment), but only
+	// active pages join the sitemap — an unavailable wine's page still
+	// exists and is reachable/indexable on its own terms, it just isn't
+	// advertised as part of the current catalog.
+	renderWine := func(w model.Wine, unavailable bool) error {
 		data := winePage{
 			page: page{
 				site:        s,
@@ -470,7 +489,8 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 				Description: firstNonEmpty(w.Description, w.Producer+" "+w.Name),
 				Path:        "/wines/" + w.Slug + "/",
 			},
-			Wine: w,
+			Wine:        w,
+			Unavailable: unavailable,
 		}
 		// Prefer the wine's own photo as its share image, but only when it's a
 		// raster the social scrapers actually render — an .svg (or .webp)
@@ -481,7 +501,20 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		if err := renderPage(tmpl, distDir, "wines/"+w.Slug, "wine", data); err != nil {
 			return err
 		}
-		paths = append(paths, data.pagePath())
+		if !unavailable {
+			paths = append(paths, data.pagePath())
+		}
+		return nil
+	}
+	for _, w := range s.Wines {
+		if err := renderWine(w, false); err != nil {
+			return err
+		}
+	}
+	for _, w := range s.Delisted {
+		if err := renderWine(w, true); err != nil {
+			return err
+		}
 	}
 
 	for _, n := range s.News {
@@ -970,7 +1003,20 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load site content: %w", err)
 	}
-	s := &site{Wines: usableWines(wines), Content: content, BaseURL: baseURL, GAID: gaID}
+	cleaned := usableWines(wines)
+	// Unavailable wines keep a published detail page (their search ranking
+	// survives the stock-out) but appear on NO browse surface: s.Wines is
+	// active-only, so the portfolio, facets, catalog index, search, featured
+	// picks, hot-sellers, and sitemap all exclude them by construction.
+	var active, delisted []model.Wine
+	for _, w := range cleaned {
+		if w.Status == model.StatusUnavailable {
+			delisted = append(delisted, w)
+			continue
+		}
+		active = append(active, w)
+	}
+	s := &site{Wines: active, Delisted: delisted, Content: content, BaseURL: baseURL, GAID: gaID}
 	// hot-sellers.json is optional: written by `finevines enrich` against a
 	// live org (mock/dev runs don't have it), and the homepage simply omits
 	// its sales-driven section when it's absent.
