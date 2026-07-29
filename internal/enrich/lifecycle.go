@@ -47,7 +47,7 @@ func SaveLifecycleRedirects(path string, m map[string]string) error {
 //   - an entry whose SOURCE is a live wine page again (reactivated slug) is
 //     removed — the page exists, redirecting it would shadow real content;
 //   - chains are flattened (a→b, b→c ⇒ a→c) so no visitor ever hops twice;
-//   - self-loops are removed.
+//   - self-loops and cyclic chains are removed entirely.
 //
 // liveSlugs holds bare wine slugs (no /wines/ prefix). The input map is not
 // mutated.
@@ -59,16 +59,25 @@ func CollapseRedirects(m map[string]string, liveSlugs map[string]bool) map[strin
 				continue // page is back — no redirect
 			}
 		}
-		// Follow the chain, bounded by map size to survive cycles.
-		for i := 0; i < len(m); i++ {
+		// Follow the chain, tracking visited nodes to detect cycles.
+		visited := make(map[string]bool)
+		for {
+			if visited[to] {
+				// Cycle detected: this entry leads into a cycle, drop it.
+				to = ""
+				break
+			}
+			visited[to] = true
 			next, ok := m[to]
 			if !ok {
+				// Found a terminal target (not in the map).
 				break
 			}
 			to = next
 		}
-		if from == to {
-			continue // self-loop (possibly after collapsing a cycle)
+		if to == "" || from == to {
+			// Dropped due to cycle or self-loop.
+			continue
 		}
 		out[from] = to
 	}

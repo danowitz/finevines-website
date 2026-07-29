@@ -47,3 +47,82 @@ func TestCollapseRedirects_ChainsSelfLoopsAndReactivation(t *testing.T) {
 		t.Errorf("plain entry must survive, got %q", got["/wines/e/"])
 	}
 }
+
+func TestCollapseRedirects_CyclesAreRemoved(t *testing.T) {
+	tests := []struct {
+		name    string
+		m       map[string]string
+		live    map[string]bool
+		dropped []string
+		kept    map[string]string
+	}{
+		{
+			name: "2-node cycle removes both",
+			m: map[string]string{
+				"/wines/a/": "/wines/b/",
+				"/wines/b/": "/wines/a/",
+			},
+			live:    map[string]bool{},
+			dropped: []string{"/wines/a/", "/wines/b/"},
+			kept:    map[string]string{},
+		},
+		{
+			name: "3-node cycle removes all",
+			m: map[string]string{
+				"/wines/a/": "/wines/b/",
+				"/wines/b/": "/wines/c/",
+				"/wines/c/": "/wines/a/",
+			},
+			live:    map[string]bool{},
+			dropped: []string{"/wines/a/", "/wines/b/", "/wines/c/"},
+			kept:    map[string]string{},
+		},
+		{
+			name: "entry leading into cycle is removed",
+			m: map[string]string{
+				"/wines/x/": "/wines/a/",
+				"/wines/a/": "/wines/b/",
+				"/wines/b/": "/wines/a/",
+			},
+			live:    map[string]bool{},
+			dropped: []string{"/wines/x/", "/wines/a/", "/wines/b/"},
+			kept:    map[string]string{},
+		},
+		{
+			name: "cycle coexists with valid entry",
+			m: map[string]string{
+				"/wines/a/": "/wines/b/",
+				"/wines/b/": "/wines/a/",
+				"/wines/c/": "/portfolio/",
+			},
+			live:    map[string]bool{},
+			dropped: []string{"/wines/a/", "/wines/b/"},
+			kept:    map[string]string{"/wines/c/": "/portfolio/"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := CollapseRedirects(tt.m, tt.live)
+
+			// Verify dropped entries are gone
+			for _, entry := range tt.dropped {
+				if _, ok := got[entry]; ok {
+					t.Errorf("expected %q to be dropped, but it exists with target %q", entry, got[entry])
+				}
+			}
+
+			// Verify kept entries survive
+			for from, expectedTo := range tt.kept {
+				if got[from] != expectedTo {
+					t.Errorf("expected %q -> %q, got %q", from, expectedTo, got[from])
+				}
+			}
+
+			// Verify no extra entries
+			if len(got) != len(tt.kept) {
+				t.Errorf("expected %d entries, got %d: %v", len(tt.kept), len(got), got)
+			}
+		})
+	}
+}
