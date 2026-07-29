@@ -41,6 +41,10 @@ import { tokens, normalize } from './match.mjs';
 const run = promisify(execFile);
 
 const OUT_DIR = 'data/fetched-images';
+// Rejected candidates live beside the accepted ones so a reviewer correcting a
+// bad match picks from images already fetched rather than starting over.
+const ALT_DIR = 'data/fetched-images/alternates';
+const MAX_ALTERNATES = 4;
 const MANIFEST = join(OUT_DIR, 'manifest.json');
 const VERIFIER = 'imgcheck.exe';
 
@@ -391,6 +395,7 @@ if (USE_VISION) {
 }
 
 await mkdir(OUT_DIR, { recursive: true });
+await mkdir(ALT_DIR, { recursive: true });
 const manifest = (await exists(MANIFEST)) ? JSON.parse(await readFile(MANIFEST, 'utf8')) : {};
 
 const browser = await openBrowser();
@@ -471,6 +476,22 @@ for (const w of wines) {
           break;
         }
       }
+      // KEEP the rejected candidate. Every one is a picture of something, taken
+      // from a page that claimed to be this wine — and when the accepted image
+      // turns out wrong, the right one is very often among the ones refused.
+      // Throwing them away meant a human correcting a bad match had to start
+      // the search from nothing; keeping them makes it a choice between images
+      // already on disk. They are gitignored and deleted with the staging dir.
+      if ((rec.alternates || []).length < MAX_ALTERNATES) {
+        const altFile = join(ALT_DIR, `${w.slug}-${(rec.alternates || []).length}.png`);
+        try {
+          await writeFile(altFile, got.bytes);
+          rec.alternates = [...(rec.alternates || []), {
+            file: altFile, page: src, size: `${got.w}x${got.h}`,
+            why: v.reason || 'rejected', label: v.label || '',
+          }];
+        } catch {}
+      }
       rec.tried.push({ src: got.src, why: v.reason || 'rejected', stage: v.stage, missing: v.missing });
       rejectReasons[v.reason || 'unknown'] = (rejectReasons[v.reason || 'unknown'] || 0) + 1;
     }
@@ -479,8 +500,9 @@ for (const w of wines) {
   }
 
   if (!rec.ok) {
-    // Do not leave the last rejected candidate on disk pretending to be this
-    // wine's image.
+    // The last rejected candidate must not sit at the accepted path pretending
+    // to be this wine's image — but it is kept as an alternate, because a wine
+    // that found nothing is exactly where a reviewer most needs options.
     try {
       const { unlink } = await import('node:fs/promises');
       await unlink(dest);
