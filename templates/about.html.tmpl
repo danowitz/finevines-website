@@ -27,7 +27,7 @@
     <div class="wrap">
       <span class="eyebrow">About Us</span>
       <h1>A service company, first and last.</h1>
-      <p class="lede">The team is the sales force, the drivers, and the warehouse and support staff &mdash;
+      <p class="lede">The team is the sales force, the drivers, and the warehouse and support staff:
         everyone focused on the best possible service to customers and suppliers.</p>
     </div>
   </section>
@@ -36,7 +36,7 @@
     <p class="lede">Every product is handled under proper temperature and humidity: orders picked with care
       and loaded in a temperature-controlled warehouse.</p>
     <p>The sales team carries a combined <strong>200+ years</strong> in the wholesale wine, retail and
-      restaurant trade &mdash; and training your staff is part of the service. Need information, technical
+      restaurant trade, and training your staff is part of the service. Need information, technical
       specs, or an in-person session? Just ask.</p>
   </section>
 
@@ -45,10 +45,9 @@
     <h2>Who You&rsquo;ll Talk To</h2>
     <div class="team-grid">
       {{range .Team}}<div class="team-card">
-        {{if .PhotoPath}}<img src="/{{.PhotoPath}}" alt="Portrait of {{.Name}}">{{end}}
+        {{if .PhotoPath}}<img src="/{{.PhotoPath}}" alt="Portrait of {{.Name}}">{{else}}<span class="team-monogram" aria-hidden="true">{{initials .Name}}</span>{{end}}
         <div class="name">{{.Name}}</div>
         <div class="role">{{.Role}}</div>
-        {{if .Note}}<p>{{.Note}}</p>{{end}}
         <a class="email" href="mailto:{{.Email}}">{{.Email}}</a>
       </div>
       {{end}}

@@ -33,8 +33,8 @@ Ask conversationally, one question per turn — don't front-load a form:
    itself (`<img src="/{{.PhotoPath}}">`), so a leading slash in the stored value would produce a broken double
    slash. If there's no photo, don't set `photoPath` at all — leave the key out entirely (the About page only
    renders an `<img>` when `PhotoPath` is present).
-5. **Note** (optional) — a short line that appears under their name and role on the About page (e.g. a specialty
-   or a welcome note). Skip this question if it doesn't feel natural; most members won't need one.
+5. **Internal note** (optional) — a staff-only reminder about a pending roster detail. Notes are never rendered
+   on the public About page. Skip this question unless there is something the next editor needs to verify.
 
 Append the new member to the **end** of the array unless the user asks for a specific position — that's where
 they'll land in the team grid.
@@ -67,19 +67,20 @@ Each member object must have exactly these keys — no more, no fewer (this must
   "role": "Sales",
   "email": "jane@finevines.com",
   "photoPath": "assets/img/team/jane-doe.jpg",
-  "note": "Joined the FineVines team in 2026."
+  "note": "new portrait requested"
 }
 ```
 
 - `name`, `role`, `email` are always present.
 - `photoPath` is included **only** if a photo file was provided for this member — omit the key entirely otherwise
   (don't write `"photoPath": ""`).
-- `note` is included **only** if one was given — omit the key entirely otherwise (don't write `"note": ""`).
+- `note` is included **only** for an internal reminder — omit the key entirely otherwise (don't write
+  `"note": ""`). Never put public biography copy here; the site intentionally does not render this field.
 
 ## Step 5 — Show the change, get approval, write the file
 
 Show the user the entry you're about to add, remove, or change — plain language is fine ("Here's what I've got for
-Jane: Sales, jane@finevines.com, with the note 'Joined the FineVines team in 2026.' Look right?"), or the raw JSON
+Jane: Sales, jane@finevines.com, with the internal note 'new portrait requested.' Look right?"), or the raw JSON
 if they're comfortable with it. Make any edits they ask for.
 
 Once approved, write `data/team.json` as a valid JSON array containing every existing member unchanged (same order,
@@ -95,10 +96,8 @@ Then ask: **"Publish now? I'll run the site build and deploy."**
 
 ## Voice
 
-This is mostly a data-entry skill, so the copy burden is light. The one place voice matters is the `note` field, if
-used: keep it brief (a phrase or short sentence) and in the FineVines register — elegant, understated, never
-corporate-tech phrasing. "Twenty years buying Piedmont and Barolo for the portfolio" reads right; "Passionate about
-delivering world-class wine solutions!" does not.
+This is mostly a data-entry skill, so the copy burden is light. Keep internal notes short and factual, such as
+"confirm email" or "new portrait requested." They are reminders for staff, not website copy.
 
 ## Boundaries
 

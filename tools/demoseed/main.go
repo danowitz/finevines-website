@@ -2,7 +2,7 @@
 // be built and previewed WITHOUT the live Salesforce/Imagen/Anthropic pipeline.
 //
 // It pulls the SAME embedded sample roster the real pipeline uses in mock mode
-// (salesforce.MockSource — FINEVINES_SF_MOCK), applies the real web-eligibility
+// (salesforce.MockSource: FINEVINES_SF_MOCK), applies the real web-eligibility
 // filter (enrich.Eligible), writes deterministic SVG bottle labels (the same
 // guaranteed-fallback generator the live pipeline falls back to), and a
 // data/wines.json pointing at them, plus a sample news post. A handful of
@@ -39,7 +39,7 @@ var authored = map[string]struct{ desc, som string }{
 	},
 	"EF4420": {
 		"From the vines that founded Oregon Pinot: cranberry, wild herb, and forest floor carried on a cool, understated frame.",
-		"An all-purpose table red — salmon, roast vegetables, or a Sunday roast.",
+		"An all-purpose table red: salmon, roast vegetables, or a Sunday roast.",
 	},
 	"GH5501": {
 		"Steely, sun-warmed Chenin from limestone: quince, beeswax, and a savoury mineral spine.",
@@ -47,7 +47,7 @@ var authored = map[string]struct{ desc, som string }{
 	},
 	"JK6612": {
 		"Old-vine La Consulta Malbec: violet, blueberry, and cocoa with a plush, generous mid-palate.",
-		"A crowd-pleaser for the grill — steak, lamb, or empanadas.",
+		"A crowd-pleaser for the grill: steak, lamb, or empanadas.",
 	},
 	"LM7723": {
 		"Garrigue, black pepper, and dark berry from a legendary Hermitage house's négociant hand.",
@@ -59,13 +59,13 @@ var authored = map[string]struct{ desc, som string }{
 	},
 	"QR9945": {
 		"The only rosé appellation in the Côte d'Or: wild strawberry, blood orange, and a dry, mineral cut.",
-		"A serious apéritif rosé — charcuterie, grilled prawns, or a summer lunch.",
+		"A serious apéritif rosé: charcuterie, grilled prawns, or a summer lunch.",
 	},
 }
 
 // houseNotes composes a grounded description + sommelier note from a wine's
 // real fields for roster rows without hand-authored copy. It invents no facts
-// (no scores, awards, or specific tasting claims) — it only reframes what the
+// (no scores, awards, or specific tasting claims): it only reframes what the
 // roster already states, so the preview reads cleanly at scale without
 // pretending to be the real enriched copy.
 func houseNotes(w salesforce.WineRaw) (desc, som string) {
@@ -82,19 +82,19 @@ func houseNotes(w salesforce.WineRaw) (desc, som string) {
 
 	switch {
 	case strings.Contains(w.Style, "Sparkling"):
-		desc = fmt.Sprintf("A sparkling %s from %s — fine, persistent mousse and bright orchard fruit, in the house style of %s.", w.Varietal, place, w.Producer)
+		desc = fmt.Sprintf("A sparkling %s from %s: fine, persistent mousse and bright orchard fruit, in the house style of %s.", w.Varietal, place, w.Producer)
 		som = "Serve well-chilled as an apéritif, or alongside oysters, fried foods, and celebration."
 	case strings.Contains(w.Style, "Rosé"):
 		desc = fmt.Sprintf("A dry rosé of %s from %s: crisp red-berry fruit and a mineral, food-friendly finish.", w.Varietal, place)
 		som = "Serve cold with charcuterie, grilled seafood, or a long summer lunch."
 	case strings.Contains(w.Style, "Sweet"):
-		desc = fmt.Sprintf("A sweet %s from %s — honeyed stone fruit balanced by fresh acidity, from %s.", w.Varietal, place, w.Producer)
+		desc = fmt.Sprintf("A sweet %s from %s: honeyed stone fruit balanced by fresh acidity, from %s.", w.Varietal, place, w.Producer)
 		som = "Serve chilled with blue cheese, foie gras, or fruit tart."
 	case strings.Contains(w.Style, "Fortified"):
 		desc = fmt.Sprintf("A fortified wine from %s, %s: dark berry and spice with a warming, structured core.", place, w.Producer)
 		som = "Serve at cool room temperature with hard cheese, dark chocolate, or walnuts."
 	case strings.Contains(w.Style, "White"):
-		desc = fmt.Sprintf("A %swhite %s from %s — orchard fruit and a clean, mineral line, in %s's hand.", vintage, w.Varietal, place, w.Producer)
+		desc = fmt.Sprintf("A %swhite %s from %s: orchard fruit and a clean, mineral line, in %s's hand.", vintage, w.Varietal, place, w.Producer)
 		som = "Serve at 10–12°C with poultry, shellfish, or fresh cheese."
 	default:
 		desc = fmt.Sprintf("A %sred %s from %s: dark fruit, savoury depth, and fine-grained tannin from %s.", vintage, w.Varietal, place, w.Producer)
@@ -103,7 +103,7 @@ func houseNotes(w salesforce.WineRaw) (desc, som string) {
 	return desc, som
 }
 
-// regionCountry backfills a country for the demo from each sample region — in
+// regionCountry backfills a country for the demo from each sample region: in
 // the live pipeline this comes straight from Product2.FV_Country__c
 // (SourceSalesforce); here it stands in for that authoritative field.
 var regionCountry = map[string]string{
@@ -184,7 +184,7 @@ func main() {
 		// Provenance for the scored fields. Country/Color stand in for
 		// Salesforce-authoritative fields; description/sommelier are found for
 		// hero wines and derived otherwise; the SVG label counts as derived.
-		// The remaining scored fields are left unset (missing) — the live
+		// The remaining scored fields are left unset (missing): the live
 		// search pass is what fills aroma/palate/finish/pairings/abv/etc.
 		sources := map[string]model.FieldSource{
 			"description":    descSource,

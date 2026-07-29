@@ -167,3 +167,22 @@ data/enrichment-prompts.md
 
 # Raw ChatGPT enrichment pastes (transient; ingested into data/enrichment/)
 out-*.json
+
+# Generated wine label SVGs (~2,200). `finevines build` regenerates any that are
+# missing (internal/build.ensureLabels), so these are a build artifact, not
+# source. The matched bottle PHOTOGRAPHS (.jpg, ~478) are NOT reproducible —
+# they came from the old site and external URLs — and stay tracked.
+# NOTE: 33 demo-seed-era .svg files are already tracked and stay tracked;
+# gitignore does not untrack. None is referenced by a current wine — they are
+# orphans due a separate cleanup.
+assets/img/wines/*.svg
+
+# bottlecomp scratch output (tools/bottlecomp -outdir)
+out-bottle/
+
+# Staged bottle photographs from tools/labelfetch (review before importing)
+data/fetched-images/
+
+# Verifier/normaliser binaries (built from tools/)
+imgcheck.exe
+imgnorm.exe

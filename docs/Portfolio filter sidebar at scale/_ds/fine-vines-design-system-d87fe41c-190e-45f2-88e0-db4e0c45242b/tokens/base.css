@@ -1,0 +1,83 @@
+/* ── Fine Vines · Base element styles & a few utilities ────────────────
+   Light, opt-in base layer. Sets the warm page ground, serif/sans defaults,
+   classic heading rhythm, and a handful of brand utility classes used by
+   specimen cards and UI kits. Components style themselves via tokens.
+   ───────────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text-body);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--text-strong);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  margin: 0 0 0.4em;
+}
+h1 { font-size: var(--text-h1); }
+h2 { font-size: var(--text-h2); }
+h3 { font-size: var(--text-h3); }
+h4 { font-size: var(--text-h4); }
+
+p { margin: 0 0 1em; }
+
+a { color: var(--text-link); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--brass-500); }
+
+::selection { background: var(--brass-300); color: var(--ink-900); }
+
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* ── Brand utility classes ── */
+.fv-eyebrow {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--brass-700);
+}
+.fv-display {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  color: var(--text-strong);
+}
+.fv-data {
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  letter-spacing: var(--tracking-normal);
+}
+/* hairline rule with a centered brass diamond — a recurring brand divider */
+.fv-rule {
+  border: none;
+  height: 1px;
+  background: var(--border-default);
+  position: relative;
+  margin: var(--space-6) 0;
+  overflow: visible;
+}
+.fv-rule::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 7px; height: 7px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--brass-500);
+  box-shadow: 0 0 0 4px var(--bg-page);
+}

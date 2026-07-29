@@ -1,0 +1,12 @@
+/* ── Fine Vines · Webfonts ─────────────────────────────────────────────
+   Loaded from Google Fonts CDN. SUBSTITUTION NOTE: Fine Vines has no
+   licensed brand fonts on file, so these are deliberate, brand-appropriate
+   choices, not originals — see readme.md › Caveats. Swap the @font-face/
+   import targets here if real font binaries are provided.
+
+   · Cormorant Garamond — high-contrast old-world serif → display headlines
+   · EB Garamond        — classic book serif            → editorial body
+   · Archivo            — clean neutral grotesque        → catalog data / UI
+   ───────────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Archivo:wght@400;500;600;700&display=swap');

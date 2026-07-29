@@ -111,6 +111,29 @@ func TestGenerateMiddleware_GuardsAgainstSelfFetchReentry(t *testing.T) {
 	}
 }
 
+// TestGenerateMiddleware_NeverRedirectsToSelf pins the runtime self-target
+// guard: MapURLs drops identity pairs at generation time, but the map the
+// script fetches is a separately-deployed asset that can be stale or
+// hand-edited. A map entry whose value equals the request's own path would
+// 301 the page to itself in an infinite loop, so the emitted script must
+// check the target against the current path before redirecting.
+func TestGenerateMiddleware_NeverRedirectsToSelf(t *testing.T) {
+	script, err := GenerateMiddleware("https://www.finevines.com/redirects.json")
+	if err != nil {
+		t.Fatalf("GenerateMiddleware() error = %v", err)
+	}
+	got := string(script)
+
+	for _, want := range []string{
+		"target !== withQuery",
+		"target !== url.pathname",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("GenerateMiddleware() output missing %q (self-redirect guard); full output:\n%s", want, got)
+		}
+	}
+}
+
 func TestGenerateMiddleware_EmptyRedirectsURLIsError(t *testing.T) {
 	if _, err := GenerateMiddleware(""); err == nil {
 		t.Fatal("GenerateMiddleware(\"\") error = nil, want an error for an empty redirects URL")

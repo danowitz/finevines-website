@@ -103,6 +103,18 @@ func LoadOldSiteImages(path string) (map[string]string, error) {
 	return m, nil
 }
 
+// hasRealImage reports whether prev already carries a REAL image — one
+// ImageFieldSource classifies as found (producer-supplied, old-site,
+// scraped-web, scraped-google) rather than generated. Real images survive
+// re-enrichment untouched: a Salesforce field change refreshes text, never
+// trades a real photograph (often a human-verified pick) for a generated one.
+// Generated placeholders are deliberately NOT preserved, so a re-enrich can
+// upgrade them to a real image.
+func hasRealImage(prev *model.Wine) bool {
+	return prev != nil && prev.ImagePath != "" &&
+		model.ImageFieldSource(prev.ImageSource) == model.SourceFound
+}
+
 // imageCandidate picks the best real-image URL for a wine and the ImageSource
 // to record if it downloads: FineVines' own old-site photo first (best, zero
 // copyright), then a found web image. Empty means no real candidate — resolve
@@ -120,9 +132,10 @@ func imageCandidate(sku, foundURL string, oldImages map[string]string) (url, sou
 // ResolveImage resolves the bottle image for one wine via a first-success-
 // wins chain (design spec §5):
 //
-//  1. Producer-supplied guard: if prev already carries a producer-supplied
-//     image, it is returned untouched and provider is never invoked — enrich
-//     must never overwrite an image the producer gave FineVines directly.
+//  1. Real-image guard: if prev already carries a real image (hasRealImage —
+//     producer-supplied, old-site, or scraped), it is returned untouched and
+//     provider is never invoked — enrich must never overwrite a real
+//     photograph with a generated one.
 //  2. Generated photo: provider.GenerateJPEG renders a photorealistic bottle
 //     photo, written to <imgDir>/<slug>.jpg (source model.ImageGeneratedPhoto).
 //  3. Label floor: ANY provider error — the ErrImageRejected sentinel or an
@@ -149,7 +162,7 @@ func imageCandidate(sku, foundURL string, oldImages map[string]string) (url, sou
 // portfolio.html.tmpl prepend "/" to, and build.go's search-index "img"
 // field builds the same way.
 func ResolveImage(ctx context.Context, provider ImageProvider, w salesforce.WineRaw, prompt, imgDir string, prev *model.Wine, log func(string, ...any)) (imagePath, imageSource string, err error) {
-	if prev != nil && prev.ImageSource == model.ImageProducerSupplied {
+	if hasRealImage(prev) {
 		return prev.ImagePath, prev.ImageSource, nil
 	}
 

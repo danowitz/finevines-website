@@ -24,8 +24,27 @@
 
   function isOpen() { return drawer.classList.contains('is-open'); }
 
+  // On the drawer's FIRST open, collapse every group but the first (Producer)
+  // so the panel starts with a scannable table of contents instead of the
+  // server's mixed open/closed state dumping the eye mid-list. Groups already
+  // filtering (has-selection badge) stay open; after that the visitor's own
+  // toggling is respected.
+  var groupsPruned = false;
+  function pruneGroups() {
+    if (groupsPruned) return;
+    groupsPruned = true;
+    var groups = drawer.querySelectorAll('details.facet-group');
+    Array.prototype.forEach.call(groups, function (d, i) {
+      // The first (Producer) group must be OPENED, not merely left alone —
+      // big groups render collapsed server-side.
+      if (i === 0) { d.open = true; return; }
+      if (!d.classList.contains('has-selection')) d.open = false;
+    });
+  }
+
   function open() {
     if (isOpen()) return;
+    pruneGroups();
     lastFocus = document.activeElement;
     drawer.classList.add('is-open');
     if (backdrop) backdrop.hidden = false;

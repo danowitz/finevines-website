@@ -2,11 +2,12 @@
   {
     "name": "George Molitor",
     "role": "Founder & President",
-    "email": "george@finevines.com"
+    "email": "george@finevines.com",
+    "note": "confirm email"
   },
   {
     "name": "Barbara Fultz",
     "role": "Office Manager",
-    "email": "barbara@finevines.com"
+    "email": "barb@finevines.com"
   }
 ]

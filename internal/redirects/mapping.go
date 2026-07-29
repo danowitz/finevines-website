@@ -53,30 +53,45 @@ const minHeuristicSegmentLen = 4
 //
 // Anything matching none of the tiers lands in unmatched, in the order it
 // appeared in oldPaths.
+//
+// A tier hit whose target equals the old path itself ("/" → "/") is dropped
+// from the map entirely — the URL is already correct on the new site, and a
+// 301 from a path to itself is an infinite redirect loop that would take
+// that page down the moment the middleware serves it. Dropped identities
+// are not unmatched either: unmatched means "needs a human override", and
+// an already-correct URL needs nothing.
 func MapURLs(oldPaths []string, wines []model.Wine, news []model.NewsPost, overrides map[string]string) (mapped map[string]string, unmatched []string) {
 	mapped = map[string]string{}
 
 	for _, old := range oldPaths {
-		if newURL, ok := overrides[old]; ok {
-			mapped[old] = newURL
+		newURL, ok := mapOne(old, wines, news, overrides)
+		if !ok {
+			unmatched = append(unmatched, old)
 			continue
 		}
-		if newURL, ok := matchWellKnownRoot(old); ok {
-			mapped[old] = newURL
+		if newURL == old {
 			continue
 		}
-		if newURL, ok := matchBySlug(old, wines, news); ok {
-			mapped[old] = newURL
-			continue
-		}
-		if newURL, ok := matchLandingFallback(old); ok {
-			mapped[old] = newURL
-			continue
-		}
-		unmatched = append(unmatched, old)
+		mapped[old] = newURL
 	}
 
 	return mapped, unmatched
+}
+
+// mapOne runs one old path through the four tiers in precedence order and
+// returns the first hit. Split out of MapURLs so the identity-drop rule
+// there applies uniformly to every tier, overrides included.
+func mapOne(old string, wines []model.Wine, news []model.NewsPost, overrides map[string]string) (string, bool) {
+	if newURL, ok := overrides[old]; ok {
+		return newURL, true
+	}
+	if newURL, ok := matchWellKnownRoot(old); ok {
+		return newURL, true
+	}
+	if newURL, ok := matchBySlug(old, wines, news); ok {
+		return newURL, true
+	}
+	return matchLandingFallback(old)
 }
 
 // matchWellKnownRoot handles the pages whose new-site location never

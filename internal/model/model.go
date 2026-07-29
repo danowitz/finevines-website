@@ -6,11 +6,13 @@ package model
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
 	"math"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 // ImageSource values (Wine.ImageSource) record how a wine's image was obtained.
@@ -168,6 +170,60 @@ type TeamMember struct {
 	Email     string `json:"email"`
 	PhotoPath string `json:"photoPath,omitempty"`
 	Note      string `json:"note,omitempty"`
+}
+
+// ContactInfo is the single source of truth for the public address, phone,
+// fax, and email rendered on the contact page and in the shared footer.
+type ContactInfo struct {
+	Street       string `json:"street"`
+	CityStateZIP string `json:"cityStateZip"`
+	PhoneDisplay string `json:"phoneDisplay"`
+	PhoneHref    string `json:"phoneHref"`
+	FaxDisplay   string `json:"faxDisplay"`
+	FaxHref      string `json:"faxHref"`
+	Email        string `json:"email"`
+}
+
+// SiteContent holds the small amount of hand-curated, site-wide content that
+// is neither Salesforce-owned wine data nor office-managed news/team data.
+// The confirmation flags are deployment evidence: production deploys remain
+// blocked until the client has explicitly approved the candidate contact and
+// team-email values.
+type SiteContent struct {
+	Contact             ContactInfo `json:"contact"`
+	ContactConfirmed    bool        `json:"contactConfirmed"`
+	TeamEmailsConfirmed bool        `json:"teamEmailsConfirmed"`
+	FeaturedWineSlugs   []string    `json:"featuredWineSlugs"`
+}
+
+// LoadSiteContent reads required site-wide content and rejects incomplete
+// contact records. Unlike wines.json's first-run behavior, site.json is
+// required: silently falling back here would recreate the duplicated contact
+// constants this file exists to eliminate.
+func LoadSiteContent(path string) (SiteContent, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return SiteContent{}, err
+	}
+	var content SiteContent
+	if err := json.Unmarshal(data, &content); err != nil {
+		return SiteContent{}, err
+	}
+	required := []struct{ field, value string }{
+		{"contact.street", content.Contact.Street},
+		{"contact.cityStateZip", content.Contact.CityStateZIP},
+		{"contact.phoneDisplay", content.Contact.PhoneDisplay},
+		{"contact.phoneHref", content.Contact.PhoneHref},
+		{"contact.faxDisplay", content.Contact.FaxDisplay},
+		{"contact.faxHref", content.Contact.FaxHref},
+		{"contact.email", content.Contact.Email},
+	}
+	for _, item := range required {
+		if strings.TrimSpace(item.value) == "" {
+			return SiteContent{}, fmt.Errorf("%s is required in %s", item.field, path)
+		}
+	}
+	return content, nil
 }
 
 // LoadWines reads and parses path as JSON. A missing file is not an error:

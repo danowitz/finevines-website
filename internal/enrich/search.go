@@ -85,7 +85,8 @@ var _ Enricher = (*OpenAIEnricher)(nil)
 // provenance must be reported honestly so the coverage score is meaningful.
 const searchSystem = `You research and write catalog copy for FineVines, a licensed
 Illinois wholesale wine distributor. Voice: elegant, editorial, old-world wine
-trade — never corporate-tech.
+trade, never corporate-tech. Never use em dashes or en dashes anywhere in the
+copy; use commas, colons, or periods instead.
 
 Use web search to find authoritative information about the EXACT wine described
 (match producer, wine name, and vintage). Prefer the producer/importer site and
@@ -109,7 +110,7 @@ reputable references. Then return a single JSON object with these keys:
   bottle (region/style-appropriate bottle and label, neutral warm-grey
   backdrop, soft light; no people, scenery, or non-label logos).
 
-RULES: Write ORIGINAL prose — never copy tasting notes, reviews, or other
+RULES: Write ORIGINAL prose; never copy tasting notes, reviews, or other
 copyrighted text verbatim. Never invent critic scores, prices, awards, or
 provenance; if unsure, mark the field "derived" or "missing" and keep the copy
 general. Respond with ONLY the JSON object, no prose around it.`
@@ -231,6 +232,9 @@ func parseEnrichResult(raw []byte) (EnrichResult, error) {
 	if i, j := strings.IndexByte(s, '{'), strings.LastIndexByte(s, '}'); i >= 0 && j > i {
 		s = s[i : j+1]
 	}
+	// Models slip non-breaking spaces (U+00A0, narrow U+202F) into text
+	// fields; fold them to plain spaces once here so every field is covered.
+	s = strings.NewReplacer("\u00a0", " ", "\u202f", " ").Replace(s)
 	var out EnrichResult
 	if err := json.Unmarshal([]byte(s), &out); err != nil {
 		return EnrichResult{}, err

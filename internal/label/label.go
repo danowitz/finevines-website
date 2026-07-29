@@ -203,8 +203,13 @@ func Generate(w salesforce.WineRaw) []byte {
 		labelH = minH
 	}
 
+	aria := w.Name
+	if w.Producer != "" {
+		aria = w.Producer + " - " + w.Name
+	}
+
 	vm := viewModel{
-		AriaLabel:   xmlEscape(fmt.Sprintf("%s — %s", w.Producer, w.Name)),
+		AriaLabel:   xmlEscape(aria),
 		Pal:         pal,
 		FrameSVG:    frameSVG(frame, labelW, labelH, pal),
 		CrestSVG:    crestSVG(crest, labelW/2, 58, xmlEscape(initials(w.Producer)), pal),

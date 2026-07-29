@@ -67,6 +67,10 @@
     }
     var key = (sort === 'name' || sort === 'region') ? sort : 'producer';
     return function (a, b) {
+      // Wines missing the sort field go LAST (matching the vintage rule) —
+      // otherwise "sort by producer" leads with every producerless wine.
+      var ae = !a[key], be = !b[key];
+      if (ae !== be) return ae ? 1 : -1;
       var r = c.compare(a[key] || '', b[key] || '');
       return r !== 0 ? r : c.compare(a.name, b.name);
     };
@@ -157,9 +161,22 @@
     }
   };
 
+  // Expose the pure half for tests (tests/unit/engine.test.js loads this exact
+  // file — not a copy — into a node:vm context, so what the tests exercise is
+  // byte-for-byte what ships). In a browser `module` is undefined and this just
+  // sets one property on window; no behaviour changes either way. Deliberately
+  // placed BEFORE the DOM bootstrap below, which returns early off-page.
+  var api = { Engine: Engine, CatalogEngine: CatalogEngine, FACET_KEYS: FACET_KEYS };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else if (typeof globalThis !== 'undefined') globalThis.FineVinesCatalog = api;
+
   // ---------------------------------------------------------------------------
   // 2. UI bootstrap.
   // ---------------------------------------------------------------------------
+
+  // No document at all → we are under Node in the unit tests; the engine above
+  // is all they need, and everything past here is DOM wiring.
+  if (typeof document === 'undefined') return;
 
   var grid = document.querySelector('.wine-grid');
   if (!grid) return;
@@ -201,7 +218,15 @@
   var countEl = document.querySelector('#portfolio-count');
   var emptyEl = document.querySelector('#portfolio-empty');
   var paginationEl = document.querySelector('.pagination');
-  var checkboxes = document.querySelectorAll('.facet input[type=checkbox]');
+  var facetsEl = document.querySelector('#portfolio-facets');
+  var chipsEl = document.querySelector('#portfolio-chips');
+  var applyCountEl = document.querySelector('.facets-apply-count');
+  var railCountEl = document.querySelector('.facets-count');
+
+  // TOP_N must equal facetSeedSize in internal/build/build.go. The server seeds
+  // each big group with exactly this many values; if the two disagreed the list
+  // would visibly change length the moment the catalog-index landed.
+  var TOP_N = 12;
 
   // The live UI state. Facets are Sets of selected values keyed by FACET_KEYS.
   var state = { q: '', facets: {}, sort: 'producer', page: 1 };
@@ -263,13 +288,11 @@
 
   // syncControls reflects state INTO the DOM controls (used on first paint and
   // on popstate, where the URL — not a control — is the source of truth).
+  // The facet rows are NOT touched here: they are re-rendered wholesale from
+  // the query result, which is the only place their checked state comes from.
   function syncControls() {
     if (searchBox) searchBox.value = state.q;
     if (sortSelect) sortSelect.value = state.sort;
-    Array.prototype.forEach.call(checkboxes, function (box) {
-      var set = state.facets[box.dataset.facet];
-      box.checked = !!(set && set.has(box.value));
-    });
   }
 
   // --- Rendering -----------------------------------------------------------
@@ -318,13 +341,29 @@
       body.appendChild(producer);
     }
     var h3 = document.createElement('h3');
-    h3.textContent = spaceJoin(w.name, w.vintage);
+    h3.textContent = w.name;
+    if (w.vintage) {
+      // The vintage rides in its own de-emphasized span (see the template).
+      h3.appendChild(document.createTextNode(' '));
+      var vint = document.createElement('span');
+      vint.className = 'vintage';
+      vint.textContent = w.vintage;
+      h3.appendChild(vint);
+    }
     body.appendChild(h3);
     if (w.region || w.varietal) {
       var meta = document.createElement('span');
       meta.className = 'meta';
       meta.textContent = (w.region && w.varietal) ? (w.region + ' · ' + w.varietal) : (w.region || w.varietal);
       body.appendChild(meta);
+    }
+    if (w.avail) {
+      // Pre-composed by build.go and shipped in the catalog-index — never
+      // derived here, so server- and JS-rendered cards stay identical.
+      var avail = document.createElement('span');
+      avail.className = 'avail';
+      avail.textContent = w.avail;
+      body.appendChild(avail);
     }
 
     a.appendChild(thumb);
@@ -333,21 +372,225 @@
     return li;
   }
 
-  // updateFacetCounts writes the live count beside each checkbox and dims +
-  // disables a value that would yield zero results given the OTHER active
-  // facets (but never a value that's currently checked — that must stay
-  // toggleable so the user can undo it).
-  function updateFacetCounts(facetCounts) {
-    Array.prototype.forEach.call(checkboxes, function (box) {
-      var counts = facetCounts[box.dataset.facet] || {};
-      var n = counts[box.value] || 0;
-      var label = box.closest('label');
-      var span = label && label.querySelector('.facet-count');
-      if (span) span.textContent = n ? String(n) : '';
-      var dead = n === 0 && !box.checked;
-      box.disabled = dead;
-      if (label) label.classList.toggle('is-empty', dead);
+  // ---------------------------------------------------------------------------
+  // The facet rail.
+  // ---------------------------------------------------------------------------
+  //
+  // The sidebar is rebuilt from the query result rather than being a static
+  // list the server printed. That is what makes 310 producers usable: only the
+  // twelve highest-count values are on screen at rest, ranked by how many wines
+  // they actually yield, with a filter box to reach the rest.
+  //
+  // It costs no extra data. Engine.query already returns facetCounts[facet] —
+  // exactly the values with a non-zero count given the OTHER active facets — so
+  // the count map IS the row set. The only thing it lacks is a value the user
+  // has selected which has since fallen to zero; that is unioned back in below,
+  // because a selection you cannot see is a selection you cannot undo.
+  //
+  // Per-group UI state (open / query / show-all / sort) is deliberately NOT in
+  // the URL. Only selections are, so shared links stay short and stable and the
+  // pre-existing ?producer=…&region=… contract is untouched.
+  var railState = {};   // facet -> { query, showAll, alpha }
+  var lastCounts = {};  // last query's facetCounts, so typing can re-render one
+                        // group without re-running the engine
+  var pendingFocus = null;
+
+  function groupState(key) {
+    if (!railState[key]) railState[key] = { query: '', showAll: false, alpha: false };
+    return railState[key];
+  }
+
+  function groupEls() {
+    return facetsEl ? facetsEl.querySelectorAll('[data-facet-group]') : [];
+  }
+
+  // rowsFor builds the full candidate row list for one group: every value with
+  // a live count, plus any selected value that has dropped to zero.
+  function rowsFor(key, counts) {
+    var sel = state.facets[key] || new Set();
+    var rows = [];
+    var seen = Object.create(null);
+    for (var value in counts) {
+      seen[value] = true;
+      rows.push({ value: value, count: counts[value], checked: sel.has(value) });
+    }
+    sel.forEach(function (value) {
+      // A selected value with no remaining matches. It must still render —
+      // enabled — or the only way out of the filter would be editing the URL.
+      if (!seen[value]) rows.push({ value: value, count: 0, checked: true });
     });
+    return rows;
+  }
+
+  // sortRows ranks a group. Checked values are pinned to the top so a selection
+  // never scrolls out of reach; the rest go by count desc (or A–Z on request),
+  // with the value as a final tiebreak so ordering is total and stable.
+  function sortRows(rows, key, isGrid) {
+    if (isGrid) {
+      // Vintage reads as a chronology, not a popularity chart.
+      return rows.sort(function (a, b) { return b.value.localeCompare(a.value); });
+    }
+    var alpha = groupState(key).alpha;
+    return rows.sort(function (a, b) {
+      if (a.checked !== b.checked) return a.checked ? -1 : 1;
+      if (!alpha && a.count !== b.count) return b.count - a.count;
+      return a.value.localeCompare(b.value);
+    });
+  }
+
+  function createRow(key, row) {
+    var label = document.createElement('label');
+    label.className = 'facet-row' + (row.checked ? ' is-checked' : '') +
+      (row.count === 0 && !row.checked ? ' is-empty' : '');
+    label.title = row.value + ': ' + row.count + (row.count === 1 ? ' wine' : ' wines');
+
+    var box = document.createElement('input');
+    box.type = 'checkbox';
+    box.dataset.facet = key;
+    box.value = row.value;
+    box.checked = row.checked;
+
+    var mark = document.createElement('span');
+    mark.className = 'facet-box';
+    mark.setAttribute('aria-hidden', 'true');
+
+    var text = document.createElement('span');
+    text.className = 'facet-label';
+    text.textContent = row.value; // textContent, never innerHTML — see createCard
+
+    var count = document.createElement('span');
+    count.className = 'facet-count';
+    count.textContent = String(row.count);
+
+    label.appendChild(box);
+    label.appendChild(mark);
+    label.appendChild(text);
+    label.appendChild(count);
+    return label;
+  }
+
+  // renderGroup repaints exactly one group from the cached counts. Only the row
+  // container's children are replaced — the filter input and sort control live
+  // outside it, so typing can never destroy the element holding focus.
+  function renderGroup(details) {
+    var key = details.dataset.facetGroup;
+    var isBig = details.dataset.big === '1';
+    var isGrid = !!details.querySelector('.facet-values.is-grid');
+    var gs = groupState(key);
+    var counts = lastCounts[key] || {};
+
+    var all = rowsFor(key, counts);
+    var available = all.length;
+    var query = gs.query.trim().toLowerCase();
+    var matched = query
+      ? all.filter(function (r) { return r.value.toLowerCase().indexOf(query) !== -1; })
+      : all;
+    sortRows(matched, key, isGrid);
+
+    // A query bypasses the cap: if you searched for it, you should see it.
+    var capped = isBig && !gs.showAll && !query;
+    var shown = capped ? matched.slice(0, TOP_N) : matched;
+
+    var container = details.querySelector('[data-facet-values]');
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < shown.length; i++) frag.appendChild(createRow(key, shown[i]));
+    container.replaceChildren(frag);
+    container.classList.toggle('is-scrolling', !capped && shown.length > TOP_N);
+
+    // Header: how many values remain reachable, and how many are selected.
+    var selCount = (state.facets[key] || new Set()).size;
+    var totalEl = details.querySelector('.facet-total');
+    if (totalEl) totalEl.textContent = String(available);
+    var selEl = details.querySelector('.facet-selected');
+    if (selEl) {
+      selEl.textContent = String(selCount);
+      selEl.hidden = selCount === 0;
+    }
+    details.classList.toggle('has-selection', selCount > 0);
+
+    var matchEl = details.querySelector('.facet-match');
+    if (matchEl) {
+      matchEl.textContent = query
+        ? matched.length + ' matching'
+        : (gs.showAll ? 'All ' + matched.length : 'Top ' + Math.min(TOP_N, matched.length) + ' by wine count');
+    }
+    var sortEl = details.querySelector('.facet-sort');
+    if (sortEl) sortEl.textContent = gs.alpha ? 'A–Z' : 'Most wines';
+
+    var expander = details.querySelector('.facet-expander');
+    if (expander) {
+      // Hidden while a query is active — "show all" is meaningless when the
+      // list is already the full set of matches.
+      expander.hidden = !!query || matched.length <= TOP_N;
+      expander.textContent = gs.showAll
+        ? 'Show fewer'
+        : 'Show all ' + matched.length + ' ' + details.querySelector('.facet-name').textContent.toLowerCase() + 's';
+    }
+
+    var emptyEl2 = details.querySelector('.facet-empty');
+    if (emptyEl2) {
+      emptyEl2.hidden = shown.length !== 0;
+      emptyEl2.textContent = query ? 'No match for “' + gs.query.trim() + '”.' : 'No values available.';
+    }
+  }
+
+  // renderChips rebuilds the selected-value summary at the top of the rail.
+  function renderChips() {
+    if (!chipsEl) return;
+    var list = chipsEl.querySelector('.facet-chips-list');
+    var frag = document.createDocumentFragment();
+    var n = 0;
+    for (var i = 0; i < FACET_KEYS.length; i++) {
+      var key = FACET_KEYS[i];
+      // Bind key/value per iteration — a closure over the loop variable would
+      // give every chip the last facet's key.
+      (function (facet) {
+        (state.facets[facet] || new Set()).forEach(function (value) {
+          n++;
+          var chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'facet-chip';
+          chip.dataset.chipFacet = facet;
+          chip.dataset.chipValue = value;
+          chip.setAttribute('aria-label', 'Remove filter ' + value);
+          var text = document.createElement('span');
+          text.textContent = value;
+          var x = document.createElement('span');
+          x.className = 'facet-chip-x';
+          x.setAttribute('aria-hidden', 'true');
+          x.textContent = '✕';
+          chip.appendChild(text);
+          chip.appendChild(x);
+          frag.appendChild(chip);
+        });
+      })(key);
+    }
+    list.replaceChildren(frag);
+    chipsEl.hidden = n === 0;
+  }
+
+  // renderRail repaints every group plus the chip summary. Called once per
+  // query; at rest that is ~12 rows per OPEN group, versus the 577 checkboxes
+  // the previous implementation walked on every single render.
+  function renderRail(facetCounts, total) {
+    lastCounts = facetCounts;
+    var groups = groupEls();
+    for (var i = 0; i < groups.length; i++) renderGroup(groups[i]);
+    renderChips();
+    if (applyCountEl) applyCountEl.textContent = total.toLocaleString();
+    restoreFocus();
+  }
+
+  // restoreFocus puts the caret back on the checkbox the user just toggled.
+  // Rows are transient DOM, so without this every keyboard interaction would
+  // drop focus to <body> and lose the reader's place in the list.
+  function restoreFocus() {
+    if (!pendingFocus || !facetsEl) return;
+    var sel = '[data-facet="' + CSS.escape(pendingFocus.facet) + '"][value="' +
+      CSS.escape(pendingFocus.value) + '"]';
+    var box = facetsEl.querySelector(sel);
+    if (box) box.focus();
+    pendingFocus = null;
   }
 
   // renderPagination rebuilds the prev/next nav for client-side paging. Links
@@ -410,11 +653,30 @@
 
     if (emptyEl) emptyEl.hidden = result.total !== 0;
     if (countEl) countEl.textContent = result.total.toLocaleString() + ' wines';
-    updateFacetCounts(result.facetCounts);
+    if (railCountEl) railCountEl.textContent = result.total.toLocaleString() + ' wines';
+    renderRail(result.facetCounts, result.total);
     renderPagination(result.page, result.pageCount);
   }
 
   // --- Events --------------------------------------------------------------
+
+  // clearAll resets every filter in one action — the search box, every facet
+  // selection, and each group's own filter-within-group query, which would
+  // otherwise survive as an invisible constraint on a rail that claims to be
+  // cleared. Reachable from both the empty state and the rail's chip summary.
+  function clearAll() {
+    state.q = '';
+    for (var i = 0; i < FACET_KEYS.length; i++) state.facets[FACET_KEYS[i]] = new Set();
+    for (var key in railState) railState[key].query = '';
+    if (facetsEl) {
+      Array.prototype.forEach.call(facetsEl.querySelectorAll('.facet-filter'), function (el) {
+        el.value = '';
+      });
+    }
+    state.page = 1;
+    syncControls();
+    commit(true);
+  }
 
   function debounce(fn, ms) {
     var t;
@@ -444,15 +706,82 @@
       });
     }
 
-    Array.prototype.forEach.call(checkboxes, function (box) {
-      box.addEventListener('change', function () {
+    // The rail is wired entirely by DELEGATION. Value rows are re-rendered on
+    // every query, so a listener bound to an individual checkbox would be
+    // discarded on the first repaint and the group would silently go dead.
+    if (facetsEl) {
+      facetsEl.addEventListener('change', function (e) {
+        var box = e.target.closest('input[data-facet]');
+        if (!box) return;
         var set = state.facets[box.dataset.facet];
         if (!set) return;
         if (box.checked) set.add(box.value); else set.delete(box.value);
+        // Remember where the caret was; the row is about to be replaced.
+        pendingFocus = { facet: box.dataset.facet, value: box.value };
         state.page = 1;
         commit(true);
       });
-    });
+
+      // Filter-within-group. Repaints ONLY that group, and only from the
+      // cached counts — narrowing a list of value names cannot change which
+      // wines match, so re-running the engine here would be pure waste.
+      facetsEl.addEventListener('input', debounce(function (e) {
+        var input = e.target.closest('.facet-filter');
+        if (!input) return;
+        groupState(input.dataset.facetFilter).query = input.value;
+        var details = input.closest('[data-facet-group]');
+        if (details) renderGroup(details);
+      }, 80));
+
+      facetsEl.addEventListener('click', function (e) {
+        var sortBtn = e.target.closest('.facet-sort');
+        if (sortBtn) {
+          var gs = groupState(sortBtn.dataset.facetSort);
+          gs.alpha = !gs.alpha;
+          renderGroup(sortBtn.closest('[data-facet-group]'));
+          return;
+        }
+
+        var expand = e.target.closest('.facet-expander');
+        if (expand) {
+          var es = groupState(expand.dataset.facetExpand);
+          es.showAll = !es.showAll;
+          renderGroup(expand.closest('[data-facet-group]'));
+          return;
+        }
+
+        var chip = e.target.closest('.facet-chip');
+        if (chip) {
+          var set = state.facets[chip.dataset.chipFacet];
+          if (set) set.delete(chip.dataset.chipValue);
+          state.page = 1;
+          commit(true);
+          return;
+        }
+
+        if (e.target.closest('.facet-clear')) {
+          clearAll();
+          return;
+        }
+
+        // Drawer "Show N wines" — commits nothing (filtering is already live)
+        // and simply dismisses the panel. filters.js owns the close.
+        if (e.target.closest('.facets-apply')) {
+          var toggle = document.querySelector('.filters-toggle');
+          var closeBtn = facetsEl.querySelector('.facets-close');
+          if (closeBtn) closeBtn.click();
+          if (toggle) toggle.focus();
+        }
+      });
+
+      // NOTE: opening a group deliberately does NOT trigger a render.
+      // renderRail repaints every group on every query — closed ones included —
+      // so a group's rows are already correct by the time it is expanded.
+      // Re-rendering on <details> toggle would be pure duplicate work, and
+      // because the toggle event fires ASYNCHRONOUSLY it would also swap the
+      // rows out from under a click that had already targeted one, detaching
+      // the node mid-gesture.
+    }
 
     // Delegated click handling for the (rebuilt-every-render) pagination links.
     if (paginationEl) {
@@ -470,15 +799,7 @@
     }
 
     var clearBtn = emptyEl && emptyEl.querySelector('.portfolio-clear');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', function () {
-        state.q = '';
-        for (var i = 0; i < FACET_KEYS.length; i++) state.facets[FACET_KEYS[i]] = new Set();
-        state.page = 1;
-        syncControls();
-        commit(true);
-      });
-    }
+    if (clearBtn) clearBtn.addEventListener('click', clearAll);
 
     // Back/forward: rebuild state from the URL and repaint without pushing.
     window.addEventListener('popstate', function () {
@@ -492,6 +813,14 @@
 
   state = readState();
   syncControls(); // reflect the URL into the controls before the index arrives
+
+  // Open any group the URL has selected into. Producer/region/varietal ship
+  // collapsed, so without this a shared link would apply a filter the visitor
+  // could see in the results but not find in the rail.
+  Array.prototype.forEach.call(groupEls(), function (details) {
+    var set = state.facets[details.dataset.facetGroup];
+    if (set && set.size) details.open = true;
+  });
 
   CatalogEngine.load(indexURL).then(function (e) {
     engine = e;

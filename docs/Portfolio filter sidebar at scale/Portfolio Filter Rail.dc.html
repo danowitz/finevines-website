@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/fine-vines-design-system-d87fe41c-190e-45f2-88e0-db4e0c45242b/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/fine-vines-design-system-d87fe41c-190e-45f2-88e0-db4e0c45242b/tokens/colors.css">
+<link rel="stylesheet" href="_ds/fine-vines-design-system-d87fe41c-190e-45f2-88e0-db4e0c45242b/tokens/typography.css">
+<link rel="stylesheet" href="_ds/fine-vines-design-system-d87fe41c-190e-45f2-88e0-db4e0c45242b/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/fine-vines-design-system-d87fe41c-190e-45f2-88e0-db4e0c45242b/tokens/effects.css">
+<link rel="stylesheet" href="_ds/fine-vines-design-system-d87fe41c-190e-45f2-88e0-db4e0c45242b/tokens/base.css">
+<link rel="stylesheet" href="_ds/fine-vines-design-system-d87fe41c-190e-45f2-88e0-db4e0c45242b/styles.css">
+<script src="_ds/fine-vines-design-system-d87fe41c-190e-45f2-88e0-db4e0c45242b/_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: var(--parchment-50); }
+  a { color: var(--bordeaux-700); text-decoration: none; }
+  a:hover { color: var(--bordeaux-800); box-shadow: inset 0 -1px 0 var(--brass-500); }
+  .fv-scroll::-webkit-scrollbar { width: 8px; }
+  .fv-scroll::-webkit-scrollbar-thumb { background: var(--cork-300); border-radius: 4px; }
+  .fv-scroll::-webkit-scrollbar-track { background: transparent; }
+  input[type="checkbox"] { accent-color: var(--bordeaux-700); }
+  .facets input[type="checkbox"]:focus-visible + .fv-box { outline: 2px solid var(--brass-500); outline-offset: 2px; }
+  input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--brass-500); outline-offset: 2px; }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--parchment-50);font-family:var(--font-ui, Archivo, sans-serif);color:var(--text-body);padding:40px 40px 72px">
+
+  <div style="max-width:1240px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:32px;padding-bottom:20px;border-bottom:1px solid var(--border-hairline)">
+    <div>
+      <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:var(--brass-600);font-weight:700">Fine Vines · Portfolio</div>
+      <h1 style="font-family:var(--font-display, 'Cormorant Garamond', serif);font-size:44px;font-weight:600;letter-spacing:-0.01em;margin:6px 0 0;color:var(--text-strong)">Filtering 2,665 wines</h1>
+      <p style="font-family:var(--font-body, 'EB Garamond', serif);font-size:16px;line-height:1.6;color:var(--text-muted);margin:8px 0 0;max-width:620px;text-wrap:pretty">Collapse &amp; filter-within-group — every value stays a real checkbox with a live <code style="font-family:var(--font-ui);font-size:12px;color:var(--bordeaux-700)">.facet-count</code>, so the existing engine drops straight in.</p>
+    </div>
+    <div style="display:flex;gap:0;border:1px solid var(--border-default);border-radius:2px;overflow:hidden;flex:none">
+      <button onClick="{{ setDesktop }}" style="{{ tabDesktopStyle }}">Desktop</button>
+      <button onClick="{{ setMobile }}" style="{{ tabMobileStyle }}">Mobile drawer</button>
+    </div>
+  </div>
+
+  <div style="{{ stageStyle }}">
+
+    <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:var(--parchment-50);padding:14px 14px 0;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border-hairline)">
+          <span style="font-family:var(--font-display, 'Cormorant Garamond', serif);font-size:22px;color:var(--text-strong)">Portfolio</span>
+          <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--brass-600);font-weight:700">{{ resultLabel }}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-top:14px">
+          <sc-for list="{{ mobileCards }}" as="w" hint-placeholder-count="4">
+            <x-import component-from-global-scope="FineVinesDesignSystem_d87fe4.WineCard" producer="{{ w.producer }}" name="{{ w.title }}" region="{{ w.region }}" vintage="{{ w.vintage }}" hint-size="100%,240px"></x-import>
+          </sc-for>
+        </div>
+        <div style="position:absolute;inset:0;background:rgba(42,10,19,0.5)"></div>
+      </div>
+    </sc-if>
+
+    <aside class="facets" style="{{ railStyle }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--border-hairline)">
+        <span style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-strong);font-weight:700">Refine</span>
+        <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+          <button aria-label="Close filters" onClick="{{ setDesktop }}" style="all:unset;cursor:pointer;font-size:14px;color:var(--text-muted);padding:2px 6px">✕</button>
+        </sc-if>
+        <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+          <span style="font-family:var(--font-body, serif);font-size:13px;color:var(--text-muted);font-variant-numeric:tabular-nums">{{ resultLabel }}</span>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ hasSelection }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:14px 0;border-bottom:1px solid var(--border-hairline)">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px">
+            <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--brass-600);font-weight:700">Selected</span>
+            <button onClick="{{ clearAll }}" style="all:unset;cursor:pointer;font-family:var(--font-body, serif);font-size:12.5px;color:var(--text-muted)" style-hover="color:var(--bordeaux-700);box-shadow:inset 0 -1px 0 var(--brass-500)">Clear all</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ chips }}" as="c" hint-placeholder-count="2">
+              <button onClick="{{ c.remove }}" style="display:inline-flex;align-items:center;gap:7px;background:var(--bordeaux-700);color:var(--parchment-50);border:none;border-radius:2px;padding:5px 8px;font-family:var(--font-ui, sans-serif);font-size:11.5px;letter-spacing:0.02em;cursor:pointer" style-hover="background:var(--bordeaux-800)">
+                <span>{{ c.label }}</span>
+                <span style="color:var(--brass-300);font-size:11px">✕</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <div class="fv-scroll" style="{{ groupsWrapStyle }}">
+        <sc-if value="{{ hasInv }}" hint-placeholder-val="{{ false }}">
+          <p style="font-family:var(--font-body, serif);font-size:12px;color:var(--text-muted);margin:10px 0 0;padding-bottom:11px;border-bottom:1px solid var(--border-hairline);text-wrap:pretty">{{ invUpdated }}</p>
+        </sc-if>
+        <sc-for list="{{ groups }}" as="g" hint-placeholder-count="5">
+          <section class="facet-group facet" style="border-bottom:1px solid var(--border-hairline);padding:13px 0">
+            <button aria-expanded="{{ g.open }}" onClick="{{ g.toggleOpen }}" style="all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;width:100%;cursor:pointer;padding:2px 0">
+              <span style="display:flex;align-items:baseline;gap:7px">
+                <span style="{{ g.titleStyle }}">{{ g.title }}</span>
+                <span style="font-size:11px;color:var(--text-faint);font-variant-numeric:tabular-nums">{{ g.total }}</span>
+              </span>
+              <span style="display:flex;align-items:center;gap:8px">
+                <sc-if value="{{ g.hasSel }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-size:10px;letter-spacing:0.1em;color:var(--parchment-50);background:var(--brass-600);border-radius:2px;padding:2px 5px;font-weight:700">{{ g.selCount }}</span>
+                </sc-if>
+                <span style="{{ g.caretStyle }}">▾</span>
+              </span>
+            </button>
+
+            <sc-if value="{{ g.open }}" hint-placeholder-val="{{ true }}">
+              <div style="padding-top:11px">
+
+                <sc-if value="{{ g.searchable }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;margin-bottom:9px">
+                    <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--cork-500);font-size:15px;pointer-events:none">⌕</span>
+                    <input type="text" value="{{ g.query }}" onChange="{{ g.onQuery }}" placeholder="{{ g.placeholder }}" aria-label="{{ g.placeholder }}" style="width:100%;height:40px;box-sizing:border-box;padding:0 12px 0 30px;border:1px solid var(--border-default);border-radius:2px;background:var(--white);font-family:var(--font-ui, sans-serif);font-size:14px;color:var(--text-body)" style-focus="border-color:var(--brass-500)">
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin:0 2px 7px">
+                    <span style="font-family:var(--font-body, serif);font-size:11.5px;color:var(--text-faint);font-variant-numeric:tabular-nums">{{ g.matchLabel }}</span>
+                    <button onClick="{{ g.toggleSort }}" style="all:unset;cursor:pointer;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--brass-600);font-weight:700" style-hover="color:var(--bordeaux-700)">{{ g.sortLabel }}</button>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ g.isGrid }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:5px">
+                    <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="12">
+                      <label title="{{ r.title }}" style="{{ r.chipStyle }}">
+                        <input type="checkbox" data-facet="{{ r.facet }}" value="{{ r.label }}" checked="{{ r.checked }}" disabled="{{ r.disabled }}" onChange="{{ r.onToggle }}" style="position:absolute;opacity:0;width:1px;height:1px">
+                        <span>{{ r.label }}</span>
+                        <span class="facet-count" style="{{ r.chipCountStyle }}">{{ r.count }}</span>
+                      </label>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ g.isList }}" hint-placeholder-val="{{ true }}">
+                  <div class="fv-scroll" style="{{ g.listStyle }}">
+                    <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="8">
+                      <label style="{{ r.rowStyle }}" style-hover="{{ r.hoverStyle }}">
+                        <input type="checkbox" data-facet="{{ r.facet }}" value="{{ r.label }}" checked="{{ r.checked }}" disabled="{{ r.disabled }}" onChange="{{ r.onToggle }}" style="position:absolute;opacity:0;width:1px;height:1px;margin:0">
+                        <span class="fv-box" aria-hidden="true" style="{{ r.boxStyle }}">{{ r.check }}</span>
+                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.label }}</span>
+                        <span class="facet-count" style="{{ r.countStyle }}">{{ r.count }}</span>
+                      </label>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ g.showExpander }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ g.toggleShowAll }}" style="all:unset;box-sizing:border-box;display:block;width:100%;text-align:left;cursor:pointer;margin-top:9px;padding:6px 8px;font-family:var(--font-body, serif);font-size:12.5px;color:var(--bordeaux-700);border-top:1px solid var(--border-hairline)" style-hover="background:var(--parchment-100)">
+                    <span style="box-shadow:inset 0 -1px 0 var(--brass-500)">{{ g.expanderLabel }}</span>
+                  </button>
+                </sc-if>
+
+                <sc-if value="{{ g.empty }}" hint-placeholder-val="{{ false }}">
+                  <p style="font-family:var(--font-body, serif);font-size:13px;color:var(--text-muted);margin:6px 2px 2px">No match for “{{ g.query }}”.</p>
+                </sc-if>
+              </div>
+            </sc-if>
+          </section>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:12px 0 0;border-top:1px solid var(--border-hairline);background:var(--parchment-50)">
+          <button onClick="{{ setDesktop }}" style="width:100%;height:40px;box-sizing:border-box;background:var(--bordeaux-700);color:var(--parchment-50);border:none;border-radius:2px;padding:0 12px;font-family:var(--font-ui, sans-serif);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;cursor:pointer" style-hover="background:var(--bordeaux-800)">{{ mobileCta }}</button>
+        </div>
+      </sc-if>
+    </aside>
+
+    <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid var(--border-hairline)">
+          <span style="font-family:var(--font-display, 'Cormorant Garamond', serif);font-size:26px;color:var(--text-strong)">{{ resultLabel }}</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-muted);font-weight:700">Sort</span>
+            <x-import component-from-global-scope="FineVinesDesignSystem_d87fe4.Select" options="{{ sortOptions }}" value="{{ resultSort }}" onChange="{{ onResultSort }}" aria-label="Sort wines" hint-size="212px,44px"></x-import>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding-top:20px">
+          <sc-for list="{{ cards }}" as="w" hint-placeholder-count="9">
+            <x-import component-from-global-scope="FineVinesDesignSystem_d87fe4.WineCard" producer="{{ w.producer }}" name="{{ w.title }}" varietal="{{ w.varietal }}" region="{{ w.region }}" vintage="{{ w.vintage }}" badge="{{ w.badge }}" hint-size="100%,380px"></x-import>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="max-width:1240px;margin:56px auto 0;border-top:1px solid var(--border-hairline);padding-top:28px">
+    <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:var(--brass-600);font-weight:700">States</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:28px;margin-top:20px">
+
+      <div>
+        <div style="font-family:var(--font-body, serif);font-size:13px;color:var(--text-muted);margin-bottom:10px">Value row</div>
+        <div style="background:var(--white);border:1px solid var(--border-hairline);border-radius:4px;padding:10px 8px;display:flex;flex-direction:column;gap:2px">
+          <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:2px;font-family:var(--font-body, serif);font-size:13.5px;color:var(--text-body)">
+            <span style="width:15px;height:15px;flex:none;border:1.5px solid var(--border-strong);border-radius:2px"></span><span style="flex:1">Groffier</span><span style="font-size:12px;color:var(--text-faint);font-variant-numeric:tabular-nums">38</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:2px;background:var(--parchment-100);font-family:var(--font-body, serif);font-size:13.5px;color:var(--text-body)">
+            <span style="width:15px;height:15px;flex:none;border:1.5px solid var(--border-strong);border-radius:2px"></span><span style="flex:1">Benjamin Leroux</span><span style="font-size:12px;color:var(--text-faint);font-variant-numeric:tabular-nums">33</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:2px;background:rgba(194,161,78,0.14);box-shadow:inset 2px 0 0 var(--brass-500);font-family:var(--font-body, serif);font-size:13.5px;color:var(--text-strong);font-weight:600">
+            <span style="width:15px;height:15px;flex:none;border:1.5px solid var(--bordeaux-700);background:var(--bordeaux-700);border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--parchment-50);font-size:10px;line-height:1">✓</span><span style="flex:1">Damoy</span><span style="font-size:12px;color:var(--bordeaux-700);font-variant-numeric:tabular-nums">22</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:2px;font-family:var(--font-body, serif);font-size:13.5px;color:var(--text-body)">
+            <span style="width:15px;height:15px;flex:none;border:1.5px solid var(--border-strong);border-radius:2px;outline:2px solid var(--brass-500);outline-offset:2px"></span><span style="flex:1">Méo-Camuzet</span><span style="font-size:12px;color:var(--text-faint);font-variant-numeric:tabular-nums">17</span>
+          </label>
+        </div>
+        <div style="font-family:var(--font-body, serif);font-size:12.5px;color:var(--text-faint);margin-top:8px">normal · hover · checked · keyboard focus. Values that fall to zero leave the list — the group count and the “show all N” label drop with them.</div>
+      </div>
+
+      <div>
+        <div style="font-family:var(--font-body, serif);font-size:13px;color:var(--text-muted);margin-bottom:10px">Group header</div>
+        <div style="background:var(--white);border:1px solid var(--border-hairline);border-radius:4px;padding:4px 12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border-hairline)">
+            <span style="display:flex;align-items:baseline;gap:7px"><span style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;color:var(--text-strong)">Producer</span><span style="font-size:11px;color:var(--text-faint)">310</span></span>
+            <span style="color:var(--brass-600);font-size:11px">▾</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border-hairline)">
+            <span style="display:flex;align-items:baseline;gap:7px"><span style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;color:var(--bordeaux-700)">Region</span><span style="font-size:11px;color:var(--text-faint)">109</span></span>
+            <span style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;letter-spacing:0.1em;color:var(--parchment-50);background:var(--brass-600);border-radius:2px;padding:2px 5px;font-weight:700">2</span><span style="color:var(--brass-600);font-size:11px;display:inline-block;transform:rotate(180deg)">▾</span></span>
+          </div>
+          <div style="padding:13px 0">
+            <div style="font-family:var(--font-body, serif);font-size:12.5px;color:var(--bordeaux-700)"><span style="box-shadow:inset 0 -1px 0 var(--brass-500)">Show all 310 producers</span></div>
+          </div>
+        </div>
+        <div style="font-family:var(--font-body, serif);font-size:12.5px;color:var(--text-faint);margin-top:8px">collapsed · open with selection badge · expander</div>
+      </div>
+
+      <div>
+        <div style="font-family:var(--font-body, serif);font-size:13px;color:var(--text-muted);margin-bottom:10px">Selected summary &amp; small facets</div>
+        <div style="background:var(--white);border:1px solid var(--border-hairline);border-radius:4px;padding:14px 12px">
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bordeaux-700);color:var(--parchment-50);border-radius:2px;padding:5px 8px;font-size:11.5px">Burgundy <span style="color:var(--brass-300)">✕</span></span>
+            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bordeaux-700);color:var(--parchment-50);border-radius:2px;padding:5px 8px;font-size:11.5px">Pinot Noir <span style="color:var(--brass-300)">✕</span></span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:14px">
+            <span style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-default);border-radius:2px;padding:4px 7px;font-size:12px;color:var(--text-body)">2019 <span style="color:var(--text-faint);font-size:11px">84</span></span>
+            <span style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bordeaux-700);background:var(--bordeaux-700);color:var(--parchment-50);border-radius:2px;padding:4px 7px;font-size:12px">2020 <span style="color:var(--brass-300);font-size:11px">91</span></span>
+            <span style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-default);border-radius:2px;padding:4px 7px;font-size:12px;color:var(--text-body)">2021 <span style="color:var(--text-faint);font-size:11px">62</span></span>
+          </div>
+        </div>
+        <div style="font-family:var(--font-body, serif);font-size:12.5px;color:var(--text-faint);margin-top:8px">chips clear a value in one click · vintage reads as a year grid</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;topN&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:12,&quot;min&quot;:6,&quot;max&quot;:24,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;showActiveChips&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.data = this.build();
+    this.state = {
+      mode: 'desktop',
+      open: { producer: false, varietal: false, region: false, vintage: true, country: true },
+      q: { producer: '', varietal: '', region: '' },
+      sort: { producer: 'count', varietal: 'count', region: 'count' },
+      all: {},
+      inStockOnly: true,
+      sel: { producer: [], varietal: [], region: [], vintage: [], country: [] }
+    };
+  }
+
+  componentDidMount() {
+    fetch('inventory.json').then((r) => r.json()).then((inv) => this.setState({ inv })).catch(() => {});
+  }
+
+  rng(seed) { let a = seed; return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+  build() {
+    const r = this.rng(20260727);
+    const pick = (arr) => arr[Math.floor(r() * arr.length)];
+    const countries = ['France','Italy','Spain','United States','Portugal','Germany','Austria','Argentina','Chile','Australia','New Zealand','South Africa','Greece','Hungary','Israel','Lebanon','Slovenia','Croatia','Uruguay','Canada'];
+    const regionSeed = {
+      France: ['Burgundy','Bordeaux','Champagne','Northern Rhône','Southern Rhône','Loire','Alsace','Beaujolais','Provence','Languedoc','Jura','Savoie','Chablis','Roussillon','Cahors','Corsica'],
+      Italy: ['Piedmont','Tuscany','Veneto','Friuli','Alto Adige','Campania','Sicily','Umbria','Marche','Abruzzo','Puglia','Lombardy','Sardinia','Emilia-Romagna'],
+      Spain: ['Rioja','Ribera del Duero','Priorat','Rías Baixas','Jerez','Bierzo','Navarra','Penedès'],
+      'United States': ['Napa Valley','Sonoma Coast','Russian River','Santa Barbara','Willamette Valley','Columbia Valley','Anderson Valley','Finger Lakes','Paso Robles','Sta. Rita Hills'],
+      Portugal: ['Douro','Dão','Vinho Verde','Alentejo','Bairrada'],
+      Germany: ['Mosel','Rheingau','Pfalz','Nahe','Baden'],
+      Austria: ['Wachau','Kamptal','Burgenland','Kremstal'],
+      Argentina: ['Mendoza','Uco Valley','Salta'],
+      Chile: ['Maipo','Casablanca','Colchagua'],
+      Australia: ['Barossa','Yarra Valley','Clare Valley','Margaret River'],
+      'New Zealand': ['Marlborough','Central Otago','Hawke’s Bay'],
+      'South Africa': ['Stellenbosch','Swartland','Walker Bay'],
+      Greece: ['Santorini','Naoussa','Nemea'],
+      Hungary: ['Tokaj','Villány'],
+      Israel: ['Galilee','Judean Hills'],
+      Lebanon: ['Bekaa Valley'],
+      Slovenia: ['Brda','Vipava'],
+      Croatia: ['Istria','Dalmatia'],
+      Uruguay: ['Canelones'],
+      Canada: ['Niagara','Okanagan']
+    };
+    const regions = [];
+    countries.forEach((c) => regionSeed[c].forEach((n) => regions.push({ name: n, country: c })));
+    const regionExtra = [
+      { name: 'Côte de Beaune', country: 'France' }, { name: 'Côte de Nuits', country: 'France' },
+      { name: 'Côte Chalonnaise', country: 'France' }, { name: 'Mâconnais', country: 'France' },
+      { name: 'Sancerre', country: 'France' }, { name: 'Muscadet', country: 'France' },
+      { name: 'Saint-Émilion', country: 'France' }, { name: 'Médoc', country: 'France' },
+      { name: 'Pessac-Léognan', country: 'France' }, { name: 'Madiran', country: 'France' },
+      { name: 'Barolo', country: 'Italy' }, { name: 'Barbaresco', country: 'Italy' },
+      { name: 'Chianti Classico', country: 'Italy' }, { name: 'Montalcino', country: 'Italy' },
+      { name: 'Etna', country: 'Italy' }, { name: 'Valpolicella', country: 'Italy' },
+      { name: 'Collio', country: 'Italy' }, { name: 'Soave', country: 'Italy' },
+      { name: 'Toro', country: 'Spain' }, { name: 'Valdeorras', country: 'Spain' },
+      { name: 'Montsant', country: 'Spain' }, { name: 'Rueda', country: 'Spain' },
+      { name: 'Colares', country: 'Portugal' }, { name: 'Setúbal', country: 'Portugal' },
+      { name: 'Saar', country: 'Germany' }, { name: 'Franken', country: 'Germany' },
+      { name: 'Thermenregion', country: 'Austria' }, { name: 'Weinviertel', country: 'Austria' },
+      { name: 'Dundee Hills', country: 'United States' }, { name: 'Eola-Amity Hills', country: 'United States' },
+      { name: 'Carneros', country: 'United States' }, { name: 'Howell Mountain', country: 'United States' }
+    ];
+    let ri = 0;
+    while (regions.length < 109 && ri < regionExtra.length) { regions.push(regionExtra[ri++]); }
+
+    const grapes = ['Pinot Noir','Chardonnay','Cabernet Sauvignon','Merlot','Syrah','Grenache','Nebbiolo','Sangiovese','Riesling','Sauvignon Blanc','Tempranillo','Malbec','Cabernet Franc','Chenin Blanc','Gamay','Mourvèdre','Barbera','Dolcetto','Aglianico','Corvina','Garganega','Vermentino','Fiano','Greco','Verdicchio','Montepulciano','Primitivo','Nero d’Avola','Carignan','Cinsault','Petit Verdot','Malvasia','Trebbiano','Albariño','Godello','Verdejo','Mencía','Monastrell','Graciano','Touriga Nacional','Touriga Franca','Baga','Alvarinho','Sylvaner','Grüner Veltliner','Blaufränkisch','Zweigelt','Furmint','Hárslevelű','Assyrtiko','Xinomavro','Agiorgitiko','Pinot Gris','Pinot Blanc','Gewürztraminer','Muscat','Sémillon','Viognier','Marsanne','Roussanne','Picpoul','Clairette','Bourboulenc','Counoise','Terret','Aligoté','Melon de Bourgogne','Savagnin','Poulsard','Trousseau','Mondeuse','Pineau d’Aunis','Négrette','Tannat','Zinfandel','Petite Sirah','Carménère','País','Bonarda','Torrontés','Ribolla Gialla','Friulano','Schioppettino','Refosco','Teroldego','Lagrein','Vernaccia','Cortese','Arneis','Timorasso','Falanghina','Pecorino','Cesanese','Frappato','Grillo','Catarratto','Carricante','Nerello Mascalese','Nerello Cappuccio','Sagrantino','Lambrusco','Freisa','Grignolino','Ruché','Vespolina'];
+    const varietals = grapes.slice(0, 102);
+    ['Shiraz','Garnacha','Grenache / Syrah','Cabernet / Merlot','Rhône Blend','Bordeaux Blend','Field Blend','White Blend'].forEach((v) => varietals.push(v));
+
+    const surnames = ['Groffier','Leroux','Damoy','Lafarge','Roulot','Coche','Boillot','Chevillon','Mugneret','Bachelet','Rousseau','Fourrier','Lignier','Hudelot','Bize','Tollot','Sauzet','Colin','Ramonet','Pillot','Carillon','Ente','Morey','Gagnard','Niellon','Dauvissat','Raveneau','Moreau','Droin','Tribut','Barthod','Cathiard','Grivot','Gouges','Arlaud','Duband','Vallet','Bertheau','Serafin','Perrot','Dujac','Trapet','Magnien','Amiot','Prieuré','Villaine','Pousse d’Or','Bouchard','Faiveley','Latour-Giraud','Marchand','Pernot','Vougeraie','Chandon','Clerget','Gros','Lamarche','Liger-Belair','Rion','Roblet','Sirugue','Thibault','Vaudoisey','Berthaut','Confuron','Feuillet','Ganevat','Overnoy','Puffeney','Tissot','Chave','Clape','Gonon','Allemand','Verset','Levet','Jamet','Ogier','Rostaing','Barge','Gangloff','Villard','Cuilleron','Vernay','Perret','Graillot','Colombo','Rayas','Beaucastel','Vieux Télégraphe','Bosquet','Charvin','Gour','Janasse','Marcoux','Pegau','Usseglio','Giacosa','Conterno','Mascarello','Rinaldi','Cappellano','Vietti','Sandrone','Altare','Clerico','Roagna','Produttori','Burlotto','Grasso','Oddero','Principiano','Vajra','Brovia','Cavallotto','Fontanafredda','Soldera','Biondi-Santi','Poggio','Montevertine','Fontodi','Isole','Felsina','Rampolla','Querciabella','Selvapiana','Bibi','Valentini','Emidio','Pepe','Cornelissen','Frank','Occhipinti','Foradori','Radikon','Gravner','Zidarich','Vodopivec','Keller','Prüm','Haag','Dönnhoff','Schäfer','Lauer','Weiser','Immich','Müller','Knoll','Prager','Hirtzberger','Nikolaihof','Alzinger','Pichler','Hirsch','Loimer','Nigl','Moric','Wachter','Egon'];
+    const prefixes = ['Domaine','Château','Maison','Tenuta','Azienda','Weingut','Bodegas','Cave','Clos','Quinta','Estate'];
+    const producers = [];
+    const seen = {};
+    surnames.forEach((s) => { if (!seen[s]) { seen[s] = 1; producers.push(s); } });
+    let pi = 0;
+    while (producers.length < 310) {
+      const n = prefixes[pi % prefixes.length] + ' ' + surnames[(pi * 7) % surnames.length];
+      pi++;
+      if (!seen[n]) { seen[n] = 1; producers.push(n); }
+    }
+    const countryGrapes = {
+      France: ['Pinot Noir','Chardonnay','Cabernet Sauvignon','Merlot','Syrah','Grenache','Cabernet Franc','Chenin Blanc','Gamay','Mourvèdre','Sauvignon Blanc','Aligoté','Viognier','Carignan','Cinsault','Marsanne','Roussanne','Savagnin','Melon de Bourgogne','Bordeaux Blend','Rhône Blend'],
+      Italy: ['Nebbiolo','Sangiovese','Barbera','Dolcetto','Aglianico','Corvina','Garganega','Vermentino','Fiano','Greco','Verdicchio','Montepulciano','Primitivo','Nero d’Avola','Nerello Mascalese','Nerello Cappuccio','Ribolla Gialla','Friulano','Teroldego','Lagrein','Cortese','Arneis','Falanghina','Frappato','Carricante'],
+      Spain: ['Tempranillo','Albariño','Godello','Verdejo','Mencía','Monastrell','Graciano','Garnacha','Carignan'],
+      Portugal: ['Touriga Nacional','Touriga Franca','Baga','Alvarinho','Field Blend'],
+      Germany: ['Riesling','Pinot Noir','Sylvaner','Pinot Blanc','Pinot Gris'],
+      Austria: ['Grüner Veltliner','Riesling','Blaufränkisch','Zweigelt'],
+      'United States': ['Pinot Noir','Chardonnay','Cabernet Sauvignon','Zinfandel','Syrah','Merlot','Sauvignon Blanc','Petite Sirah','Riesling'],
+      Argentina: ['Malbec','Cabernet Franc','Bonarda','Torrontés'],
+      Chile: ['Carménère','Cabernet Sauvignon','País','Sauvignon Blanc'],
+      Australia: ['Shiraz','Grenache','Riesling','Cabernet Sauvignon','Sémillon'],
+      'New Zealand': ['Sauvignon Blanc','Pinot Noir','Chardonnay'],
+      'South Africa': ['Chenin Blanc','Syrah','Cinsault','Cabernet Sauvignon'],
+      Greece: ['Assyrtiko','Xinomavro','Agiorgitiko'],
+      Hungary: ['Furmint','Hárslevelű'],
+      Israel: ['Cabernet Sauvignon','Syrah','Chardonnay'],
+      Lebanon: ['Cinsault','Carignan','Grenache'],
+      Slovenia: ['Ribolla Gialla','Friulano','Malvasia'],
+      Croatia: ['Malvasia','Field Blend','Teroldego'],
+      Uruguay: ['Tannat','Cabernet Franc'],
+      Canada: ['Riesling','Pinot Noir','Chardonnay']
+    };
+    const regionGrapes = {
+      Burgundy: ['Pinot Noir','Chardonnay','Aligoté'], Chablis: ['Chardonnay'],
+      'Côte de Beaune': ['Pinot Noir','Chardonnay'], 'Côte de Nuits': ['Pinot Noir'],
+      'Côte Chalonnaise': ['Pinot Noir','Chardonnay','Aligoté'], Mâconnais: ['Chardonnay'],
+      Beaujolais: ['Gamay'], Bordeaux: ['Bordeaux Blend','Cabernet Sauvignon','Merlot','Cabernet Franc'],
+      'Saint-Émilion': ['Merlot','Cabernet Franc'], Médoc: ['Cabernet Sauvignon','Merlot'],
+      'Pessac-Léognan': ['Bordeaux Blend','Sémillon','Sauvignon Blanc'],
+      Champagne: ['Chardonnay','Pinot Noir','Field Blend'],
+      'Northern Rhône': ['Syrah','Viognier','Marsanne','Roussanne'],
+      'Southern Rhône': ['Grenache','Mourvèdre','Rhône Blend','Cinsault'],
+      Loire: ['Chenin Blanc','Cabernet Franc','Sauvignon Blanc','Melon de Bourgogne'],
+      Sancerre: ['Sauvignon Blanc'], Muscadet: ['Melon de Bourgogne'],
+      Alsace: ['Riesling','Pinot Gris','Gewürztraminer','Sylvaner'],
+      Jura: ['Savagnin','Poulsard','Trousseau','Chardonnay'], Madiran: ['Tannat'],
+      Piedmont: ['Nebbiolo','Barbera','Dolcetto','Arneis','Cortese'], Barolo: ['Nebbiolo'], Barbaresco: ['Nebbiolo'],
+      Tuscany: ['Sangiovese','Vermentino'], 'Chianti Classico': ['Sangiovese'], Montalcino: ['Sangiovese'],
+      Etna: ['Nerello Mascalese','Nerello Cappuccio','Carricante'], Sicily: ['Nero d’Avola','Frappato','Grillo'],
+      Valpolicella: ['Corvina'], Soave: ['Garganega'], Friuli: ['Friulano','Ribolla Gialla'], Collio: ['Friulano','Ribolla Gialla'],
+      Mosel: ['Riesling'], Saar: ['Riesling'], Rheingau: ['Riesling'], Wachau: ['Grüner Veltliner','Riesling'],
+      Rioja: ['Tempranillo','Graciano'], 'Ribera del Duero': ['Tempranillo'], Priorat: ['Garnacha','Carignan'], 'Rías Baixas': ['Albariño'],
+      'Napa Valley': ['Cabernet Sauvignon','Merlot'], 'Sonoma Coast': ['Pinot Noir','Chardonnay'],
+      'Russian River': ['Pinot Noir','Chardonnay'], 'Willamette Valley': ['Pinot Noir','Chardonnay'],
+      'Dundee Hills': ['Pinot Noir'], 'Eola-Amity Hills': ['Pinot Noir','Chardonnay'], Carneros: ['Pinot Noir','Chardonnay'],
+      Marlborough: ['Sauvignon Blanc'], 'Central Otago': ['Pinot Noir'], Santorini: ['Assyrtiko'], Douro: ['Field Blend','Touriga Nacional']
+    };
+    const producerObjs = producers.slice(0, 310).map((name, i) => {
+      const reg = regions[Math.floor(Math.pow(r(), 1.3) * regions.length)];
+      const src = regionGrapes[reg.name] || countryGrapes[reg.country] || countryGrapes.France;
+      const pool = [];
+      const k = Math.min(src.length, 2 + Math.floor(r() * 3));
+      while (pool.length < k) { const g = src[Math.floor(r() * src.length)]; if (pool.indexOf(g) === -1) pool.push(g); }
+      return { name, region: reg.name, country: reg.country, pool, weight: 1 / (8 + i * 0.55) };
+    });
+
+    const vintages = [];
+    for (let y = 2025; y >= 1998; y--) vintages.push(String(y));
+    const cuveePools = {
+      France: ['Les Amoureuses','Clos du Roi','Vieilles Vignes','La Combe','Les Charmes','Terres Blanches','En Chaillot','Le Clos','Cuvée Prestige','Les Terrasses','Sous le Mont','Réserve','Les Sables','Cuvée Nicolas','Tradition','Les Perrières','Clos des Ormes','La Chapelle','Les Grandes Vignes','Cuvée Classique'],
+      Italy: ['Vigna Alta','La Serra','Bricco delle Viole','Vigneto Sorì','Le Coste','Riserva','Vigna Vecchia','Costa Rubia','Contrada Nord','Vigne Antiche'],
+      Spain: ['Viña Antigua','El Molino','Finca La Riva','Crianza','Reserva','Viñas Viejas','El Páramo','La Solana'],
+      Portugal: ['Vinha Velha','Reserva','Quinta Nova','Vinha do Souto','Colheita'],
+      Germany: ['Alte Reben','Grosses Gewächs','Kabinett','Spätlese','Vom Schiefer'],
+      Austria: ['Alte Reben','Ried Steinberg','Smaragd','Federspiel','Erste Lage'],
+      'United States': ['Estate','Old Vine','Block Seven','Hillside Select','Home Ranch','Reserve'],
+      Australia: ['Old Vine','Single Block','Estate','The Ridge'],
+      'New Zealand': ['Single Vineyard','Home Block','Estate'],
+      'South Africa': ['Old Vine','Skurfberg','Estate'],
+      Argentina: ['Finca Los Álamos','Parcela 6','Viñas Viejas'],
+      Chile: ['Los Lingues','Viñedo Antiguo','Reserva'],
+      Greece: ['Palia Klimata','Ktima','Nychteri'],
+      Hungary: ['Első Dűlő','Szamorodni','Öreg Tőkék'],
+      Israel: ['Har Bracha','Reserve'], Lebanon: ['Vieilles Vignes','Réserve'],
+      Slovenia: ['Stara Trta','Selekcija'], Croatia: ['Stare Loze','Selekcija'],
+      Uruguay: ['Viñedo Viejo','Reserva'], Canada: ['Bench Block','Estate']
+    };
+
+    const total = producerObjs.reduce((s, p) => s + p.weight, 0);
+    const wines = [];
+    for (let i = 0; i < 2665; i++) {
+      let t = r() * total, p = producerObjs[0];
+      for (let j = 0; j < producerObjs.length; j++) { t -= producerObjs[j].weight; if (t <= 0) { p = producerObjs[j]; break; } }
+      const vintage = vintages[Math.floor(Math.pow(r(), 1.6) * vintages.length)];
+      const varietal = p.pool[Math.floor(r() * p.pool.length)];
+      wines.push({
+        producer: p.name, region: p.region, country: p.country, varietal, vintage,
+        title: (() => { const pool = cuveePools[p.country] || cuveePools.France; return pool[Math.floor(r() * pool.length)]; })()
+      });
+    }
+    const uniq = (k) => Array.from(new Set(wines.map((w) => w[k])));
+    return {
+      wines,
+      values: { producer: producers.slice(0, 310), varietal: varietals, region: regions.map((x) => x.name), vintage: vintages, country: countries },
+      totals: { producer: 310, varietal: varietals.length, region: regions.length, vintage: vintages.length, country: countries.length },
+      present: { producer: uniq('producer'), varietal: uniq('varietal'), region: uniq('region'), vintage: uniq('vintage'), country: uniq('country') }
+    };
+  }
+
+  toggle(facet, value) {
+    this.setState((s) => {
+      const cur = s.sel[facet];
+      const next = cur.includes(value) ? cur.filter((v) => v !== value) : cur.concat([value]);
+      return { sel: Object.assign({}, s.sel, { [facet]: next }) };
+    });
+  }
+
+  stock(producer) {
+    const inv = this.state.inv;
+    if (!inv || !inv.bottles) return null;
+    const v = inv.bottles[producer];
+    return v == null ? null : v;
+  }
+
+  matches(w, exclude) {
+    const sel = this.state.sel;
+    if (this.stock(w.producer) === 0) return false;
+    const keys = ['producer', 'varietal', 'region', 'vintage', 'country'];
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      if (k === exclude) continue;
+      if (sel[k].length && sel[k].indexOf(w[k]) === -1) return false;
+    }
+    return true;
+  }
+
+  counts(facet) {
+    const map = {};
+    const wines = this.data.wines;
+    for (let i = 0; i < wines.length; i++) { const w = wines[i]; if (this.matches(w, facet)) map[w[facet]] = (map[w[facet]] || 0) + 1; }
+    return map;
+  }
+
+  renderVals() {
+    const st = this.state;
+    const topN = this.props.topN ?? 12;
+    const isMobile = st.mode === 'mobile';
+    const filtered = this.data.wines.filter((w) => this.matches(w, null));
+    const defs = [
+      { key: 'producer', title: 'Producer', big: true, placeholder: 'Filter 310 producers…' },
+      { key: 'region', title: 'Region', big: true, placeholder: 'Filter 109 regions…' },
+      { key: 'varietal', title: 'Varietal', big: true, placeholder: 'Filter 110 varietals…' },
+      { key: 'vintage', title: 'Vintage', grid: true },
+      { key: 'country', title: 'Country' }
+    ];
+
+    const groups = defs.map((d) => {
+      const counts = this.counts(d.key);
+      const sel = st.sel[d.key];
+      const q = (st.q[d.key] || '').toLowerCase();
+      let rows = this.data.values[d.key].map((label) => ({ label, count: counts[label] || 0, checked: sel.indexOf(label) !== -1 }))
+        .filter((x) => x.count > 0 || x.checked);
+      const available = rows.length;
+      if (q) rows = rows.filter((x) => x.label.toLowerCase().indexOf(q) !== -1);
+      const alpha = st.sort[d.key] === 'alpha';
+      if (d.key === 'vintage') rows.sort((a, b) => b.label.localeCompare(a.label));
+      else rows.sort((a, b) => (b.checked - a.checked) || (alpha ? a.label.localeCompare(b.label) : (b.count - a.count) || a.label.localeCompare(b.label)));
+      const matchTotal = rows.length;
+      const showAll = !!st.all[d.key];
+      const capped = d.big && !showAll && !q;
+      const shown = capped ? rows.slice(0, topN) : rows;
+
+      return {
+        key: d.key,
+        title: d.title,
+        total: available,
+        open: !!st.open[d.key],
+        hasSel: sel.length > 0,
+        selCount: sel.length,
+        searchable: !!d.big && !!st.open[d.key],
+        isGrid: !!d.grid,
+        isList: !d.grid && shown.length > 0,
+        empty: shown.length === 0,
+        query: st.q[d.key] || '',
+        placeholder: d.big ? 'Filter ' + available + ' ' + d.title.toLowerCase() + 's…' : '',
+        matchLabel: q ? matchTotal + ' matching' : (showAll ? 'All ' + matchTotal : 'Top ' + Math.min(topN, matchTotal) + ' by wine count'),
+        sortLabel: alpha ? 'A–Z' : 'Most wines',
+        toggleSort: () => this.setState((s) => ({ sort: Object.assign({}, s.sort, { [d.key]: alpha ? 'count' : 'alpha' }) })),
+        showExpander: d.big && !q && matchTotal > topN,
+        expanderLabel: showAll ? 'Show fewer' : 'Show all ' + matchTotal + ' ' + d.title.toLowerCase() + 's',
+        titleStyle: 'font-size:11px;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;color:' + (sel.length ? 'var(--bordeaux-700)' : 'var(--text-strong)'),
+        caretStyle: 'color:var(--brass-600);font-size:11px;display:inline-block;transition:transform 120ms;transform:rotate(' + (st.open[d.key] ? 180 : 0) + 'deg)',
+        listStyle: 'display:flex;flex-direction:column;gap:1px;' + ((showAll || q) ? 'max-height:296px;overflow-y:auto;padding-right:4px;' : ''),
+        toggleOpen: () => this.setState((s) => ({ open: Object.assign({}, s.open, { [d.key]: !s.open[d.key] }) })),
+        toggleShowAll: () => this.setState((s) => ({ all: Object.assign({}, s.all, { [d.key]: !s.all[d.key] }) })),
+        onQuery: (e) => { const v = e.target.value; this.setState((s) => ({ q: Object.assign({}, s.q, { [d.key]: v }) })); },
+        rows: shown.map((x) => {
+          const zero = x.count === 0 && !x.checked;
+          return {
+            label: x.label, count: x.count, checked: x.checked, disabled: zero, facet: d.key,
+            title: x.label + ' — ' + x.count + ' wines',
+            onToggle: () => this.toggle(d.key, x.label),
+            check: x.checked ? '✓' : '',
+            boxStyle: 'width:15px;height:15px;flex:none;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;color:var(--parchment-50);transition:all 120ms;border:1.5px solid '
+              + (x.checked ? 'var(--bordeaux-700);background:var(--bordeaux-700);' : (zero ? 'var(--border-default);' : 'var(--border-strong);')),
+            rowStyle: 'position:relative;display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:2px;font-family:var(--font-body, serif);font-size:13.5px;line-height:1.25;'
+              + (zero ? 'opacity:0.42;cursor:not-allowed;color:var(--text-muted);' : 'cursor:pointer;')
+              + (x.checked ? 'background:rgba(194,161,78,0.14);box-shadow:inset 2px 0 0 var(--brass-500);color:var(--text-strong);font-weight:600;' : (zero ? '' : 'color:var(--text-body);')),
+            hoverStyle: zero ? '' : (x.checked ? 'background:rgba(194,161,78,0.2)' : 'background:var(--parchment-100)'),
+            countStyle: 'font-size:12px;font-variant-numeric:tabular-nums;color:' + (x.checked ? 'var(--bordeaux-700)' : 'var(--text-faint)'),
+            chipStyle: 'display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:2px;padding:4px 7px;width:66px;box-sizing:border-box;font-family:var(--font-ui, sans-serif);font-size:12px;position:relative;'
+              + (zero ? 'opacity:0.45;cursor:not-allowed;border:1px solid var(--border-hairline);color:var(--text-faint);'
+                : x.checked ? 'cursor:pointer;border:1px solid var(--bordeaux-700);background:var(--bordeaux-700);color:var(--parchment-50);'
+                : 'cursor:pointer;border:1px solid var(--border-default);color:var(--text-body);'),
+            chipCountStyle: 'font-size:11px;font-variant-numeric:tabular-nums;color:' + (x.checked ? 'var(--brass-300)' : 'var(--text-faint)')
+          };
+        })
+      };
+    });
+
+    const chips = [];
+    defs.forEach((d) => st.sel[d.key].forEach((v) => chips.push({ label: v, remove: () => this.toggle(d.key, v) })));
+
+    const rs = st.resultSort || 'producer';
+    const sorted = filtered.slice();
+    if (rs === 'producer') sorted.sort((a, b) => a.producer.localeCompare(b.producer) || a.title.localeCompare(b.title));
+    else if (rs === 'vintage-desc') sorted.sort((a, b) => b.vintage.localeCompare(a.vintage) || a.producer.localeCompare(b.producer));
+    else if (rs === 'vintage-asc') sorted.sort((a, b) => a.vintage.localeCompare(b.vintage) || a.producer.localeCompare(b.producer));
+    else if (rs === 'region') sorted.sort((a, b) => a.region.localeCompare(b.region) || a.producer.localeCompare(b.producer));
+    else if (rs === 'varietal') sorted.sort((a, b) => a.varietal.localeCompare(b.varietal) || a.producer.localeCompare(b.producer));
+
+    const perProducer = {}, seenTitle = {};
+    const spread = sorted.filter((w) => {
+      perProducer[w.producer] = (perProducer[w.producer] || 0) + 1;
+      if (perProducer[w.producer] > 2) return false;
+      const k = w.title + '|' + w.region;
+      if (seenTitle[k]) return false;
+      seenTitle[k] = 1;
+      return true;
+    });
+    const cards = (spread.length >= 9 ? spread : sorted).slice(0, 9).map((w) => {
+      const b = this.stock(w.producer);
+      const pack = (this.state.inv && this.state.inv.casePack) || 12;
+      const cs = b == null ? 0 : Math.floor(b / pack), rem = b == null ? 0 : b % pack;
+      return {
+        producer: w.producer, title: w.title, varietal: w.varietal, region: w.region, vintage: w.vintage,
+        badge: b == null ? '' : b + (b === 1 ? ' bottle' : ' bottles') + (cs ? ' · ' + cs + ' cs' + (rem ? ' + ' + rem : '') : ' — broken case')
+      };
+    });
+
+    const tab = (on) => 'all:unset;box-sizing:border-box;cursor:pointer;height:40px;display:inline-flex;align-items:center;padding:0 16px;font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;'
+      + (on ? 'background:var(--bordeaux-700);color:var(--parchment-50);' : 'background:var(--white);color:var(--text-muted);');
+
+    return {
+      isMobile, isDesktop: !isMobile,
+      setDesktop: () => this.setState({ mode: 'desktop' }),
+      setMobile: () => this.setState({ mode: 'mobile' }),
+      tabDesktopStyle: tab(!isMobile), tabMobileStyle: tab(isMobile),
+      groups, chips, cards,
+      resultSort: rs,
+      hasInv: !!this.state.inv,
+      invUpdated: this.state.inv ? 'In-stock only · inventory ' + this.state.inv.updated + ' · ' + ((this.state.inv.casePack || 12) + ' × 750ml case') : '',
+      sortOptions: [
+        { value: 'producer', label: 'Producer A–Z' },
+        { value: 'vintage-desc', label: 'Vintage, newest' },
+        { value: 'vintage-asc', label: 'Vintage, oldest' },
+        { value: 'region', label: 'Region A–Z' },
+        { value: 'varietal', label: 'Varietal A–Z' }
+      ],
+      onResultSort: (e) => this.setState({ resultSort: e.target.value }),
+      mobileCards: cards.slice(0, 4),
+      hasSelection: chips.length > 0 && (this.props.showActiveChips ?? true),
+      resultLabel: filtered.length.toLocaleString() + ' wines',
+      mobileCta: 'Show ' + filtered.length.toLocaleString() + ' wines',
+      stageStyle: isMobile
+        ? 'position:relative;width:400px;height:812px;margin:32px auto 0;overflow:hidden;border:1px solid var(--border-default);border-radius:6px;background:var(--parchment-50);box-shadow:var(--shadow-md);'
+        : 'max-width:1240px;margin:32px auto 0;display:flex;gap:44px;align-items:flex-start;',
+      railStyle: isMobile
+        ? 'position:absolute;top:0;right:0;bottom:0;width:332px;background:var(--parchment-50);border-left:1px solid var(--border-default);box-shadow:var(--shadow-lg);padding:18px 16px;display:flex;flex-direction:column;z-index:2;'
+        : 'width:288px;flex:none;position:sticky;top:24px;',
+      groupsWrapStyle: isMobile ? 'flex:1;overflow-y:auto;padding-right:4px;' : '',
+      stageWrap: null
+    };
+  }
+}
+</script>
+</body>
+</html>

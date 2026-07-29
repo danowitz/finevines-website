@@ -53,12 +53,47 @@ func TestMapURLs_OverrideWinsOverWellKnownAndHeuristic(t *testing.T) {
 	}
 }
 
+// TestMapURLs_IdentityMappingsAreDropped: an old path that maps to itself
+// ("/" → "/", "/news/" → "/news/") means the URL is already correct on the
+// new site — there is nothing to redirect. Emitting it anyway would make
+// the deployed middleware 301 the path to its own Location in an infinite
+// loop, taking that page down entirely. Identity pairs are dropped from the
+// map, and they are NOT unmatched either (unmatched means "needs a human to
+// write an override"; an already-correct URL needs nothing).
+func TestMapURLs_IdentityMappingsAreDropped(t *testing.T) {
+	oldPaths := []string{"/", "/about/", "/contact/", "/news/", "/portfolio/"}
+
+	mapped, unmatched := MapURLs(oldPaths, fixtureWines(), fixtureNews(), nil)
+
+	if len(mapped) != 0 {
+		t.Errorf("mapped = %#v, want empty — every input is already its own new-site URL", mapped)
+	}
+	if len(unmatched) != 0 {
+		t.Errorf("unmatched = %#v, want empty — identity paths are resolved, not unmatched", unmatched)
+	}
+}
+
+// TestMapURLs_IdentityOverrideIsDropped: the drop applies to the override
+// tier too — a hand-written redirect-overrides.json entry pointing a path
+// at itself would be just as much of a 301 loop as a heuristic one.
+func TestMapURLs_IdentityOverrideIsDropped(t *testing.T) {
+	overrides := map[string]string{"/legacy-page.html": "/legacy-page.html"}
+
+	mapped, unmatched := MapURLs([]string{"/legacy-page.html"}, nil, nil, overrides)
+
+	if _, ok := mapped["/legacy-page.html"]; ok {
+		t.Errorf("mapped = %#v — an identity override must not produce a self-redirect", mapped)
+	}
+	if len(unmatched) != 0 {
+		t.Errorf("unmatched = %#v, want empty", unmatched)
+	}
+}
+
 func TestMapURLs_WellKnownRootPages(t *testing.T) {
 	cases := []struct {
 		old  string
 		want string
 	}{
-		{"/", "/"},
 		{"/about.html", "/about/"},
 		{"/About-Us.html", "/about/"}, // case-insensitive prefix match
 		{"/contact", "/contact/"},
@@ -96,7 +131,6 @@ func TestMapURLs_NewsWellKnownRoot(t *testing.T) {
 		want string
 	}{
 		{"/news", "/news/"},
-		{"/news/", "/news/"},
 		{"/news?x=1", "/news/"},
 		{"/News.html", "/news/"}, // case-insensitive prefix match
 	}

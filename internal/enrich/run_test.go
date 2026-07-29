@@ -224,6 +224,104 @@ func TestRun_FullPipeline(t *testing.T) {
 	}
 }
 
+// TestRun_RealImagesPreservedAcrossReEnrich: a descriptive-field change
+// re-enriches a wine's TEXT, but a real image the catalog already holds —
+// old-site, scraped-web, scraped-google, producer-supplied (anything
+// ImageFieldSource classifies as found) — must survive untouched: same path,
+// same source, same provenance URL, no image-provider call. Only generated
+// placeholders (SVG label, AI photo) are re-resolved, since replacing those
+// with a real image is an upgrade.
+func TestRun_RealImagesPreservedAcrossReEnrich(t *testing.T) {
+	dir := t.TempDir()
+	dataPath := filepath.Join(dir, "wines.json")
+	imgDir := filepath.Join(dir, "img")
+
+	rawOld := salesforce.WineRaw{
+		ID: "SF-OLD", SKU: "OL1111", Producer: "Chateau Old", Name: "Reserve",
+		Vintage: "2018", StockQty: 5, ReadyToSell: true,
+	}
+	rawWeb := salesforce.WineRaw{
+		ID: "SF-WEB", SKU: "WB2222", Producer: "Domaine Web", Name: "Cuvee",
+		Vintage: "2019", StockQty: 4, ReadyToSell: true,
+	}
+	rawGen := salesforce.WineRaw{
+		ID: "SF-GEN", SKU: "GN3333", Producer: "Estate Gen", Name: "Blanc",
+		Vintage: "2021", StockQty: 2, ReadyToSell: true,
+	}
+	src := &fakeSource{roster: []salesforce.WineRaw{rawOld, rawWeb, rawGen}}
+
+	seed := []model.Wine{
+		{
+			ID: "SF-OLD", SourceHash: "stale-hash", SKU: "OL1111",
+			Producer: "Chateau Old", Name: "Reserve", Vintage: "2018",
+			ImagePath: "img/chateau-old-reserve-2018.jpg", ImageSource: model.ImageOldSite,
+			ImageSourceURL: "https://finevines.com/old/OL1111.jpg",
+			Slug:           model.Slugify("Chateau Old", "Reserve", "2018"),
+		},
+		{
+			ID: "SF-WEB", SourceHash: "stale-hash", SKU: "WB2222",
+			Producer: "Domaine Web", Name: "Cuvee", Vintage: "2019",
+			ImagePath: "img/domaine-web-cuvee-2019.jpg", ImageSource: model.ImageScrapedWeb,
+			ImageSourceURL: "https://producer.example/cuvee.jpg",
+			Slug:           model.Slugify("Domaine Web", "Cuvee", "2019"),
+		},
+		{
+			ID: "SF-GEN", SourceHash: "stale-hash", SKU: "GN3333",
+			Producer: "Estate Gen", Name: "Blanc", Vintage: "2021",
+			ImagePath: "img/estate-gen-blanc-2021.svg", ImageSource: model.ImageGeneratedLabel,
+			Slug: model.Slugify("Estate Gen", "Blanc", "2021"),
+		},
+	}
+	if err := model.SaveWines(dataPath, seed); err != nil {
+		t.Fatalf("seed wines.json: %v", err)
+	}
+
+	texts := &fakeTexts{}
+	images := &fakeImages{}
+
+	if err := Run(context.Background(), src, texts, images, nil, dataPath, imgDir, t.Logf); err != nil {
+		t.Fatalf("Run returned error: %v", err)
+	}
+
+	got, err := model.LoadWines(dataPath)
+	if err != nil {
+		t.Fatalf("reload wines.json: %v", err)
+	}
+	byID := make(map[string]model.Wine, len(got))
+	for _, w := range got {
+		byID[w.ID] = w
+	}
+
+	for id, want := range map[string]model.Wine{
+		"SF-OLD": seed[0],
+		"SF-WEB": seed[1],
+	} {
+		w, ok := byID[id]
+		if !ok {
+			t.Fatalf("%s missing from output", id)
+		}
+		if w.ImagePath != want.ImagePath || w.ImageSource != want.ImageSource || w.ImageSourceURL != want.ImageSourceURL {
+			t.Errorf("%s real image must be preserved: got path=%q source=%q url=%q, want path=%q source=%q url=%q",
+				id, w.ImagePath, w.ImageSource, w.ImageSourceURL, want.ImagePath, want.ImageSource, want.ImageSourceURL)
+		}
+		if w.Description == "" {
+			t.Errorf("%s text must still be re-enriched", id)
+		}
+	}
+
+	gen, ok := byID["SF-GEN"]
+	if !ok {
+		t.Fatal("SF-GEN missing from output")
+	}
+	if gen.ImageSource != model.ImageGeneratedPhoto {
+		t.Errorf("SF-GEN placeholder must be re-resolved (upgradeable), got source=%q", gen.ImageSource)
+	}
+
+	if got := images.callCount(); got != 1 {
+		t.Errorf("want 1 image-provider call (only SF-GEN; real images preserved), got %d", got)
+	}
+}
+
 // TestRun_CheckpointsProgressMidRun proves the every-N-completions
 // checkpoint actually lands on disk before the run finishes, not just at
 // the end. checkpointEvery is lowered to 1; two wines (SF-BLOCK1,

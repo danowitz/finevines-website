@@ -53,7 +53,7 @@ This is a static, SEO-first website. It does not need a database or application 
 - `templates/` contains the Go HTML templates for the home, portfolio, individual wine, News & Events, About,
   and Contact pages.
 - `assets/` contains the CSS, browser JavaScript, fonts, general images, and generated wine images.
-- `data/wines.json`, `data/news/*.json`, and `data/team.json` are the structured content inputs.
+- `data/wines.json`, `data/news/*.json`, `data/team.json`, and `data/site.json` are the structured content inputs.
 - `internal/build/build.go` reads those inputs and generates the complete publishable site in `dist/`, including
   the HTML pages, client-side catalog search index, sitemap, robots file, and static assets.
 - `dist/` is generated output. It is the only website tree sent to Bunny.net and should not be edited by hand.
@@ -86,6 +86,10 @@ The batch file stops when any command fails. If enrichment or the build fails, d
 a Bunny file operation fails during deployment, the manifest is not advanced and the CDN is not purged, so the
 next run can safely retry; some files may already have reached the storage origin before that retry. If only
 the final cache purge fails, the files are uploaded but visitors may temporarily receive cached content.
+
+Production deploys also require `contactConfirmed` and `teamEmailsConfirmed` to be `true` in `data/site.json`.
+This prevents candidate contact or roster details from reaching `finevines.com` before client approval. A staging
+deploy remains available by setting `FINEVINES_SITE_BASE_URL` to the staging URL.
 
 Old-site URL preservation is a separate launch concern. `finevines redirects` creates `redirects.json`, and
 `finevines redirects --publish` publishes the large redirect map through Bunny.net Edge Scripting so legacy
@@ -165,8 +169,9 @@ that becomes eligible appears after the next successful cycle; a wine that becom
 the rebuilt catalog and its obsolete page is deleted from Bunny.net during deployment.
 
 `data/wines.json` is machine-owned by `enrich`. `data/news/` and `data/team.json` are human-owned through the
-two Claude Code skills in `plugins/finevines-news` and `plugins/finevines-team`. All three feed the same build
-and deploy path, but the website build itself never talks to Salesforce or an AI service.
+two Claude Code skills in `plugins/finevines-news` and `plugins/finevines-team`. `data/site.json` owns shared
+contact details, their client-confirmation state, and homepage wine curation. All four feed the same build and
+deploy path, but the website build itself never talks to Salesforce or an AI service.
 
 ## Building
 

@@ -41,8 +41,8 @@
     <div class="wrap">
       <span class="eyebrow">The Portfolio</span>
       <h1>Browse the catalog</h1>
-      <p class="lede">Every bottle currently in stock. Filter by producer, region, varietal, country, or vintage
-        &mdash; or search the portfolio directly. What's listed reflects current wholesale availability.</p>
+      <p class="lede">Every bottle currently in stock. Filter by producer, region, varietal, country, or vintage,
+        or search the portfolio directly. What's listed reflects current wholesale availability.</p>
     </div>
   </section>
 
@@ -54,30 +54,99 @@
       <div class="facets-backdrop" hidden aria-hidden="true"></div>
 
       <aside class="facets" id="portfolio-facets" aria-label="Filter the portfolio">
-        {{/* Drawer chrome — only visible when .facets is a mobile drawer. */}}
-        <div class="facets-drawer-head">
-          <span class="facets-drawer-title">Filters</span>
+        {{/* Rail header. On desktop the trailing count mirrors the live result
+             total (portfolio.js keeps it in sync) and the close button is
+             hidden; as a mobile drawer the count hides and the ✕ shows. */}}
+        <div class="facets-head">
+          <span class="facets-title">Refine</span>
+          <span class="facets-count">{{comma .Total}} wines</span>
           <button type="button" class="facets-close" aria-label="Close filters">&times;</button>
         </div>
 
-        <h3>Search</h3>
-        <input type="search" id="portfolio-search" placeholder="Producer, wine, region&hellip;"
-          aria-label="Search the portfolio">
+        <div class="facet-search">
+          <input type="search" id="portfolio-search" placeholder="Producer, wine, region&hellip;"
+            aria-label="Search the portfolio">
+        </div>
+
+        {{/* Selected-value summary. Empty and hidden server-side; portfolio.js
+             fills it with one removable chip per selected value and reveals it.
+             It is the fastest way to see and undo what is currently applied
+             without hunting back through five collapsed groups. */}}
+        <div class="facet-chips" id="portfolio-chips" hidden>
+          <div class="facet-chips-head">
+            <span class="facet-chips-title">Selected</span>
+            <button type="button" class="facet-clear">Clear all</button>
+          </div>
+          <div class="facet-chips-list"></div>
+        </div>
 
         {{range .Facets}}
-        <details class="facet-group facet" open>
-          <summary>{{.Label}}</summary>
-          {{$facet := .Facet}}
-          {{range .Values}}
-          {{/* .facet-count is filled by portfolio.js with the live count of
-               matching wines for this value given the OTHER active facets; it
-               stays empty (invisible) with JS off. The value text is a bare
-               flex item (no wrapping span) to keep this markup — repeated for
-               every facet value across the whole catalog — as lean as possible. */}}
-          <label><input type="checkbox" data-facet="{{$facet}}" value="{{.}}"> {{.}} <span class="facet-count" aria-hidden="true"></span></label>
-          {{end}}
+        {{/* One filter group. data-facet-group keys every control inside to its
+             facet so portfolio.js can wire the whole rail by delegation — the
+             value rows are re-rendered on every query, so nothing may hold a
+             listener on an individual row.
+
+             Big groups (producer/region/varietal) render only the top
+             .Values by wine count and start COLLAPSED; the full set arrives
+             with the catalog-index. Small groups render whole and start open. */}}
+        <details class="facet-group facet" data-facet-group="{{.Facet}}" data-total="{{.Total}}"{{if .Big}} data-big="1"{{end}}{{if .Open}} open{{end}}>
+          <summary>
+            <span class="facet-name">{{.Label}}</span>
+            {{/* The catalog-wide number of distinct values. portfolio.js
+                 replaces it with how many are still AVAILABLE once other
+                 facets narrow things. */}}
+            <span class="facet-total">{{.Total}}</span>
+            {{/* Count of selections inside this group, so a collapsed group
+                 still announces that it is filtering. JS-only. */}}
+            <span class="facet-selected" hidden></span>
+          </summary>
+          <div class="facet-body">
+            {{if .Big}}
+            {{/* Filter-within-group. Distinct from #portfolio-search above:
+                 this narrows the VALUES in this one group and never touches
+                 the result set. The placeholder names the full total so it is
+                 clear the box reaches past the twelve rows shown. */}}
+            <div class="facet-search">
+              <input type="search" class="facet-filter" data-facet-filter="{{.Facet}}"
+                placeholder="{{.Placeholder}}" aria-label="{{.Placeholder}}">
+            </div>
+            <div class="facet-meta">
+              <span class="facet-match" aria-live="polite"></span>
+              <button type="button" class="facet-sort" data-facet-sort="{{.Facet}}">Most wines</button>
+            </div>
+            {{end}}
+
+            {{/* The value rows. portfolio.js replaces the CONTENTS of this
+                 container on every query — the filter box and sort control
+                 above sit outside it precisely so typing never destroys the
+                 input holding focus. */}}
+            <div class="facet-values{{if .Grid}} is-grid{{end}}" data-facet-values="{{.Facet}}">
+              {{$facet := .Facet}}
+              {{range .Values}}
+              {{/* .facet-count carries the catalog-wide count server-side;
+                   portfolio.js rewrites it with the live count of wines this
+                   value would yield given the OTHER active facets. */}}
+              <label class="facet-row"><input type="checkbox" data-facet="{{$facet}}" value="{{.Value}}"><span class="facet-box" aria-hidden="true"></span><span class="facet-label">{{.Value}}</span><span class="facet-count">{{.Count}}</span></label>
+              {{end}}
+            </div>
+
+            {{if and .Big .HasMore}}
+            {{/* Reveals the full ranked list. The label is rewritten by the JS
+                 to the count available under current filters. */}}
+            <button type="button" class="facet-expander" data-facet-expand="{{.Facet}}">{{.ExpandLabel}}</button>
+            {{end}}
+            <p class="facet-empty" hidden></p>
+          </div>
         </details>
         {{end}}
+
+        {{/* Sticky drawer footer — visible only when .facets is the ≤1024px
+             off-canvas drawer. Committing with a live count is what makes
+             filtering on a phone legible: you see what you are about to get
+             before you dismiss the panel. */}}
+        <div class="facets-drawer-foot">
+          <button type="button" class="facets-apply">Show <span class="facets-apply-count">{{comma .Total}}</span> wines</button>
+        </div>
       </aside>
 
       <div>
@@ -125,8 +194,9 @@
               </div>
               <div class="body">
                 {{if .Producer}}<span class="producer">{{.Producer}}</span>{{end}}
-                <h3>{{.Name}}{{if .Vintage}} {{.Vintage}}{{end}}</h3>
+                <h3>{{.Name}}{{if .Vintage}} <span class="vintage">{{.Vintage}}</span>{{end}}</h3>
                 {{if or .Region .Varietal}}<span class="meta">{{.Region}}{{if and .Region .Varietal}} &middot; {{end}}{{.Varietal}}</span>{{end}}
+                {{with avail .}}<span class="avail">{{.}}</span>{{end}}
               </div>
             </a>
           </li>
@@ -154,8 +224,8 @@
   </section>
 </main>
 {{template "footer" .}}
-<script src="/assets/js/portfolio.js" defer></script>
-<script src="/assets/js/filters.js" defer></script>
+<script src="{{.PortfolioJSURL}}" defer></script>
+<script src="{{.FiltersJSURL}}" defer></script>
 </body>
 </html>
 {{end}}
