@@ -11,6 +11,9 @@ import "strings"
 //     marked not-ready-to-sell is withheld even if it is in stock, so
 //     allocated/embargoed/not-yet-launched inventory never leaks onto the
 //     public catalog.
+//   - SBTL: excluded 2026-07-29 (client-confirmed) — the QuickBooks-sync
+//     placeholder row ("This is a placeholder for syncing with QuickBooks")
+//     passes every other clause in the live org, so it is denied by SKU.
 func Eligible(stockQty int, sku string, readyToSell bool) bool {
-	return stockQty > 0 && !strings.HasPrefix(sku, "9") && readyToSell
+	return stockQty > 0 && !strings.HasPrefix(sku, "9") && readyToSell && sku != "SBTL"
 }

@@ -17,6 +17,8 @@ func TestEligible(t *testing.T) {
 		{1, "", true, true},          // empty SKU doesn't start with 9
 		{14, "AB1234", false, false}, // in stock, good SKU, but not ready to sell
 		{0, "9X1234", false, false},  // fails every clause
+		{5, "SBTL", true, false},     // the QuickBooks-sync placeholder row (client: never show it)
+		{5, "SBTL2", true, true},     // only the exact placeholder SKU is excluded
 	}
 	for _, c := range cases {
 		if got := Eligible(c.qty, c.sku, c.ready); got != c.want {
