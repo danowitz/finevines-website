@@ -14,7 +14,10 @@ import (
 // rule was meant to catch these, but the org has fee rows with word SKUs
 // ("SIX/PK SURCHARGE") that sail past it, and one was the site's #4 seller by
 // volume when the hot-sellers ranking first ran live (2026-07-29).
-var nonWine = regexp.MustCompile(`(?i)\b(freight|surcharge|shipping|deposit|sample|samples|display|misc)\b`)
+// "remit"/"remittance" added 2026-07-29: a remittance-address memo row
+// (SKU "REMIT TO", 10,000 fake cases) was publishing the P.O. Box on the
+// public catalog — and no addresses appear anywhere on the site.
+var nonWine = regexp.MustCompile(`(?i)\b(freight|surcharge|shipping|deposit|sample|samples|display|misc|remit|remittance)\b`)
 
 // Eligible implements the confirmed web-eligibility rule (compiled constant):
 // a wine is shown on the site when at least one actual bottle is on hand, its

@@ -39,6 +39,9 @@ func TestEligible(t *testing.T) {
 		}), false},
 		{"sample row by name", wine(func(w *salesforce.WineRaw) { w.Name = "TASTING SAMPLE DO NOT SELL" }), false},
 		{"fee row by producer", wine(func(w *salesforce.WineRaw) { w.Producer = "FREIGHT MISC" }), false},
+		{"remittance-address memo row (no addresses on the site)", wine(func(w *salesforce.WineRaw) {
+			w.SKU, w.Name = "REMIT TO", "PLEASE NOTE OUR REMITTANCE ADDRESS:\nP.O. BOX 1649\nMELROSE PARK, IL 60161-1649"
+		}), false},
 		{"guarded word only as a substring stays eligible", wine(func(w *salesforce.WineRaw) {
 			w.Name = "Chateau Sampleton Rouge"
 		}), true},

@@ -39,21 +39,16 @@
 
     <hr class="rule-gold">
 
-    <h2>Warehouse &amp; Office</h2>
-    <address class="contact-address">
-      {{.Content.Contact.Street}}<br>
-      {{.Content.Contact.CityStateZIP}}
-    </address>
     {{/* The one place both geo terms appear together in visible copy:
          "Chicagoland ... distributor" keeps the metro search phrase
-         indexable while the sentence's actual claim is statewide. */}}
+         indexable while the sentence's actual claim is statewide. No
+         street address anywhere on the site (client direction, 2026-07-29). */}}
     <p>A Chicagoland wine and spirits distributor with statewide reach: our trucks run to
       licensed accounts across all of Illinois.</p>
 
     <h2>Contact</h2>
     <p class="contact-links">
       Phone: <a href="tel:{{.Content.Contact.PhoneHref}}">{{.Content.Contact.PhoneDisplay}}</a><br>
-      Fax: <a href="tel:{{.Content.Contact.FaxHref}}">{{.Content.Contact.FaxDisplay}}</a><br>
       Email: <a href="mailto:{{.Content.Contact.Email}}">{{.Content.Contact.Email}}</a>
     </p>
 

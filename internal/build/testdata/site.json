@@ -1,11 +1,7 @@
 {
   "contact": {
-    "street": "2725 Thomas St",
-    "cityStateZip": "Melrose Park, IL 60160",
     "phoneDisplay": "(708) 343-6702",
     "phoneHref": "+17083436702",
-    "faxDisplay": "(708) 343-6536",
-    "faxHref": "+17083436536",
     "email": "info@finevines.com"
   },
   "contactConfirmed": false,

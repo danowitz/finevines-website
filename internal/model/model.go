@@ -180,15 +180,13 @@ type TeamMember struct {
 	Note      string `json:"note,omitempty"`
 }
 
-// ContactInfo is the single source of truth for the public address, phone,
-// fax, and email rendered on the contact page and in the shared footer.
+// ContactInfo is the single source of truth for the public phone and email
+// rendered on the contact page and in the shared footer. The street address
+// and fax number were removed 2026-07-29 (client direction: no addresses
+// published anywhere on the site).
 type ContactInfo struct {
-	Street       string `json:"street"`
-	CityStateZIP string `json:"cityStateZip"`
 	PhoneDisplay string `json:"phoneDisplay"`
 	PhoneHref    string `json:"phoneHref"`
-	FaxDisplay   string `json:"faxDisplay"`
-	FaxHref      string `json:"faxHref"`
 	Email        string `json:"email"`
 }
 
@@ -237,12 +235,8 @@ func LoadSiteContent(path string) (SiteContent, error) {
 		return SiteContent{}, err
 	}
 	required := []struct{ field, value string }{
-		{"contact.street", content.Contact.Street},
-		{"contact.cityStateZip", content.Contact.CityStateZIP},
 		{"contact.phoneDisplay", content.Contact.PhoneDisplay},
 		{"contact.phoneHref", content.Contact.PhoneHref},
-		{"contact.faxDisplay", content.Contact.FaxDisplay},
-		{"contact.faxHref", content.Contact.FaxHref},
 		{"contact.email", content.Contact.Email},
 	}
 	for _, item := range required {

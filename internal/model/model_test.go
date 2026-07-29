@@ -54,12 +54,8 @@ func TestLoadSiteContentRequiresCompleteContact(t *testing.T) {
 	path := filepath.Join(dir, "site.json")
 	valid := `{
 		"contact": {
-			"street": "2725 Thomas St",
-			"cityStateZip": "Melrose Park, IL 60160",
 			"phoneDisplay": "(708) 343-6702",
 			"phoneHref": "+17083436702",
-			"faxDisplay": "(708) 343-6536",
-			"faxHref": "+17083436536",
 			"email": "info@finevines.com"
 		},
 		"contactConfirmed": false,
@@ -73,11 +69,11 @@ func TestLoadSiteContentRequiresCompleteContact(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if content.Contact.FaxHref != "+17083436536" || len(content.FeaturedWineSlugs) != 1 {
+	if content.Contact.PhoneHref != "+17083436702" || len(content.FeaturedWineSlugs) != 1 {
 		t.Fatalf("site content lost data: %+v", content)
 	}
 
-	incomplete := `{"contact":{"street":"2725 Thomas St"}}`
+	incomplete := `{"contact":{"phoneDisplay":"(708) 343-6702"}}`
 	if err := os.WriteFile(path, []byte(incomplete), 0o644); err != nil {
 		t.Fatal(err)
 	}

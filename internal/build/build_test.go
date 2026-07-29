@@ -82,11 +82,8 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 		`href="https://www.instagram.com/finevineswine/"`, // real Instagram
 		`href="https://twitter.com/finevineswine"`,        // real X/Twitter
 		`href="https://www.linkedin.com/company/1291059"`, // real LinkedIn
-		`Become a Customer`,                               // trade CTA
-		`2725 Thomas St`,
-		`Melrose Park, IL 60160`,
+		`Become a Customer`, // trade CTA
 		`href="tel:&#43;17083436702"`,
-		`Fax: <a href="tel:&#43;17083436536">(708) 343-6536</a>`,
 		`href="mailto:info@finevines.com"`,
 		`&copy; 2026 FineVines. All rights reserved.`, // static year, no clock
 	} {
@@ -118,8 +115,13 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 			t.Errorf("header nav toggle missing %q", want)
 		}
 	}
-	// No fabricated contact data may reappear in the footer.
-	for _, bad := range []string{"[to be confirmed]", "(847)", "(630)", "(773)"} {
+	// No fabricated contact data may reappear in the footer — and neither may
+	// the street address or fax number (removed 2026-07-29, client direction:
+	// no addresses published anywhere on the site).
+	for _, bad := range []string{
+		"[to be confirmed]", "(847)", "(630)", "(773)",
+		"2725 Thomas St", "Melrose Park, IL 60160", "Fax:", "17083436536",
+	} {
 		if strings.Contains(string(home), bad) {
 			t.Errorf("footer must not contain fabricated contact detail %q", bad)
 		}
@@ -155,10 +157,7 @@ func TestRunGeneratesContactFromSiteContent(t *testing.T) {
 		t.Fatal("contact page missing:", err)
 	}
 	for _, want := range []string{
-		"2725 Thomas St",
-		"Melrose Park, IL 60160",
 		`href="tel:&#43;17083436702"`,
-		`href="tel:&#43;17083436536"`,
 		`href="mailto:info@finevines.com"`,
 		// Testimonial block, driven by site.json's testimonial (rendered
 		// only when a quote is present).
@@ -173,8 +172,12 @@ func TestRunGeneratesContactFromSiteContent(t *testing.T) {
 			t.Errorf("contact page missing verified detail %q", want)
 		}
 	}
-	if strings.Contains(string(contact), "[to be confirmed]") {
-		t.Error("contact page must not publish confirmation placeholders")
+	// Placeholders, the street address, and the fax number must all stay off
+	// the page (address/fax removed 2026-07-29, client direction).
+	for _, bad := range []string{"[to be confirmed]", "2725 Thomas St", "Melrose Park, IL 60160", "Fax:", "17083436536"} {
+		if strings.Contains(string(contact), bad) {
+			t.Errorf("contact page must not contain %q", bad)
+		}
 	}
 }
 
