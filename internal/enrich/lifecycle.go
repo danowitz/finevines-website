@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -34,52 +35,125 @@ func LoadLifecycleRedirects(path string) (map[string]string, error) {
 
 // SaveLifecycleRedirects writes the map as indented JSON (map keys marshal
 // sorted, so the file diffs cleanly in review).
+//
+// The write is atomic — the same temp-file+rename pattern as
+// model.SaveWines (see its doc comment for the full rationale). A plain
+// os.WriteFile truncates in place, so a crash mid-write would destroy the
+// WHOLE accumulated redirect map; unlike wines.json, that knowledge cannot
+// be reconstructed from Salesforce on a later run once the dropped/renamed
+// wine's old record is gone from `existing` — so this file's durability
+// matters just as much as wines.json's.
 func SaveLifecycleRedirects(path string, m map[string]string) error {
 	data, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, append(data, '\n'), 0o644)
+	data = append(data, '\n')
+
+	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".tmp-*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath) // no-op once the rename below has succeeded
+
+	if err := tmp.Chmod(0o644); err != nil {
+		tmp.Close()
+		return err
+	}
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpPath, path)
+}
+
+// isLiveWinePage reports whether path (a redirect map key or value, e.g.
+// "/wines/foo/") points at a wine slug currently in liveSlugs — i.e. a real,
+// published page, not a stale redirect target.
+func isLiveWinePage(path string, liveSlugs map[string]bool) bool {
+	slug, ok := strings.CutPrefix(path, "/wines/")
+	if !ok {
+		return false
+	}
+	return liveSlugs[strings.TrimSuffix(slug, "/")]
 }
 
 // CollapseRedirects normalizes the accumulated map:
 //
 //   - an entry whose SOURCE is a live wine page again (reactivated slug) is
-//     removed — the page exists, redirecting it would shadow real content;
-//   - chains are flattened (a→b, b→c ⇒ a→c) so no visitor ever hops twice;
-//   - self-loops and cyclic chains are removed entirely.
+//     pruned BEFORE any chain-following happens — the page exists,
+//     redirecting it would shadow real content, and the stale entry must
+//     never be treated as a live hop when some OTHER entry's chain passes
+//     through it (this is what makes rename-then-revert correct: a→b, b→a
+//     with "a" live must resolve to b→a, not be misread as a cycle and
+//     dropped wholesale — see TestCollapseRedirects_RenameThenRevertResolvesToLivePage);
+//   - a chain that lands on a live wine page STOPS there — it is a
+//     terminal, not a hop to keep following, even in the general
+//     (non-revert) case where a middle hop of a longer chain came back to
+//     life;
+//   - ordinary all-dead chains are flattened (a→b, b→c ⇒ a→c) so no visitor
+//     ever hops twice;
+//   - a chain that loops back on ITSELF — a self-loop, or a genuine cycle
+//     among all-dead pages — removes every node that is a MEMBER of that
+//     cycle; there is no single sane target to give them;
+//   - an entry whose chain merely LEADS INTO such a dead cycle, without
+//     being a member of it, is not left to silently 404: it falls back to
+//     delistRedirectTarget, the same generic target any other dropped wine
+//     gets.
 //
 // liveSlugs holds bare wine slugs (no /wines/ prefix). The input map is not
 // mutated.
 func CollapseRedirects(m map[string]string, liveSlugs map[string]bool) map[string]string {
-	out := make(map[string]string, len(m))
+	// Prune live-SOURCE entries FIRST, before any chain-following: the page
+	// they'd redirect from exists again, so they must never participate in
+	// another entry's chain or cycle detection.
+	pruned := make(map[string]string, len(m))
 	for from, to := range m {
-		if slug, ok := strings.CutPrefix(from, "/wines/"); ok {
-			if liveSlugs[strings.TrimSuffix(slug, "/")] {
-				continue // page is back — no redirect
-			}
+		if isLiveWinePage(from, liveSlugs) {
+			continue
 		}
-		// Follow the chain, tracking visited nodes to detect cycles.
+		pruned[from] = to
+	}
+
+	out := make(map[string]string, len(pruned))
+	for from, to0 := range pruned {
 		visited := make(map[string]bool)
+		to := to0
+		cyclic := false
 		for {
+			if isLiveWinePage(to, liveSlugs) {
+				break // terminal: the chain has landed on a live wine page
+			}
 			if visited[to] {
-				// Cycle detected: this entry leads into a cycle, drop it.
-				to = ""
+				cyclic = true
 				break
 			}
 			visited[to] = true
-			next, ok := m[to]
+			next, ok := pruned[to]
 			if !ok {
-				// Found a terminal target (not in the map).
-				break
+				break // terminal: not (or no longer) in the map
 			}
 			to = next
 		}
-		if to == "" || from == to {
-			// Dropped due to cycle or self-loop.
+
+		switch {
+		case cyclic && visited[from]:
+			// `from` is itself a member of the dead cycle it walked into —
+			// there is no single sane target for it. Drop entirely.
 			continue
+		case cyclic:
+			// The chain leads into a dead cycle it isn't part of. Don't let
+			// it 404 — fall back to the same generic target a hard drop uses.
+			out[from] = delistRedirectTarget
+		case from == to:
+			continue // resolved straight back to itself (defensive; see self-loop handling above)
+		default:
+			out[from] = to
 		}
-		out[from] = to
 	}
 	return out
 }
