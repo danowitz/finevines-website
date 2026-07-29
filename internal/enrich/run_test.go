@@ -627,6 +627,74 @@ func TestRun_DelistLifecycle(t *testing.T) {
 	}
 }
 
+// TestRun_CheckpointPersistsLifecycleBeforeWinesGoStale proves the crash-safety
+// ordering fix: lifecycle-redirects.json must already carry a drop's redirect
+// by the time of the FIRST mid-run checkpoint, not only at the very end of
+// Run. If the redirect knowledge only hit disk at the final save, a crash (or
+// a save failure) between an earlier wines.json checkpoint and the final save
+// would lose it permanently — the dropped wine is gone from `existing` on the
+// next run, so Delist can never re-derive its redirect.
+//
+// checkpointEvery is lowered to 1 (the existing test knob) and one wine
+// (SF-BLOCK) is held open in Texts.Enrich so Run cannot reach its final save
+// while the test polls disk for the intermediate state: SF-FAST's completion
+// alone must trigger a checkpoint, and lifecycle-redirects.json must show
+// SF-HIDE's drop redirect at that point, well before Run returns.
+func TestRun_CheckpointPersistsLifecycleBeforeWinesGoStale(t *testing.T) {
+	orig := checkpointEvery
+	checkpointEvery = 1
+	t.Cleanup(func() { checkpointEvery = orig })
+
+	dir := t.TempDir()
+	dataPath := filepath.Join(dir, "wines.json")
+	imgDir := filepath.Join(dir, "img")
+	redirectsPath := filepath.Join(dir, "lifecycle-redirects.json")
+
+	rawFast := salesforce.WineRaw{ID: "SF-FAST", SKU: "AB1111", Producer: "Fast Winery", Name: "Fast Wine", StockQty: 10, ReadyToSell: true}
+	rawBlock := salesforce.WineRaw{ID: "SF-BLOCK", SKU: "CD2222", Producer: "Block Winery", Name: "Block Wine", StockQty: 5, ReadyToSell: true}
+	// SF-HIDE is withheld (ready-to-sell false): Delist drops it and records
+	// its redirect BEFORE the enrich worker loop even starts.
+	rawHide := salesforce.WineRaw{ID: "SF-HIDE", SKU: "EF3333", Producer: "Hidden Winery", Name: "Hidden Wine", StockQty: 9, ReadyToSell: false}
+
+	seed := []model.Wine{
+		{ID: "SF-HIDE", SKU: "EF3333", Slug: "hidden-winery-hidden-wine", SourceHash: "whatever"},
+	}
+	if err := model.SaveWines(dataPath, seed); err != nil {
+		t.Fatal(err)
+	}
+
+	src := &fakeSource{roster: []salesforce.WineRaw{rawFast, rawBlock, rawHide}}
+	release := make(chan struct{})
+	texts := &fakeTexts{blockIDs: map[string]bool{"SF-BLOCK": true}, release: release}
+	images := &fakeImages{}
+
+	runErr := make(chan error, 1)
+	go func() {
+		runErr <- Run(context.Background(), src, texts, images, nil, dataPath, imgDir, t.Logf)
+	}()
+
+	deadline := time.Now().Add(5 * time.Second)
+	var observed map[string]string
+	for time.Now().Before(deadline) {
+		m, err := LoadLifecycleRedirects(redirectsPath)
+		if err == nil && m["/wines/hidden-winery-hidden-wine/"] == "/portfolio/" {
+			observed = m
+			break
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	close(release) // don't leak the goroutine regardless of pass/fail
+	if err := <-runErr; err != nil {
+		t.Fatalf("Run returned error: %v", err)
+	}
+
+	if observed == nil {
+		t.Fatal("lifecycle-redirects.json never showed SF-HIDE's drop redirect while SF-BLOCK was still held open — " +
+			"the redirect must be durable at every checkpoint, not only written at the final save")
+	}
+}
+
 // TestRun_ResolveImageFilesystemErrorAbortsRun confirms the one class of
 // error ResolveImage can return (a filesystem failure, per its doc comment)
 // is treated as fatal by Run rather than logged-and-skipped like a text

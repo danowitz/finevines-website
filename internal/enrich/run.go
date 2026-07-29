@@ -173,9 +173,28 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 	var fatalErr error
 	completions := 0
 
-	save := func() error {
-		snap := buildSnapshot(enriched, diff, existingByID, attempted)
-		return model.SaveWines(dataPath, append(snap, unavailable...))
+	// currentWines assembles the current best-known full wines.json content —
+	// see buildSnapshot's doc comment — plus the retained-unavailable set.
+	currentWines := func() []model.Wine {
+		return append(buildSnapshot(enriched, diff, existingByID, attempted), unavailable...)
+	}
+
+	// save persists BOTH files for one checkpoint, lifecycle first: if a
+	// crash or write failure happens between the two, wines.json must never
+	// get ahead of lifecycle-redirects.json. A drop or slug-rename recorded
+	// in `lifecycle` but not yet flushed to disk is unrecoverable on the next
+	// run — the dropped wine is gone from `existing` so Delist can't re-derive
+	// its redirect, and a renamed wine now hash-matches so the rename check
+	// never re-fires — so the redirect knowledge must hit disk no later than
+	// the wines.json snapshot that reflects it. The map written here is
+	// intentionally uncollapsed at checkpoint time (collapse is a pure
+	// normalization the caller applies once, right before the final save;
+	// the next full run collapses again regardless).
+	save := func(wines []model.Wine) error {
+		if err := SaveLifecycleRedirects(redirectsPath, lifecycle); err != nil {
+			return err
+		}
+		return model.SaveWines(dataPath, wines)
 	}
 
 	for res := range results {
@@ -209,23 +228,24 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 		}
 
 		if completions%checkpointEvery == 0 {
-			if err := save(); err != nil {
+			if err := save(currentWines()); err != nil {
 				return fmt.Errorf("enrich: checkpoint save: %w", err)
 			}
 		}
 	}
 
-	if err := save(); err != nil {
-		return fmt.Errorf("enrich: final save: %w", err)
-	}
-
-	finalWines := append(buildSnapshot(enriched, diff, existingByID, attempted), unavailable...)
+	// Final save: collapse the accumulated lifecycle map against the final
+	// live slugs BEFORE persisting anything, then save() writes the collapsed
+	// lifecycle followed by the final wines snapshot, in that order — the
+	// same crash-safety ordering as every mid-run checkpoint above.
+	finalWines := currentWines()
 	liveSlugs := make(map[string]bool, len(finalWines))
 	for _, w := range finalWines {
 		liveSlugs[w.Slug] = true
 	}
-	if err := SaveLifecycleRedirects(redirectsPath, CollapseRedirects(lifecycle, liveSlugs)); err != nil {
-		return fmt.Errorf("enrich: save %s: %w", redirectsPath, err)
+	lifecycle = CollapseRedirects(lifecycle, liveSlugs)
+	if err := save(finalWines); err != nil {
+		return fmt.Errorf("enrich: final save: %w", err)
 	}
 
 	log("enrich: complete — enriched %d, kept %d, unavailable %d, delisted %d, dropped %d, label-fallbacks %d",
