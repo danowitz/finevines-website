@@ -40,7 +40,18 @@ var nonWine = regexp.MustCompile(`(?i)\b(freight|surcharge|shipping|deposit|samp
 //     shadow — reads as in-stock, listing effectively-empty wines. A wine is
 //     in stock when its cases round to at least one real bottle.
 func Eligible(w salesforce.WineRaw) bool {
-	return BottlesOnHand(w) >= 1 && !strings.HasPrefix(w.SKU, "9") && w.ReadyToSell &&
+	return BottlesOnHand(w) >= 1 && Merchandisable(w)
+}
+
+// Merchandisable is every clause of Eligible EXCEPT the stock floor: the row
+// is a real wine the client is willing to show, whether or not any bottles
+// are on hand right now. Delist depends on this split to tell "out of stock"
+// (page retained, marked unavailable) from "withheld or not a wine" (page
+// dropped outright) without duplicating — or drifting from — the rule above.
+// Any future eligibility clause must land in exactly one of the two halves:
+// stock-like clauses in Eligible, identity/policy clauses here.
+func Merchandisable(w salesforce.WineRaw) bool {
+	return !strings.HasPrefix(w.SKU, "9") && w.ReadyToSell &&
 		w.SKU != "SBTL" && !nonWine.MatchString(w.Name) && !nonWine.MatchString(w.Producer)
 }
 

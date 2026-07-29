@@ -279,10 +279,10 @@ func mustAbs(t *testing.T, rel string) string {
 
 // chdir switches the test process's working directory to dir for the
 // duration of the calling test, restoring the original directory via
-// t.Cleanup. Needed because copyRedirectsJSON reads "redirects.json"
-// relative to the process's cwd — matching where redirects.Save writes it
-// (repo root) and where cmd/finevines's runBuild/runRedirects always
-// operate from.
+// t.Cleanup. Needed because mergeRedirects (via Run's redirectsJSONName
+// argument) reads "redirects.json" relative to the process's cwd — matching
+// where redirects.Save writes it (repo root) and where cmd/finevines's
+// runBuild/runRedirects always operate from.
 func chdir(t *testing.T, dir string) {
 	t.Helper()
 	orig, err := os.Getwd()
@@ -1279,5 +1279,261 @@ func TestHomeHotSellersOmittedWhenAbsentOrThin(t *testing.T) {
 	}
 	if strings.Contains(string(home2), "home-hot-sellers") {
 		t.Errorf("home renders hot-sellers section from a ranking with only one resolvable wine")
+	}
+}
+
+// TestBuild_UnavailableWineHasPageButIsHiddenFromBrowse guards the delisting
+// lifecycle's build-side contract: a wine with Status ==
+// model.StatusUnavailable keeps its own detail page (so any search ranking it
+// earned survives the stock-out) rendered with an OutOfStock JSON-LD offer
+// and a visible unavailable notice, but is otherwise invisible — dropped from
+// the sitemap, the portfolio grid, and the compact catalog-index JSON that
+// feeds client-side search/filters. An active wine alongside it is
+// unaffected and still asserts InStock.
+func TestBuild_UnavailableWineHasPageButIsHiddenFromBrowse(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		{ID: "SF-1", SKU: "AA1111", Producer: "Alpha", Name: "Active Red", Vintage: "2021",
+			Slug: "alpha-active-red-2021", Description: "d", ImagePath: "assets/img/wines/a.svg"},
+		{ID: "SF-2", SKU: "BB2222", Producer: "Beta", Name: "Gone Blanc", Vintage: "2020",
+			Slug: "beta-gone-blanc-2020", Description: "d", ImagePath: "assets/img/wines/b.svg",
+			Status: model.StatusUnavailable, DelistedAt: "2026-07-01T00:00:00Z"},
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. The unavailable wine still gets a page...
+	page := readFile(t, filepath.Join(dist, "wines", "beta-gone-blanc-2020", "index.html"))
+	if !strings.Contains(page, "currently unavailable") {
+		t.Error("unavailable page must say so")
+	}
+	if !strings.Contains(page, `"availability": "https://schema.org/OutOfStock"`) {
+		t.Error("unavailable page must carry OutOfStock JSON-LD")
+	}
+
+	// 2. ...but is absent from sitemap, portfolio, and the catalog index.
+	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
+	if strings.Contains(sitemap, "beta-gone-blanc-2020") {
+		t.Error("unavailable wine must not be in the sitemap")
+	}
+	if !strings.Contains(sitemap, "alpha-active-red-2021") {
+		t.Error("active wine must still be in the sitemap")
+	}
+	portfolio := readFile(t, filepath.Join(dist, "portfolio", "index.html"))
+	if strings.Contains(portfolio, "beta-gone-blanc-2020") {
+		t.Error("unavailable wine must not appear on the portfolio grid")
+	}
+	// The compact catalog index feeds client-side search/filters.
+	idx := globOne(t, filepath.Join(dist, "assets", "catalog-index*.json"))
+	if strings.Contains(readFile(t, idx), "beta-gone-blanc-2020") {
+		t.Error("unavailable wine must not be in the catalog index")
+	}
+
+	// 3. Active wine's page asserts InStock unchanged.
+	active := readFile(t, filepath.Join(dist, "wines", "alpha-active-red-2021", "index.html"))
+	if !strings.Contains(active, `"availability": "https://schema.org/InStock"`) {
+		t.Error("active page must remain InStock")
+	}
+
+	// 4. The delisted wine's own page still gets its no-broken-image label
+	// fallback generated, same as an active wine — its detail page is a real
+	// published page, not a second-class one.
+	if _, err := os.Stat(filepath.Join(dist, "assets", "img", "wines", "b.svg")); err != nil {
+		t.Errorf("delisted wine's label image was not generated: %v", err)
+	}
+}
+
+// TestBuild_CollidingSlugActivePageWins guards the render-order hazard noted
+// in the delisting-lifecycle review: delisted wines render AFTER active
+// ones (see Run's renderWine loop), so if a slug were ever shared between an
+// active and a delisted wine (a data anomaly, but not one build should ever
+// let corrupt the site), a naive render order would let the OutOfStock
+// delisted page silently clobber the active page written moments before.
+// The active page must always win; the collision is logged, not
+// overwritten.
+func TestBuild_CollidingSlugActivePageWins(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		{ID: "SF-ACTIVE", SKU: "AA1111", Producer: "Alpha", Name: "Shared Red", Vintage: "2021",
+			Slug: "collision-slug", Description: "active wine", ImagePath: "assets/img/wines/a.svg"},
+		{ID: "SF-DELISTED", SKU: "BB2222", Producer: "Alpha", Name: "Shared Red", Vintage: "2021",
+			Slug: "collision-slug", Description: "delisted wine", ImagePath: "assets/img/wines/b.svg",
+			Status: model.StatusUnavailable, DelistedAt: "2026-07-01T00:00:00Z"},
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	page := readFile(t, filepath.Join(dist, "wines", "collision-slug", "index.html"))
+	if !strings.Contains(page, `"availability": "https://schema.org/InStock"`) {
+		t.Error("the active wine's page must win a slug collision, not be clobbered by the delisted one")
+	}
+	if strings.Contains(page, "currently unavailable") {
+		t.Error("the active wine's page must not carry the delisted-wine unavailable notice")
+	}
+}
+
+// readFile reads path and fails the test on error, returning the contents as
+// a string for strings.Contains checks against rendered dist/ output.
+func readFile(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
+}
+
+// globOne resolves pattern to exactly one file (e.g. the content-hashed
+// catalog-index.<hash>.json) and fails the test if zero or more than one
+// match, since a hashed filename can't be predicted ahead of the build.
+func globOne(t *testing.T, pattern string) string {
+	t.Helper()
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("glob %q: want exactly one match, got %v", pattern, matches)
+	}
+	return matches[0]
+}
+
+// writeJSON marshals v and writes it to path, failing the test on error. Used
+// to build ad-hoc redirect-map fixtures without going through the production
+// Save helpers.
+func writeJSON(t *testing.T, path string, v any) {
+	t.Helper()
+	data, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestMergeRedirects_UnionWithLifecycleWinningConflicts is the focused unit
+// test of the merge contract dist/redirects.json now has: the old-site crawl
+// map (produced by `finevines redirects`) and the lifecycle map (produced by
+// enrich as wines are renamed/delisted) are unioned, with the lifecycle entry
+// winning on any overlapping key — it is newer knowledge about OUR OWN URLs,
+// while the crawl map only speculates about old-site paths. mergeRedirects
+// takes its source paths as parameters (rather than the package-level
+// redirectsJSONName constant resolved against the process cwd) specifically
+// so this test can use ordinary temp-dir fixtures instead of writing into the
+// real repo root or chdir'ing the test process.
+func TestMergeRedirects_UnionWithLifecycleWinningConflicts(t *testing.T) {
+	dir := t.TempDir()
+	crawlPath := filepath.Join(dir, "crawl-redirects.json")
+	lifecyclePath := filepath.Join(dir, "lifecycle-redirects.json")
+	writeJSON(t, crawlPath, map[string]string{
+		"/old-page.html": "/portfolio/",
+		"/wines/shared/": "/crawl-target/",
+	})
+	writeJSON(t, lifecyclePath, map[string]string{
+		"/wines/renamed-old/": "/wines/renamed-new/",
+		"/wines/shared/":      "/wines/lifecycle-wins/",
+	})
+
+	distDir := t.TempDir()
+	if err := mergeRedirects(distDir, crawlPath, lifecyclePath); err != nil {
+		t.Fatal(err)
+	}
+
+	var got map[string]string
+	if err := json.Unmarshal([]byte(readFile(t, filepath.Join(distDir, "redirects.json"))), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got["/old-page.html"] != "/portfolio/" {
+		t.Error("crawl entries must survive the merge")
+	}
+	if got["/wines/renamed-old/"] != "/wines/renamed-new/" {
+		t.Error("lifecycle entries must be merged in")
+	}
+	if got["/wines/shared/"] != "/wines/lifecycle-wins/" {
+		t.Error("on conflict the lifecycle entry must win (it is newer knowledge)")
+	}
+}
+
+// TestMergeRedirects_MissingFilesTolerated covers the three absence
+// combinations a from-scratch checkout can hit: neither file exists yet (no
+// `finevines redirects` run, no lifecycle events yet — write nothing), only
+// the lifecycle map exists (a brand-new site with no old-site crawl to
+// honor), and only the crawl map exists (covered implicitly by every other
+// build_test.go case that never creates a lifecycle-redirects.json).
+func TestMergeRedirects_MissingFilesTolerated(t *testing.T) {
+	dir := t.TempDir()
+	missingCrawl := filepath.Join(dir, "nope-crawl.json")
+	missingLifecycle := filepath.Join(dir, "nope-lifecycle.json")
+
+	distDir := t.TempDir()
+	if err := mergeRedirects(distDir, missingCrawl, missingLifecycle); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(distDir, "redirects.json")); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("expected no redirects.json written when no sources exist, stat err = %v", err)
+	}
+
+	lifecyclePath := filepath.Join(dir, "lifecycle-redirects.json")
+	writeJSON(t, lifecyclePath, map[string]string{"/wines/x/": "/wines/y/"})
+	distDir2 := t.TempDir()
+	if err := mergeRedirects(distDir2, missingCrawl, lifecyclePath); err != nil {
+		t.Fatal(err)
+	}
+	var got map[string]string
+	if err := json.Unmarshal([]byte(readFile(t, filepath.Join(distDir2, "redirects.json"))), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got["/wines/x/"] != "/wines/y/" {
+		t.Error("lifecycle-only source must still be published when the crawl map is absent")
+	}
+}
+
+// TestBuild_MergesLifecycleRedirectsIntoDist is the light integration
+// assertion that Run wires dataDir through to mergeRedirects correctly: a
+// data/lifecycle-redirects.json alongside ordinary testdata ends up unioned
+// into dist/redirects.json by a full Run. (The crawl-map side of the union is
+// exercised by TestMergeRedirects_UnionWithLifecycleWinningConflicts above,
+// not here — the crawl map is read from the literal redirectsJSONName path
+// resolved against the process's cwd, i.e. this package's directory during
+// `go test`, and no fixture should plant a file there.)
+func TestBuild_MergesLifecycleRedirectsIntoDist(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	writeJSON(t, filepath.Join(data, "lifecycle-redirects.json"), map[string]string{
+		"/wines/renamed-old/": "/wines/renamed-new/",
+	})
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	var got map[string]string
+	if err := json.Unmarshal([]byte(readFile(t, filepath.Join(dist, "redirects.json"))), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got["/wines/renamed-old/"] != "/wines/renamed-new/" {
+		t.Errorf("dist/redirects.json missing lifecycle entry from a full Run, got %v", got)
 	}
 }

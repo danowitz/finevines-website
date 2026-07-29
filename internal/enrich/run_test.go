@@ -507,12 +507,14 @@ func TestRun_TextErrorIsLoggedAndSkipped(t *testing.T) {
 }
 
 // TestRun_ResumeAfterPartialRun proves the resume story end to end across
-// two separate Run calls against the same dataPath: a wine dropped by
+// two separate Run calls against the same dataPath: a wine that fails
 // log-and-skip in the first pass (simulating one wine's share of a crash or
-// a transient API failure) is picked up as "new" and enriched on the
-// second pass, while a wine that succeeded in the first pass hash-matches
-// on the second and is carried over via Keep — Texts.Enrich must not be
-// called for it again.
+// a transient API failure) is retained under its OLD stale record — Finding
+// 3: dropping it entirely here would orphan a RENAMED wine's old URL forever,
+// since the retry would have no prior record left to diff the rename
+// against — then successfully re-enriched on the second pass, while a wine
+// that succeeded in the first pass hash-matches on the second and is
+// carried over via Keep (Texts.Enrich must not be called for it again).
 func TestRun_ResumeAfterPartialRun(t *testing.T) {
 	dir := t.TempDir()
 	dataPath := filepath.Join(dir, "wines.json")
@@ -522,6 +524,18 @@ func TestRun_ResumeAfterPartialRun(t *testing.T) {
 	rawB := salesforce.WineRaw{ID: "SF-B", SKU: "CD2222", Producer: "Winery B", Name: "Wine B", Vintage: "2020", StockQty: 4, ReadyToSell: true}
 	src := &fakeSource{roster: []salesforce.WineRaw{rawA, rawB}}
 	images := &fakeImages{}
+
+	// Seed SF-B with a stale prior record (as if an earlier successful
+	// enrich pass already produced it, and Salesforce has since changed it —
+	// e.g. a rename), so this test exercises the retained-on-failure path
+	// (Finding 3) rather than the brand-new-wine path.
+	seed := []model.Wine{
+		{ID: "SF-B", SourceHash: "stale-hash-does-not-match", SKU: "CD2222", Producer: "Winery B",
+			Name: "Wine B (old name)", Slug: "winery-b-old-name", Description: "OLD STALE DESCRIPTION"},
+	}
+	if err := model.SaveWines(dataPath, seed); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
 
 	// Pass 1: SF-B fails (simulates a dropped wine from a crash or a
 	// transient API error) and must be logged-and-skipped, not abort the run.
@@ -534,8 +548,20 @@ func TestRun_ResumeAfterPartialRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("pass 1: reload: %v", err)
 	}
-	if len(afterPass1) != 1 || afterPass1[0].ID != "SF-A" {
-		t.Fatalf("pass 1: want only SF-A in output, got %+v", afterPass1)
+	// SF-A (brand new, succeeded) and SF-B (retained under its OLD stale
+	// record — an attempted-but-failed re-enrichment of a wine that already
+	// had a page must not orphan that page) are both present.
+	if len(afterPass1) != 2 {
+		t.Fatalf("pass 1: want SF-A and SF-B (stale) in output, got %+v", afterPass1)
+	}
+	var sfB *model.Wine
+	for i := range afterPass1 {
+		if afterPass1[i].ID == "SF-B" {
+			sfB = &afterPass1[i]
+		}
+	}
+	if sfB == nil || sfB.Description != "OLD STALE DESCRIPTION" || sfB.Slug != "winery-b-old-name" {
+		t.Fatalf("pass 1: want SF-B retained with its OLD stale record (not dropped), got %+v", sfB)
 	}
 
 	// Pass 2: re-run against the same dataPath with a Texts fake that would
@@ -557,6 +583,213 @@ func TestRun_ResumeAfterPartialRun(t *testing.T) {
 	}
 	if len(final) != 2 {
 		t.Fatalf("pass 2: want both SF-A and SF-B in final output, got %+v", final)
+	}
+	for _, w := range final {
+		if w.ID == "SF-B" && w.Description == "OLD STALE DESCRIPTION" {
+			t.Error("pass 2: SF-B should have been freshly re-enriched, not left with the pass-1 stale description")
+		}
+	}
+}
+
+// TestRun_FailedReEnrichmentOfRenamedWineIsRetainedThenRedirected is
+// Finding 3's end-to-end regression test: a wine whose Salesforce name
+// changed (a slug rename) fails its FIRST re-enrichment attempt (simulating
+// a transient API error). Its OLD page must survive under the OLD slug
+// rather than vanishing, so that once the retry succeeds on the NEXT run,
+// Run's rename-detection (which diffs prev.Slug from existingByID against
+// the freshly enriched wine's new slug) can still see the old slug and
+// record the 301. Pre-fix, the failed attempt dropped the wine entirely: the
+// retry would enrich it as "new" with no prior record to diff the rename
+// against, permanently orphaning the old URL.
+func TestRun_FailedReEnrichmentOfRenamedWineIsRetainedThenRedirected(t *testing.T) {
+	dir := t.TempDir()
+	dataPath := filepath.Join(dir, "wines.json")
+	imgDir := filepath.Join(dir, "img")
+
+	rawRenamed := salesforce.WineRaw{
+		ID: "SF-REN", SKU: "CC3333", Producer: "Gamma", Name: "New Name Blanc", Vintage: "2021",
+		StockQty: 4, ReadyToSell: true,
+	}
+	seed := []model.Wine{
+		{ID: "SF-REN", SKU: "CC3333", Slug: "gamma-old-name-blanc-2021", SourceHash: "stale",
+			Description: "old description"},
+	}
+	if err := model.SaveWines(dataPath, seed); err != nil {
+		t.Fatal(err)
+	}
+
+	src := &fakeSource{roster: []salesforce.WineRaw{rawRenamed}}
+	images := &fakeImages{}
+
+	// Pass 1: the re-enrichment attempt fails.
+	pass1Texts := &fakeTexts{errs: map[string]error{"SF-REN": fmt.Errorf("simulated failure")}}
+	if err := Run(context.Background(), src, pass1Texts, images, nil, dataPath, imgDir, t.Logf); err != nil {
+		t.Fatalf("pass 1: Run returned error: %v", err)
+	}
+
+	afterPass1, err := model.LoadWines(dataPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(afterPass1) != 1 || afterPass1[0].Slug != "gamma-old-name-blanc-2021" || afterPass1[0].Description != "old description" {
+		t.Fatalf("pass 1: renamed wine's OLD record must survive a failed re-enrichment attempt, got %+v", afterPass1)
+	}
+
+	// Pass 2: the same wine's re-enrichment succeeds, landing under a new slug.
+	pass2Texts := &fakeTexts{}
+	if err := Run(context.Background(), src, pass2Texts, images, nil, dataPath, imgDir, t.Logf); err != nil {
+		t.Fatalf("pass 2: Run returned error: %v", err)
+	}
+
+	final, err := model.LoadWines(dataPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(final) != 1 || final[0].Slug == "gamma-old-name-blanc-2021" {
+		t.Fatalf("pass 2: want the wine re-enriched under a new slug, got %+v", final)
+	}
+
+	redirects, err := LoadLifecycleRedirects(filepath.Join(dir, "lifecycle-redirects.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if redirects["/wines/gamma-old-name-blanc-2021/"] != "/wines/"+final[0].Slug+"/" {
+		t.Errorf("want old slug 301 to new slug after the retry succeeds, got %v", redirects)
+	}
+}
+
+// TestRun_DelistLifecycle exercises Run's lifecycle wiring end to end: an
+// out-of-stock wine is retained unavailable with its enrichment intact, a
+// withheld (ready-to-sell=false) wine is dropped entirely and gains a
+// portfolio redirect, and a re-enriched wine whose slug changed leaves a 301
+// from its old URL to the new one.
+func TestRun_DelistLifecycle(t *testing.T) {
+	dir := t.TempDir()
+	dataPath := filepath.Join(dir, "wines.json")
+	imgDir := filepath.Join(dir, "img")
+
+	// Roster: SF-OOS is out of stock but otherwise fine; SF-HIDE is
+	// withheld (ready-to-sell false); SF-RENAME is in stock with a CHANGED
+	// name (hash mismatch -> re-enriched -> new slug).
+	rawOOS := salesforce.WineRaw{ID: "SF-OOS", SKU: "AA1111", Producer: "Alpha", Name: "Old Vine Red", StockQty: 0, ReadyToSell: true}
+	rawHide := salesforce.WineRaw{ID: "SF-HIDE", SKU: "BB2222", Producer: "Beta", Name: "Hidden Cuvee", StockQty: 9, ReadyToSell: false}
+	rawRename := salesforce.WineRaw{ID: "SF-REN", SKU: "CC3333", Producer: "Gamma", Name: "New Name Blanc", Vintage: "2021", StockQty: 4, ReadyToSell: true}
+
+	seed := []model.Wine{
+		{ID: "SF-OOS", SKU: "AA1111", Slug: "alpha-old-vine-red", SourceHash: SourceHash(rawOOS), Description: "keep me"},
+		{ID: "SF-HIDE", SKU: "BB2222", Slug: "beta-hidden-cuvee", SourceHash: "whatever", Description: "hide me"},
+		{ID: "SF-REN", SKU: "CC3333", Slug: "gamma-old-name-blanc-2021", SourceHash: "stale", Description: "rename me"},
+	}
+	if err := model.SaveWines(dataPath, seed); err != nil {
+		t.Fatal(err)
+	}
+
+	src := &fakeSource{roster: []salesforce.WineRaw{rawOOS, rawHide, rawRename}}
+	if err := Run(context.Background(), src, &fakeTexts{}, &fakeImages{}, nil, dataPath, imgDir, t.Logf); err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	got, err := model.LoadWines(dataPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	byID := map[string]model.Wine{}
+	for _, w := range got {
+		byID[w.ID] = w
+	}
+
+	// SF-OOS survives as unavailable with its enrichment intact.
+	oos, ok := byID["SF-OOS"]
+	if !ok || oos.Status != model.StatusUnavailable || oos.Description != "keep me" {
+		t.Errorf("SF-OOS must be retained unavailable with text intact, got %+v", oos)
+	}
+	// SF-HIDE is gone entirely.
+	if _, ok := byID["SF-HIDE"]; ok {
+		t.Error("withheld SF-HIDE must be dropped from the catalog")
+	}
+
+	redirects, err := LoadLifecycleRedirects(filepath.Join(dir, "lifecycle-redirects.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if redirects["/wines/beta-hidden-cuvee/"] != "/portfolio/" {
+		t.Errorf("dropped wine must gain a portfolio redirect, got %v", redirects)
+	}
+	// SF-REN was re-enriched under a new slug; the old URL must 301 to it.
+	ren := byID["SF-REN"]
+	if ren.Slug == "" || ren.Slug == "gamma-old-name-blanc-2021" {
+		t.Fatalf("SF-REN should have a new slug, got %q", ren.Slug)
+	}
+	if redirects["/wines/gamma-old-name-blanc-2021/"] != "/wines/"+ren.Slug+"/" {
+		t.Errorf("slug rename must 301 old->new, got %v", redirects)
+	}
+}
+
+// TestRun_CheckpointPersistsLifecycleBeforeWinesGoStale proves the crash-safety
+// ordering fix: lifecycle-redirects.json must already carry a drop's redirect
+// by the time of the FIRST mid-run checkpoint, not only at the very end of
+// Run. If the redirect knowledge only hit disk at the final save, a crash (or
+// a save failure) between an earlier wines.json checkpoint and the final save
+// would lose it permanently — the dropped wine is gone from `existing` on the
+// next run, so Delist can never re-derive its redirect.
+//
+// checkpointEvery is lowered to 1 (the existing test knob) and one wine
+// (SF-BLOCK) is held open in Texts.Enrich so Run cannot reach its final save
+// while the test polls disk for the intermediate state: SF-FAST's completion
+// alone must trigger a checkpoint, and lifecycle-redirects.json must show
+// SF-HIDE's drop redirect at that point, well before Run returns.
+func TestRun_CheckpointPersistsLifecycleBeforeWinesGoStale(t *testing.T) {
+	orig := checkpointEvery
+	checkpointEvery = 1
+	t.Cleanup(func() { checkpointEvery = orig })
+
+	dir := t.TempDir()
+	dataPath := filepath.Join(dir, "wines.json")
+	imgDir := filepath.Join(dir, "img")
+	redirectsPath := filepath.Join(dir, "lifecycle-redirects.json")
+
+	rawFast := salesforce.WineRaw{ID: "SF-FAST", SKU: "AB1111", Producer: "Fast Winery", Name: "Fast Wine", StockQty: 10, ReadyToSell: true}
+	rawBlock := salesforce.WineRaw{ID: "SF-BLOCK", SKU: "CD2222", Producer: "Block Winery", Name: "Block Wine", StockQty: 5, ReadyToSell: true}
+	// SF-HIDE is withheld (ready-to-sell false): Delist drops it and records
+	// its redirect BEFORE the enrich worker loop even starts.
+	rawHide := salesforce.WineRaw{ID: "SF-HIDE", SKU: "EF3333", Producer: "Hidden Winery", Name: "Hidden Wine", StockQty: 9, ReadyToSell: false}
+
+	seed := []model.Wine{
+		{ID: "SF-HIDE", SKU: "EF3333", Slug: "hidden-winery-hidden-wine", SourceHash: "whatever"},
+	}
+	if err := model.SaveWines(dataPath, seed); err != nil {
+		t.Fatal(err)
+	}
+
+	src := &fakeSource{roster: []salesforce.WineRaw{rawFast, rawBlock, rawHide}}
+	release := make(chan struct{})
+	texts := &fakeTexts{blockIDs: map[string]bool{"SF-BLOCK": true}, release: release}
+	images := &fakeImages{}
+
+	runErr := make(chan error, 1)
+	go func() {
+		runErr <- Run(context.Background(), src, texts, images, nil, dataPath, imgDir, t.Logf)
+	}()
+
+	deadline := time.Now().Add(5 * time.Second)
+	var observed map[string]string
+	for time.Now().Before(deadline) {
+		m, err := LoadLifecycleRedirects(redirectsPath)
+		if err == nil && m["/wines/hidden-winery-hidden-wine/"] == "/portfolio/" {
+			observed = m
+			break
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	close(release) // don't leak the goroutine regardless of pass/fail
+	if err := <-runErr; err != nil {
+		t.Fatalf("Run returned error: %v", err)
+	}
+
+	if observed == nil {
+		t.Fatal("lifecycle-redirects.json never showed SF-HIDE's drop redirect while SF-BLOCK was still held open — " +
+			"the redirect must be durable at every checkpoint, not only written at the final save")
 	}
 }
 

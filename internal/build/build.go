@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -23,13 +24,14 @@ import (
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
 
-// redirectsJSONName is the file redirects.Save writes at the repo root
+// redirectsJSONName is both the file redirects.Save writes at the repo root
 // (internal/redirects/mapping.go's Save, invoked from cmd/finevines's
-// runRedirects) — the SAME location copyRedirectsJSON looks for it here.
-// `finevines build` and `finevines redirects` are both always run from the
-// repo root (cmd/finevines/main.go's runBuild/runRedirects pass bare
-// relative paths like "data" and "redirects.json"), so reading this literal
-// name from the process's cwd is the correct, consistent lookup.
+// runRedirects — the SAME location mergeRedirects is pointed at it here) and
+// the filename it's published under in dist/. `finevines build` and
+// `finevines redirects` are both always run from the repo root
+// (cmd/finevines/main.go's runBuild/runRedirects pass bare relative paths
+// like "data" and "redirects.json"), so reading this literal name from the
+// process's cwd is the correct, consistent lookup.
 const redirectsJSONName = "redirects.json"
 
 // site is the seam between loadSite (producer) and every page template
@@ -37,11 +39,20 @@ const redirectsJSONName = "redirects.json"
 // Wines/News/Team from here to add the portfolio, wine-detail, news, and
 // about pages without changing this struct's shape.
 type site struct {
-	Wines   []model.Wine
-	News    []model.NewsPost
-	Team    []model.TeamMember
-	Content model.SiteContent
-	BaseURL string
+	Wines []model.Wine
+	// Delisted holds unavailable wines (model.StatusUnavailable) split out of
+	// Wines at load time: they still render their own detail page (any search
+	// ranking they earned survives the stock-out) but must never appear on any
+	// browse surface. Because every existing consumer of Wines — the
+	// portfolio, facets, catalog index, search, sitemap, featured picks, and
+	// hot-sellers — was written before this field existed, none of them need
+	// to change: Wines being active-only excludes Delisted wines BY
+	// CONSTRUCTION rather than by each consumer remembering to filter.
+	Delisted []model.Wine
+	News     []model.NewsPost
+	Team     []model.TeamMember
+	Content  model.SiteContent
+	BaseURL  string
 	// GAID is the Google Analytics 4 measurement ID (G-XXXXXXXXXX), promoted
 	// through page's embedded *site so base.html.tmpl's head can emit the
 	// gtag snippet. Empty by default (analytics off) — which keeps the build
@@ -233,6 +244,11 @@ func ledgerStats(wines []model.Wine, accounts int) []ledgerStat {
 type winePage struct {
 	page
 	Wine model.Wine
+	// Unavailable marks a delisted (model.StatusUnavailable) wine's own
+	// detail page: still rendered (any search ranking it earned survives the
+	// stock-out) but with the JSON-LD offer flipped to OutOfStock and a
+	// visible unavailable notice in place of the normal availability markup.
+	Unavailable bool
 }
 
 // ldProp is one schema.org PropertyValue (name/value) for the wine's Product
@@ -449,10 +465,17 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		}
 		*fp.dst = url
 	}
-	if err := ensureLabels(distDir, s.Wines); err != nil {
+	// Delisted wines still render their own detail page (see the render loop
+	// below), so they need the same no-broken-image fallback as active wines.
+	labelWines := make([]model.Wine, 0, len(s.Wines)+len(s.Delisted))
+	labelWines = append(labelWines, s.Wines...)
+	labelWines = append(labelWines, s.Delisted...)
+	if err := ensureLabels(distDir, labelWines); err != nil {
 		return err
 	}
-	if err := copyRedirectsJSON(distDir); err != nil {
+	// dist/redirects.json = old-site crawl map ∪ lifecycle map. See
+	// mergeRedirects for the missing-file tolerance and conflict rule.
+	if err := mergeRedirects(distDir, redirectsJSONName, filepath.Join(dataDir, "lifecycle-redirects.json")); err != nil {
 		return err
 	}
 
@@ -542,7 +565,12 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	}
 	paths = append(paths, portfolioPaths...)
 
-	for _, w := range s.Wines {
+	// renderWine renders one wine's detail page. Both active and delisted
+	// wines get a page (see winePage.Unavailable's doc comment), but only
+	// active pages join the sitemap — an unavailable wine's page still
+	// exists and is reachable/indexable on its own terms, it just isn't
+	// advertised as part of the current catalog.
+	renderWine := func(w model.Wine, unavailable bool) error {
 		data := winePage{
 			page: page{
 				site:        s,
@@ -550,7 +578,8 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 				Description: firstNonEmpty(w.Description, w.Producer+" "+w.Name),
 				Path:        "/wines/" + w.Slug + "/",
 			},
-			Wine: w,
+			Wine:        w,
+			Unavailable: unavailable,
 		}
 		// Prefer the wine's own photo as its share image, but only when it's a
 		// raster the social scrapers actually render — an .svg (or .webp)
@@ -561,7 +590,36 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		if err := renderPage(tmpl, distDir, "wines/"+w.Slug, "wine", data); err != nil {
 			return err
 		}
-		paths = append(paths, data.pagePath())
+		if !unavailable {
+			paths = append(paths, data.pagePath())
+		}
+		return nil
+	}
+	for _, w := range s.Wines {
+		if err := renderWine(w, false); err != nil {
+			return err
+		}
+	}
+	// Delisted wines render AFTER active ones, so a slug shared between an
+	// active and a delisted wine (a data anomaly — e.g. two Salesforce rows
+	// that normalize to the same producer/name/vintage) must not let the
+	// OutOfStock delisted page clobber the active page just written to the
+	// same dist/wines/<slug>/ directory. The active page always wins; the
+	// collision is logged so it surfaces as a data problem to fix, not
+	// silently swallowed.
+	activeSlugs := make(map[string]bool, len(s.Wines))
+	for _, w := range s.Wines {
+		activeSlugs[w.Slug] = true
+	}
+	for _, w := range s.Delisted {
+		if activeSlugs[w.Slug] {
+			log.Printf("build: skipping delisted wine %s (SKU %s) — slug %q is already claimed by an active wine",
+				w.ID, w.SKU, w.Slug)
+			continue
+		}
+		if err := renderWine(w, true); err != nil {
+			return err
+		}
 	}
 
 	for _, n := range s.News {
@@ -1071,7 +1129,20 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load site content: %w", err)
 	}
-	s := &site{Wines: usableWines(wines), Content: content, BaseURL: baseURL, GAID: gaID}
+	cleaned := usableWines(wines)
+	// Unavailable wines keep a published detail page (their search ranking
+	// survives the stock-out) but appear on NO browse surface: s.Wines is
+	// active-only, so the portfolio, facets, catalog index, search, featured
+	// picks, hot-sellers, and sitemap all exclude them by construction.
+	var active, delisted []model.Wine
+	for _, w := range cleaned {
+		if w.Status == model.StatusUnavailable {
+			delisted = append(delisted, w)
+			continue
+		}
+		active = append(active, w)
+	}
+	s := &site{Wines: active, Delisted: delisted, Content: content, BaseURL: baseURL, GAID: gaID}
 	// hot-sellers.json is optional: written by `finevines enrich` against a
 	// live org (mock/dev runs don't have it), and the homepage simply omits
 	// its sales-driven section when it's absent.
@@ -1309,27 +1380,56 @@ func renderPage(tmpl *template.Template, distDir, rel, name string, data any) er
 	return tmpl.ExecuteTemplate(f, name, data)
 }
 
-// copyRedirectsJSON copies redirects.json from the process's current
-// working directory (repo root) into dist/, so the deployed Edge
-// middleware (internal/redirects/middleware.ts.tmpl) — which fetches
-// /redirects.json from the live site at runtime — actually finds the
-// generated redirect map instead of 404ing into an effectively empty one.
-// Without this, every 301 discovered by `finevines redirects` would
-// silently no-op at launch: redirects.Save writes redirects.json to the
-// repo root, but nothing else ever put it into dist/, and deploy.Run only
-// uploads dist/.
+// mergeRedirects publishes dist/redirects.json as the union of every source
+// path given, so the deployed Edge middleware
+// (internal/redirects/middleware.ts.tmpl) — which fetches /redirects.json
+// from the live site at runtime — actually finds the generated redirect map
+// instead of 404ing into an effectively empty one.
 //
-// A from-scratch checkout (or one that hasn't run `redirects` yet) has no
-// redirects.json — that is not an error, just nothing to copy.
-func copyRedirectsJSON(distDir string) error {
-	data, err := os.ReadFile(redirectsJSONName)
-	if errors.Is(err, fs.ErrNotExist) {
+// In production this is called with two sources: the old-site crawl map
+// (redirectsJSONName, written by redirects.Save at the repo root) and the
+// lifecycle map (data/lifecycle-redirects.json, maintained by enrich as
+// wines are renamed or delisted). Sources are applied in order, later
+// sources overwriting earlier ones on a key conflict — since lifecycle is
+// passed last, its entries win: it is newer knowledge about OUR OWN URLs,
+// while the crawl map only speculates about old-site paths.
+//
+// Each source is individually optional (a from-scratch checkout, or one
+// that hasn't run `redirects` or delisted anything yet, has neither file) —
+// a missing source is not an error, just nothing to contribute. If no
+// source contributes anything, nothing is written, matching the old
+// copy-only behavior on a missing file.
+//
+// Sources are accepted as explicit paths (rather than this function
+// resolving redirectsJSONName against the process's cwd itself) so callers
+// — tests included — can point it at arbitrary fixture locations instead of
+// planting files at the process's real working directory.
+func mergeRedirects(distDir string, sources ...string) error {
+	merged := map[string]string{}
+	for _, src := range sources {
+		data, err := os.ReadFile(src)
+		if errors.Is(err, fs.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		m := map[string]string{}
+		if err := json.Unmarshal(data, &m); err != nil {
+			return fmt.Errorf("parse %s: %w", src, err)
+		}
+		for k, v := range m {
+			merged[k] = v
+		}
+	}
+	if len(merged) == 0 {
 		return nil
 	}
+	data, err := json.MarshalIndent(merged, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(distDir, redirectsJSONName), data, 0o644)
+	return os.WriteFile(filepath.Join(distDir, redirectsJSONName), append(data, '\n'), 0o644)
 }
 
 // cleanDir empties dir of all its contents but leaves the directory itself in

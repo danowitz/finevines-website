@@ -100,6 +100,14 @@ func ImageFieldSource(imageSource string) FieldSource {
 	}
 }
 
+// StatusUnavailable marks a wine retained in the catalog data but currently
+// out of stock: its detail page stays published (preserving any search
+// ranking) while it is hidden from the portfolio, facets, search index, and
+// sitemap. An empty Status means active. Wines withheld on purpose
+// (ready-to-sell = false) or gone from the org are never retained — see
+// enrich.Delist.
+const StatusUnavailable = "unavailable"
+
 // Wine is one row of data/wines.json — the enrich pipeline's output and
 // build's primary input. JSON tags are the contract — do not rename existing
 // ones without a spec change; new descriptive fields are additive and
@@ -159,6 +167,12 @@ type Wine struct {
 	EnrichedAt      string                 `json:"enrichedAt,omitempty"`
 
 	Slug string `json:"slug"`
+
+	// Lifecycle. Empty Status = active. DelistedAt is the RFC3339 UTC time
+	// the wine was last seen going out of stock; enrich.Delist drops the
+	// page entirely once this exceeds the grace period.
+	Status     string `json:"status,omitempty"`
+	DelistedAt string `json:"delistedAt,omitempty"`
 }
 
 // NewsPost is one data/news/<slug>.json file.

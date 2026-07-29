@@ -1,8 +1,10 @@
 package model
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -117,5 +119,28 @@ func TestSaveWinesIsAtomic(t *testing.T) {
 			names = append(names, e.Name())
 		}
 		t.Errorf("directory should contain only wines.json after a successful save, got %v", names)
+	}
+}
+
+func TestWineStatusRoundTripAndOmitEmpty(t *testing.T) {
+	// An active wine must serialize WITHOUT status/delistedAt keys, so the
+	// on-disk format of the existing 2,664-wine catalog is unchanged.
+	active, err := json.Marshal(Wine{ID: "SF-1", Slug: "a-wine"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(active), "status") || strings.Contains(string(active), "delistedAt") {
+		t.Errorf("active wine must omit status fields, got %s", active)
+	}
+
+	// An unavailable wine round-trips both fields.
+	w := Wine{ID: "SF-2", Status: StatusUnavailable, DelistedAt: "2026-07-29T12:00:00Z"}
+	b, _ := json.Marshal(w)
+	var got Wine
+	if err := json.Unmarshal(b, &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.Status != StatusUnavailable || got.DelistedAt != "2026-07-29T12:00:00Z" {
+		t.Errorf("round-trip lost status: %+v", got)
 	}
 }

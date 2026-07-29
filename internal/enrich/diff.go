@@ -40,6 +40,9 @@ func DiffRoster(eligible []salesforce.WineRaw, existing []model.Wine) Diff {
 			prev.StockQty = raw.StockQty
 			prev.StockCases = raw.StockCases
 			prev.CasePack = raw.CasePack
+			// Back in the eligible roster ⇒ active again, whatever its past.
+			prev.Status = ""
+			prev.DelistedAt = ""
 			d.Keep = append(d.Keep, prev)
 		} else {
 			d.Enrich = append(d.Enrich, raw)

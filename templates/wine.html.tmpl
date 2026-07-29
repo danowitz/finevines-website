@@ -4,11 +4,15 @@
   Dot is a winePage (build.go): the embedded `page` supplies Title/
   Description/Path/BaseURL for head/header/footer (same contract every page
   uses), and .Wine carries this wine's own fields. Product/Offer JSON-LD is
-  emitted from .Wine — no price (wholesale) and availability is always
-  InStock, because ineligible wines (stockQty <= 0 or SKU starting "9") never
-  reach wines.json in the first place. html/template's contextual escaping
-  handles the JSON-encoding of interpolated values inside the
-  application/ld+json <script> block; nothing here hand-rolls that escaping.
+  emitted from .Wine — no price (wholesale). Availability is InStock for
+  every wine reachable through the normal catalog (ineligible wines,
+  stockQty <= 0 or SKU starting "9", never reach wines.json in the first
+  place) except a delisted wine retained as StatusUnavailable: .Unavailable
+  flips its offer to OutOfStock and swaps the body's availability markup for
+  a plain notice (see build.go's winePage.Unavailable). html/template's
+  contextual escaping handles the JSON-encoding of interpolated values inside
+  the application/ld+json <script> block; nothing here hand-rolls that
+  escaping.
 */}}
 {{define "wine"}}<!doctype html>
 <html lang="en">
@@ -26,7 +30,7 @@
   "additionalProperty": [{{range $i, $p := .LDProps}}{{if $i}}, {{end}}{"@type": "PropertyValue", "name": {{$p.Name}}, "value": {{$p.Value}}}{{end}}],{{end}}
   "offers": {
     "@type": "Offer",
-    "availability": "https://schema.org/InStock",
+    "availability": "https://schema.org/{{if .Unavailable}}OutOfStock{{else}}InStock{{end}}",
     "seller": {"@type": "Organization", "name": "FineVines Ltd."}
   }
 }
@@ -43,6 +47,9 @@
       <div>
         <span class="producer">{{.Wine.Producer}}</span>
         <h1>{{.Wine.Name}} {{.Wine.Vintage}}</h1>
+        {{if .Unavailable}}
+        <p class="wine-unavailable">This wine is currently unavailable. Contact your FineVines representative about upcoming vintages and allocations.</p>
+        {{end}}
         <div class="facts">
           {{if .Wine.Region}}<span>Region<b>{{.Wine.Region}}</b></span>{{end}}
           {{if .Wine.Appellation}}<span>Appellation<b>{{.Wine.Appellation}}</b></span>{{end}}

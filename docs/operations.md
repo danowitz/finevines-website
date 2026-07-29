@@ -226,3 +226,23 @@ walk you through it, then offer to publish the change the same way.
 
 If you say "not now" to publishing in either skill, the change is saved and will simply go live the next time
 `deploy.bat` runs (e.g. the next 2 AM cycle).
+
+---
+
+## Wine lifecycle: out of stock vs delisted
+
+- **Out of stock** (stock hits 0, everything else fine): the wine's page
+  stays published so its search ranking survives, marked "currently
+  unavailable", with OutOfStock structured data. It disappears from the
+  portfolio, filters, search, and the sitemap. The moment stock returns,
+  the next `enrich` reactivates it everywhere automatically.
+- **Withheld** (ready-to-sell unchecked in Salesforce) and non-wine rows:
+  removed entirely, page 301s to /portfolio/. Unchanged from before.
+- **Gone for good**: after 180 days continuously unavailable, the page is
+  dropped and 301s to /portfolio/.
+- **Renamed wines** (Salesforce name/producer edits that change the URL):
+  the old URL 301s to the new one automatically.
+
+The 301 map accumulates in `data/lifecycle-redirects.json` (committed with
+the catalog) and ships inside `dist/redirects.json`, which the Bunny Edge
+middleware serves. No operator action is ever required.

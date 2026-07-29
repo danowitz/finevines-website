@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -88,12 +89,17 @@ func (e *resolveImageError) Unwrap() error { return e.err }
 // checkpoint. A final SaveWines happens once every job has completed.
 //
 // Per-wine failures: an error from texts.Enrich is logged and that wine is
-// skipped for this pass — it stays entirely absent from dataPath and is
-// retried as if new on the next run, because a single bad prompt or
-// transient API hiccup must not abort a 5-10k-wine run. An error from
-// ResolveImage can only be a filesystem failure and is fatal: Run stops
-// dispatching further work, saves whatever progress exists, and returns the
-// error (see resolveImageError).
+// skipped for this pass. If it already had a record in dataPath (existingByID),
+// that OLD record is retained as-is (stale SourceHash and all) rather than
+// dropped — see buildSnapshot's doc comment for why: dropping it would orphan
+// a RENAMED wine's old URL forever, since the retry would have no prior
+// record left to diff the rename against. A brand-new wine with no prior
+// record simply stays absent, exactly as before, and either way the wine is
+// retried as if new (or as a rename, if it has a stale record) on the next
+// run — a single bad prompt or transient API hiccup must not abort a
+// 5-10k-wine run. An error from ResolveImage can only be a filesystem
+// failure and is fatal: Run stops dispatching further work, saves whatever
+// progress exists, and returns the error (see resolveImageError).
 func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImageProvider, oldImages map[string]string, dataPath, imgDir string, log func(string, ...any)) error {
 	if log == nil {
 		log = func(string, ...any) {}
@@ -123,9 +129,25 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 		existingByID[w.ID] = w
 	}
 
+	eligibleIDs := make(map[string]bool, len(eligible))
+	for _, w := range eligible {
+		eligibleIDs[w.ID] = true
+	}
+
 	diff := DiffRoster(eligible, existing)
 	log("enrich: %d roster rows, %d eligible, %d need enrichment, %d unchanged",
 		len(rawRoster), len(eligible), len(diff.Enrich), len(diff.Keep))
+
+	unavailable, drops := Delist(existing, rawRoster, eligibleIDs, nowUTC())
+
+	redirectsPath := filepath.Join(filepath.Dir(dataPath), "lifecycle-redirects.json")
+	lifecycle, err := LoadLifecycleRedirects(redirectsPath)
+	if err != nil {
+		return fmt.Errorf("enrich: load %s: %w", redirectsPath, err)
+	}
+	for from, to := range drops {
+		lifecycle[from] = to
+	}
 
 	jobs := make(chan salesforce.WineRaw, len(diff.Enrich))
 	for _, raw := range diff.Enrich {
@@ -152,12 +174,36 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 
 	var enriched []model.Wine
 	attempted := make(map[string]bool, len(diff.Enrich))
+	// failed tracks the subset of attempted whose text enrichment errored out
+	// (as opposed to succeeding) — see buildSnapshot's doc comment for why
+	// this distinction matters for a wine that already had a prior record.
+	failed := make(map[string]bool, len(diff.Enrich))
 	var enrichedCount, droppedCount, labelFallbacks int
 	var fatalErr error
 	completions := 0
 
-	save := func() error {
-		return model.SaveWines(dataPath, buildSnapshot(enriched, diff, existingByID, attempted))
+	// currentWines assembles the current best-known full wines.json content —
+	// see buildSnapshot's doc comment — plus the retained-unavailable set.
+	currentWines := func() []model.Wine {
+		return append(buildSnapshot(enriched, diff, existingByID, attempted, failed), unavailable...)
+	}
+
+	// save persists BOTH files for one checkpoint, lifecycle first: if a
+	// crash or write failure happens between the two, wines.json must never
+	// get ahead of lifecycle-redirects.json. A drop or slug-rename recorded
+	// in `lifecycle` but not yet flushed to disk is unrecoverable on the next
+	// run — the dropped wine is gone from `existing` so Delist can't re-derive
+	// its redirect, and a renamed wine now hash-matches so the rename check
+	// never re-fires — so the redirect knowledge must hit disk no later than
+	// the wines.json snapshot that reflects it. The map written here is
+	// intentionally uncollapsed at checkpoint time (collapse is a pure
+	// normalization the caller applies once, right before the final save;
+	// the next full run collapses again regardless).
+	save := func(wines []model.Wine) error {
+		if err := SaveLifecycleRedirects(redirectsPath, lifecycle); err != nil {
+			return err
+		}
+		return model.SaveWines(dataPath, wines)
 	}
 
 	for res := range results {
@@ -176,8 +222,14 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 		case res.err != nil:
 			log("enrich: skipping %s %q (SKU %s) — text enrichment failed, will retry next run: %v",
 				res.raw.Producer, res.raw.Name, res.raw.SKU, res.err)
+			failed[res.raw.ID] = true
 			droppedCount++
 		default:
+			// A re-enriched wine whose slug changed leaves a 301 behind so
+			// the old URL keeps working (and keeps its search ranking).
+			if prev, ok := existingByID[res.raw.ID]; ok && prev.Slug != "" && prev.Slug != res.wine.Slug {
+				lifecycle["/wines/"+prev.Slug+"/"] = "/wines/" + res.wine.Slug + "/"
+			}
 			enriched = append(enriched, res.wine)
 			enrichedCount++
 			if res.wine.ImageSource == model.ImageGeneratedLabel {
@@ -186,18 +238,28 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 		}
 
 		if completions%checkpointEvery == 0 {
-			if err := save(); err != nil {
+			if err := save(currentWines()); err != nil {
 				return fmt.Errorf("enrich: checkpoint save: %w", err)
 			}
 		}
 	}
 
-	if err := save(); err != nil {
+	// Final save: collapse the accumulated lifecycle map against the final
+	// live slugs BEFORE persisting anything, then save() writes the collapsed
+	// lifecycle followed by the final wines snapshot, in that order — the
+	// same crash-safety ordering as every mid-run checkpoint above.
+	finalWines := currentWines()
+	liveSlugs := make(map[string]bool, len(finalWines))
+	for _, w := range finalWines {
+		liveSlugs[w.Slug] = true
+	}
+	lifecycle = CollapseRedirects(lifecycle, liveSlugs)
+	if err := save(finalWines); err != nil {
 		return fmt.Errorf("enrich: final save: %w", err)
 	}
 
-	log("enrich: complete — enriched %d, kept %d, dropped %d, label-fallbacks %d",
-		enrichedCount, len(diff.Keep), droppedCount, labelFallbacks)
+	log("enrich: complete — enriched %d, kept %d, unavailable %d, delisted %d, dropped %d, label-fallbacks %d",
+		enrichedCount, len(diff.Keep), len(unavailable), len(drops), droppedCount, labelFallbacks)
 
 	if fatalErr != nil {
 		return fmt.Errorf("enrich: aborted after filesystem error (partial progress saved to %s): %w", dataPath, fatalErr)
@@ -334,21 +396,36 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 
 // buildSnapshot assembles the current best-known full wines.json content at
 // any point during (or at the end of) Run: wines finished so far (enriched)
-// plus Diff.Keep (unchanged, zero-cost carryover) plus — for any Diff.Enrich
-// wine that hasn't been attempted yet — its previous entry, if it had one.
-// That last part is what makes a mid-run checkpoint safe: a wine already on
-// the site doesn't vanish from wines.json just because its refresh hasn't
-// started yet. Once a wine has been attempted (success or a logged text
-// error), it leaves this fallback set for good — a text-enrich failure
-// drops the wine from output entirely rather than reusing stale data, so it
-// is picked up as "new" again on the next run (see Run's doc comment).
-func buildSnapshot(enriched []model.Wine, diff Diff, existingByID map[string]model.Wine, attempted map[string]bool) []model.Wine {
+// plus Diff.Keep (unchanged, zero-cost carryover) plus, for any Diff.Enrich
+// wine, its previous entry (if it had one) UNLESS that wine already
+// succeeded this pass (it's in `enriched` already, via the `default` branch
+// of Run's results loop).
+//
+// That fallback covers two cases:
+//
+//   - not yet attempted: this is what makes a mid-run checkpoint safe — a
+//     wine already on the site doesn't vanish from wines.json just because
+//     its refresh hasn't started yet;
+//   - attempted but FAILED (in `failed`): the wine's re-enrichment errored
+//     out this pass (a bad prompt, a transient API hiccup), but its OLD page
+//     must not be orphaned. This matters most for a RENAMED wine: dropping
+//     it entirely here would leave the next successful retry with no prior
+//     record (existingByID) to diff the rename against, so the old URL
+//     could never get its 301 (see Run's rename-detection in the results
+//     loop's default case). The retained record's stale SourceHash also
+//     guarantees DiffRoster re-selects it for enrichment on the next run,
+//     same as a brand-new wine.
+//
+// A brand-new wine (no prior entry in existingByID) that fails has nothing
+// to fall back to and stays absent, exactly as before — it is picked up as
+// "new" again on the next run (see Run's doc comment).
+func buildSnapshot(enriched []model.Wine, diff Diff, existingByID map[string]model.Wine, attempted, failed map[string]bool) []model.Wine {
 	out := make([]model.Wine, 0, len(enriched)+len(diff.Keep)+len(diff.Enrich))
 	out = append(out, enriched...)
 	out = append(out, diff.Keep...)
 	for _, raw := range diff.Enrich {
-		if attempted[raw.ID] {
-			continue
+		if attempted[raw.ID] && !failed[raw.ID] {
+			continue // succeeded already — its fresh record is in `enriched`
 		}
 		if prev, ok := existingByID[raw.ID]; ok {
 			out = append(out, prev)
