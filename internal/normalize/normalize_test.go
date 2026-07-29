@@ -56,6 +56,18 @@ func TestWineName(t *testing.T) {
 		{"NV PROSCOTTO SPARKLING WINE 24/375 CANS", "", "Proscotto Sparkling Wine"},
 		{"NV VARA HIGH DESERT GIN 12/750**", "VARA", "High Desert Gin"},
 		{"NV CIDER FARM OAK AGED CIDER 1/19.5 LITER", "THE CIDER FARM", "Oak Aged Cider"},
+		// The pack token can arrive GLUED to the last word ("GRAND CRU12/750",
+		// "(100% PINOT NOIR)12/750" — live data): cut at the digits, keep the word.
+		{"NV CHAMPAGNE CAMILLE SAVES ANAIS JOLIE COEUR BRUT GRAND CRU12/750", "CAMILLE SAVES",
+			"Champagne Camille Saves Anais Jolie Coeur Brut Grand Cru"},
+		{"NV DOM JEAN NOEL GAGNARD CREMANT DE BOURGOGNE GRAND LYS EXTRA BRUT (100% PINOT NOIR)12/750", "",
+			"Domaine Jean Noel Gagnard Cremant de Bourgogne Grand Lys Extra Brut (100% Pinot Noir)"},
+		{"20 DOM PARENT BOURGOGNE PINOT NOIR CUVEE XIV12/750", "PARENT",
+			"Domaine Parent Bourgogne Pinot Noir Cuvee XIV"},
+		// A leading multi-vintage token ("16/17/18 …", a vertical assortment)
+		// must NOT be treated as a glued pack token and blank the name.
+		{"16/17/18 ROCCA DI MONTEGROSSI CHIANTI GRAN SELEZIONE DOCG 6/750 VERTICAL ASSORTMENT( 2 BTLS EA 16/17/18)", "ROCCA DI MONTEGROSSI",
+			"16/17/18 Rocca Di Montegrossi Chianti Gran Selezione DOCG"},
 		// Already-clean (mock/enriched) names pass through untouched.
 		{"Saint-Aubin 1er Cru « Derrière chez Édouard »", "Hubert Lamy",
 			"Saint-Aubin 1er Cru « Derrière chez Édouard »"},

@@ -15,9 +15,14 @@ import (
 
 var (
 	vintagePrefix = regexp.MustCompile(`^(?:L?\d{2}|NV)\s+`) // "14 …", "L17 …", "NV …"
-	packToken     = regexp.MustCompile(`\s+\d+/[\d.]+`)      // "12/750", "1/3.0", "3/1.5L", "24/375 CANS"
-	trailingStar  = regexp.MustCompile(`[.*]+\s*$`)
-	digitRe       = regexp.MustCompile(`\d`)
+	// A pack token is either preceded by whitespace ("… 12/750", "1/3.0",
+	// "3/1.5L", "24/375 CANS") or glued to the last word ("GRAND CRU12/750",
+	// "(100% PINOT NOIR)12/750" — both live data). Requiring a letter or ')'
+	// before a glued token keeps a LEADING numeric run like the vertical
+	// assortment "16/17/18 ROCCA …" from matching itself.
+	packToken    = regexp.MustCompile(`(?:\s+|[A-Za-z)])\d+/[\d.]+`)
+	trailingStar = regexp.MustCompile(`[.*]+\s*$`)
+	digitRe      = regexp.MustCompile(`\d`)
 )
 
 // small words stay lowercase unless first in the name.
@@ -38,10 +43,15 @@ var abbrev = map[string]string{
 	"ch": "Château", "dom": "Domaine",
 }
 
-// acronym tokens kept uppercase when title-casing (USA, DOCG, …).
+// acronym tokens kept uppercase when title-casing (USA, DOCG, …). Multi-char
+// roman numerals ("CUVEE XIV") stay uppercase too; single letters are excluded
+// as too ambiguous with initials.
 var acronym = map[string]bool{
 	"usa": true, "us": true, "uk": true, "gsm": true, "ava": true, "avr": true,
 	"docg": true, "doc": true, "igt": true, "aoc": true, "nv": true, "us.": true,
+	"ii": true, "iii": true, "iv": true, "vi": true, "vii": true, "viii": true,
+	"ix": true, "xi": true, "xii": true, "xiii": true, "xiv": true, "xv": true,
+	"xvi": true, "xvii": true, "xviii": true, "xix": true, "xx": true,
 }
 
 // Text title-cases ALL-CAPS trade text (varietal, region, country) for display,
@@ -86,10 +96,14 @@ func WineName(desc, brand string) string {
 // warehouse hold/ops notes ("HOLD FOR …", "GM HOLD"), asterisks, or a
 // duplicated pack token.
 func truncateAtPack(s string) string {
-	if loc := packToken.FindStringIndex(s); loc != nil {
-		return s[:loc[0]]
+	loc := packToken.FindStringIndex(s)
+	if loc == nil {
+		return s
 	}
-	return s
+	if s[loc[0]] == ' ' || s[loc[0]] == '\t' {
+		return s[:loc[0]] // whitespace-led token: cut the whitespace too
+	}
+	return s[:loc[0]+1] // glued token: keep the word's final letter or ')'
 }
 
 // Producer normalizes a brand: "LAST, FIRST" → "First Last", ALL-CAPS or
