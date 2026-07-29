@@ -229,5 +229,67 @@ func TestRosterErrorsOnTruncatedPagination(t *testing.T) {
 	}
 }
 
+// TestSalesTotalsSumsNetCasesAcrossPages drives SalesTotals against a
+// two-page OpportunityLineItem result and asserts (1) lines for the same
+// product accumulate across pages, (2) negative quantities (credits/returns)
+// subtract, and (3) rows with no Product2Id are skipped rather than pooled
+// under "".
+func TestSalesTotalsSumsNetCasesAcrossPages(t *testing.T) {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/services/oauth2/token", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"access_token": "tok123",
+			"instance_url": "http://example.invalid",
+			"token_type":   "Bearer",
+		})
+	})
+
+	mux.HandleFunc("/services/data/v61.0/query", func(w http.ResponseWriter, r *http.Request) {
+		if q := r.URL.Query().Get("q"); !strings.Contains(q, "OpportunityLineItem") ||
+			!strings.Contains(q, "LAST_N_DAYS:30") {
+			t.Errorf("sales SOQL = %q, want it to target OpportunityLineItem over LAST_N_DAYS:30", q)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"done":           false,
+			"nextRecordsUrl": "/services/data/v61.0/query/01g-sales-2",
+			"records": []map[string]any{
+				{"Product2Id": "01tAAA", "Quantity": 2.5},
+				{"Product2Id": "01tBBB", "Quantity": 0.08},
+				{"Product2Id": nil, "Quantity": 4.0}, // orphan line: no product
+			},
+		})
+	})
+
+	mux.HandleFunc("/services/data/v61.0/query/01g-sales-2", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"done":           true,
+			"nextRecordsUrl": "",
+			"records": []map[string]any{
+				{"Product2Id": "01tAAA", "Quantity": 1.5},
+				{"Product2Id": "01tBBB", "Quantity": -0.08}, // full credit
+			},
+		})
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	cfg := Config{BaseURL: server.URL, ClientID: "id", ClientSecret: "secret", APIVersion: "v61.0"}
+	client := NewClient(cfg, server.Client())
+
+	got, err := client.SalesTotals(context.Background(), 30)
+	if err != nil {
+		t.Fatalf("SalesTotals() error = %v", err)
+	}
+	want := map[string]float64{"01tAAA": 4.0, "01tBBB": 0.0}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("SalesTotals() = %#v, want %#v", got, want)
+	}
+}
+
 // compile-time check kept alongside the tests: Client must satisfy Source.
 var _ Source = (*Client)(nil)

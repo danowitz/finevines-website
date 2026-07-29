@@ -57,6 +57,10 @@ type site struct {
 	NavJSURL       string
 	PortfolioJSURL string
 	FiltersJSURL   string
+	// HotSellerSlugs is data/hot-sellers.json's ranking (best first), loaded
+	// by loadSite; Run resolves it against the catalog into the homepage's
+	// HotSellers section. Empty (file absent/thin) ⇒ no section.
+	HotSellerSlugs []string
 }
 
 // page is the template data shared by every page: the site's data plus this
@@ -128,6 +132,11 @@ type homePage struct {
 	LatestNews        []model.NewsPost
 	FeaturedWines     []model.Wine
 	FeaturedProducers []featuredProducer
+	// HotSellers is the sales-driven "What the trade is pouring" section:
+	// wines resolved from data/hot-sellers.json's ranking. Deliberately
+	// rendered WITHOUT sales volumes — case velocity is competitively
+	// sensitive for a distributor, so the ranking curates and never counts.
+	HotSellers []model.Wine
 }
 
 // featuredProducer is the compact, derived homepage view of one producer.
@@ -375,6 +384,10 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		latestNews = latestNews[:3]
 	}
 	featuredWines := selectFeaturedWines(s.Wines, s.Content.FeaturedWineSlugs, 4)
+	// min 3 / max 4: the home wine grid is four-up, so four fills one clean
+	// row; the ranking file's extra entries are sold-out slack (see
+	// selectHotSellers).
+	hotSellers := selectHotSellers(s.Wines, s.HotSellerSlugs, 3, 4)
 
 	pages := []struct {
 		rel, tmpl string
@@ -391,6 +404,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 			LatestNews:        latestNews,
 			FeaturedWines:     featuredWines,
 			FeaturedProducers: featuredProducers(s.Wines, featuredWines),
+			HotSellers:        hotSellers,
 		}},
 		{"contact", "contact", page{
 			site:  s,
@@ -957,6 +971,17 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 		return nil, fmt.Errorf("load site content: %w", err)
 	}
 	s := &site{Wines: usableWines(wines), Content: content, BaseURL: baseURL, GAID: gaID}
+	// hot-sellers.json is optional: written by `finevines enrich` against a
+	// live org (mock/dev runs don't have it), and the homepage simply omits
+	// its sales-driven section when it's absent.
+	hotSellers, err := model.LoadHotSellers(filepath.Join(dataDir, "hot-sellers.json"))
+	if err != nil {
+		return nil, fmt.Errorf("load hot-sellers: %w", err)
+	}
+	s.HotSellerSlugs = make([]string, 0, len(hotSellers.Wines))
+	for _, h := range hotSellers.Wines {
+		s.HotSellerSlugs = append(s.HotSellerSlugs, h.Slug)
+	}
 	// team.json is optional until seeded
 	if data, err := os.ReadFile(filepath.Join(dataDir, "team.json")); err == nil {
 		if err := jsonUnmarshal(data, &s.Team); err != nil {
@@ -981,6 +1006,37 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 	}
 	sort.Slice(s.News, func(i, j int) bool { return s.News[i].Date > s.News[j].Date }) // newest first
 	return s, nil
+}
+
+// selectHotSellers resolves the sales-driven ranking (data/hot-sellers.json,
+// best first) against the current catalog. Unlike selectFeaturedWines there is
+// NO fallback fill: every slot here is a claim that the wine is actually
+// moving, so a vacancy is dropped, never invented. Wines that have left the
+// catalog or sold out since the ranking was computed (it can be up to one
+// enrich run staler than wines.json) are skipped. The ranking file carries
+// more entries than max on purpose — the slack absorbs those drops and still
+// fills the row. Fewer than min survivors omits the whole section: a one-card
+// "hot sellers" section reads as a markdown bin, not a pulse.
+func selectHotSellers(wines []model.Wine, slugs []string, min, max int) []model.Wine {
+	bySlug := make(map[string]model.Wine, len(wines))
+	for _, wine := range wines {
+		bySlug[wine.Slug] = wine
+	}
+	selected := make([]model.Wine, 0, max)
+	for _, slug := range slugs {
+		if len(selected) == max {
+			break
+		}
+		wine, ok := bySlug[slug]
+		if !ok || wine.StockQty <= 0 || wine.ImagePath == "" {
+			continue
+		}
+		selected = append(selected, wine)
+	}
+	if len(selected) < min {
+		return nil
+	}
+	return selected
 }
 
 // selectFeaturedWines resolves the hand-curated slug list, then fills any

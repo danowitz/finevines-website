@@ -172,6 +172,36 @@ func (c *Client) Query(ctx context.Context, soql string) ([]map[string]any, erro
 	return out, nil
 }
 
+// SalesTotals returns NET cases sold per Product2 Id over the trailing `days`
+// days, read from the org's invoice ledger: QuickBooks invoices sync into
+// Salesforce as Opportunities (AVSFQB connector, verified live 2026-07-29), so
+// OpportunityLineItem IS the sales ledger. Quantity is in CASES and fractional
+// (0.08 ≈ one bottle of a 12-pack — same convention as FV_OnHand_Qty__c), and
+// credit/return lines carry negative quantities, so a plain sum yields net
+// movement.
+//
+// Aggregated in Go rather than with SOQL GROUP BY: aggregate queries cap at
+// 2,000 result rows and cannot be paginated past it, while this raw line pull
+// rides Query's nextRecordsUrl loop, so no sales volume silently truncates.
+func (c *Client) SalesTotals(ctx context.Context, days int) (map[string]float64, error) {
+	soql := fmt.Sprintf("SELECT Product2Id, Quantity FROM OpportunityLineItem "+
+		"WHERE CreatedDate = LAST_N_DAYS:%d", days)
+	rows, err := c.Query(ctx, soql)
+	if err != nil {
+		return nil, fmt.Errorf("salesforce sales totals: %w", err)
+	}
+	totals := make(map[string]float64)
+	for _, r := range rows {
+		id, _ := r["Product2Id"].(string)
+		if id == "" {
+			continue
+		}
+		q, _ := r["Quantity"].(float64)
+		totals[id] += q
+	}
+	return totals, nil
+}
+
 // authenticate runs the OAuth 2.0 Client Credentials Flow against the org's
 // token endpoint (POST {BaseURL}/services/oauth2/token) and stores the
 // resulting access token on c for use by subsequent query calls.

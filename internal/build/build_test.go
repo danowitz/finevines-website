@@ -1018,3 +1018,122 @@ func TestFeaturedHomepageSelectionFallsBackWithoutRepeatingProducers(t *testing.
 		t.Errorf("producer URL should be query encoded, got %q", producers[1].URL)
 	}
 }
+
+// TestHomeHotSellersSectionIsSalesDriven covers the data-present path: a
+// testdata copy with a hot-sellers.json ranking renders the "What the Trade
+// Is Pouring" section in RANKED order (not catalog order), shows each card's
+// availability line, and never leaks the ranking's raw case volumes — those
+// are private diagnostics (competitively sensitive), the section curates
+// without counting.
+func TestHomeHotSellersSectionIsSalesDriven(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	// Ridgeview (SF-00789) outsells Petit-Clos outsells Lamy — deliberately
+	// the reverse of wines.json's slug order so an accidental catalog-order
+	// render fails the order assertion below. 8.25 is a distinctive volume
+	// that must never appear in the HTML.
+	hs := model.HotSellers{
+		Updated:    "2026-07-29T00:00:00Z",
+		WindowDays: 30,
+		Wines: []model.HotSeller{
+			{Slug: "ridgeview-cellars-estate-cabernet-sauvignon-2020", Cases: 8.25},
+			{Slug: "domaine-petit-clos-cotes-du-rhone-villages-2022", Cases: 4.5},
+			{Slug: "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021", Cases: 2},
+		},
+	}
+	if err := model.SaveHotSellers(filepath.Join(data, "hot-sellers.json"), hs); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	homeBytes, err := os.ReadFile(filepath.Join(dist, "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	home := string(homeBytes)
+
+	for _, want := range []string{
+		`class="wrap home-hot-sellers"`,
+		`What the Trade Is Pouring`,
+		`In Demand`,
+	} {
+		if !strings.Contains(home, want) {
+			t.Errorf("home missing hot-sellers marker %q", want)
+		}
+	}
+
+	section := home[strings.Index(home, `home-hot-sellers`):]
+	section = section[:strings.Index(section, `</section>`)]
+	first := strings.Index(section, `href="/wines/ridgeview-cellars-estate-cabernet-sauvignon-2020/"`)
+	second := strings.Index(section, `href="/wines/domaine-petit-clos-cotes-du-rhone-villages-2022/"`)
+	third := strings.Index(section, `href="/wines/hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021/"`)
+	if first < 0 || second < 0 || third < 0 {
+		t.Fatalf("hot-sellers section missing ranked wines (indexes %d, %d, %d)", first, second, third)
+	}
+	if !(first < second && second < third) {
+		t.Errorf("hot sellers not in ranked order: indexes %d, %d, %d", first, second, third)
+	}
+
+	// Availability (stock, a number we already publish) yes; sales volume no.
+	// The leak check is scoped to the section — elsewhere in the page "8.25"
+	// occurs as SVG path coordinates in the footer icons.
+	if !strings.Contains(section, `class="avail"`) {
+		t.Errorf("hot-seller cards missing availability line")
+	}
+	if strings.Contains(section, "8.25") {
+		t.Errorf("hot-sellers section leaks the ranking's case volume (8.25) — sales numbers must never render")
+	}
+}
+
+// TestHomeHotSellersOmittedWhenAbsentOrThin covers both omission paths: no
+// hot-sellers.json at all (mock/dev builds), and a ranking too thin to read
+// as a real pulse (fewer than three resolvable wines).
+func TestHomeHotSellersOmittedWhenAbsentOrThin(t *testing.T) {
+	// Plain testdata has no hot-sellers.json.
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	home, err := os.ReadFile(filepath.Join(dist, "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(home), "home-hot-sellers") {
+		t.Errorf("home renders hot-sellers section with no hot-sellers.json present")
+	}
+
+	// A ranking whose entries mostly no longer resolve (sold out / gone from
+	// the catalog) must drop the whole section, not render a lonely card.
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	hs := model.HotSellers{
+		Updated:    "2026-07-29T00:00:00Z",
+		WindowDays: 30,
+		Wines: []model.HotSeller{
+			{Slug: "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021", Cases: 9},
+			{Slug: "no-longer-in-catalog", Cases: 7},
+			{Slug: "also-gone", Cases: 5},
+		},
+	}
+	if err := model.SaveHotSellers(filepath.Join(data, "hot-sellers.json"), hs); err != nil {
+		t.Fatal(err)
+	}
+	dist2 := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist2, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	home2, err := os.ReadFile(filepath.Join(dist2, "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(home2), "home-hot-sellers") {
+		t.Errorf("home renders hot-sellers section from a ranking with only one resolvable wine")
+	}
+}

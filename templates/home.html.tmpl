@@ -42,8 +42,40 @@
           </div>
           <div class="body">
             {{if .Producer}}<span class="producer">{{.Producer}}</span>{{end}}
-            <h3>{{.Name}}{{if .Vintage}} {{.Vintage}}{{end}}</h3>
+            <h3>{{.Name}}{{if .Vintage}} <span class="vintage">{{.Vintage}}</span>{{end}}</h3>
             {{if or .Region .Varietal}}<span class="meta">{{.Region}}{{if and .Region .Varietal}} &middot; {{end}}{{.Varietal}}</span>{{end}}
+          </div>
+        </a>
+      </li>{{end}}
+    </ul>
+  </section>{{end}}
+
+  {{/* Sales-driven: the top movers from data/hot-sellers.json (written by the
+       nightly enrich run from the org's invoice ledger), resolved and capped
+       in build.go. Curation only — the cards NEVER show sales volumes; case
+       velocity is competitively sensitive for a distributor. Omitted entirely
+       when the ranking is missing or too thin to read as a real pulse. */}}
+  {{if .HotSellers}}<section class="wrap home-hot-sellers">
+    <div class="home-section-heading">
+      <div>
+        <span class="eyebrow">In Demand</span>
+        <h2>What the Trade Is Pouring</h2>
+      </div>
+      <a class="text-link" href="/portfolio/">Browse the full portfolio &rarr;</a>
+    </div>
+    <p class="lede">The bottles moving fastest through Chicagoland's lists and shelves this month
+      &mdash; in stock now and ready to order.</p>
+    <ul class="wine-grid view-cards home-wine-grid">
+      {{range .HotSellers}}<li>
+        <a class="wine-card" href="/wines/{{.Slug}}/">
+          <div class="thumb">
+            <img src="/{{.ImagePath}}" alt="Bottle of {{spaceJoin .Producer .Name .Vintage}}" loading="lazy">
+          </div>
+          <div class="body">
+            {{if .Producer}}<span class="producer">{{.Producer}}</span>{{end}}
+            <h3>{{.Name}}{{if .Vintage}} <span class="vintage">{{.Vintage}}</span>{{end}}</h3>
+            {{if or .Region .Varietal}}<span class="meta">{{.Region}}{{if and .Region .Varietal}} &middot; {{end}}{{.Varietal}}</span>{{end}}
+            {{with avail .}}<span class="avail">{{.}}</span>{{end}}
           </div>
         </a>
       </li>{{end}}

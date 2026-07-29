@@ -1,0 +1,30 @@
+{
+  "updated": "2026-07-29T07:12:37Z",
+  "windowDays": 30,
+  "wines": [
+    {
+      "slug": "domaine-vacheron-sancerre-blanc-2024",
+      "cases": 164.33334000000002
+    },
+    {
+      "slug": "taonga-sauvignon-blanc-marlborough-2025",
+      "cases": 109.16666000000001
+    },
+    {
+      "slug": "domaine-de-la-villaudiere-sancerre-la-villaudiere-2025",
+      "cases": 93.16667
+    },
+    {
+      "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
+      "cases": 58
+    },
+    {
+      "slug": "filare-italia-prosecco-doc-extra-dry",
+      "cases": 47.08333
+    },
+    {
+      "slug": "jl-chave-selection-cotes-du-rhone-mon-coeur-2024",
+      "cases": 42.5
+    }
+  ]
+}

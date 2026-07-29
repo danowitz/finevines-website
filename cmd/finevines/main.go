@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gritautomation/finevines-website/internal/build"
 	"github.com/gritautomation/finevines-website/internal/config"
@@ -186,6 +187,57 @@ func runEnrich(cfg config.Config) error {
 	} else {
 		log.Printf("enrich: wrote coverage report %s", reportPath)
 	}
+
+	// Refresh the sales-driven homepage ranking (data/hot-sellers.json) from
+	// the org's invoice ledger. Optional by design: it needs a live org (the
+	// mock roster has no sales), and a failure must not fail the enrich run —
+	// the catalog is already saved, and the homepage simply keeps (or omits)
+	// its hot-sellers section. The stale-is-fine tradeoff is deliberate: a
+	// day-old ranking of what's pouring beats no section.
+	if client, ok := src.(*salesforce.Client); ok {
+		if err := refreshHotSellers(client); err != nil {
+			log.Printf("enrich: warning: hot-sellers refresh skipped: %v", err)
+		}
+	} else {
+		log.Printf("enrich: mock roster has no sales ledger — data/hot-sellers.json left as-is")
+	}
+	return nil
+}
+
+// hotSellerWindowDays is the sales window the homepage ranking looks back
+// over. Thirty days matches the section's editorial copy ("this month") and is
+// long enough that one big allocation drop doesn't own every slot.
+const hotSellerWindowDays = 30
+
+// hotSellerCount is how many wines the ranking keeps. The homepage renders at
+// most four (one clean row of its four-up grid — see build.selectHotSellers);
+// the extra entries are slack so the build can drop wines that sell out
+// between enrich runs and still fill the row.
+const hotSellerCount = 6
+
+// refreshHotSellers pulls net cases sold per product over the trailing window
+// and writes the top web-eligible, in-stock movers to data/hot-sellers.json
+// (see enrich.RankHotSellers for the ranking rules). Only the ranking is ever
+// rendered publicly — case volumes stay in this private repo file.
+func refreshHotSellers(client *salesforce.Client) error {
+	totals, err := client.SalesTotals(context.Background(), hotSellerWindowDays)
+	if err != nil {
+		return err
+	}
+	wines, err := model.LoadWines("data/wines.json")
+	if err != nil {
+		return err
+	}
+	hs := model.HotSellers{
+		Updated:    time.Now().UTC().Format(time.RFC3339),
+		WindowDays: hotSellerWindowDays,
+		Wines:      enrich.RankHotSellers(wines, totals, hotSellerCount),
+	}
+	if err := model.SaveHotSellers("data/hot-sellers.json", hs); err != nil {
+		return err
+	}
+	log.Printf("enrich: wrote data/hot-sellers.json — top %d of %d products with sales in the last %d days",
+		len(hs.Wines), len(totals), hotSellerWindowDays)
 	return nil
 }
 
