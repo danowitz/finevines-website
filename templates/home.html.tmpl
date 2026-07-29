@@ -2,6 +2,29 @@
 <html lang="en">
 <head>
 {{template "head" .}}
+{{/* Organization schema: the machine-readable service-area statement. The
+     visible copy claims Illinois; areaServed carries BOTH the state and the
+     "Chicagoland" region so geo queries for either resolve to FineVines
+     without the copy having to keyword-stuff. Values interpolate via
+     html/template's contextual JSON escaping (same pattern as wine.html.tmpl
+     and newspost.html.tmpl). */}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "FineVines",
+  "url": {{printf "%s/" .BaseURL}},
+  "logo": {{printf "%s/assets/img/finevines-logo.png" .BaseURL}},
+  "description": "Licensed wholesale distributor of wine and spirits, State of Illinois.",
+  "telephone": {{.Content.Contact.PhoneHref}},
+  "email": {{.Content.Contact.Email}},
+  "address": {{printf "%s, %s" .Content.Contact.Street .Content.Contact.CityStateZIP}},
+  "areaServed": [
+    {"@type": "State", "name": "Illinois"},
+    {"@type": "Place", "name": "Chicagoland"}
+  ]
+}
+</script>
 </head>
 <body>
 {{template "header" .}}
@@ -9,7 +32,7 @@
   <section class="home-hero">
     <div class="wrap">
       <div class="home-hero-copy">
-        <span class="eyebrow">Wholesale Wine &amp; Spirits &middot; Chicagoland</span>
+        <span class="eyebrow">Wholesale Wine &amp; Spirits &middot; Illinois</span>
         <h1>Pouring elegance with a sommelier's touch.</h1>
         <p class="lede">FineVines is a licensed wholesale distributor bringing a hand-selected portfolio of wine
           and spirits to Illinois restaurants, retailers, and hospitality tables. Sourced with care, stored
@@ -73,11 +96,11 @@
     <div class="home-section-heading">
       <div>
         <span class="eyebrow">In Demand</span>
-        <h2>What Chicagoland Is Pouring</h2>
+        <h2>What Illinois Is Pouring</h2>
       </div>
       <a class="text-link" href="/portfolio/">Browse the full portfolio &rarr;</a>
     </div>
-    <p class="lede">The bottles moving fastest through Chicagoland's lists and shelves this month
+    <p class="lede">The bottles moving fastest through lists and shelves across Illinois this month
       &mdash; in stock now and ready to order.</p>
     <ul class="wine-grid view-cards home-wine-grid">
       {{range .HotSellers}}<li>

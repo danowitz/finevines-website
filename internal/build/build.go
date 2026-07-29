@@ -141,7 +141,7 @@ type homePage struct {
 	// Ledger is the credibility band under the hero: counts the live catalog
 	// can actually back (see ledgerStats). Empty (thin catalog) ⇒ no band.
 	Ledger []ledgerStat
-	// HotSellers is the sales-driven "what Chicagoland is pouring" section:
+	// HotSellers is the sales-driven "what Illinois is pouring" section:
 	// wines resolved from data/hot-sellers.json's ranking. Deliberately
 	// rendered WITHOUT sales volumes — case velocity is competitively
 	// sensitive for a distributor, so the ranking curates and never counts.
@@ -473,9 +473,10 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		{"", "home", homePage{
 			page: page{
 				site:  s,
-				Title: "FineVines - Wholesale Wine & Spirits, Chicagoland",
+				Title: "FineVines - Wholesale Wine & Spirits, Illinois",
 				Description: "FineVines is a licensed wholesale distributor of wine and spirits, pouring " +
-					"elegance with a sommelier's touch across Chicagoland's restaurants and retailers.",
+					"elegance with a sommelier's touch for restaurants and retailers across Chicagoland " +
+					"and all of Illinois.",
 				Path: "/",
 			},
 			LatestNews:    latestNews,
@@ -488,7 +489,8 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 			site:  s,
 			Title: "Contact - FineVines",
 			Description: "Reach the FineVines team: wholesale wine and spirits distribution for " +
-				"licensed Illinois retailers, restaurants, and hospitality accounts.",
+				"licensed retailers, restaurants, and hospitality accounts across Chicagoland " +
+				"and all of Illinois.",
 			Path: "/contact/",
 		}},
 		{"news", "news", newsPage{
@@ -1364,6 +1366,13 @@ func copyTree(src, dst string) error {
 		target := filepath.Join(dst, rel)
 		if d.IsDir() {
 			return os.MkdirAll(target, 0o755)
+		}
+		// Files at the root of assets/ are the full-size image masters —
+		// source control only, ~500KB each. Everything the site serves lives
+		// in a subdirectory (opt/, img/, css/, js/, fonts/, video/), so
+		// root-level files never ship to the CDN.
+		if filepath.Dir(rel) == "." {
+			return nil
 		}
 		data, err := os.ReadFile(path)
 		if err != nil {

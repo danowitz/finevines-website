@@ -59,6 +59,12 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 		`<meta name="twitter:site" content="@finevineswine">`,
 		`<meta name="twitter:image" content="https://finevines.com/assets/img/og-default.png">`,
 		`<meta name="theme-color" content="#531427">`,
+		// Organization schema: the machine-readable service area must name
+		// BOTH the state and the Chicagoland region (geo-SEO without
+		// keyword-stuffing the visible copy).
+		`"@type": "Organization"`,
+		`{"@type": "State", "name": "Illinois"}`,
+		`{"@type": "Place", "name": "Chicagoland"}`,
 	} {
 		if !strings.Contains(string(home), want) {
 			t.Errorf("home missing %q", want)
@@ -93,8 +99,10 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 		t.Error("footer should use the real logo image, not the text wordmark")
 	}
 	// The colored brand logo image now appears in BOTH the header and the
-	// footer, so there must be exactly two logo <img>s.
-	if n := strings.Count(string(home), "finevines-logo.png"); n != 2 {
+	// footer, so there must be exactly two logo <img>s. (Counted as <img>
+	// tags, not raw filename hits — the Organization JSON-LD's "logo"
+	// property also references the file and must not trip this.)
+	if n := strings.Count(string(home), `<img src="/assets/img/finevines-logo.png"`); n != 2 {
 		t.Errorf("expected exactly 2 logo images (header + footer), got %d", n)
 	}
 	// The mobile nav hamburger must be present and accessible (aria-controls
@@ -157,6 +165,9 @@ func TestRunGeneratesContactFromSiteContent(t *testing.T) {
 		`class="testimonial"`,
 		"A testdata quote about the by-the-glass program.",
 		"Testdata Wine Director, Logan Square",
+		// The one visible-copy sentence carrying both geo terms: the metro
+		// search phrase stays indexable, the claim stays statewide.
+		"A Chicagoland wine and spirits distributor with statewide reach",
 	} {
 		if !strings.Contains(string(contact), want) {
 			t.Errorf("contact page missing verified detail %q", want)
@@ -164,6 +175,36 @@ func TestRunGeneratesContactFromSiteContent(t *testing.T) {
 	}
 	if strings.Contains(string(contact), "[to be confirmed]") {
 		t.Error("contact page must not publish confirmation placeholders")
+	}
+}
+
+// TestRunSkipsAssetRootMasters guards the CDN payload: the full-size PNG
+// masters sit at the root of assets/ (source control only — ~500KB each,
+// nothing links to them). Everything the site serves lives in a
+// subdirectory, so copyTree must not ship root-level files into dist/.
+func TestRunSkipsAssetRootMasters(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	// No file at the root of the assets tree may be copied. (dist/assets
+	// legitimately gains the generated catalog-index.<hash>.json, so assert
+	// against the source listing, not a glob of dist.)
+	entries, err := os.ReadDir("../../assets")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(dist, "assets", e.Name())); err == nil {
+			t.Errorf("root-level asset master %q must not deploy", e.Name())
+		}
+	}
+	// The optimized derivatives in opt/ must still ship.
+	if _, err := os.Stat(filepath.Join(dist, "assets", "opt", "finevines-sommeliers-working-table-hero.jpg")); err != nil {
+		t.Error("optimized hero missing from dist:", err)
 	}
 }
 
@@ -383,7 +424,8 @@ func TestPortfolioPage(t *testing.T) {
 		`id="portfolio-count"`,
 		`id="portfolio-search"`,
 		`src="/assets/js/portfolio.`,
-		`class="page-hero"`, // signature bordeaux hero band on section pages
+		`class="page-hero page-hero-split"`,                            // signature bordeaux hero band, split with the editorial portrait
+		`src="/assets/opt/finevines-portfolio-chosen-by-hand-hero.jpg"`, // the "chosen by hand" hero image
 		// Cards | List view toggle control + the grid's default view class
 		// that portfolio.js swaps between (facet filtering works in both).
 		`class="view-toggle"`,
@@ -1158,7 +1200,7 @@ func TestHomeHotSellersSectionIsSalesDriven(t *testing.T) {
 
 	for _, want := range []string{
 		`class="wrap home-hot-sellers"`,
-		`What Chicagoland Is Pouring`,
+		`What Illinois Is Pouring`,
 		`In Demand`,
 	} {
 		if !strings.Contains(home, want) {
