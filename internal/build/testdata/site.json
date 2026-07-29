@@ -13,5 +13,10 @@
   "featuredWineSlugs": [
     "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021",
     "domaine-petit-clos-cotes-du-rhone-villages-2022"
-  ]
+  ],
+  "testimonial": {
+    "quote": "A testdata quote about the by-the-glass program.",
+    "attribution": "Testdata Wine Director, Logan Square"
+  },
+  "testimonialConfirmed": false
 }

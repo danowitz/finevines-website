@@ -145,10 +145,26 @@ func SizeOf(w model.Wine) Size {
 	return Size{ML: 750, Label: "750ml"}
 }
 
-// PackOf returns the bottles-per-case a row's name encodes (12/750, 6/1.5L),
-// or the trade-standard 12 when the name doesn't say. Same masking rule as
-// SizeOf: a vintage range like 2018/2019 must never be read as a pack.
+// OnHandCases returns a wine's on-hand quantity in cases: the verbatim
+// fractional figure when the row has one, otherwise falling back to StockQty —
+// which IS ceiled cases (FV_OnHand_Qty__c's unit is cases; the field was long
+// mis-read as bottles) — for data written before StockCases existed.
+func OnHandCases(w model.Wine) float64 {
+	if w.StockCases > 0 {
+		return w.StockCases
+	}
+	return float64(w.StockQty)
+}
+
+// PackOf returns the bottles-per-case for a row: Salesforce's explicit
+// FV_Bottles_Per_Case__c when present, else whatever the name encodes (12/750,
+// 6/1.5L — only raw trade names carry this; enriched display names have it
+// stripped), else the trade-standard 12. Same masking rule as SizeOf: a
+// vintage range like 2018/2019 must never be read as a pack.
 func PackOf(w model.Wine) int {
+	if w.CasePack > 0 {
+		return w.CasePack
+	}
 	name := yearRE.ReplaceAllStringFunc(w.Name, func(string) string { return "yyyy" })
 	if m := packSize.FindStringSubmatch(name); m != nil {
 		if n, err := strconv.Atoi(m[1]); err == nil && n > 0 {

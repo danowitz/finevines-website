@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -74,6 +75,9 @@ func NewClient(cfg Config, hc *http.Client) *Client {
 //   - Varietal   <- FV_Varietal__c, Region <- FV_Region__c, Country <- FV_Country__c
 //   - StockQty   <- FV_OnHand_Qty__c    (FRACTIONAL cases, e.g. 0.66 — see
 //     ceilStock; truncation would drop it)
+//   - CasePack   <- FV_Bottles_Per_Case__c (a STRING in the org, e.g. "12";
+//     the authoritative bottles-per-case — enriched display names have the
+//     "6/750" pack shorthand stripped, so it can't be re-parsed later)
 //   - ReadyToSell<- FV_Ready_To_Sell__c
 //
 // Pricing fields (FV_Net_Price__c/FV_List_Price__c/COGS/…) are deliberately NOT
@@ -81,8 +85,8 @@ func NewClient(cfg Config, hc *http.Client) *Client {
 // Style, ABV, colour, etc. are filled by enrichment. The field->WineRaw mapping
 // in Roster must move in lockstep with this SELECT list.
 const rosterSOQL = `SELECT Id, Name, Description, FV_Brand__c, FV_Vintage_Year__c,
- FV_Varietal__c, FV_Region__c, FV_Country__c, FV_OnHand_Qty__c, FV_Ready_To_Sell__c
- FROM Product2`
+ FV_Varietal__c, FV_Region__c, FV_Country__c, FV_OnHand_Qty__c, FV_Bottles_Per_Case__c,
+ FV_Ready_To_Sell__c FROM Product2`
 
 // Roster authenticates and runs rosterSOQL, following nextRecordsUrl until
 // Salesforce reports done:true, mapping every record into a WineRaw in API
@@ -120,6 +124,8 @@ func (c *Client) Roster(ctx context.Context) ([]WineRaw, error) {
 				Region:      str(r["FV_Region__c"]),
 				Country:     str(r["FV_Country__c"]),
 				StockQty:    ceilStock(r["FV_OnHand_Qty__c"]), // fractional cases -> ceil
+				StockCases:  floatval(r["FV_OnHand_Qty__c"]),  // verbatim cases (see WineRaw)
+				CasePack:    atoiStr(r["FV_Bottles_Per_Case__c"]),
 				ReadyToSell: boolval(r["FV_Ready_To_Sell__c"]),
 				// Appellation and Style have no Product2 field — both are
 				// populated later by the search-scrape enrichment step.
@@ -200,6 +206,29 @@ func (c *Client) SalesTotals(ctx context.Context, days int) (map[string]float64,
 		totals[id] += q
 	}
 	return totals, nil
+}
+
+// AccountsServed returns how many DISTINCT accounts had at least one invoice
+// in the trailing `days` days, read from the same AVSFQB invoice ledger as
+// SalesTotals (QuickBooks invoices sync as Opportunities, so an Opportunity
+// row in the window IS an order). Credit-only accounts still count — serving
+// a return is still serving the account. Deduped in Go from a raw paginated
+// pull rather than SOQL COUNT_DISTINCT, matching SalesTotals's
+// aggregate-query-cap rationale and riding the same pagination loop.
+func (c *Client) AccountsServed(ctx context.Context, days int) (int, error) {
+	soql := fmt.Sprintf("SELECT AccountId FROM Opportunity "+
+		"WHERE CreatedDate = LAST_N_DAYS:%d AND AccountId != null", days)
+	rows, err := c.Query(ctx, soql)
+	if err != nil {
+		return 0, fmt.Errorf("salesforce accounts served: %w", err)
+	}
+	seen := make(map[string]struct{}, len(rows))
+	for _, r := range rows {
+		if id, _ := r["AccountId"].(string); id != "" {
+			seen[id] = struct{}{}
+		}
+	}
+	return len(seen), nil
 }
 
 // authenticate runs the OAuth 2.0 Client Credentials Flow against the org's
@@ -288,6 +317,25 @@ func str(v any) string {
 func intval(v any) int {
 	f, _ := v.(float64) // Salesforce numbers arrive as JSON numbers (float64).
 	return int(f)
+}
+
+func floatval(v any) float64 {
+	f, _ := v.(float64)
+	if f < 0 {
+		return 0
+	}
+	return f
+}
+
+// atoiStr parses an org field that carries a number AS A STRING
+// (FV_Bottles_Per_Case__c is "12", not 12). Unparseable/absent -> 0.
+func atoiStr(v any) int {
+	s, _ := v.(string)
+	n, err := strconv.Atoi(strings.TrimSpace(s))
+	if err != nil || n < 0 {
+		return 0
+	}
+	return n
 }
 
 // ceilStock converts FV_OnHand_Qty__c to an int, rounding UP. That field is

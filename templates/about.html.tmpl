@@ -36,13 +36,18 @@
     <p class="lede">Every product is handled under proper temperature and humidity: orders picked with care
       and loaded in a temperature-controlled warehouse.</p>
     <p>The sales team carries a combined <strong>200+ years</strong> in the wholesale wine, retail and
-      restaurant trade, and training your staff is part of the service. Need information, technical
+      restaurant business, and training your staff is part of the service. Need information, technical
       specs, or an in-person session? Just ask.</p>
   </section>
 
+  {{/* "The House" heading: the people count is derived from team.json via
+       spellnum so the headline stays true as the roster changes; the tenure
+       claim restates the client-confirmed "200+ years" copy above. */}}
   <section class="wrap">
-    <span class="eyebrow">The Team</span>
-    <h2>Who You&rsquo;ll Talk To</h2>
+    <span class="eyebrow">The House</span>
+    <h2>{{spellnum (len .Team)}} people. Two hundred years in the business.</h2>
+    <p class="lede">FineVines is run by the people who answer its phones. When you call, you get
+      one of them: not a queue, not a portal, not a ticket number.</p>
     <div class="team-grid">
       {{range .Team}}<div class="team-card">
         {{if .PhotoPath}}<img src="/{{.PhotoPath}}" alt="Portrait of {{.Name}}">{{else}}<span class="team-monogram" aria-hidden="true">{{initials .Name}}</span>{{end}}

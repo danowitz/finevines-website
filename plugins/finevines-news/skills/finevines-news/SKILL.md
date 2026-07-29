@@ -14,7 +14,7 @@ no talk of JSON, slugs, git, or "the build." To her this is just "post the updat
 Ask conversationally, in plain language, one question per turn — don't front-load a form. Gather:
 
 1. **What's this about?** — get the gist first; it tells you the category:
-   - `Events` — a tasting, dinner, trade show, in-store pour, etc.
+   - `Events` — a tasting, dinner, industry show, in-store pour, etc.
    - `New Arrivals` — a new wine or producer joining the portfolio.
    - `News` — anything else (an award, a press mention, a staff note).
 2. **Title** — a short headline for the post. Suggest one from what they've told you if they're not sure.
@@ -33,11 +33,15 @@ guess or fill it in from general wine knowledge.
 
 ## Step 2 — Write the body in the FineVines voice
 
-FineVines is an old-world wine trade voice: elegant, editorial, unhurried. Never corporate-tech phrasing, never
+FineVines is an old-world wine-merchant voice: elegant, editorial, unhurried. Never corporate-tech phrasing, never
 marketing hype, never exclamation points doing the work that a well-chosen verb should do. Write the way a
-knowledgeable friend in the trade would tell you about a wine or an evening — warm, specific, a little formal, never
+knowledgeable friend in the business would tell you about a wine or an evening — warm, specific, a little formal, never
 salesy. You don't need to repeat the tagline ("Pouring elegance with a sommelier's touch") — just let that
 sensibility come through in the word choices.
+
+Never use the word "trade" — it isn't part of FineVines' vocabulary (client direction, 2026-07-29). Where you'd
+reach for it, say "wholesale", "our accounts", "the business", or name the audience directly ("restaurants and
+retailers").
 
 **Before (corporate-tech, wrong):**
 > Exciting news! FineVines is thrilled to announce our newest addition to the portfolio! This amazing Barolo is a

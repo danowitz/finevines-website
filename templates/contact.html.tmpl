@@ -8,7 +8,7 @@
 <main>
   <section class="page-hero">
     <div class="wrap">
-      <span class="eyebrow">Trade Contact</span>
+      <span class="eyebrow">Wholesale Contact</span>
       <h1>Reach the FineVines Team</h1>
       <p class="lede">FineVines is a licensed wholesale distributor of wine and spirits, serving Chicagoland's
         restaurants, retailers, and hospitality accounts. For allocations, new accounts, or a visit from your
@@ -18,9 +18,19 @@
 
   <section class="wrap">
     <div class="callout">
-      <p><strong>Wholesale &amp; trade inquiries only.</strong> FineVines sells exclusively to licensed
+      <p><strong>Wholesale inquiries only.</strong> FineVines sells exclusively to licensed
         retailers, restaurants, and hospitality accounts within Illinois.</p>
     </div>
+
+    {{/* Account testimonial: rendered only when site.json carries a quote.
+         Borrowed credibility at the decision point — someone ELSE vouching
+         for the house, next to where a prospect makes contact. site.json's
+         testimonialConfirmed gates production deploys (model.SiteContent):
+         drafted-not-approved quotes are preview-only by policy. */}}
+    {{if .Content.Testimonial.Quote}}<figure class="testimonial">
+      <blockquote>&ldquo;{{.Content.Testimonial.Quote}}&rdquo;</blockquote>
+      <figcaption>{{.Content.Testimonial.Attribution}}</figcaption>
+    </figure>{{end}}
 
     <hr class="rule-gold">
 

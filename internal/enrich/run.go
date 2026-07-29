@@ -109,7 +109,7 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 
 	eligible := make([]salesforce.WineRaw, 0, len(rawRoster))
 	for _, w := range rawRoster {
-		if Eligible(w.StockQty, w.SKU, w.ReadyToSell) {
+		if Eligible(w) {
 			eligible = append(eligible, w)
 		}
 	}
@@ -310,6 +310,8 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 		Color:           res.Color,
 		Style:           raw.Style,
 		StockQty:        raw.StockQty,
+		StockCases:      raw.StockCases,
+		CasePack:        raw.CasePack,
 		Description:     res.Description,
 		SommelierNotes:  res.SommelierNotes,
 		Aroma:           res.Aroma,

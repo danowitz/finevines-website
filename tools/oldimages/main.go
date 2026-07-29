@@ -106,7 +106,7 @@ func main() {
 	}
 	var eligible []salesforce.WineRaw
 	for _, w := range roster {
-		if enrich.Eligible(w.StockQty, w.SKU, w.ReadyToSell) {
+		if enrich.Eligible(w) {
 			eligible = append(eligible, w)
 		}
 	}

@@ -20,11 +20,25 @@
         </p>
       </div>
       <figure class="home-hero-media">
-        <img src="/assets/opt/pour-hero.jpg" alt="Wine being poured for service" width="900" height="1200"
+        <img src="/assets/opt/finevines-sommeliers-working-table-hero.jpg" alt="Sommeliers at work over a tasting table" width="848" height="1264"
           loading="eager" fetchpriority="high">
       </figure>
     </div>
   </section>
+
+  {{/* Credibility band: counts the live catalog can back, presented as a
+       quiet ledger. Values regenerate from wines.json on every build
+       (build.go ledgerStats) so the band can never overstate the portfolio;
+       thin catalogs omit it entirely. Counts, never superlatives. */}}
+  {{if .Ledger}}<section class="home-ledger" aria-label="FineVines at a glance">
+    <div class="wrap">
+      {{range .Ledger}}<div class="stat">
+        <span class="num">{{.Value}}</span>
+        <span class="lbl">{{.Label}}</span>
+      </div>
+      {{end}}
+    </div>
+  </section>{{end}}
 
   {{if .FeaturedWines}}<section class="wrap home-featured">
     <div class="home-section-heading">
@@ -59,7 +73,7 @@
     <div class="home-section-heading">
       <div>
         <span class="eyebrow">In Demand</span>
-        <h2>What the Trade Is Pouring</h2>
+        <h2>What Chicagoland Is Pouring</h2>
       </div>
       <a class="text-link" href="/portfolio/">Browse the full portfolio &rarr;</a>
     </div>
@@ -82,33 +96,23 @@
     </ul>
   </section>{{end}}
 
-  {{if .FeaturedProducers}}<section class="wrap home-producers">
-    <span class="eyebrow">Families Behind the Bottles</span>
-    <h2>Relationships Built at the Source</h2>
-    <p class="lede">FineVines represents producers whose work belongs on thoughtful lists and discerning shelves.
-      Explore the families and estates represented in the current portfolio.</p>
-    <div class="producer-grid">
-      {{range .FeaturedProducers}}<a class="producer-card" href="{{.URL}}">
-        <span class="producer-name">{{.Name}}</span>
-        <span class="producer-meta">{{if .Region}}{{.Region}} &middot; {{end}}{{.CountLabel}}</span>
-        <span class="producer-arrow" aria-hidden="true">&rarr;</span>
-      </a>{{end}}
+  {{/* The Book: the house judged by its portfolio — a roll of the catalog's
+       deepest holdings (or site.json's bookProducers, the client's own
+       shortlist), each name deep-linking to its filtered portfolio view.
+       Replaced the Featured Producers cards AND the Featured Regions links
+       (2026-07-29): one band, one question ("who are your relationships?"),
+       answered once. */}}
+  {{if .Book.Producers}}<section class="home-book">
+    <div class="wrap">
+      <span class="eyebrow">The Book</span>
+      <h2>The portfolio is the r&eacute;sum&eacute;.</h2>
+      <p class="lede">In this business, a house is judged by its book. Ours runs from old-world benchmarks
+        to the producers reshaping the new world: {{.Book.CountLabel}}, each carried because the
+        wine earned it.</p>
+      <p class="book-roll">{{range $i, $p := .Book.Producers}}{{if $i}}<span class="sep">&middot;</span>{{end}}<a href="{{$p.URL}}">{{$p.Name}}</a>{{end}}</p>
+      <a class="text-link book-link" href="/portfolio/">Browse the full portfolio &rarr;</a>
     </div>
   </section>{{end}}
-
-  <section class="wrap">
-    <span class="eyebrow">Featured Regions</span>
-    <h2>A Portfolio Built by Region</h2>
-    <p class="lede">From old-world benchmarks to the producers reshaping the new world, every bottle in the
-      portfolio is chosen on its own merits, not by allocation alone.</p>
-    <div class="region-row">
-      <a href="/portfolio/">Bordeaux</a> <span class="sep">&middot;</span>
-      <a href="/portfolio/">Burgundy</a> <span class="sep">&middot;</span>
-      <a href="/portfolio/">Piedmont</a> <span class="sep">&middot;</span>
-      <a href="/portfolio/">Rh&ocirc;ne Valley</a> <span class="sep">&middot;</span>
-      <a href="/portfolio/">Napa Valley</a>
-    </div>
-  </section>
 
   <section class="wrap">
     <span class="eyebrow">News &amp; Events</span>

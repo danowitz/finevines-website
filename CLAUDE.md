@@ -56,9 +56,11 @@ artifacts, and are complete/self-contained on their own.
   deterministic SVG label generator remains only as the guaranteed no-broken-image fallback.
 - **Pricing is fixed-fee**, not hourly estimates — the client relationship and pricing rationale is personal/history
   with the founders; don't reference that history in any client-facing copy, only use it to price confidently.
-- **Brand voice**: elegant, editorial, old-world-wine-trade tone. Avoid corporate-tech phrasing like "no developer
+- **Brand voice**: elegant, editorial, old-world wine-merchant tone. Avoid corporate-tech phrasing like "no developer
   on retainer" (came across as a dig, was removed). The tagline `Pouring elegance with a sommelier's touch` threads
   through the proposal's copy and cover design — keep using it if writing further client-facing material.
+  **Never use the word "trade" in client-facing copy** (directed 2026-07-29 — it isn't George's vocabulary; the
+  whole site was swept). Say "wholesale", "our accounts", "the business", or name the audience directly.
 - **The "About Us" page keeps Fine Vines' own existing copy voice** ("A service company, first and last...") rather
   than being rewritten from scratch.
 - **Real team roster** (confirmed, use these — not placeholders): George Molitor (Founder & President), Connie

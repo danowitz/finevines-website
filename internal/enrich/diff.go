@@ -36,7 +36,10 @@ func DiffRoster(eligible []salesforce.WineRaw, existing []model.Wine) Diff {
 	var d Diff
 	for _, raw := range eligible {
 		if prev, ok := byID[raw.ID]; ok && prev.SourceHash == SourceHash(raw) {
-			prev.StockQty = raw.StockQty // prev is a map-value copy; inputs stay unmutated
+			// prev is a map-value copy; inputs stay unmutated.
+			prev.StockQty = raw.StockQty
+			prev.StockCases = raw.StockCases
+			prev.CasePack = raw.CasePack
 			d.Keep = append(d.Keep, prev)
 		} else {
 			d.Enrich = append(d.Enrich, raw)

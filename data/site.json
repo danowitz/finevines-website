@@ -15,5 +15,10 @@
     "bauda-tenuta-olim-bauda-gavi-di-gavi-docg-2024",
     "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-rouge-2012",
     "dashe-cabernet-sauvignon-heart-arrow-ranch-2016"
-  ]
+  ],
+  "testimonial": {
+    "quote": "They run our list like it's their own. One call, and it's handled: first pour to last bottle.",
+    "attribution": "Beverage Director, River North"
+  },
+  "testimonialConfirmed": false
 }

@@ -31,10 +31,14 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 	for _, want := range []string{
 		"<title>FineVines",
 		"Pouring elegance with a sommelier", // tagline present
-		`src="/assets/opt/pour-hero.jpg"`,
-		`alt="Wine being poured for service"`,
+		`src="/assets/opt/finevines-sommeliers-working-table-hero.jpg"`,
+		`alt="Sommeliers at work over a tasting table"`,
 		`The Heart of What We Do`,
-		`Families Behind the Bottles`,
+		// The Book band (replaced Featured Producers + Featured Regions
+		// 2026-07-29): the roll deep-links each producer to its filtered
+		// portfolio view.
+		`The portfolio is the r&eacute;sum&eacute;.`,
+		`class="book-roll"`,
 		`href="/wines/hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021/"`,
 		`href="/portfolio/?producer=Hubert&#43;Lamy"`,
 		`rel="canonical" href="https://finevines.com/"`,
@@ -67,8 +71,8 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 	// and the static-year bottom bar (no runtime clock — must
 	// stay deterministic).
 	for _, want := range []string{
-		`class="footer-logo"`,                           // logo lockup wraps the image
-		`>Explore</h2>`, `>Trade</h2>`, `>Contact</h2>`, // column headings
+		`class="footer-logo"`,                               // logo lockup wraps the image
+		`>Explore</h2>`, `>Wholesale</h2>`, `>Contact</h2>`, // column headings ("Trade" retired 2026-07-29, client vocabulary)
 		`href="https://www.instagram.com/finevineswine/"`, // real Instagram
 		`href="https://twitter.com/finevineswine"`,        // real X/Twitter
 		`href="https://www.linkedin.com/company/1291059"`, // real LinkedIn
@@ -112,6 +116,18 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 			t.Errorf("footer must not contain fabricated contact detail %q", bad)
 		}
 	}
+	// The credibility ledger must NOT render for a thin (testdata) catalog:
+	// small counts read as anti-credibility, so ledgerStats floors the band
+	// at minLedgerWines.
+	if strings.Contains(string(home), "home-ledger") {
+		t.Error("credibility ledger should be omitted for a thin catalog")
+	}
+	// The Book band replaced these sections (2026-07-29) — they must be gone.
+	for _, gone := range []string{"Families Behind the Bottles", "Featured Regions"} {
+		if strings.Contains(string(home), gone) {
+			t.Errorf("home still renders retired section %q", gone)
+		}
+	}
 	cssMatches, err := filepath.Glob(filepath.Join(dist, "assets", "css", "site.*.css"))
 	if err != nil {
 		t.Fatal(err)
@@ -136,6 +152,11 @@ func TestRunGeneratesContactFromSiteContent(t *testing.T) {
 		`href="tel:&#43;17083436702"`,
 		`href="tel:&#43;17083436536"`,
 		`href="mailto:info@finevines.com"`,
+		// Testimonial block, driven by site.json's testimonial (rendered
+		// only when a quote is present).
+		`class="testimonial"`,
+		"A testdata quote about the by-the-glass program.",
+		"Testdata Wine Director, Logan Square",
 	} {
 		if !strings.Contains(string(contact), want) {
 			t.Errorf("contact page missing verified detail %q", want)
@@ -512,6 +533,11 @@ func TestAboutPage(t *testing.T) {
 		`rel="canonical" href="https://finevines.com/about/"`,
 		"George Molitor",
 		"Founder &amp; President",
+		// "The House" band: headline count is derived from team.json (two
+		// entries in testdata) via spellnum, never hardcoded copy.
+		"The House",
+		"<h2>Two people. Two hundred years in the business.</h2>",
+		"not a queue, not a portal, not a ticket number",
 		"Barbara Fultz",
 		"Office Manager",
 		`class="team-monogram"`,
@@ -527,6 +553,65 @@ func TestAboutPage(t *testing.T) {
 	for _, internal := range []string{"confirm email", "barbara@finevines.com"} {
 		if strings.Contains(html, internal) {
 			t.Errorf("about page leaked internal or superseded roster data %q", internal)
+		}
+	}
+}
+
+func TestLedgerStats(t *testing.T) {
+	// Thin catalogs omit the band entirely rather than shrink it.
+	if got := ledgerStats(make([]model.Wine, minLedgerWines-1), 504); got != nil {
+		t.Fatalf("expected no ledger for a thin catalog, got %v", got)
+	}
+
+	// 1,234 wines floor to "1,200+"; accounts floor to the nearest fifty;
+	// blank producers/regions never count.
+	wines := make([]model.Wine, 0, 1234)
+	for i := 0; i < 1234; i++ {
+		w := model.Wine{Producer: "Robert Groffier", Region: "Burgundy"}
+		switch {
+		case i%3 == 0:
+			w.Producer = "Felton Road"
+			w.Region = "Central Otago"
+		case i%7 == 0:
+			w.Producer = " "
+			w.Region = ""
+		}
+		wines = append(wines, w)
+	}
+	got := ledgerStats(wines, 504)
+	want := []ledgerStat{
+		{"1,200+", "Wines in Portfolio"},
+		{"2", "Producers Represented"},
+		{"2", "Regions of Origin"},
+		{"500+", "Accounts Served"},
+		{"200+", "Years in the Business, Combined"},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("ledgerStats = %v, want %v", got, want)
+	}
+
+	// Below the accounts floor (file absent loads as 0) the entry is
+	// omitted while the rest of the band still renders.
+	got = ledgerStats(wines, minLedgerAccounts-1)
+	for _, s := range got {
+		if s.Label == "Accounts Served" {
+			t.Errorf("accounts entry should be omitted below the floor, got %v", got)
+		}
+	}
+	if len(got) != 4 {
+		t.Errorf("ledgerStats without accounts = %v, want 4 entries", got)
+	}
+}
+
+func TestSpellNum(t *testing.T) {
+	for _, tc := range []struct {
+		n    int
+		want string
+	}{
+		{2, "Two"}, {10, "Ten"}, {20, "Twenty"}, {21, "21"}, {1234, "1,234"},
+	} {
+		if got := spellNum(tc.n); got != tc.want {
+			t.Errorf("spellNum(%d) = %q, want %q", tc.n, tc.want, got)
 		}
 	}
 }
@@ -558,7 +643,7 @@ func TestNewsPagesEmptyState(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !strings.Contains(string(page), "Fresh notes from the FineVines trade team are on the way.") {
+		if !strings.Contains(string(page), "Fresh notes from the FineVines team are on the way.") {
 			t.Errorf("%s missing the news empty state", path)
 		}
 	}
@@ -1004,18 +1089,32 @@ func TestFeaturedHomepageSelectionFallsBackWithoutRepeatingProducers(t *testing.
 		t.Fatalf("featured slugs = %v, want %v", got, want)
 	}
 
-	producers := featuredProducers(wines, got)
-	if len(producers) != 3 {
-		t.Fatalf("featured producers = %+v, want three unique producers", producers)
+}
+
+// TestBookProducers pins the Book band's roll: deepest holdings first
+// (name-ascending on ties) by default, and site.json picks — resolved
+// case-insensitively, unknown names skipped, pick order kept — when the
+// client has curated.
+func TestBookProducers(t *testing.T) {
+	wines := []model.Wine{
+		{Slug: "a", Producer: "Alpha"},
+		{Slug: "b", Producer: "Alpha"},
+		{Slug: "c", Producer: "Cellar C"},
+		{Slug: "d", Producer: "Domaine D"},
+		{Slug: "e", Producer: "  "}, // blank after trim: never in the roll
 	}
-	if producers[0].Count != 2 || producers[0].URL != "/portfolio/?producer=Alpha" {
-		t.Errorf("Alpha producer card = %+v", producers[0])
+
+	roll := bookProducers(wines, nil, 2)
+	if len(roll) != 2 || roll[0].Name != "Alpha" || roll[1].Name != "Cellar C" {
+		t.Fatalf("default roll = %+v, want Alpha (2 wines) then Cellar C (tie, name asc), capped at 2", roll)
 	}
-	if producers[2].CountLabel != "1 current listing" {
-		t.Errorf("singular producer count = %q", producers[2].CountLabel)
+	if roll[0].URL != "/portfolio/?producer=Alpha" || roll[1].URL != "/portfolio/?producer=Cellar+C" {
+		t.Errorf("roll URLs = %q, %q — want query-encoded portfolio filters", roll[0].URL, roll[1].URL)
 	}
-	if producers[1].URL != "/portfolio/?producer=Cellar+C" {
-		t.Errorf("producer URL should be query encoded, got %q", producers[1].URL)
+
+	picks := bookProducers(wines, []string{"domaine d", "Nonexistent", "ALPHA", "alpha"}, 7)
+	if len(picks) != 2 || picks[0].Name != "Domaine D" || picks[1].Name != "Alpha" {
+		t.Errorf("picked roll = %+v, want [Domaine D, Alpha] (case-insensitive, unknowns skipped, deduped)", picks)
 	}
 }
 
@@ -1059,7 +1158,7 @@ func TestHomeHotSellersSectionIsSalesDriven(t *testing.T) {
 
 	for _, want := range []string{
 		`class="wrap home-hot-sellers"`,
-		`What the Trade Is Pouring`,
+		`What Chicagoland Is Pouring`,
 		`In Demand`,
 	} {
 		if !strings.Contains(home, want) {

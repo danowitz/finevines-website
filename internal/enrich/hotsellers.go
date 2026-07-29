@@ -1,19 +1,12 @@
 package enrich
 
 import (
-	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/gritautomation/finevines-website/internal/catalog"
 	"github.com/gritautomation/finevines-website/internal/model"
 )
-
-// nonWine matches catalog rows that are really logistics/fee items riding the
-// product ledger (live 2026-07-29: "MIDSTATE SIX PACK FREIGHT SURCHARGE" was
-// the org's #4 mover). The eligibility rule SHOULD exclude these upstream —
-// this is defense-in-depth for the one section where a mistake is a homepage
-// headline, not a page-40 catalog row.
-var nonWine = regexp.MustCompile(`(?i)\b(freight|surcharge|shipping|deposit|sample|samples|display|misc)\b`)
 
 // producerKey is the one-slot-per-producer dedupe key. The producer field
 // when present; otherwise (FV_Brand__c is blank on a long tail of rows) the
@@ -41,9 +34,10 @@ func producerKey(w model.Wine) string {
 // excluded 9-prefix items, so this join is load-bearing, not hygiene).
 //
 // Rules, in order:
-//   - a wine must have net-positive movement (credits net off), be in stock
-//     NOW (a hot seller you cannot buy is an ad for a competitor), and carry a
-//     slug + image so its card can render;
+//   - a wine must have net-positive movement (credits net off), have at least
+//     a FULL CASE on hand NOW (a hot seller you cannot actually order is an ad
+//     for a competitor, and "2 bottles left" reads as a markdown bin), and
+//     carry a slug + image so its card can render;
 //   - one wine per producer, best first — the section is curation ("what the
 //     trade is pouring"), not a leaderboard, and a single hot brand must not
 //     fill every slot;
@@ -61,9 +55,11 @@ func RankHotSellers(wines []model.Wine, netCases map[string]float64, limit int) 
 	cands := make([]cand, 0, len(wines))
 	for _, w := range wines {
 		cases := netCases[w.ID]
-		if cases <= 0 || w.StockQty <= 0 || w.Slug == "" || w.ImagePath == "" {
+		if cases <= 0 || catalog.OnHandCases(w) < 1 || w.Slug == "" || w.ImagePath == "" {
 			continue
 		}
+		// Belt-and-braces: Eligible now excludes fee rows upstream, but this
+		// ranking may run against a wines.json written before that rule.
 		if nonWine.MatchString(w.Name) || nonWine.MatchString(w.Producer) {
 			continue
 		}

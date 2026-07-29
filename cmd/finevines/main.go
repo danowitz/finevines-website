@@ -198,8 +198,11 @@ func runEnrich(cfg config.Config) error {
 		if err := refreshHotSellers(client); err != nil {
 			log.Printf("enrich: warning: hot-sellers refresh skipped: %v", err)
 		}
+		if err := refreshAccountsServed(client); err != nil {
+			log.Printf("enrich: warning: accounts-served refresh skipped: %v", err)
+		}
 	} else {
-		log.Printf("enrich: mock roster has no sales ledger — data/hot-sellers.json left as-is")
+		log.Printf("enrich: mock roster has no sales ledger — data/hot-sellers.json and data/accounts.json left as-is")
 	}
 	return nil
 }
@@ -238,6 +241,34 @@ func refreshHotSellers(client *salesforce.Client) error {
 	}
 	log.Printf("enrich: wrote data/hot-sellers.json — top %d of %d products with sales in the last %d days",
 		len(hs.Wines), len(totals), hotSellerWindowDays)
+	return nil
+}
+
+// accountsServedWindowDays is the accounts-served lookback: an account counts
+// if it had at least one invoice in the trailing year (client definition,
+// 2026-07-29). A year rides out seasonality — a steakhouse that orders its
+// Bordeaux list twice a year is still very much an account.
+const accountsServedWindowDays = 365
+
+// refreshAccountsServed counts distinct invoiced accounts over the trailing
+// year and writes data/accounts.json for the homepage credibility ledger.
+// Same optional/stale-is-fine contract as refreshHotSellers; the exact count
+// stays in the private repo file — the build renders a floored "400+".
+func refreshAccountsServed(client *salesforce.Client) error {
+	n, err := client.AccountsServed(context.Background(), accountsServedWindowDays)
+	if err != nil {
+		return err
+	}
+	as := model.AccountsServed{
+		Updated:    time.Now().UTC().Format(time.RFC3339),
+		WindowDays: accountsServedWindowDays,
+		Accounts:   n,
+	}
+	if err := model.SaveAccountsServed("data/accounts.json", as); err != nil {
+		return err
+	}
+	log.Printf("enrich: wrote data/accounts.json — %d distinct accounts invoiced in the last %d days",
+		n, accountsServedWindowDays)
 	return nil
 }
 

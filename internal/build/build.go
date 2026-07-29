@@ -61,6 +61,10 @@ type site struct {
 	// by loadSite; Run resolves it against the catalog into the homepage's
 	// HotSellers section. Empty (file absent/thin) ⇒ no section.
 	HotSellerSlugs []string
+	// AccountsServed is data/accounts.json's distinct-accounts-invoiced count
+	// (trailing year), loaded by loadSite for the homepage credibility
+	// ledger. Zero (file absent) ⇒ the ledger omits its accounts entry.
+	AccountsServed int
 }
 
 // page is the template data shared by every page: the site's data plus this
@@ -129,25 +133,97 @@ func (p page) pagePath() string { return p.Path }
 // top of the shared page contract.
 type homePage struct {
 	page
-	LatestNews        []model.NewsPost
-	FeaturedWines     []model.Wine
-	FeaturedProducers []featuredProducer
-	// HotSellers is the sales-driven "What the trade is pouring" section:
+	LatestNews    []model.NewsPost
+	FeaturedWines []model.Wine
+	// Book is "The Book" band: the house judged by its portfolio (see
+	// bookProducers). No Producers ⇒ no band.
+	Book bookBand
+	// Ledger is the credibility band under the hero: counts the live catalog
+	// can actually back (see ledgerStats). Empty (thin catalog) ⇒ no band.
+	Ledger []ledgerStat
+	// HotSellers is the sales-driven "what Chicagoland is pouring" section:
 	// wines resolved from data/hot-sellers.json's ranking. Deliberately
 	// rendered WITHOUT sales volumes — case velocity is competitively
 	// sensitive for a distributor, so the ranking curates and never counts.
 	HotSellers []model.Wine
 }
 
-// featuredProducer is the compact, derived homepage view of one producer.
-// It deliberately uses catalog facts only; the site does not invent producer
-// biographies before FineVines supplies them.
-type featuredProducer struct {
-	Name       string
-	Region     string
-	Count      int
+// bookProducer is one name in the Book band's roll, linking to its filtered
+// portfolio view. It deliberately uses catalog facts only; the site does not
+// invent producer biographies before FineVines supplies them.
+type bookProducer struct {
+	Name string
+	URL  string
+}
+
+// bookBand is the homepage's "The Book" section: in the wholesale wine
+// business a house is judged by its book, so the band name-drops the
+// portfolio's deepest holdings — borrowed credibility from names the
+// audience already respects. The roll derives from the catalog (see
+// bookProducers) until site.json's bookProducers override supplies George's
+// own picks: which suppliers get billing is an allocation-politics call
+// that belongs to the client, not the pipeline.
+type bookBand struct {
+	// CountLabel is the lede's "310 growers and estates" phrase, or the
+	// generic "growers and estates" when the count is too small to impress
+	// (same anti-credibility rationale as minLedgerWines).
 	CountLabel string
-	URL        string
+	Producers  []bookProducer
+}
+
+// ledgerStat is one entry in the homepage's credibility band: a count the
+// live catalog can actually back, presented as plain fact. Counts, never
+// superlatives — "largest" is a claim the trade would snort at, "310
+// producers" is a ledger line the portfolio verifies one click away.
+type ledgerStat struct {
+	Value string
+	Label string
+}
+
+// minLedgerWines is the floor under the credibility band. Small counts read
+// as anti-credibility (a band boasting "12 wines" does the opposite of its
+// job), so thin catalogs — mock runs, tests, a mid-migration build — omit
+// the band entirely rather than shrink it.
+const minLedgerWines = 100
+
+// minLedgerAccounts is the same floor for the accounts-served entry: below
+// it the entry is omitted (the rest of the band still renders).
+const minLedgerAccounts = 50
+
+// ledgerStats derives the homepage credibility band from the catalog plus
+// the accounts-served count (data/accounts.json; 0 when absent). The wine
+// count is floored to the nearest hundred ("2,600+") and accounts to the
+// nearest fifty ("500+") so the figures stay true as stock moves and
+// accounts churn between refreshes — and so the exact counts (mildly
+// competitively sensitive) are never published. Producer and region counts
+// are exact distinct values. The closing tenure entry restates the About
+// page's client-confirmed "200+ years" copy — the one line not derived from
+// data files. Fields with no data are skipped, never zero-filled.
+func ledgerStats(wines []model.Wine, accounts int) []ledgerStat {
+	if len(wines) < minLedgerWines {
+		return nil
+	}
+	producers := make(map[string]struct{})
+	regions := make(map[string]struct{})
+	for _, w := range wines {
+		if p := strings.TrimSpace(w.Producer); p != "" {
+			producers[p] = struct{}{}
+		}
+		if r := strings.TrimSpace(w.Region); r != "" {
+			regions[r] = struct{}{}
+		}
+	}
+	stats := []ledgerStat{{Value: comma(len(wines)/100*100) + "+", Label: "Wines in Portfolio"}}
+	if len(producers) > 0 {
+		stats = append(stats, ledgerStat{Value: comma(len(producers)), Label: "Producers Represented"})
+	}
+	if len(regions) > 0 {
+		stats = append(stats, ledgerStat{Value: comma(len(regions)), Label: "Regions of Origin"})
+	}
+	if accounts >= minLedgerAccounts {
+		stats = append(stats, ledgerStat{Value: comma(accounts/50*50) + "+", Label: "Accounts Served"})
+	}
+	return append(stats, ledgerStat{Value: "200+", Label: "Years in the Business, Combined"})
 }
 
 // winePage carries one wine plus the shared page contract (Title/Description/
@@ -338,6 +414,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		"spaceJoin":  spaceJoin,
 		"avail":      availability,
 		"initials":   initials,
+		"spellnum":   spellNum,
 	}).ParseGlob(filepath.Join(templatesDir, "*.tmpl"))
 	if err != nil {
 		return err
@@ -401,15 +478,16 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 					"elegance with a sommelier's touch across Chicagoland's restaurants and retailers.",
 				Path: "/",
 			},
-			LatestNews:        latestNews,
-			FeaturedWines:     featuredWines,
-			FeaturedProducers: featuredProducers(s.Wines, featuredWines),
-			HotSellers:        hotSellers,
+			LatestNews:    latestNews,
+			FeaturedWines: featuredWines,
+			Book:          bookBandOf(s.Wines, s.Content.BookProducers),
+			HotSellers:    hotSellers,
+			Ledger:        ledgerStats(s.Wines, s.AccountsServed),
 		}},
 		{"contact", "contact", page{
 			site:  s,
 			Title: "Contact - FineVines",
-			Description: "Reach the FineVines trade team: wholesale wine and spirits distribution for " +
+			Description: "Reach the FineVines team: wholesale wine and spirits distribution for " +
 				"licensed Illinois retailers, restaurants, and hospitality accounts.",
 			Path: "/contact/",
 		}},
@@ -417,7 +495,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 			page: page{
 				site:        s,
 				Title:       "News & Events - FineVines",
-				Description: "Tastings, allocations, and news from the FineVines trade team.",
+				Description: "Tastings, allocations, and news from the FineVines team.",
 				Path:        "/news/",
 			},
 			Posts: s.News,
@@ -588,14 +666,21 @@ func spaceJoin(parts ...string) string {
 	return strings.Join(out, " ")
 }
 
-// availability renders a wine card's trade availability line from the on-hand
-// bottle count and the case pack the product name encodes (12 when it doesn't
-// say): "74 bottles · 6 cs + 2"; a holding short of one full case reads
-// "3 bottles · broken case". Composed HERE, once, and shipped verbatim in both
+// availability renders a wine card's availability line from the on-hand
+// quantity in CASES (FV_OnHand_Qty__c's true unit, verified live 2026-07-29 —
+// this line originally mis-read StockQty as bottles; the fractional part is a
+// broken case) and the case pack the product name encodes (12 when it doesn't
+// say): "205 bottles · 17 cs + 1"; a holding short of one full case reads
+// "8 bottles · broken case". Composed HERE, once, and shipped verbatim in both
 // the server-rendered cards and the catalog-index (indexEntry.Avail) so
 // portfolio.js never re-derives it — the two renderings must stay identical.
 func availability(w model.Wine) string {
-	b := w.StockQty
+	cases := catalog.OnHandCases(w)
+	if cases <= 0 {
+		return ""
+	}
+	pack := catalog.PackOf(w)
+	b := int(cases*float64(pack) + 0.5)
 	if b <= 0 {
 		return ""
 	}
@@ -604,7 +689,6 @@ func availability(w model.Wine) string {
 		unit = "bottle"
 	}
 	s := fmt.Sprintf("%s %s", comma(b), unit)
-	pack := catalog.PackOf(w)
 	cs, rem := b/pack, b%pack
 	if cs == 0 {
 		return s + " · broken case"
@@ -614,6 +698,21 @@ func availability(w model.Wine) string {
 		s += fmt.Sprintf(" + %d", rem)
 	}
 	return s
+}
+
+// spellNum spells a small count as a capitalized word ("Ten"), for counts
+// that open headline prose — the About page's "Ten people. Two hundred years
+// in the business." stays correct as team.json changes. Counts past twenty fall
+// back to digits, which is also the better typography at that size.
+// Exposed to templates via template.FuncMap in Run.
+func spellNum(n int) string {
+	words := []string{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
+		"Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen",
+		"Sixteen", "Seventeen", "Eighteen", "Nineteen", "Twenty"}
+	if n >= 0 && n < len(words) {
+		return words[n]
+	}
+	return comma(n)
 }
 
 // comma formats a non-negative integer with thousands separators (2665 →
@@ -982,6 +1081,13 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 	for _, h := range hotSellers.Wines {
 		s.HotSellerSlugs = append(s.HotSellerSlugs, h.Slug)
 	}
+	// accounts.json is optional on the same terms as hot-sellers.json; a
+	// missing file loads as zero and the ledger omits its accounts entry.
+	accounts, err := model.LoadAccountsServed(filepath.Join(dataDir, "accounts.json"))
+	if err != nil {
+		return nil, fmt.Errorf("load accounts-served: %w", err)
+	}
+	s.AccountsServed = accounts.Accounts
 	// team.json is optional until seeded
 	if data, err := os.ReadFile(filepath.Join(dataDir, "team.json")); err == nil {
 		if err := jsonUnmarshal(data, &s.Team); err != nil {
@@ -1028,7 +1134,9 @@ func selectHotSellers(wines []model.Wine, slugs []string, min, max int) []model.
 			break
 		}
 		wine, ok := bySlug[slug]
-		if !ok || wine.StockQty <= 0 || wine.ImagePath == "" {
+		// A full case on hand is the floor: a "hot seller" down to loose
+		// bottles reads as a markdown bin, not a pulse.
+		if !ok || catalog.OnHandCases(wine) < 1 || wine.ImagePath == "" {
 			continue
 		}
 		selected = append(selected, wine)
@@ -1100,31 +1208,88 @@ func selectFeaturedWines(wines []model.Wine, slugs []string, limit int) []model.
 // featuredProducers turns the featured bottle selection into the homepage's
 // producer-family cards. Counts and regions come from the current catalog, so
 // the section stays factual and updates with the same nightly data as browse.
-func featuredProducers(wines, featured []model.Wine) []featuredProducer {
-	counts := make(map[string]int)
-	for _, wine := range wines {
-		if wine.Producer != "" {
-			counts[wine.Producer]++
+// bookProducerCount is how many names the Book band's roll carries. Seven
+// reads as a considered shortlist; more reads as a directory.
+const bookProducerCount = 7
+
+// bookBandOf assembles the Book band: the roll (bookProducers) plus the
+// lede's count phrase, which only carries a number once the distinct-producer
+// count is large enough to impress (>= minLedgerWines, reusing the band
+// floor as a sensible "worth counting" threshold).
+func bookBandOf(wines []model.Wine, picks []string) bookBand {
+	distinct := make(map[string]struct{})
+	for _, w := range wines {
+		if p := strings.TrimSpace(w.Producer); p != "" {
+			distinct[strings.ToLower(p)] = struct{}{}
 		}
 	}
-	out := make([]featuredProducer, 0, len(featured))
-	seen := make(map[string]bool, len(featured))
-	for _, wine := range featured {
-		if wine.Producer == "" || seen[wine.Producer] {
+	label := "growers and estates"
+	if len(distinct) >= minLedgerWines {
+		label = comma(len(distinct)) + " growers and estates"
+	}
+	return bookBand{CountLabel: label, Producers: bookProducers(wines, picks, bookProducerCount)}
+}
+
+// bookProducers selects the Book band's roll. With picks (site.json's
+// bookProducers — George's own shortlist) each name is resolved
+// case-insensitively against the catalog, in pick order; unknown names are
+// skipped so a delisted producer quietly drops off rather than 404ing into
+// an empty portfolio filter. Without picks the roll defaults to the
+// catalog's deepest holdings — most wines carried first, name ascending on
+// ties so the roll is deterministic — which is honest ("deepest" is a fact,
+// not a favor) until the client curates.
+func bookProducers(wines []model.Wine, picks []string, limit int) []bookProducer {
+	if limit <= 0 {
+		return nil
+	}
+	counts := make(map[string]int)
+	canonical := make(map[string]string) // lower-cased -> as written in the catalog
+	for _, w := range wines {
+		p := strings.TrimSpace(w.Producer)
+		if p == "" {
 			continue
 		}
-		seen[wine.Producer] = true
-		countLabel := fmt.Sprintf("%d current listings", counts[wine.Producer])
-		if counts[wine.Producer] == 1 {
-			countLabel = "1 current listing"
+		counts[p]++
+		canonical[strings.ToLower(p)] = p
+	}
+
+	link := func(name string) bookProducer {
+		return bookProducer{Name: name, URL: "/portfolio/?producer=" + url.QueryEscape(name)}
+	}
+
+	if len(picks) > 0 {
+		out := make([]bookProducer, 0, limit)
+		seen := make(map[string]bool, limit)
+		for _, pick := range picks {
+			name, ok := canonical[strings.ToLower(strings.TrimSpace(pick))]
+			if !ok || seen[name] {
+				continue
+			}
+			seen[name] = true
+			out = append(out, link(name))
+			if len(out) == limit {
+				break
+			}
 		}
-		out = append(out, featuredProducer{
-			Name:       wine.Producer,
-			Region:     wine.Region,
-			Count:      counts[wine.Producer],
-			CountLabel: countLabel,
-			URL:        "/portfolio/?producer=" + url.QueryEscape(wine.Producer),
-		})
+		return out
+	}
+
+	names := make([]string, 0, len(counts))
+	for name := range counts {
+		names = append(names, name)
+	}
+	sort.Slice(names, func(i, j int) bool {
+		if counts[names[i]] != counts[names[j]] {
+			return counts[names[i]] > counts[names[j]]
+		}
+		return names[i] < names[j]
+	})
+	if len(names) > limit {
+		names = names[:limit]
+	}
+	out := make([]bookProducer, 0, len(names))
+	for _, name := range names {
+		out = append(out, link(name))
 	}
 	return out
 }

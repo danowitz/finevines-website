@@ -73,7 +73,7 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 					"Description": "Alpha Reserve", "FV_Brand__c": "Chateau Alpha",
 					"FV_Vintage_Year__c": "19", "FV_Varietal__c": "Cabernet Sauvignon",
 					"FV_Region__c": "Napa Valley", "FV_Country__c": "USA",
-					"FV_OnHand_Qty__c": 12, "FV_Ready_To_Sell__c": true,
+					"FV_OnHand_Qty__c": 12, "FV_Bottles_Per_Case__c": "6", "FV_Ready_To_Sell__c": true,
 				},
 				{
 					// FV_OnHand_Qty__c 0.66666 (cases) must ceil to 1, not
@@ -82,7 +82,7 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 					"Description": "Beta Blanc", "FV_Brand__c": "Chateau Beta",
 					"FV_Vintage_Year__c": "21", "FV_Varietal__c": "Chardonnay",
 					"FV_Region__c": "Sonoma Coast", "FV_Country__c": "USA",
-					"FV_OnHand_Qty__c": 0.66666, "FV_Ready_To_Sell__c": false,
+					"FV_OnHand_Qty__c": 0.66666, "FV_Bottles_Per_Case__c": "12", "FV_Ready_To_Sell__c": false,
 				},
 			},
 		})
@@ -134,17 +134,19 @@ func TestRosterAuthenticatesAndPaginates(t *testing.T) {
 		{
 			ID: "01t000000001AAA", SKU: "AB1001", Producer: "Chateau Alpha",
 			Name: "Alpha Reserve", Vintage: "19", Varietal: "Cabernet Sauvignon",
-			Region: "Napa Valley", Country: "USA", StockQty: 12, ReadyToSell: true,
+			Region: "Napa Valley", Country: "USA",
+			StockQty: 12, StockCases: 12, CasePack: 6, ReadyToSell: true,
 		},
 		{
 			ID: "01t000000002BBB", SKU: "AB1002", Producer: "Chateau Beta",
 			Name: "Beta Blanc", Vintage: "21", Varietal: "Chardonnay",
-			Region: "Sonoma Coast", Country: "USA", StockQty: 1, ReadyToSell: false, // ceil(0.66666)
+			Region: "Sonoma Coast", Country: "USA",
+			StockQty: 1, StockCases: 0.66666, CasePack: 12, ReadyToSell: false, // StockQty = ceil(cases); StockCases verbatim
 		},
 		{
 			ID: "01t000000003CCC", SKU: "9X9999", Producer: "Chateau Gamma",
 			Name: "Gamma Noir", Vintage: "18", Varietal: "Pinot Noir",
-			Region: "Willamette Valley", Country: "USA", StockQty: 4, ReadyToSell: true,
+			Region: "Willamette Valley", Country: "USA", StockQty: 4, StockCases: 4, ReadyToSell: true,
 		},
 	}
 

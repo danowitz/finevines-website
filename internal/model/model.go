@@ -113,6 +113,14 @@ type Wine struct {
 	Name       string `json:"name"`
 	Vintage    string `json:"vintage"`
 	StockQty   int    `json:"stockQty"`
+	// StockCases is the on-hand quantity in CASES, verbatim from Salesforce
+	// (FV_OnHand_Qty__c) — fractional part = a broken case. StockQty above is
+	// its ceiled shadow (kept for the eligibility test and for older data
+	// written before this field existed). See catalog.OnHandCases.
+	StockCases float64 `json:"stockCases,omitempty"`
+	// CasePack is bottles-per-case from Salesforce (FV_Bottles_Per_Case__c).
+	// 0 = unknown; catalog.PackOf falls back to name parsing, then 12.
+	CasePack int `json:"casePack,omitempty"`
 
 	// Classification.
 	Varietal    string `json:"varietal"`
@@ -194,6 +202,25 @@ type SiteContent struct {
 	ContactConfirmed    bool        `json:"contactConfirmed"`
 	TeamEmailsConfirmed bool        `json:"teamEmailsConfirmed"`
 	FeaturedWineSlugs   []string    `json:"featuredWineSlugs"`
+	// BookProducers optionally overrides the homepage Book band's producer
+	// roll with the client's own shortlist (matched case-insensitively
+	// against the catalog; unknown names are skipped). Empty ⇒ the roll
+	// derives from the catalog's deepest holdings (build.bookProducers).
+	BookProducers []string `json:"bookProducers,omitempty"`
+	// Testimonial is the contact page's account quote, rendered only when
+	// Quote is non-empty. TestimonialConfirmed is the same deployment
+	// evidence as ContactConfirmed: the block may render on preview builds,
+	// but a production deploy with an UNCONFIRMED (drafted, not
+	// client-approved) testimonial is a launch blocker — a fabricated quote
+	// presented as a real account's words is worse than no quote at all.
+	Testimonial          Testimonial `json:"testimonial,omitempty"`
+	TestimonialConfirmed bool        `json:"testimonialConfirmed"`
+}
+
+// Testimonial is one account quote (see SiteContent.Testimonial).
+type Testimonial struct {
+	Quote       string `json:"quote"`
+	Attribution string `json:"attribution"`
 }
 
 // LoadSiteContent reads required site-wide content and rejects incomplete

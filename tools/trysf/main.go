@@ -73,7 +73,7 @@ func main() {
 
 	eligible := 0
 	for _, w := range roster {
-		if enrich.Eligible(w.StockQty, w.SKU, w.ReadyToSell) {
+		if enrich.Eligible(w) {
 			eligible++
 		}
 	}

@@ -277,13 +277,91 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   object-position: center 43%;
 }
 
-/* ---- Region row (home) ------------------------------------------------ */
-.region-row { font-family: var(--serif-display); font-size: 24px; color: var(--bordeaux-800); display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; margin-top: 14px; }
-.region-row a { text-decoration: none; color: var(--bordeaux-800); }
-.region-row a:hover { color: var(--wine); text-decoration: underline; text-decoration-color: var(--gold); }
-.region-row .sep { color: var(--brass-500); }
+/* ---- Credibility ledger (home) ---------------------------------------- */
+/* Counts the catalog can back, set as a quiet ledger line under the hero:
+   wine-list idiom (hairlines, small caps, display numerals), no superlatives.
+   Values are computed at build time (build.go ledgerStats). */
+.home-ledger { background: var(--cream-alt); border-bottom: 1px solid var(--line); padding: 26px 0; }
+.home-ledger .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 22px 36px; }
+.home-ledger .stat { flex: 1 1 150px; min-width: 140px; }
+.home-ledger .num {
+  font-family: var(--serif-display);
+  font-weight: 600;
+  font-size: 38px;
+  line-height: 1;
+  color: var(--wine-dark);
+  font-variant-numeric: tabular-nums;
+  display: block;
+  margin-bottom: 6px;
+}
+.home-ledger .lbl {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--cork-600);
+  display: block;
+}
 
-/* ---- Homepage portfolio / producer features -------------------------- */
+/* ---- The Book (home) --------------------------------------------------- */
+/* Dark bordeaux band: the house judged by its portfolio. The roll sets the
+   producer names as an italic wine-list colophon; each links to its filtered
+   portfolio view. Replaced the region row + producer cards (2026-07-29). */
+.home-book {
+  background: var(--hero-band);
+  color: var(--parchment-100);
+  border-top: 1px solid var(--bordeaux-950);
+  border-bottom: 1px solid var(--bordeaux-950);
+  padding: 56px 0 60px;
+}
+.home-book .eyebrow { color: var(--brass-300); }
+.home-book h2 { color: var(--parchment-50); }
+.home-book .lede { color: var(--brass-100); }
+.home-book .book-roll {
+  font-family: var(--serif-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(21px, 2.6vw, 27px);
+  line-height: 1.85;
+  color: var(--brass-100);
+  border-top: 1px solid rgba(221, 196, 137, .35);
+  padding-top: 22px;
+  margin: 10px 0 18px;
+  max-width: none;
+}
+.home-book .book-roll a { color: var(--brass-100); text-decoration: none; }
+.home-book .book-roll a:hover { color: #fff; text-decoration: underline; text-decoration-color: var(--gold); }
+.home-book .book-roll .sep { color: var(--gold-dark); padding: 0 10px; font-style: normal; }
+.home-book .book-link { color: var(--brass-300); border-bottom-color: var(--brass-600); }
+.home-book .book-link:hover { color: #fff; border-bottom-color: var(--gold); }
+
+/* ---- Testimonial (contact) --------------------------------------------- */
+.testimonial { margin: 34px 0 8px; }
+.testimonial blockquote {
+  font-family: var(--serif-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(22px, 2.6vw, 28px);
+  line-height: 1.4;
+  color: var(--wine-dark);
+  border-left: 2px solid var(--gold);
+  margin: 0;
+  padding: 2px 0 2px 22px;
+  max-width: 30em;
+}
+.testimonial figcaption {
+  margin-top: 12px;
+  padding-left: 24px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--cork-600);
+}
+
+/* ---- Homepage portfolio features -------------------------------------- */
 .home-section-heading {
   display: flex;
   align-items: end;
@@ -313,57 +391,6 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 }
 .home-wine-grid .wine-card .thumb { height: 310px; }
 .home-wine-grid .wine-card h3 { font-size: 18px; }
-.producer-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 28px;
-}
-.producer-card {
-  position: relative;
-  display: flex;
-  min-height: 146px;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 24px;
-  background: var(--bordeaux-950);
-  border: 1px solid var(--bordeaux-800);
-  color: var(--parchment-50);
-  text-decoration: none;
-  box-shadow: 0 20px 34px -28px rgba(42, 10, 19, .75);
-  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
-}
-.producer-card:hover {
-  color: #fff;
-  border-color: var(--gold);
-  transform: translateY(-3px);
-  box-shadow: 0 24px 42px -26px rgba(42, 10, 19, .8);
-}
-.producer-name {
-  display: block;
-  padding-right: 28px;
-  font-family: var(--serif-display);
-  font-size: 24px;
-  line-height: 1.05;
-}
-.producer-meta {
-  display: block;
-  margin-top: 10px;
-  font-family: var(--sans);
-  font-size: 10px;
-  line-height: 1.45;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--brass-300);
-}
-.producer-arrow {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  color: var(--gold);
-  font-size: 22px;
-}
-
 /* ---- Portfolio: facet sidebar + wine grid ----------------------------- */
 .portfolio-layout { display: grid; grid-template-columns: 288px 1fr; gap: 44px; align-items: start; }
 /* The rail sits directly on the parchment page — no card chrome. (The ≤1024px
@@ -814,10 +841,10 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .footer-nav ul { list-style: none; padding: 0; margin: 0; }
 .footer-nav li { margin: 0 0 11px; }
 .footer-nav a { font-size: 16.5px; }
-.footer-trade p { margin: 0 0 14px; max-width: none; }
-.footer-trade-cta { font-family: var(--sans); font-weight: 600; font-size: 14px; letter-spacing: .02em; color: var(--brass-300) !important; }
-.footer-trade-cta:hover { color: #fff !important; }
-.footer-trade-note { font-size: 15px; color: var(--brass-100); opacity: .82; line-height: 1.5; }
+.footer-wholesale p { margin: 0 0 14px; max-width: none; }
+.footer-wholesale-cta { font-family: var(--sans); font-weight: 600; font-size: 14px; letter-spacing: .02em; color: var(--brass-300) !important; }
+.footer-wholesale-cta:hover { color: #fff !important; }
+.footer-wholesale-note { font-size: 15px; color: var(--brass-100); opacity: .82; line-height: 1.5; }
 .footer-address { font-style: normal; font-size: 15px; line-height: 1.85; color: var(--brass-100); opacity: .9; }
 
 /* Bottom bar */
@@ -851,7 +878,7 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
      (3:4 of a ~320px column) — cap them at desktop scale. */
   .portfolio-layout .wine-grid.view-cards .wine-card .thumb { aspect-ratio: auto; height: 300px; }
 
-  /* Footer: brand full-width on top, then Explore/Trade/Contact in an even
+  /* Footer: brand full-width on top, then Explore/Wholesale/Contact in an even
      three-column grid — tight and balanced, no orphaned/half-empty column. */
   .footer-cols { grid-template-columns: repeat(3, 1fr); gap: 34px 30px; }
   .footer-brand { grid-column: 1 / -1; }
@@ -982,8 +1009,7 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   }
   .site-nav a[aria-current="page"] { border-bottom-color: var(--parchment-200); color: var(--wine); }
   .site-nav .btn-cta { margin: 14px 0 4px; text-align: center; padding: 13px 20px; border-radius: 4px; }
-  .wine-grid.view-cards.home-wine-grid,
-  .producer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wine-grid.view-cards.home-wine-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* sm — single-column phones */
@@ -996,6 +1022,11 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   .wrap { padding-inline: 20px; }
   body { font-size: 17px; }
 
+  /* Ledger: two-up so four stats stay one clean block, not a ragged column. */
+  .home-ledger .wrap { gap: 18px 24px; }
+  .home-ledger .stat { flex: 1 1 40%; }
+  .home-ledger .num { font-size: 30px; }
+
   /* Tighter vertical rhythm: desktop section/hero padding eats half a phone
      viewport before any wine is visible. */
   section.wrap { padding-block: 34px 46px; }
@@ -1005,8 +1036,8 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   .home-section-heading { display: block; }
   .home-section-heading .text-link { display: inline-block; margin-top: 16px; }
   .home-wine-grid .wine-card .thumb { height: 240px; }
-  .producer-grid { grid-template-columns: 1fr; }
-  .producer-card { min-height: 122px; }
+  .home-book { padding: 40px 0 44px; }
+  .home-book .book-roll .sep { padding: 0 7px; }
 
   /* Cards: two-up and compact. A single full-width card put a ~440px-tall
      bottle on screen — one wine per viewport. Two tighter columns keep the

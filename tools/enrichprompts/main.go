@@ -102,7 +102,7 @@ func main() {
 	var wines []salesforce.WineRaw
 	skipped := 0
 	for _, w := range roster {
-		if !enrich.Eligible(w.StockQty, w.SKU, w.ReadyToSell) {
+		if !enrich.Eligible(w) {
 			continue
 		}
 		if _, err := os.Stat(filepath.Join("data", "enrichment", w.SKU+".json")); err == nil {
