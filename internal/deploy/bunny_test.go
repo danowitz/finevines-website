@@ -193,6 +193,31 @@ func TestBunnyClient_PurgeNon2xxReturnsErrorWithStatus(t *testing.T) {
 	}
 }
 
+// One storage zone is fronted by TWO pull zones (finevines-com for the
+// b-cdn.net preview, finevines-biz for finevines.biz), so PullZoneID accepts
+// comma-separated IDs and Purge must clear every one — purging only the
+// first left finevines.biz serving stale HTML for its full TTL (live
+// incident 2026-07-29).
+func TestBunnyClient_PurgeClearsEveryCommaSeparatedZone(t *testing.T) {
+	var gotPaths []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPaths = append(gotPaths, r.URL.Path)
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	c := NewBunnyClient(srv.URL, testStorageZone, testStorageKey, testAccountAPIKey, "6207738, 6234793", srv.Client())
+	c.PurgeBaseURL = srv.URL
+
+	if err := c.Purge(context.Background()); err != nil {
+		t.Fatalf("Purge returned error: %v", err)
+	}
+	want := []string{"/pullzone/6207738/purgeCache", "/pullzone/6234793/purgeCache"}
+	if len(gotPaths) != 2 || gotPaths[0] != want[0] || gotPaths[1] != want[1] {
+		t.Errorf("purge paths = %v, want %v", gotPaths, want)
+	}
+}
+
 func TestBunnyClient_DefaultPurgeBaseURLIsBunnyAPI(t *testing.T) {
 	c := NewBunnyClient("https://storage.bunnycdn.com", testStorageZone, testStorageKey, testAccountAPIKey, testPullZoneID, nil)
 	if c.PurgeBaseURL != "https://api.bunny.net" {

@@ -33,7 +33,13 @@ type BunnyClient struct {
 	// AccessKey header on Purge requests. This is a different credential
 	// from StorageKey.
 	AccountAPIKey string
-	// PullZoneID identifies which Pull Zone's cache Purge clears.
+	// PullZoneID identifies which Pull Zone caches Purge clears. It may be
+	// a single ID or comma-separated IDs: the ONE storage zone is fronted
+	// by TWO pull zones (finevines-com 6207738 for the b-cdn.net preview /
+	// eventual finevines.com, finevines-biz 6234793 for finevines.biz), and
+	// purging only one left the other serving stale HTML for its full TTL
+	// (live incident 2026-07-29: finevines.biz kept the old homepage while
+	// the b-cdn.net hostname showed the new one).
 	PullZoneID string
 	// PurgeBaseURL is the host Purge posts to. Defaults to Bunny's public
 	// API (https://api.bunny.net) via NewBunnyClient; overridable so tests
@@ -116,25 +122,41 @@ func (c *BunnyClient) Delete(ctx context.Context, relPath string) error {
 	return nil
 }
 
-// Purge clears the configured Pull Zone's CDN cache. Call this once, after
-// all Upload/Delete calls for a deploy have completed, so stale edge copies
-// of changed files are evicted.
+// Purge clears every configured Pull Zone's CDN cache (PullZoneID may be
+// comma-separated — see its doc comment). Call this once, after all
+// Upload/Delete calls for a deploy have completed, so stale edge copies of
+// changed files are evicted. Zones purge in order and the first failure
+// stops the run: the error names the zone so the operator knows which
+// caches are already clean.
 func (c *BunnyClient) Purge(ctx context.Context) error {
-	url := fmt.Sprintf("%s/pullzone/%s/purgeCache", strings.TrimRight(c.PurgeBaseURL, "/"), c.PullZoneID)
+	for _, zone := range strings.Split(c.PullZoneID, ",") {
+		zone = strings.TrimSpace(zone)
+		if zone == "" {
+			continue
+		}
+		if err := c.purgeZone(ctx, zone); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *BunnyClient) purgeZone(ctx context.Context, zone string) error {
+	url := fmt.Sprintf("%s/pullzone/%s/purgeCache", strings.TrimRight(c.PurgeBaseURL, "/"), zone)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return fmt.Errorf("bunny purge: building request: %w", err)
+		return fmt.Errorf("bunny purge zone %s: building request: %w", zone, err)
 	}
 	req.Header.Set("AccessKey", c.AccountAPIKey)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("bunny purge: %w", err)
+		return fmt.Errorf("bunny purge zone %s: %w", zone, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("bunny purge: status %d: %s", resp.StatusCode, readBody(resp))
+		return fmt.Errorf("bunny purge zone %s: status %d: %s", zone, resp.StatusCode, readBody(resp))
 	}
 	return nil
 }
