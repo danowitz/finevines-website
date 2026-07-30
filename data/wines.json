@@ -8103,15 +8103,16 @@
     "style": "",
     "description": "A  from the estate.",
     "sommelierNotes": "Serve at the temperature typical for its style.",
-    "imagePath": "assets/img/wines/bw20-champagne-pierre-gerbais-champagne-champ-viole-chardonnay-12-750.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/bw20-champagne-pierre-gerbais-champagne-champ-viole-chardonnay.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.astorwines.com/item/51776",
     "sources": {
       "color": "derived",
       "description": "derived",
-      "image": "derived",
+      "image": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 0,
+    "metadataScore": 8,
     "matchConfidence": 40,
     "enrichedAt": "2026-07-27T23:11:36Z",
     "slug": "bw20-champagne-pierre-gerbais-champagne-champ-viole-chardonnay"
@@ -9662,8 +9663,9 @@
     "abv": "12.5%",
     "bottleSize": "750 ml",
     "drinkWindow": "3–5 years",
-    "imagePath": "assets/img/wines/nv-champagne-de-sousa-avec-le-temps-blanc-de-blancs-extra-brut-grand-cru-12-750.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/champagne-de-sousa-avec-le-temps-blanc-de-blancs-extra-brut-grand-cru.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://plumpjackwines.com/cdn/shop/products/DeSousaAvecleTemps.webp?v=1675991141",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -9675,11 +9677,11 @@
       "drinkWindow": "found",
       "finish": "derived",
       "foodPairings": "found",
-      "image": "derived",
+      "image": "found",
       "palate": "found",
       "sommelierNotes": "found"
     },
-    "metadataScore": 62,
+    "metadataScore": 69,
     "matchConfidence": 95,
     "enrichedAt": "2026-07-29T07:06:21Z",
     "slug": "champagne-de-sousa-avec-le-temps-blanc-de-blancs-extra-brut-grand-cru"
@@ -9764,8 +9766,9 @@
       "shellfish"
     ],
     "bottleSize": "750 ml",
-    "imagePath": "assets/img/wines/nv-champagne-edouard-duval-blanc-d-eulalie-12-750.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/champagne-edouard-duval-blanc-d-eulalie.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://champagne-duval.com/",
     "sources": {
       "abv": "missing",
       "appellation": "found",
@@ -9777,11 +9780,11 @@
       "drinkWindow": "missing",
       "finish": "found",
       "foodPairings": "found",
-      "image": "derived",
+      "image": "found",
       "palate": "found",
       "sommelierNotes": "found"
     },
-    "metadataScore": 62,
+    "metadataScore": 69,
     "matchConfidence": 95,
     "enrichedAt": "2026-07-29T07:06:10Z",
     "slug": "champagne-edouard-duval-blanc-d-eulalie"
@@ -14113,15 +14116,16 @@
     "style": "",
     "description": "A  from the estate.",
     "sommelierNotes": "Serve at the temperature typical for its style.",
-    "imagePath": "assets/img/wines/22-ch-puynormand-montagne-st-emilion-les-vieilles-vignes-12-750-22.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/chateau-puynormand-montagne-saint-emilion-les-vieilles-vignes-2022.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.troisfoisvin.com/wp-content/uploads/2024/09/montagne-st-emilion-307x1024.png",
     "sources": {
       "color": "derived",
       "description": "derived",
-      "image": "derived",
+      "image": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 0,
+    "metadataScore": 8,
     "matchConfidence": 40,
     "enrichedAt": "2026-07-27T23:11:35Z",
     "slug": "chateau-puynormand-montagne-saint-emilion-les-vieilles-vignes-2022"
@@ -14608,15 +14612,16 @@
     "style": "",
     "description": "A  from the estate.",
     "sommelierNotes": "Serve at the temperature typical for its style.",
-    "imagePath": "assets/img/wines/23-ch-tour-sieujean-pauillac-12-750-23.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/chateau-tour-sieujean-pauillac-2023.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://cdn.klwines.com/images/skus/1610335x.jpg",
     "sources": {
       "color": "derived",
       "description": "derived",
-      "image": "derived",
+      "image": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 0,
+    "metadataScore": 8,
     "matchConfidence": 40,
     "enrichedAt": "2026-07-27T23:11:36Z",
     "slug": "chateau-tour-sieujean-pauillac-2023"
@@ -16499,8 +16504,9 @@
       "charcuterie board"
     ],
     "bottleSize": "750ml",
-    "imagePath": "assets/img/wines/comtadine-19-cave-la-comtadine-cotes-du-rhone-12-750-organic-19.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/comtadine-cave-la-comtadine-cotes-du-rhone-2019.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.tuscvino.com/product/cave-la-comtadine-cotes-du-rhone-20197456/",
     "sources": {
       "abv": "missing",
       "appellation": "found",
@@ -16512,11 +16518,11 @@
       "drinkWindow": "missing",
       "finish": "found",
       "foodPairings": "derived",
-      "image": "derived",
+      "image": "found",
       "palate": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 46,
+    "metadataScore": 54,
     "matchConfidence": 80,
     "enrichedAt": "2026-07-29T07:04:47Z",
     "slug": "comtadine-cave-la-comtadine-cotes-du-rhone-2019"
@@ -16646,8 +16652,9 @@
     "abv": "11.5% (approx)",
     "bottleSize": "750 ml",
     "drinkWindow": "2025–2035",
-    "imagePath": "assets/img/wines/nv-conde-de-subirats-cava-brut-12-750.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/conde-de-subirats-cava-brut.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.liquorexpress.us/products/conde-de-subirats-brut-cava",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -16659,11 +16666,11 @@
       "drinkWindow": "found",
       "finish": "found",
       "foodPairings": "derived",
-      "image": "derived",
+      "image": "found",
       "palate": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 69,
+    "metadataScore": 77,
     "matchConfidence": 90,
     "enrichedAt": "2026-07-29T07:08:11Z",
     "slug": "conde-de-subirats-cava-brut"
@@ -16684,15 +16691,16 @@
     "style": "",
     "description": "A  from the estate.",
     "sommelierNotes": "Serve at the temperature typical for its style.",
-    "imagePath": "assets/img/wines/19-confidences-de-prieure-lichine-margaux-12-750-19.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/confidences-de-prieure-lichine-margaux-2019.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.westernreservewines.com/chateau-prieure-lichine-confidences-2022-margaux.html",
     "sources": {
       "color": "derived",
       "description": "derived",
-      "image": "derived",
+      "image": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 0,
+    "metadataScore": 8,
     "matchConfidence": 40,
     "enrichedAt": "2026-07-27T23:11:25Z",
     "slug": "confidences-de-prieure-lichine-margaux-2019"
@@ -16713,15 +16721,16 @@
     "style": "",
     "description": "A  from the estate.",
     "sommelierNotes": "Serve at the temperature typical for its style.",
-    "imagePath": "assets/img/wines/20-confidences-de-prieure-lichine-margaux-6-750-20.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/confidences-de-prieure-lichine-margaux-2020.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.winedockus.com/products/2020-chateau-prieure-lichine-confidences-de-prieure-lichine-margaux/",
     "sources": {
       "color": "derived",
       "description": "derived",
-      "image": "derived",
+      "image": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 0,
+    "metadataScore": 8,
     "matchConfidence": 40,
     "enrichedAt": "2026-07-27T23:11:36Z",
     "slug": "confidences-de-prieure-lichine-margaux-2020"
@@ -16742,15 +16751,16 @@
     "style": "",
     "description": "A  from the estate.",
     "sommelierNotes": "Serve at the temperature typical for its style.",
-    "imagePath": "assets/img/wines/22-confidences-de-prieure-lichine-margaux-6-750-22.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/confidences-de-prieure-lichine-margaux-2022.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.westernreservewines.com/chateau-prieure-lichine-confidences-2022-margaux.html",
     "sources": {
       "color": "derived",
       "description": "derived",
-      "image": "derived",
+      "image": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 0,
+    "metadataScore": 8,
     "matchConfidence": 40,
     "enrichedAt": "2026-07-27T23:11:37Z",
     "slug": "confidences-de-prieure-lichine-margaux-2022"
@@ -17131,15 +17141,16 @@
     "style": "",
     "description": "A  from the estate.",
     "sommelierNotes": "Serve at the temperature typical for its style.",
-    "imagePath": "assets/img/wines/confuron-gindre-17-dom-confuron-gindre-vosne-romanee-1er-cru-les-chaumes-6-750-17.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/confuron-gindre-domaine-confuron-gindre-vosne-romanee-1er-cru-les-chaumes-2017.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.domaine-confuron.com/",
     "sources": {
       "color": "derived",
       "description": "derived",
-      "image": "derived",
+      "image": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 0,
+    "metadataScore": 8,
     "matchConfidence": 40,
     "enrichedAt": "2026-07-27T23:11:20Z",
     "slug": "confuron-gindre-domaine-confuron-gindre-vosne-romanee-1er-cru-les-chaumes-2017"
@@ -17160,15 +17171,16 @@
     "style": "",
     "description": "A  from the estate.",
     "sommelierNotes": "Serve at the temperature typical for its style.",
-    "imagePath": "assets/img/wines/confuron-gindre-21-dom-confuron-gindre-vosne-romanee-1er-cru-les-chaumes-6-750-21.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/confuron-gindre-domaine-confuron-gindre-vosne-romanee-1er-cru-les-chaumes-2021.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.domaine-confuron.com/",
     "sources": {
       "color": "derived",
       "description": "derived",
-      "image": "derived",
+      "image": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 0,
+    "metadataScore": 8,
     "matchConfidence": 40,
     "enrichedAt": "2026-07-27T23:11:35Z",
     "slug": "confuron-gindre-domaine-confuron-gindre-vosne-romanee-1er-cru-les-chaumes-2021"
@@ -22276,15 +22288,16 @@
     "style": "",
     "description": "A  from the estate.",
     "sommelierNotes": "Serve at the temperature typical for its style.",
-    "imagePath": "assets/img/wines/17-dom-bernard-moreau-pommard-1c-les-fremiers-12-750-17.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/domaine-bernard-moreau-pommard-1er-cru-les-fremiers-2017.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.internationalwinechallenge.com/canopy/beverage_details?wid=159564",
     "sources": {
       "color": "derived",
       "description": "derived",
-      "image": "derived",
+      "image": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 0,
+    "metadataScore": 8,
     "matchConfidence": 40,
     "enrichedAt": "2026-07-27T23:11:26Z",
     "slug": "domaine-bernard-moreau-pommard-1er-cru-les-fremiers-2017"
