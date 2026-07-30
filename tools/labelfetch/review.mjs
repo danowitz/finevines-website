@@ -72,11 +72,15 @@ const card = (r, { chosen }) => {
   const w = wines.get(r.slug) || {};
   const alts = (r.alternates || []).filter((a) => onDisk(a.file));
   const title = [w.producer, w.name].filter(Boolean).join(' — ') || r.name;
+  // The host is a link to the product page the image was fetched from, so
+  // the reviewer can see the picture in its retail context in one click.
+  // Anchors are interactive elements, so clicking one navigates without
+  // toggling the surrounding label's radio.
   const opt = (file, page, why, label, i) => `
       <label class="opt">
         <input type="radio" name="${esc(r.slug)}" value="${esc(file || '')}" ${i === 0 && chosen ? 'checked' : ''}>
         <img src="${esc(src(file))}" loading="lazy" alt="">
-        <span class="opt-src">${esc(hostOf(page))}</span>
+        <span class="opt-src">${page ? `<a href="${esc(page)}" target="_blank" rel="noopener">${esc(hostOf(page))} &#8599;</a>` : esc(hostOf(page))}</span>
         ${why ? `<span class="opt-why">${esc(why)}</span>` : ''}
         ${label ? `<span class="opt-label" title="the text OCR read off this bottle — the evidence the match was made on">text on bottle: ${esc(String(label).slice(0, 70))}</span>` : ''}
       </label>`;
@@ -87,6 +91,8 @@ const card = (r, { chosen }) => {
       <b>${esc(title)}</b>
       <span class="meta">${esc([w.vintage, w.region || w.country, w.varietal].filter(Boolean).join(' · '))}</span>
       <span class="sku">SKU ${esc(w.sku || '?')}</span>
+      <a class="search" href="${esc(searchURL(w, r))}" target="_blank" rel="noopener"
+         title="the same query the pipeline searched to find these candidates">search used to find these &rarr;</a>
       ${(r.review || []).map((f) => `<span class="why">${esc(f)}</span>`).join('')}
     </figcaption>
     <div class="opts">
@@ -132,6 +138,9 @@ const html = `<!doctype html>
   .opt img { width: 100%; height: 150px; object-fit: contain; background: #fff; }
   .opt input { accent-color: #6b1630; }
   .opt-src { color: #9c8c7c; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .opt-src a { color: #6b1630; text-decoration: none; }
+  .opt-src a:hover { text-decoration: underline; }
+  .search { font-size: 11px; color: #6b1630; align-self: flex-start; }
   .opt-why { color: #9a2b2b; font-size: 10px; }
   .opt-label { color: #43352a; font-size: 10px; font-style: italic; }
   .opt.wrong { justify-content: center; align-items: center; text-align: center; background: #faf6ee; }
