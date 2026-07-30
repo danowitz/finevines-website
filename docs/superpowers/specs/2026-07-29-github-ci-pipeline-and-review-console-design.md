@@ -101,7 +101,11 @@ secrets never run on `pull_request` events; fork PRs get build/test only.
 `FINEVINES_BUNNY_STORAGE_ENDPOINT`, `FINEVINES_BUNNY_API_KEY`,
 `FINEVINES_BUNNY_PULL_ZONE_ID`, `FINEVINES_BUNNY_SCRIPT_ID`,
 `FINEVINES_GA_ID`, `FINEVINES_SITE_BASE_URL`, `POSTMARK_TOKEN`,
-`FINEVINES_NOTIFY_TO`, `FINEVINES_REVIEW_HMAC_SECRET`.
+`FINEVINES_NOTIFY_TO`, `FINEVINES_NOTIFY_FROM`, `FINEVINES_REVIEW_HMAC_SECRET`.
+
+(`FINEVINES_NOTIFY_FROM` added during planning: Postmark accepts a send from
+an unconfirmed sender signature with HTTP 200 + non-zero ErrorCode, so the
+From address must be explicit configuration, never a guessed default.)
 
 The console's dispatch PAT is a **Bunny Edge Script secret**, not a GitHub
 secret: fine-grained, this repo only, `contents: none`,
@@ -163,6 +167,20 @@ ts}` to `_review/queue.json` in storage → script calls GitHub
 run drains the queue (step 1 above) → change lands as a bot commit and
 deploys. Reviewer sees their fix live in minutes; every change is auditable in
 git history.
+
+Contract pinned during Sub-project A planning (B must honour it):
+
+- `payload` schema is flat: `{candidate, sourceUrl, note, reason}`.
+  `sourceUrl` is **required** on image swaps — it becomes the wine's
+  `imageSourceUrl`; provenance is unsatisfiable without it.
+- The console **rewrites the whole queue file** on each append; the pipeline
+  clears the queue by deleting it (Bunny treats 404 as success). A mid-drain
+  append therefore reappears next run and the applied-ID ledger no-ops any
+  duplicate.
+- Uploading candidate images to `_review/candidates/` is **B's job** — the
+  pipeline's fetch stage stages candidates locally (gitignored
+  `data/fetched-images/`) and discards them in CI; `applyqueue` resolves an
+  image swap's `payload.candidate` relative to `_review/candidates/`.
 
 ## Error handling
 
