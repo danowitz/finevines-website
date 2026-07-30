@@ -103,11 +103,25 @@ if (!slugs.length) {
   process.exit(0);
 }
 
-let swapped = 0, rejected = 0, unknown = 0, pasted = 0, failed = 0;
+let swapped = 0, rejected = 0, confirmed = 0, unknown = 0, pasted = 0, failed = 0;
 for (const slug of slugs) {
   const rec = manifest[slug];
   const choice = decisions[slug];
   if (!rec) { unknown++; console.log(`  ?      ${slug} — not in the manifest`); continue; }
+
+  // The reviewer looked at the shown image beside the catalog row and said it
+  // is right. That human confirmation outranks every recorded doubt, so the
+  // flags clear and the next clean-only import promotes it. The pixels are
+  // unchanged, so the watermark verdict stands.
+  if (choice === '__confirm__') {
+    confirmed++;
+    console.log(`  YES    ${rec.name}`);
+    if (apply) {
+      rec.verifiedBy = 'human review (confirmed)';
+      rec.review = [];
+    }
+    continue;
+  }
 
   if (choice === '__none__') {
     rejected++;
@@ -189,7 +203,7 @@ for (const slug of slugs) {
 if (browser) await browser.close();
 if (apply) await writeFile(MANIFEST, JSON.stringify(manifest, null, 1));
 
-console.log(`\n${slugs.length} decisions: ${swapped} swapped, ${rejected} marked wrong${unknown ? `, ${unknown} unrecognised` : ''}`);
+console.log(`\n${slugs.length} decisions: ${confirmed} confirmed, ${swapped} swapped, ${rejected} marked wrong${unknown ? `, ${unknown} unrecognised` : ''}`);
 if (!apply) {
   console.log('\nnothing written — re-run with --apply');
 } else {

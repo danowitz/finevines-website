@@ -112,6 +112,10 @@ const card = (r, { chosen }) => {
     <div class="opts">
       ${chosen ? opt(r.file, r.page, '', r.label, 0) : ''}
       ${alts.map((a, i) => opt(a.file, a.page, a.why, a.label, chosen ? i + 1 : i)).join('')}
+      ${chosen ? `<label class="opt right">
+        <input type="radio" name="${esc(r.slug)}" value="__confirm__">
+        <span class="opt-yes">&#10003; correct<br>use this image</span>
+      </label>` : ''}
       <label class="opt wrong">
         <input type="radio" name="${esc(r.slug)}" value="__none__">
         <span class="opt-none">&#10007; wrong<br>none of these</span>
@@ -159,6 +163,9 @@ const html = `<!doctype html>
   .opt-label { color: #43352a; font-size: 10px; font-style: italic; }
   .opt.wrong { justify-content: center; align-items: center; text-align: center; background: #faf6ee; }
   .opt.wrong:has(input:checked) { border-color: #9a2b2b; background: #fdf0f0; }
+  .opt.right { justify-content: center; align-items: center; text-align: center; background: #faf6ee; }
+  .opt.right:has(input:checked) { border-color: #2e6b3f; background: #f0faf2; }
+  .opt-yes { font-size: 11px; color: #2e6b3f; font-weight: 600; }
   .opt-none { font-size: 11px; color: #6e5d4e; }
   .opt-search { font-size: 11px; color: #6b1630; }
   .opt-url { width: 100%; box-sizing: border-box; margin-top: 4px; font-size: 10px;
@@ -177,9 +184,10 @@ const html = `<!doctype html>
   ${clean.length} unflagged &middot; <b>${missedWithOptions.length}</b> found nothing but have candidates &middot;
   ${missedBare.length} found nothing at all
 </p>
-<p class="sum">Mark anything wrong with <b>&#10007; wrong</b>, pick a better candidate where one is offered, or
-<b>paste an image URL</b> you found yourself — right-click an image in the search results, Copy image address, paste.
-Only what you change is recorded. Then <b>Download decisions</b> and run
+<p class="sum">Four moves per card: <b>&#10003; correct</b> confirms the shown image (clears its doubt flags — it
+goes live on the next import), <b>&#10007; wrong</b> rejects everything (the wine goes back to the fetch queue),
+picking a different candidate swaps it in, or <b>paste an image URL</b> you found yourself. A card you
+don't touch stays flagged and waits. Then <b>Download decisions</b> and run
 <code>node tools/labelfetch/decide.mjs --apply</code>.</p>
 <p class="sum"><b>text on bottle</b> is what OCR actually read off that picture — it is the evidence
 the match was made on, so a wrong image usually names a different estate there.</p>
