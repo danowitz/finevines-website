@@ -41,11 +41,19 @@ permissions:
 
 jobs:
   run:
-    # GitHub already skips a push whose head commit message contains [skip ci],
-    # so the bot's own commit cannot loop. This is the belt to that braces: a
-    # repository_dispatch or a schedule firing seconds after a bot commit is NOT
-    # covered by GitHub's rule, and would redo work that just landed.
-    # github.event.head_commit is null on those events, so the guard passes.
+    # A redundant restatement of GitHub's own rule, and nothing more. GitHub
+    # already skips a push whose head commit message contains [skip ci], which
+    # is what stops the bot's own commit from re-triggering this workflow; this
+    # guard re-checks the same string so the protection is visible in the file
+    # rather than only in GitHub's behaviour, and so it survives that rule being
+    # disabled. It does NOT extend the protection to the other triggers:
+    # github.event.head_commit is null on schedule, workflow_dispatch and
+    # repository_dispatch, contains() reads null as the empty string, and the
+    # guard passes. That is deliberate — a schedule or a reviewer's dispatch
+    # firing right after a bot commit SHOULD run. Redoing work that just landed
+    # is close to free: SourceHash means no unchanged wine is re-sent to OpenAI,
+    # the attempt ledger means no image is re-fetched, and the manifest diff
+    # means nothing is re-uploaded.
     if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 300
@@ -95,7 +103,12 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - run: npm ci
+      # --ignore-scripts: every secret above is job-level env, so an install
+      # script would run with the Salesforce credentials, the OpenAI key, the
+      # Bunny keys and the Postmark token in its environment, on a public repo.
+      # The only runtime dependency is puppeteer-core, which has no meaningful
+      # install script — so closing that path costs nothing.
+      - run: npm ci --ignore-scripts
 
       - name: Build the binaries
         run: |
@@ -179,5 +192,20 @@ jobs:
       #    reports what actually shipped, and is NOT `if: always()`: a failed run
       #    surfaces through GitHub's own workflow-failure email to the repo
       #    owner. This email is for content changes, not CI health.
+      #
+      #    DO NOT USE "Re-run failed jobs" ONCE THE COMMIT-BACK HAS LANDED.
+      #    This is the only step after it, so the failure that sends you to the
+      #    re-run button is usually this one — and a re-run is silently wrong.
+      #    A re-run checks out a master that ALREADY contains the bot commit, so
+      #    the snapshot above captures the AFTER state, Diff finds nothing,
+      #    notify takes its quiet "changed nothing" path and the job goes green
+      #    without an email — on the exact night an email mattered most.
+      #    Re-send by hand instead, from a checkout, with the wines.json from the
+      #    commit BEFORE the bot's:
+      #
+      #      git show <bot-commit>~1:data/wines.json > /tmp/before.json
+      #      ./finevines notify -before /tmp/before.json   # add -dry to preview
+      #
+      #    (Runbook: docs/operations.md, per Task 9.)
       - name: Send the digest
         run: ./finevines notify -before .run/wines-before.json -applied .run/queue-applied.json
