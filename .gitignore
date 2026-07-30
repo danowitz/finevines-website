@@ -180,6 +180,9 @@ assets/img/wines/*.svg
 # bottlecomp scratch output (tools/bottlecomp -outdir)
 out-bottle/
 
+# gpt-image-1 dry-run output (tools/imagedryrun -out)
+out-imagedryrun/
+
 # Staged bottle photographs from tools/labelfetch (review before importing)
 data/fetched-images/
 

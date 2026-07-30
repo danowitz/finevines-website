@@ -14,17 +14,18 @@ import (
 	"strings"
 )
 
-// ErrImageRejected is the sentinel GenerateJPEG wraps whenever Imagen
-// declines to produce a photo: a non-2xx response (the shape a safety/policy
-// rejection takes on this endpoint) or a 200 with an empty predictions
-// array. It exists to distinguish a content/safety rejection from a
+// ErrImageRejected is the sentinel a provider's GenerateJPEG (ImagenClient,
+// GPTImageClient) wraps whenever the model declines to produce a photo: a
+// non-2xx response (the shape a safety/policy rejection takes on these
+// endpoints — except a 429 rate limit, which GPTImageClient retries and then
+// surfaces as an ordinary error) or a 200 with an empty result. It exists to distinguish a content/safety rejection from a
 // transport/network error or malformed response (ordinary errors, not this
 // sentinel) — but that distinction is informational only: the pipeline
 // (ResolveImage, images.go) falls back to the deterministic label on ANY
 // provider error, wrapped in this sentinel or not, and never aborts an
 // enrich run because of it. Only filesystem failures (MkdirAll/WriteFile)
 // abort a run; see ResolveImage's doc comment.
-var ErrImageRejected = errors.New("imagen: image generation rejected")
+var ErrImageRejected = errors.New("image generation rejected")
 
 // ImageProvider turns one Claude-authored image prompt into a photorealistic
 // bottle photo. ImagenClient is the only implementation today; the
