@@ -36,7 +36,15 @@ const all = Object.values(manifest);
 // broken picture — that reads as a fetch failure rather than the bookkeeping
 // lag it is.
 const onDisk = (f) => !!f && existsSync(f);
-const ok = all.filter((r) => r.ok && onDisk(r.file));
+// A record whose wine already wears a real photograph is moot: import would
+// refuse to overwrite it, so reviewing it is wasted attention. This is what
+// keeps the queue shrinking as imports and vintage-sharing land.
+const wineNeedsImage = (slug) => {
+  const w = wines.get(slug);
+  return !w || !w.imagePath || w.imagePath.endsWith('.svg');
+};
+const ok = all.filter((r) => r.ok && onDisk(r.file) && wineNeedsImage(r.slug));
+const moot = all.filter((r) => r.ok && onDisk(r.file) && !wineNeedsImage(r.slug)).length;
 const stale = all.filter((r) => r.ok && !onDisk(r.file)).length;
 const flagged = ok.filter((r) => r.review?.length);
 const clean = ok.filter((r) => !r.review?.length);
@@ -63,10 +71,14 @@ const hostOf = (u) => {
 // A one-click search, for the wines where nothing on disk is right. Opens the
 // same query the pipeline used, so the reviewer starts where it left off
 // rather than retyping a Burgundy name from a SKU.
-const searchURL = (w, r) =>
-  'https://duckduckgo.com/?q=' +
-  encodeURIComponent([w.producer, w.name, w.vintage].filter(Boolean).join(' ') || r.name) +
-  '+wine+bottle&iax=images&ia=images';
+const searchTerms = (w, r) =>
+  encodeURIComponent(([w.producer, w.name, w.vintage].filter(Boolean).join(' ') || r.name) + ' wine bottle');
+const searchURL = (w, r) => `https://duckduckgo.com/?q=${searchTerms(w, r)}&iax=images&ia=images`;
+// Google's image index is broader — often the difference for small-production
+// wines. Fine as a link the HUMAN clicks; the pipeline's automated discovery
+// stays on DuckDuckGo's HTML endpoint, which tolerates a robot where Google's
+// SERP answers one with consent walls and CAPTCHAs.
+const googleURL = (w, r) => `https://www.google.com/search?udm=2&q=${searchTerms(w, r)}`;
 
 const card = (r, { chosen }) => {
   const w = wines.get(r.slug) || {};
@@ -91,8 +103,10 @@ const card = (r, { chosen }) => {
       <b>${esc(title)}</b>
       <span class="meta">${esc([w.vintage, w.region || w.country, w.varietal].filter(Boolean).join(' · '))}</span>
       <span class="sku">SKU ${esc(w.sku || '?')}</span>
-      <a class="search" href="${esc(searchURL(w, r))}" target="_blank" rel="noopener"
-         title="the same query the pipeline searched to find these candidates">search used to find these &rarr;</a>
+      <span class="search">search:
+        <a href="${esc(googleURL(w, r))}" target="_blank" rel="noopener">Google Images</a> &middot;
+        <a href="${esc(searchURL(w, r))}" target="_blank" rel="noopener"
+           title="the same query the pipeline searched to find these candidates">DuckDuckGo (pipeline's)</a></span>
       ${(r.review || []).map((f) => `<span class="why">${esc(f)}</span>`).join('')}
     </figcaption>
     <div class="opts">
@@ -101,7 +115,7 @@ const card = (r, { chosen }) => {
       <label class="opt wrong">
         <input type="radio" name="${esc(r.slug)}" value="__none__">
         <span class="opt-none">&#10007; wrong<br>none of these</span>
-        <a class="opt-search" href="${esc(searchURL(w, r))}" target="_blank" rel="noopener">search images &rarr;</a>
+        <a class="opt-search" href="${esc(googleURL(w, r))}" target="_blank" rel="noopener">search images &rarr;</a>
         <input class="opt-url" type="url" placeholder="paste image URL"
                data-slug="${esc(r.slug)}"
                title="Right-click an image in the search results, Copy image address, paste here. It is fetched, checked and normalised like any other candidate.">
@@ -240,6 +254,7 @@ await writeFile(OUT_CSV, csv);
 
 const withAlts = ok.filter((r) => r.alternates?.length).length;
 console.log(`${ok.length} staged  ${flagged.length} flagged  ${clean.length} unflagged`);
+if (moot) console.log(`${moot} records hidden — their wine already wears a real photograph`);
 if (stale) console.log(`${stale} records skipped — their image file is no longer on disk`);
 console.log(`${missedWithOptions.length} found nothing but have candidates to choose from`);
 console.log(`${withAlts} accepted images have alternates offered`);
