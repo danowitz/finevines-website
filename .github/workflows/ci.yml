@@ -29,9 +29,18 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      # Pinned to 20, matching the only Node version this repo's npm scripts
+      # have ever run under (the dev machine's local install). Node 22's
+      # `node --test <dir>` no longer recurses a bare directory argument for
+      # test files (it errors MODULE_NOT_FOUND trying to require() the
+      # directory itself) — verified directly against the ubuntu-latest run
+      # and by downloading node-v22.23.1 locally; package.json's test:unit/
+      # test:e2e scripts rely on that directory-recursion form. Revisit this
+      # pin only alongside updating those scripts to a version-stable
+      # invocation (e.g. the node:test `run()` API or an explicit glob).
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
           cache: npm
 
       - run: npm ci
