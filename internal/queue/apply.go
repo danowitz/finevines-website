@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -15,12 +16,14 @@ import (
 )
 
 // Store is the subset of the Bunny storage zone a drain needs: read a file,
-// delete a file. Declared here rather than depending on *deploy.BunnyClient so
-// tests inject an in-memory fake with no network and no credentials — the same
-// reasoning as internal/deploy.Uploader. *deploy.BunnyClient satisfies it
-// unchanged (asserted in cmd/finevines/applyqueue.go).
+// write a file, delete a file. Declared here rather than depending on
+// *deploy.BunnyClient so tests inject an in-memory fake with no network and no
+// credentials — the same reasoning as internal/deploy.Uploader.
+// *deploy.BunnyClient satisfies it unchanged (asserted in
+// cmd/finevines/applyqueue.go).
 type Store interface {
 	Download(ctx context.Context, relPath string) ([]byte, error)
+	Upload(ctx context.Context, relPath string, data []byte) error
 	Delete(ctx context.Context, relPath string) error
 }
 
@@ -57,8 +60,13 @@ type Input struct {
 	// QueuePath is the storage-zone path of the queue file itself, deleted once
 	// the drain has finished (_review/queue.json).
 	QueuePath string
-	Now       time.Time
-	Log       func(string, ...any)
+	// RunID names the archive copy of the batch (see archiveBatch). The workflow
+	// passes GITHUB_RUN_ID so an archive can be traced to the run that read it;
+	// empty falls back to a timestamp derived from Now, so a local invocation
+	// still produces a distinct, sortable name.
+	RunID string
+	Now   time.Time
+	Log   func(string, ...any)
 }
 
 // Result is what one drain changed. Wines and Ledger are the new values to
@@ -86,6 +94,14 @@ type Result struct {
 //   - An action naming a SKU the catalog does not hold IS ledgered, with the
 //     reason. Leaving it unrecorded would have every future run retry it
 //     forever and the queue would never drain.
+//   - The batch is ARCHIVED to the storage zone before a single action is
+//     applied. The ledger and the catalog only reach the repo at the run's
+//     commit-back, several steps later; if enrich, the image stage, build or
+//     deploy fails in between, the run dies with the queue already deleted and
+//     nothing persisted, and the reviewer's correction exists nowhere. The
+//     archive is the copy that survives that — see archiveBatch. An archive that
+//     cannot be written aborts the drain before any side effect: applying work we
+//     could not first copy aside is the exact trade this exists to refuse.
 //   - The queue file is deleted last, only if there was anything in it, and ONLY
 //     when every action either applied or was skipped. A batch containing a
 //     failure leaves the queue in place: keeping the action out of the ledger is
@@ -105,6 +121,10 @@ func Apply(ctx context.Context, in Input) (Result, error) {
 	res := Result{Wines: append([]model.Wine(nil), in.Wines...), Ledger: in.Ledger, Flags: in.Flags}
 	if len(in.Actions) == 0 {
 		return res, nil
+	}
+
+	if err := archiveBatch(ctx, in, log); err != nil {
+		return res, err
 	}
 
 	bySKU := make(map[string]int, len(res.Wines))
@@ -167,6 +187,56 @@ func Apply(ctx context.Context, in Input) (Result, error) {
 			in.QueuePath, err)
 	}
 	return res, nil
+}
+
+// archiveBatch writes the batch about to be drained beside the queue file, as
+// _review/queue-applied-<run>.json, BEFORE anything is applied.
+//
+// It exists because "a crashed run re-applies safely" was only ever true of a
+// crash DURING the drain. Apply deletes the queue at the end of step 1, but the
+// ledger and the catalog it produced are held in memory and only land in the
+// repo at the commit-back in step 6 — so a failure in enrich, the image stage,
+// build or deploy loses every action in that batch with no copy anywhere: not in
+// the queue (deleted), not in the ledger (never written), not in the digest
+// (never sent). The reviewer sees their correction silently not happen and has
+// no way to know it was ever read.
+//
+// The archive is written in the queue's own format, so recovery is a copy:
+// download the archive, upload it to _review/queue.json, re-run the pipeline.
+// The ledger makes that safe even for the actions that DID land — they are
+// skipped.
+//
+// Never deleted here. These files are small, human-readable, and land in a
+// storage prefix the public pull zone does not serve; keeping them is a cheap
+// audit trail of every correction the pipeline has ever consumed.
+func archiveBatch(ctx context.Context, in Input, log func(string, ...any)) error {
+	data, err := json.MarshalIndent(in.Actions, "", "  ")
+	if err != nil {
+		return fmt.Errorf("applyqueue: encode the batch for archiving: %w", err)
+	}
+	relPath := archivePath(in)
+	if err := in.Store.Upload(ctx, relPath, append(data, '\n')); err != nil {
+		return fmt.Errorf("applyqueue: archive the batch to %s before applying it "+
+			"(nothing has been applied and %s is untouched, so the next run re-reads it): %w",
+			relPath, in.QueuePath, err)
+	}
+	// The one log line manual recovery is driven from — docs/operations.md quotes
+	// this format. It has to name the archive path verbatim.
+	log("applyqueue: archived %d queued action(s) to %s before applying them "+
+		"(recover a lost batch by copying that file back to %s)", len(in.Actions), relPath, in.QueuePath)
+	return nil
+}
+
+// archivePath names the archive after the run that read the batch, so an
+// operator reading a failed workflow run can find its archive by run ID. A local
+// invocation has no run ID and falls back to the drain's own clock, which is
+// passed in (Input.Now) rather than read here so the name is testable.
+func archivePath(in Input) string {
+	id := in.RunID
+	if id == "" {
+		id = in.Now.UTC().Format("20060102T150405Z")
+	}
+	return path.Join(path.Dir(in.QueuePath), "queue-applied-"+id+".json")
 }
 
 // applyOne applies a single action to res.Wines[i] and returns the ledger

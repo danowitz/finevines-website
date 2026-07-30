@@ -154,8 +154,13 @@ func runApplyQueue(cfg config.Config, args []string) error {
 		ImgDir:       "assets/img/wines",
 		CandidateDir: candidateDir,
 		QueuePath:    queueStoragePath,
-		Now:          time.Now().UTC(),
-		Log:          log.Printf,
+		// GITHUB_RUN_ID names the batch archive after the run that read it, so an
+		// operator looking at a failed workflow run can find that run's archive by
+		// the number already in front of them. Empty off CI, where the drain's own
+		// clock names it instead.
+		RunID: os.Getenv("GITHUB_RUN_ID"),
+		Now:   time.Now().UTC(),
+		Log:   log.Printf,
 	})
 	if err != nil {
 		return err

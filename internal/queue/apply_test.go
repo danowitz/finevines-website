@@ -20,10 +20,14 @@ import (
 // specific path — the same shape internal/deploy's fakeUploader has, for the
 // same reason: no network, no Bunny credentials, deterministic failures.
 type fakeStore struct {
-	mu      sync.Mutex
-	files   map[string][]byte
-	deleted []string
-	failOn  string
+	mu       sync.Mutex
+	files    map[string][]byte
+	deleted  []string
+	uploaded []string
+	failOn   string
+	// failUploads makes every Upload fail, so a test can assert the drain aborts
+	// rather than applying work it could not first copy aside.
+	failUploads bool
 }
 
 func (f *fakeStore) Download(_ context.Context, relPath string) ([]byte, error) {
@@ -33,6 +37,17 @@ func (f *fakeStore) Download(_ context.Context, relPath string) ([]byte, error) 
 		return nil, errors.New("storage unavailable")
 	}
 	return f.files[relPath], nil
+}
+
+func (f *fakeStore) Upload(_ context.Context, relPath string, data []byte) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.failUploads {
+		return errors.New("storage unavailable")
+	}
+	f.uploaded = append(f.uploaded, relPath)
+	f.files[relPath] = data
+	return nil
 }
 
 func (f *fakeStore) Delete(_ context.Context, relPath string) error {
@@ -502,5 +517,144 @@ func TestApply_EmptyQueueTouchesNothing(t *testing.T) {
 	}
 	if len(res.Applied) != 0 || res.Skipped != 0 {
 		t.Errorf("res = %+v, want an untouched result", res)
+	}
+}
+
+// The archive is what makes a reviewer's correction survive a failure ANYWHERE
+// in the run, not just a failure inside the drain. Apply deletes the queue in
+// step 1; the ledger and catalog it produced only reach the repo at the
+// commit-back in step 6. Between those, enrich, the image stage, build and
+// deploy can all fail — and before this archive existed, that lost the batch
+// with no copy in the queue, the ledger, or the digest.
+func TestApply_ArchivesTheBatchBeforeApplyingAnything(t *testing.T) {
+	store := &fakeStore{files: map[string][]byte{
+		"_review/candidates/AB1201/cand-2.png": []byte("candidate-bytes"),
+	}}
+	actions := []Action{{
+		ID: "a1", Reviewer: "barbara", SKU: "AB1201", Kind: ActionImageSwap, TS: "2026-07-29T08:00:00Z",
+		Payload: Payload{Candidate: "AB1201/cand-2.png", SourceURL: "https://example-producer.fr/vins/"},
+	}}
+	in := baseInput(t, store, actions)
+	in.RunID = "1234567890"
+
+	if _, err := Apply(context.Background(), in); err != nil {
+		t.Fatalf("Apply returned error: %v", err)
+	}
+
+	want := "_review/queue-applied-1234567890.json"
+	if len(store.uploaded) != 1 || store.uploaded[0] != want {
+		t.Fatalf("store.uploaded = %v, want exactly [%s]", store.uploaded, want)
+	}
+	// Same format as the queue, so recovery is a copy rather than a repair job.
+	back, err := ParseQueue(store.files[want])
+	if err != nil {
+		t.Fatalf("the archive does not parse as a queue: %v", err)
+	}
+	if len(back) != 1 || back[0].ID != "a1" || back[0].Payload.SourceURL != actions[0].Payload.SourceURL {
+		t.Errorf("the archive round-trips as %+v, want the batch that was read", back)
+	}
+}
+
+// With no run ID — a local invocation — the name still has to be distinct and
+// sortable, and it comes from the drain's own clock rather than a hidden
+// time.Now so the name stays testable.
+func TestApply_ArchiveNameFallsBackToTheRunClock(t *testing.T) {
+	store := &fakeStore{files: map[string][]byte{}}
+	in := baseInput(t, store, []Action{{ID: "a3", SKU: "MB5110", Reviewer: "george",
+		Kind: ActionFlag, Payload: Payload{Reason: "duplicate"}}})
+
+	if _, err := Apply(context.Background(), in); err != nil {
+		t.Fatalf("Apply returned error: %v", err)
+	}
+	want := "_review/queue-applied-20260729T081500Z.json"
+	if len(store.uploaded) != 1 || store.uploaded[0] != want {
+		t.Errorf("store.uploaded = %v, want [%s]", store.uploaded, want)
+	}
+}
+
+// The archive has to be there for the batches most likely to need it: the ones
+// that went wrong. A per-action failure keeps the queue AND keeps the archive.
+func TestApply_ArchiveIsWrittenEvenWhenAnActionLaterFails(t *testing.T) {
+	store := &fakeStore{
+		files:  map[string][]byte{"_review/candidates/AB1201/cand-2.png": []byte("candidate-bytes")},
+		failOn: "_review/candidates/AB1201/cand-2.png",
+	}
+	in := baseInput(t, store, []Action{
+		{ID: "a1", SKU: "AB1201", Reviewer: "barbara", Kind: ActionImageSwap,
+			Payload: Payload{Candidate: "AB1201/cand-2.png", SourceURL: "https://example-producer.fr/vins/"}},
+		{ID: "a2", SKU: "MB5110", Reviewer: "george", Kind: ActionTextFeedback,
+			Payload: Payload{Note: "says oaked; this wine is unoaked"}},
+	})
+	in.RunID = "99"
+
+	if _, err := Apply(context.Background(), in); err != nil {
+		t.Fatalf("Apply returned error: %v", err)
+	}
+	if len(store.uploaded) != 1 || store.uploaded[0] != "_review/queue-applied-99.json" {
+		t.Errorf("store.uploaded = %v, want the archive of the failing batch", store.uploaded)
+	}
+	// Belt and braces both still hold: the queue survives a failed batch too.
+	if len(store.deleted) != 0 {
+		t.Errorf("store.deleted = %v, want the queue kept alongside the archive", store.deleted)
+	}
+}
+
+// An archive that cannot be written aborts the drain BEFORE any side effect.
+// Applying work we could not first copy aside is the exact trade the archive
+// exists to refuse — and it costs nothing: the queue is untouched, so the next
+// run reads the same batch.
+func TestApply_AFailedArchiveAbortsBeforeAnySideEffect(t *testing.T) {
+	store := &fakeStore{
+		files:       map[string][]byte{"_review/candidates/AB1201/cand-2.png": []byte("candidate-bytes")},
+		failUploads: true,
+	}
+	in := baseInput(t, store, []Action{{
+		ID: "a1", Reviewer: "barbara", SKU: "AB1201", Kind: ActionImageSwap,
+		Payload: Payload{Candidate: "AB1201/cand-2.png", SourceURL: "https://example-producer.fr/vins/"},
+	}})
+
+	res, err := Apply(context.Background(), in)
+	if err == nil {
+		t.Fatal("Apply drained a batch it could not archive")
+	}
+	if !strings.Contains(err.Error(), "archive") {
+		t.Errorf("error %q does not say the archive is what failed", err)
+	}
+	if len(res.Applied) != 0 || res.Ledger.Has("a1") {
+		t.Errorf("an unarchived action was applied: %+v", res.Applied)
+	}
+	if n := len(in.Norm.(*fakeNorm).calls); n != 0 {
+		t.Errorf("the normalizer ran %d time(s) before the batch was archived", n)
+	}
+	if len(store.deleted) != 0 {
+		t.Errorf("store.deleted = %v — an unarchived batch must stay queued", store.deleted)
+	}
+}
+
+// The archive is a copy, not a replacement for the queue's own rules: a fully
+// successful batch is still archived AND still clears the queue.
+func TestApply_ArchivingDoesNotStopTheQueueBeingCleared(t *testing.T) {
+	store := &fakeStore{files: map[string][]byte{}}
+	in := baseInput(t, store, []Action{{ID: "a3", SKU: "MB5110", Reviewer: "george",
+		Kind: ActionFlag, Payload: Payload{Reason: "duplicate"}}})
+
+	if _, err := Apply(context.Background(), in); err != nil {
+		t.Fatalf("Apply returned error: %v", err)
+	}
+	if len(store.deleted) != 1 || store.deleted[0] != "_review/queue.json" {
+		t.Errorf("store.deleted = %v, want the queue cleared on a clean drain", store.deleted)
+	}
+}
+
+// An empty queue archives nothing. The archive names a batch that was read and
+// is about to be applied; a nightly run with nobody reviewing must not litter
+// the storage zone with an empty file per night.
+func TestApply_EmptyQueueWritesNoArchive(t *testing.T) {
+	store := &fakeStore{files: map[string][]byte{}}
+	if _, err := Apply(context.Background(), baseInput(t, store, nil)); err != nil {
+		t.Fatalf("Apply returned error: %v", err)
+	}
+	if len(store.uploaded) != 0 {
+		t.Errorf("store.uploaded = %v, want nothing for an empty queue", store.uploaded)
 	}
 }
