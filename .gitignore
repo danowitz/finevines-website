@@ -152,6 +152,11 @@ dist/
 finevines.exe
 *.exe
 
+# Per-run scratch state for the CI pipeline (before-snapshot for the digest,
+# the applied-action log). Written by one run, read by `notify` later in the
+# SAME run, never committed.
+.run/
+
 # Editor workspace file (personal, not shared)
 *.code-workspace
 

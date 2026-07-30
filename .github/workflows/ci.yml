@@ -1,0 +1,92 @@
+# The cheap gate. Everything here is safe on a fork's pull request because this
+# workflow declares NO secrets at all: the pipeline is exercised in mock mode
+# (FINEVINES_SF_MOCK), which reads the embedded sample roster instead of the
+# live Salesforce org, and never reaches OpenAI, Bunny.net or Postmark.
+#
+# Its real job is cross-platform assurance. The whole publish path was written
+# and only ever run on one Windows machine; this is what catches a hardcoded
+# backslash, a .exe name, or a PowerShell shell-out before the nightly
+# pipeline meets it at 2:15am.
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build the binary
+        run: go build -o finevines ./cmd/finevines
+
+      - name: Go tests
+        run: go test ./...
+
+      - name: Node unit tests
+        run: npm run test:unit
+
+      # Mock mode proves enrich's orchestration runs on Linux: roster pull,
+      # eligibility filter, diff, the delisting lifecycle, the SVG label floor,
+      # the atomic checkpoint writes. FINEVINES_MANUAL_ENRICH_DIR points at the
+      # hand-authored enrichment files so no OpenAI key is needed; wines with no
+      # authored file fall through to enrich.deriveResult, which is exactly the
+      # documented behaviour and still exercises the full write path.
+      - name: Mock-mode enrich (no live Salesforce, OpenAI or Bunny)
+        env:
+          FINEVINES_SF_MOCK: '1'
+          FINEVINES_MANUAL_ENRICH_DIR: data/enrichment
+        run: ./finevines enrich
+
+      # RESTORE THE CATALOG BEFORE BUILDING. The mock roster is 38 rows against
+      # a real catalog of ~2,200, so the enrich above legitimately delists
+      # almost everything and rewrites data/wines.json and
+      # data/lifecycle-redirects.json to match. Building that would produce an
+      # almost-empty site and fail the browser tests for the wrong reason. The
+      # SVG labels it wrote under assets/img/wines/ are gitignored build
+      # artifacts, but writeImageFile removes the sibling .jpg when it writes a
+      # .svg, so assets/ needs restoring too.
+      - name: Restore the committed catalog
+        run: |
+          git checkout -- data assets
+          git status --porcelain
+
+      - name: Build the site
+        env:
+          FINEVINES_SITE_BASE_URL: https://finevines-com.b-cdn.net
+        run: |
+          ./finevines build
+          test -f dist/portfolio/index.html
+          # The flat dist/search-index.json was replaced by a content-hashed
+          # dist/assets/catalog-index.<hash>.json (writeCatalogIndex in
+          # internal/build/build.go) so Bunny can cache it immutably; glob for
+          # it since the hash changes with the data.
+          ls dist/assets/catalog-index.*.json
+
+      # ubuntu-latest ships Google Chrome; tests/helpers/browser.js finds it at
+      # /usr/bin/google-chrome. CHROME_PATH is set explicitly so a runner image
+      # change surfaces as "no Chrome at the path we asked for" rather than a
+      # confusing puppeteer launch failure.
+      - name: Browser tests against the built site
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: npm run test:e2e
