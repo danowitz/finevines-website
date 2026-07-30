@@ -25,6 +25,7 @@
 //   node tools/labelfetch/watermarksweep.mjs --apply --recheck-clean   # re-vote the cleans
 import { readFile, writeFile, access } from 'node:fs/promises';
 import { parseVerdict, flagWatermark, isWatermarked } from './watermark.mjs';
+import { openaiKey } from './env.mjs';
 
 const MANIFEST = 'data/fetched-images/manifest.json';
 const MODEL = 'gpt-4.1-nano';
@@ -34,9 +35,9 @@ const apply = process.argv.includes('--apply');
 const recheckClean = process.argv.includes('--recheck-clean');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const KEY = (await readFile('.env', 'utf8')).match(/^OPENAI_API_KEY=(.*)$/m)?.[1]?.trim() || '';
+const KEY = await openaiKey();
 if (!KEY) {
-  console.error('needs OPENAI_API_KEY in .env');
+  console.error('needs OPENAI_API_KEY in the environment or .env');
   process.exit(2);
 }
 

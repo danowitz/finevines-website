@@ -25,12 +25,14 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { shouldImport } from './importrules.mjs';
+import { binPath } from './env.mjs';
+import { loadAttempts, recordAttempt, saveAttempts } from './attempts.mjs';
 
 const run = promisify(execFile);
 const MANIFEST = 'data/fetched-images/manifest.json';
 const IMG_DIR = 'assets/img/wines';
 const WINES = 'data/wines.json';
-const NORMALIZER = 'imgnorm.exe';
+const NORMALIZER = binPath('imgnorm');
 
 const apply = process.argv.includes('--apply');
 const cleanOnly = process.argv.includes('--clean-only');
@@ -55,6 +57,7 @@ if (!(await exists(MANIFEST))) {
 const manifest = JSON.parse(await readFile(MANIFEST, 'utf8'));
 const wines = JSON.parse(await readFile(WINES, 'utf8'));
 const bySlug = new Map(wines.map((w) => [w.slug, w]));
+const attempts = await loadAttempts();
 
 const staged = Object.values(manifest).filter((r) => r.ok && r.file);
 console.log(`${staged.length} verified images staged\n`);
@@ -118,12 +121,14 @@ for (const rec of staged) {
       wine.metadataScore = Math.round((100 * real) / scored.length);
     }
   }
+  if (rec.sku ?? wine.sku) recordAttempt(attempts, rec.sku ?? wine.sku, 'imported');
   console.log(`  ${apply ? 'wrote' : 'would'} ${rec.slug}.jpg  <- ${rec.page ? new URL(rec.page).host : '?'}`);
   changed++;
 }
 
 if (apply && changed) {
   await writeFile(WINES, JSON.stringify(wines, null, 1) + '\n');
+  await saveAttempts(attempts);
   console.log(`\nwrote ${changed} images to ${IMG_DIR}/ and updated ${WINES}`);
 } else {
   console.log(`\n${changed} would change, ${skipped} skipped. Re-run with --apply to write.`);

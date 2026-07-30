@@ -37,6 +37,8 @@ import { join } from 'node:path';
 import { openBrowser } from '../../tests/helpers/browser.js';
 import { blockedBy } from './sources.mjs';
 import { tokens, normalize } from './match.mjs';
+import { binPath, openaiKey } from './env.mjs';
+import { loadAttempts, isDue, recordAttempt, saveAttempts } from './attempts.mjs';
 
 const run = promisify(execFile);
 
@@ -46,7 +48,7 @@ const OUT_DIR = 'data/fetched-images';
 const ALT_DIR = 'data/fetched-images/alternates';
 const MAX_ALTERNATES = 4;
 const MANIFEST = join(OUT_DIR, 'manifest.json');
-const VERIFIER = 'imgcheck.exe';
+const VERIFIER = binPath('imgcheck');
 
 // How many search results to try before giving up on a wine. Three is a
 // deliberate ceiling: past that the results stop being the wine asked for and
@@ -64,10 +66,28 @@ const opt = (k, d) => {
   return i >= 0 ? args[i + 1] : d;
 };
 const VERBOSE = has('verbose') || opt('slug', '') !== '';
-// Vision fallback is opt-in: the pipeline runs without an API key, just at a
-// lower recovery rate.
-const USE_VISION = has('vision');
+// Vision label reading is opt-in: the pipeline runs without an API key, just at
+// a lower recovery rate.
+//
+// --vision-first is what makes the pipeline work on Linux AT ALL. imgcheck's
+// stage-2 label read shells out to the Windows OCR engine
+// (tools/imgcheck/ocr.ps1), so on ubuntu-latest it exits 1 printing nothing,
+// verify() reports stage 'verifier', and the vision second chance below never
+// fires because it only reconsiders a 'label' refusal. Reading the label with
+// the vision model FIRST and passing the text to imgcheck via -label skips
+// local OCR entirely.
+//
+// Both hard gates survive that inversion. -single-bottle is still NOT passed
+// (see verifyText), so stage 1 — the shape check, pure Go — still decides from
+// pixels whether this is one bottle on a sweep; and the identity decision still
+// goes through the one tested match() inside imgcheck rather than being taken on
+// the model's word.
+const VISION_FIRST = has('vision-first');
+const USE_VISION = has('vision') || VISION_FIRST;
 const VISION_MODEL = opt('vision-model', 'gpt-4.1-nano');
+// --due-only consults the committed attempt ledger so a nightly run does not
+// re-search the ~1,700 wines that have already been looked for and not found.
+const DUE_ONLY = has('due-only');
 let VISION_KEY = '';
 let CSE_KEY = '';
 let CSE_CX = '';
@@ -422,6 +442,27 @@ async function verify(file, name, producer) {
   }
 }
 
+// verifyVisionFirst reads the label with the vision model and then applies the
+// SAME identity rules through the same binary, returning a verdict shaped
+// exactly like verify()'s so the calling loop needs no other change.
+//
+// It is the only path that works on Linux (see VISION_FIRST above). Note what it
+// does NOT do: it does not pass -single-bottle, so the local shape gate still
+// runs and can still refuse; and it does not let the model decide identity, only
+// read the text. An empty or near-empty read is a refusal, not a pass — a wine
+// was once accepted on a photograph of grapes because a blank string was allowed
+// through here.
+async function verifyVisionFirst(file, name, producer) {
+  const text = await readLabel(file);
+  if (!text || text.trim().length < 3) {
+    return { accept: false, stage: 'label', label: text || '', reason: 'nothing legible on the label' };
+  }
+  const ok = await verifyText(file, name, producer, text);
+  return ok
+    ? { accept: true, stage: 'label', label: text, verifiedBy: VISION_MODEL }
+    : { accept: false, stage: 'label', label: text, reason: 'the label does not name this wine' };
+}
+
 // --- main --------------------------------------------------------------------
 
 if (!(await exists(VERIFIER))) {
@@ -430,11 +471,17 @@ if (!(await exists(VERIFIER))) {
 }
 
 let wines = JSON.parse(await readFile('data/wines.json', 'utf8')).filter((w) => w.slug && w.name);
+const attempts = await loadAttempts();
 const only = opt('slug', '');
 if (only) {
   wines = wines.filter((w) => w.slug === only);
 } else {
   if (has('missing')) wines = wines.filter((w) => (w.imagePath || '').endsWith('.svg'));
+  if (DUE_ONLY) {
+    const before = wines.length;
+    wines = wines.filter((w) => isDue(attempts, w.sku));
+    console.log(`due per the attempt ledger: ${wines.length} of ${before} imageless wines`);
+  }
   wines = wines.filter((w) => !SPIRIT.test(w.name));
   wines.sort((a, b) => a.slug.localeCompare(b.slug));
   if (!has('all')) {
@@ -448,12 +495,12 @@ if (!wines.length) {
 }
 
 if (USE_VISION) {
-  VISION_KEY = (await readFile('.env', 'utf8')).match(/^OPENAI_API_KEY=(.*)$/m)?.[1]?.trim() || '';
+  VISION_KEY = await openaiKey();
   if (!VISION_KEY) {
-    console.error('--vision needs OPENAI_API_KEY in .env');
+    console.error('--vision needs OPENAI_API_KEY in the environment or .env');
     process.exit(2);
   }
-  console.log(`vision fallback: ${VISION_MODEL}`);
+  console.log(`vision label reading: ${VISION_MODEL}${VISION_FIRST ? ' (first, local OCR skipped)' : ' (fallback)'}`);
 }
 {
   const env = await readFile('.env', 'utf8');
@@ -520,7 +567,9 @@ for (const w of wines) {
     // with the bottle, and the bottle is frequently the second or third image.
     for (const got of cands) {
       await writeFile(dest, got.bytes);
-      const v = await verify(dest, name, w.producer);
+      const v = VISION_FIRST
+        ? await verifyVisionFirst(dest, name, w.producer)
+        : await verify(dest, name, w.producer);
       if (v.accept) {
         rec.ok = true;
         rec.file = dest;
@@ -531,11 +580,13 @@ for (const w of wines) {
         rec.matched = v.found;
         rec.review = reviewFlags({ wine: w, name, label: v.label, w: got.w, h: got.h, page: src });
         accepted++;
+        if (VISION_FIRST) rec.verifiedBy = VISION_MODEL;
         break;
       }
-      // Second chance: re-read the label with a better OCR, then apply the
-      // SAME identity rules. Vision supplies evidence; it does not decide.
-      if (USE_VISION && v.stage !== 'decode') {
+      // The second chance only exists for the local-OCR path; in vision-first
+      // mode the model has already read the label, so re-reading it would just
+      // pay twice for the same answer.
+      if (USE_VISION && !VISION_FIRST && v.stage !== 'decode') {
         visionCalls++;
         // Only reconsider a LABEL refusal. A shape refusal stands: see
         // verifyText. And an empty read is not evidence — a wine was accepted
@@ -597,6 +648,15 @@ for (const w of wines) {
   }
 
   manifest[w.slug] = rec;
+  // Record the attempt as a MISS regardless of how the fetch went. import.mjs
+  // upgrades the ones it actually writes to 'imported' afterwards. Recording
+  // pessimistically first is deliberate: a run that dies between fetch and
+  // import still leaves the attempt on record, so the next night does not
+  // re-burn the same search.
+  if (w.sku) {
+    recordAttempt(attempts, w.sku, 'miss');
+    await saveAttempts(attempts);
+  }
   const mark = rec.ok ? (rec.review?.length ? 'OK? ' : 'OK  ') : 'MISS';
   console.log(`${mark} ${name.slice(0, 56).padEnd(56)} ${rec.ok ? new URL(rec.page).host : (rec.tried[0]?.why || rec.error || 'no candidates')}`);
   if (VERBOSE && rec.ok) console.log(`       label: ${rec.label?.slice(0, 90)}`);
