@@ -42,6 +42,8 @@ func main() {
 		runErr = runDeploy(cfg)
 	case "applyqueue":
 		runErr = runApplyQueue(cfg, os.Args[2:])
+	case "notify":
+		runErr = runNotify(cfg, os.Args[2:])
 	case "report":
 		runErr = runReport()
 	default:

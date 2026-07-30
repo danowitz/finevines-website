@@ -91,6 +91,26 @@ func TestRedirectsMapURLOverride(t *testing.T) {
 	}
 }
 
+func TestLoad_NotifySettings(t *testing.T) {
+	t.Setenv("POSTMARK_TOKEN", "pm-token")
+	t.Setenv("FINEVINES_NOTIFY_TO", "george@example.com,barbara@example.com")
+	t.Setenv("FINEVINES_NOTIFY_FROM", "catalog@finevines.biz")
+
+	cfg, err := Load("nonexistent.env")
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	if cfg.PostmarkToken != "pm-token" {
+		t.Errorf("PostmarkToken = %q", cfg.PostmarkToken)
+	}
+	if cfg.NotifyTo != "george@example.com,barbara@example.com" {
+		t.Errorf("NotifyTo = %q", cfg.NotifyTo)
+	}
+	if cfg.NotifyFrom != "catalog@finevines.biz" {
+		t.Errorf("NotifyFrom = %q", cfg.NotifyFrom)
+	}
+}
+
 func TestLoadMissingFileIsNotAnError(t *testing.T) {
 	if _, err := Load(filepath.Join(t.TempDir(), "nope.env")); err != nil {
 		t.Fatalf("missing .env should be fine (env-vars-only mode): %v", err)
