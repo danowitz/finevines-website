@@ -89,8 +89,9 @@ const card = (r, { chosen }) => {
   // Anchors are interactive elements, so clicking one navigates without
   // toggling the surrounding label's radio.
   const opt = (file, page, why, label, i) => `
-      <label class="opt">
+      <label class="opt${i === 0 && chosen ? ' proposed' : ''}">
         <input type="radio" name="${esc(r.slug)}" value="${esc(file || '')}" ${i === 0 && chosen ? 'checked' : ''}>
+        ${i === 0 && chosen ? '<span class="confirm-badge">click picture to confirm &#10003;</span>' : ''}
         <img src="${esc(src(file))}" loading="lazy" alt="">
         <span class="opt-src">${page ? `<a href="${esc(page)}" target="_blank" rel="noopener">${esc(hostOf(page))} &#8599;</a>` : esc(hostOf(page))}</span>
         ${why ? `<span class="opt-why">${esc(why)}</span>` : ''}
@@ -112,10 +113,6 @@ const card = (r, { chosen }) => {
     <div class="opts">
       ${chosen ? opt(r.file, r.page, '', r.label, 0) : ''}
       ${alts.map((a, i) => opt(a.file, a.page, a.why, a.label, chosen ? i + 1 : i)).join('')}
-      ${chosen ? `<label class="opt right">
-        <input type="radio" name="${esc(r.slug)}" value="__confirm__">
-        <span class="opt-yes">&#10003; correct<br>use this image</span>
-      </label>` : ''}
       <label class="opt wrong">
         <input type="radio" name="${esc(r.slug)}" value="__none__">
         <span class="opt-none">&#10007; wrong<br>none of these</span>
@@ -163,9 +160,9 @@ const html = `<!doctype html>
   .opt-label { color: #43352a; font-size: 10px; font-style: italic; }
   .opt.wrong { justify-content: center; align-items: center; text-align: center; background: #faf6ee; }
   .opt.wrong:has(input:checked) { border-color: #9a2b2b; background: #fdf0f0; }
-  .opt.right { justify-content: center; align-items: center; text-align: center; background: #faf6ee; }
-  .opt.right:has(input:checked) { border-color: #2e6b3f; background: #f0faf2; }
-  .opt-yes { font-size: 11px; color: #2e6b3f; font-weight: 600; }
+  .confirm-badge { font-size: 10px; color: #9c8c7c; text-align: center; }
+  .opt.confirmed { border-color: #2e6b3f; background: #f0faf2; }
+  .opt.confirmed .confirm-badge { color: #2e6b3f; font-weight: 700; }
   .opt-none { font-size: 11px; color: #6e5d4e; }
   .opt-search { font-size: 11px; color: #6b1630; }
   .opt-url { width: 100%; box-sizing: border-box; margin-top: 4px; font-size: 10px;
@@ -184,10 +181,10 @@ const html = `<!doctype html>
   ${clean.length} unflagged &middot; <b>${missedWithOptions.length}</b> found nothing but have candidates &middot;
   ${missedBare.length} found nothing at all
 </p>
-<p class="sum">Four moves per card: <b>&#10003; correct</b> confirms the shown image (clears its doubt flags — it
-goes live on the next import), <b>&#10007; wrong</b> rejects everything (the wine goes back to the fetch queue),
-picking a different candidate swaps it in, or <b>paste an image URL</b> you found yourself. A card you
-don't touch stays flagged and waits. Then <b>Download decisions</b> and run
+<p class="sum">Four moves per card: <b>click the bottle picture</b> to confirm it (turns green — goes live on the
+next import), <b>&#10007; wrong</b> rejects everything (the wine goes back to the fetch queue), click a
+different candidate to swap it in, or <b>paste an image URL</b> you found yourself. A card you don't
+touch stays in the queue. Then <b>Download decisions</b> and run
 <code>node tools/labelfetch/decide.mjs --apply</code>.</p>
 <p class="sum"><b>text on bottle</b> is what OCR actually read off that picture — it is the evidence
 the match was made on, so a wrong image usually names a different estate there.</p>
@@ -210,6 +207,30 @@ const chosen = {};
 const initial = {};
 document.querySelectorAll('input[type=radio]:checked').forEach(i => initial[i.name] = i.value);
 const count = () => document.getElementById('n').textContent = Object.keys(chosen).length;
+
+// Confirming is a click on the proposed picture itself — the thing being
+// judged — not a separate tile that reads like a competing choice. Clicking
+// toggles; the green state is the receipt. Links inside the tile still
+// navigate without confirming.
+document.addEventListener('click', e => {
+  if (e.target.closest('a')) return;
+  const lab = e.target.closest('.opt.proposed');
+  if (!lab) return;
+  const radio = lab.querySelector('input[type=radio]');
+  if (!radio.checked) return; // switching back from an alternate: change-handler territory
+  const slug = radio.name;
+  const badge = lab.querySelector('.confirm-badge');
+  if (chosen[slug] === '__confirm__') {
+    delete chosen[slug];
+    lab.classList.remove('confirmed');
+    badge.innerHTML = 'click picture to confirm &#10003;';
+  } else {
+    chosen[slug] = '__confirm__';
+    lab.classList.add('confirmed');
+    badge.innerHTML = '&#10003; confirmed — goes live next import';
+  }
+  count();
+});
 document.addEventListener('change', e => {
   if (e.target.type === 'radio') {
     if (e.target.value === initial[e.target.name]) delete chosen[e.target.name];
