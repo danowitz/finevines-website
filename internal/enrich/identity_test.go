@@ -62,3 +62,25 @@ func TestIdentityMatches_FalseWhenDescriptiveFieldChanged(t *testing.T) {
 		}
 	}
 }
+
+// RawFromWine is what lets something OTHER than a roster pull trigger
+// enrichment — a reviewer's text-feedback note, where the only record of the
+// wine is the catalog row.
+func TestRawFromWine_CarriesEveryEnrichmentInput(t *testing.T) {
+	w := model.Wine{
+		ID: "01t000000000001", SKU: "AB1201", Producer: "Domaine Bart",
+		Name: "Marsannay La Montagne", Vintage: "2019", Varietal: "Pinot Noir",
+		Region: "Burgundy", Country: "France", Appellation: "Marsannay",
+		Style: "Red", StockQty: 4, StockCases: 3.5, CasePack: 12,
+	}
+	got := RawFromWine(w)
+	want := salesforce.WineRaw{
+		ID: "01t000000000001", SKU: "AB1201", Producer: "Domaine Bart",
+		Name: "Marsannay La Montagne", Vintage: "2019", Varietal: "Pinot Noir",
+		Region: "Burgundy", Country: "France", Appellation: "Marsannay",
+		Style: "Red", StockQty: 4, StockCases: 3.5, CasePack: 12, ReadyToSell: true,
+	}
+	if got != want {
+		t.Errorf("RawFromWine mismatch:\n got %+v\nwant %+v", got, want)
+	}
+}

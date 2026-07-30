@@ -224,3 +224,48 @@ func TestBunnyClient_DefaultPurgeBaseURLIsBunnyAPI(t *testing.T) {
 		t.Errorf("default PurgeBaseURL = %q, want https://api.bunny.net", c.PurgeBaseURL)
 	}
 }
+
+// Download is the read side of the same storage zone Upload writes to. It
+// exists for internal/queue, which fetches _review/queue.json and the
+// candidate images the console's reviewers picked.
+func TestBunnyClient_DownloadReturnsBodyAndSendsAccessKey(t *testing.T) {
+	var gotPath, gotKey string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath, gotKey = r.URL.Path, r.Header.Get("AccessKey")
+		w.Write([]byte(`[{"id":"a1"}]`))
+	}))
+	defer srv.Close()
+
+	c := NewBunnyClient(srv.URL, "finevines", "storage-key", "acct-key", "1", srv.Client())
+	got, err := c.Download(context.Background(), "_review/queue.json")
+	if err != nil {
+		t.Fatalf("Download returned error: %v", err)
+	}
+	if string(got) != `[{"id":"a1"}]` {
+		t.Errorf("Download body = %q", got)
+	}
+	if gotPath != "/finevines/_review/queue.json" {
+		t.Errorf("Download path = %q, want /finevines/_review/queue.json", gotPath)
+	}
+	if gotKey != "storage-key" {
+		t.Errorf("Download AccessKey = %q, want the storage key", gotKey)
+	}
+}
+
+// A 404 is "the console has never written a queue", which is the state of the
+// zone until the first reviewer clicks something. Empty bytes, no error.
+func TestBunnyClient_DownloadMissingIsEmptyNotAnError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer srv.Close()
+
+	c := NewBunnyClient(srv.URL, "finevines", "k", "a", "1", srv.Client())
+	got, err := c.Download(context.Background(), "_review/queue.json")
+	if err != nil {
+		t.Fatalf("Download returned error: %v", err)
+	}
+	if len(got) != 0 {
+		t.Errorf("Download of a missing file = %q, want empty", got)
+	}
+}

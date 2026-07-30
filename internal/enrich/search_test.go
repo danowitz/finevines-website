@@ -1,6 +1,7 @@
 package enrich
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -153,5 +154,66 @@ func TestEnrichSurfacesHTTPError(t *testing.T) {
 	enricher := NewOpenAIEnricher("test-key", "gpt-4.1", server.URL, server.Client())
 	if _, err := enricher.Enrich(t.Context(), testWine()); err == nil {
 		t.Fatal("want error on HTTP 401, got nil")
+	}
+}
+
+// EnrichWithNote must put the reviewer's correction in the prompt VERBATIM and
+// AFTER the wine's facts, so the model reads it as a correction to them rather
+// than as another fact. The note is the whole value of the text-feedback
+// action: "says oaked; this wine is unoaked" has to survive to the model
+// unparaphrased.
+func TestEnrichWithNote_AppendsTheReviewerNoteAfterTheFacts(t *testing.T) {
+	var gotInput string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatal(err)
+		}
+		gotInput, _ = req["input"].(string)
+		// Via responsesJSON, not a hand-rolled body: the reply has to be a real
+		// Responses-API shape (an output item of type "message"), which is what
+		// responsesOutputText looks for.
+		w.Write([]byte(responsesJSON(`{"description":"Unoaked and precise.","sommelierNotes":"Serve cool.",` +
+			`"sources":{"description":"found"},"matchConfidence":88}`)))
+	}))
+	defer srv.Close()
+
+	e := NewOpenAIEnricher("key", "gpt-4.1", srv.URL, srv.Client())
+	res, err := e.EnrichWithNote(context.Background(),
+		salesforce.WineRaw{SKU: "MB5110", Producer: "Brezza", Name: "Langhe Chardonnay"},
+		"says oaked; this wine is unoaked")
+	if err != nil {
+		t.Fatalf("EnrichWithNote returned error: %v", err)
+	}
+	if res.Description != "Unoaked and precise." {
+		t.Errorf("Description = %q", res.Description)
+	}
+	if !strings.Contains(gotInput, "says oaked; this wine is unoaked") {
+		t.Errorf("the reviewer note is not in the prompt:\n%s", gotInput)
+	}
+	if i, j := strings.Index(gotInput, "Brezza"), strings.Index(gotInput, "says oaked"); i < 0 || j < i {
+		t.Errorf("the note does not follow the wine's facts (producer at %d, note at %d):\n%s", i, j, gotInput)
+	}
+}
+
+// Enrich must keep behaving exactly as before: it is EnrichWithNote with an
+// empty note, and an empty note must add nothing at all to the prompt.
+func TestEnrich_AddsNoCorrectionSection(t *testing.T) {
+	var gotInput string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req map[string]any
+		json.NewDecoder(r.Body).Decode(&req)
+		gotInput, _ = req["input"].(string)
+		w.Write([]byte(responsesJSON(
+			`{"description":"d","sommelierNotes":"s","sources":{},"matchConfidence":50}`)))
+	}))
+	defer srv.Close()
+
+	e := NewOpenAIEnricher("key", "gpt-4.1", srv.URL, srv.Client())
+	if _, err := e.Enrich(context.Background(), salesforce.WineRaw{SKU: "AB1201"}); err != nil {
+		t.Fatalf("Enrich returned error: %v", err)
+	}
+	if strings.Contains(strings.ToLower(gotInput), "correction") {
+		t.Errorf("Enrich added a correction section with no note:\n%s", gotInput)
 	}
 }
