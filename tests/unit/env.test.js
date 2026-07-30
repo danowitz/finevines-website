@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { binPath, openaiKey } from '../../tools/labelfetch/env.mjs';
+import { binPath, openaiKey, envOrFile } from '../../tools/labelfetch/env.mjs';
 
 describe('locating the Go helper binaries', () => {
   test('Windows keeps the .exe name it has always used', () => {
@@ -51,5 +51,30 @@ describe('finding the OpenAI key', () => {
     await writeFile(path, 'OPENAI_API_KEY=  sk-padded  \n');
     assert.equal(await openaiKey({}, path), 'sk-padded');
     assert.equal(await openaiKey({ OPENAI_API_KEY: ' sk-padded ' }, path), 'sk-padded');
+  });
+});
+
+describe('envOrFile — the general form behind openaiKey, also used for the Google CSE key/cx', () => {
+  test('the real environment variable wins', async () => {
+    assert.equal(
+      await envOrFile('FINEVINES_GOOGLE_CSE_KEY', { FINEVINES_GOOGLE_CSE_KEY: 'from-env' }, '/nonexistent'),
+      'from-env'
+    );
+  });
+
+  test('falls back to the same key inside .env', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'env-'));
+    const path = join(dir, '.env');
+    await writeFile(path, 'FINEVINES_GOOGLE_CSE_KEY=from-file\nFINEVINES_GOOGLE_CSE_CX=cx-from-file\n');
+    assert.equal(await envOrFile('FINEVINES_GOOGLE_CSE_KEY', {}, path), 'from-file');
+    assert.equal(await envOrFile('FINEVINES_GOOGLE_CSE_CX', {}, path), 'cx-from-file');
+  });
+
+  test('neither the environment nor .env having it — nor .env existing at all — is an empty string, not a throw', async () => {
+    // This is the exact crash this function replaces: pipeline.mjs used to
+    // read .env directly and unconditionally for these two keys, so on
+    // ubuntu-latest — no .env file — it threw ENOENT and took the whole
+    // script down before a single wine was selected.
+    assert.equal(await envOrFile('FINEVINES_GOOGLE_CSE_KEY', {}, '/nonexistent'), '');
   });
 });

@@ -37,7 +37,7 @@ import { join } from 'node:path';
 import { openBrowser } from '../../tests/helpers/browser.js';
 import { blockedBy } from './sources.mjs';
 import { tokens, normalize } from './match.mjs';
-import { binPath, openaiKey } from './env.mjs';
+import { binPath, openaiKey, envOrFile } from './env.mjs';
 import { loadAttempts, isDue, recordAttempt, saveAttempts } from './attempts.mjs';
 
 const run = promisify(execFile);
@@ -502,12 +502,16 @@ if (USE_VISION) {
   }
   console.log(`vision label reading: ${VISION_MODEL}${VISION_FIRST ? ' (first, local OCR skipped)' : ' (fallback)'}`);
 }
-{
-  const env = await readFile('.env', 'utf8');
-  CSE_KEY = env.match(/^FINEVINES_GOOGLE_CSE_KEY=(.*)$/m)?.[1]?.trim() || '';
-  CSE_CX = env.match(/^FINEVINES_GOOGLE_CSE_CX=(.*)$/m)?.[1]?.trim() || '';
-  if (CSE_KEY && CSE_CX) console.log('google discovery: on (Custom Search JSON API)');
-}
+// Same env-then-.env resolution as the OpenAI key, via the shared helper: an
+// environment variable wins outright, .env is a tolerant fallback, and either
+// key simply missing — no .env file at all included — leaves discovery off
+// rather than crashing the run. A direct, unconditional readFile('.env') here
+// used to ENOENT-kill the whole script on any machine without a .env file,
+// which is exactly ubuntu-latest, the one place this pipeline most needs to
+// keep running.
+CSE_KEY = await envOrFile('FINEVINES_GOOGLE_CSE_KEY');
+CSE_CX = await envOrFile('FINEVINES_GOOGLE_CSE_CX');
+if (CSE_KEY && CSE_CX) console.log('google discovery: on (Custom Search JSON API)');
 
 await mkdir(OUT_DIR, { recursive: true });
 await mkdir(ALT_DIR, { recursive: true });
