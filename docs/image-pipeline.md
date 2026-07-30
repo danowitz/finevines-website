@@ -168,3 +168,27 @@ Bordeaux and a Burgundy sit at the same scale.
   (see `CLAUDE.md`, 2026-07-26). That decision does not extend to watermark
   removal, which is refused. The best long-term answer remains supplier and
   importer asset libraries, which exist precisely so distributors can use them.
+
+## Running unattended (GitHub Actions)
+
+`tools/labelfetch/cistage.sh` is the nightly form of the whole loop, called by
+`.github/workflows/pipeline.yml`. It differs from the hand-driven sequence in
+three ways, all of them deliberate:
+
+- **It only looks at wines that are due.** `data/image-attempts.json` records a
+  per-SKU `lastAttempted`, so a wine whose photograph is not on the open web is
+  re-searched after 30 days rather than every night. See
+  `tools/labelfetch/attempts.mjs`.
+- **The label is read by the vision model first**, not by local OCR.
+  `imgcheck`'s OCR is a PowerShell shell-out and does not exist on Linux;
+  `--vision-first` reads the label with `gpt-4.1-nano` and passes the text to
+  `imgcheck -label`. The single-bottle shape gate and the identity match are
+  unchanged, so both hard gates still apply.
+- **There is no human review step.** `import.mjs` runs without `--clean-only`,
+  so an image that passed both hard gates is published even if it still carries
+  an informational review flag. Every newly imported image appears in the digest
+  email with its flags; a wrong one is corrected through the review console, not
+  by holding the whole batch back.
+
+Nothing else changes: the watermark sweep still runs between fetch and import,
+and a watermarked image is still never importable by any path.
