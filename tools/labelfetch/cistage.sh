@@ -36,9 +36,11 @@ node tools/labelfetch/pipeline.mjs --all --missing --due-only --vision-first
 echo "::endgroup::"
 
 echo "::group::Watermark sweep (hard gate)"
-# --apply records each verdict on the manifest record: a hit becomes a watermark
-# flag import refuses, a clean becomes watermarkSwept so a re-run does not pay
-# for it twice.
+# --apply records each verdict on the manifest record: hit or clean, the record
+# is marked watermarkSwept so a re-run does not pay for it twice, and a hit also
+# gains the watermark flag import refuses. An image the sweep could NOT reach a
+# verdict on stays unswept, and import refuses it too — see importrules.mjs. The
+# gate is "the sweep has looked", not "the sweep has condemned".
 node tools/labelfetch/watermarksweep.mjs --apply
 echo "::endgroup::"
 

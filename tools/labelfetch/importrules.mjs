@@ -12,6 +12,23 @@ export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
   if (isWatermarked(rec)) {
     return { import: false, reason: `watermark (${rec.watermark || '?'}) — never imported` };
   }
+  // The invariant is "no image publishes until the sweep has LOOKED at it", not
+  // "no image publishes once the sweep has condemned it" — and only the first of
+  // those is safe. watermarksweep.mjs produces no verdict on a transport error,
+  // an exhausted retry budget or an unparseable reply, and leaves such a record
+  // exactly as it found it: unflagged, unswept, and (before this rule) freely
+  // importable. That is the failure mode that matters, because it is permanent:
+  // once a photograph sits in the catalog the "already has a photograph" rule
+  // below refuses to replace it, so a watermark that slips through on a night
+  // the sweep was rate-limited can never be swept out again.
+  //
+  // Refusing per image fails closed without failing the run: the wine keeps its
+  // generated label for one more night and the next sweep re-examines the same
+  // staged file, which is exactly what an unchecked image deserves.
+  if (rec.watermarkSwept !== true) {
+    const why = rec.watermarkSweepError ? ` (${rec.watermarkSweepError})` : '';
+    return { import: false, reason: `watermark sweep has not cleared this image${why} — not imported` };
+  }
   if (!wine) {
     return { import: false, reason: 'no such wine in the catalog' };
   }
