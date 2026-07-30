@@ -137,6 +137,15 @@ for (const slug of slugs) {
     confirmed++;
     console.log(`  YES    ${rec.name}`);
     if (apply) {
+      // A confirmed image photographed against a backdrop still gets the
+      // backdrop stripped — the reviewer confirmed the WINE, and a clean
+      // white ground is what the catalog grid needs. New pixels mean the
+      // watermark sweep must look again.
+      const v = await checkShape(rec.file);
+      if (!v.ok && /no clean background/.test(v.reason || '')) {
+        console.log('            scene background — removing it…');
+        if (await cutBackground(rec.file)) delete rec.watermarkSwept;
+      }
       rec.verifiedBy = 'human review (confirmed)';
       rec.review = [];
     }

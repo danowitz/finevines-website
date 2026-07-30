@@ -30,7 +30,7 @@
 //   node tools/labelfetch/pipeline.mjs --n 20            # sample the catalog
 //   node tools/labelfetch/pipeline.mjs --all --missing   # every wine lacking a photo
 //   node tools/labelfetch/pipeline.mjs --slug some-wine  # one wine, verbose
-import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access, rename } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
@@ -405,6 +405,19 @@ async function verifyText(file, name, producer, labelText) {
   }
 }
 
+// cutBackground strips a scene background locally (tools/labelfetch/bgcut.py:
+// rembg U^2-Net, flattened onto white), in place. Costs ~10s per call (each
+// spawn reloads the model), so it runs only on the one refusal it can fix.
+async function cutBackground(file) {
+  try {
+    await run('python', ['tools/labelfetch/bgcut.py', file, file + '.cut']);
+    await rename(file + '.cut', file);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // verify shells out to the Go binary: single-bottle shape check, then OCR of
 // the label band against the catalog name.
 async function verify(file, name, producer) {
@@ -520,7 +533,19 @@ for (const w of wines) {
     // with the bottle, and the bottle is frequently the second or third image.
     for (const got of cands) {
       await writeFile(dest, got.bytes);
-      const v = await verify(dest, name, w.producer);
+      let v = await verify(dest, name, w.producer);
+      // A right-wine bottle photographed against a backdrop is recoverable:
+      // strip the background and judge the RESULT with the same rules. Only
+      // the clean-background refusal triggers this — a multi-subject sweep
+      // stays refused, because rembg keeps every foreground object (measured
+      // 2026-07-30: the wall vanished, the plated steak survived).
+      let cutApplied = false;
+      if (!v.accept && /no clean background/.test(v.reason || '')) {
+        if (await cutBackground(dest)) {
+          cutApplied = true;
+          v = await verify(dest, name, w.producer);
+        }
+      }
       if (v.accept) {
         rec.ok = true;
         rec.file = dest;
@@ -530,6 +555,7 @@ for (const w of wines) {
         rec.label = v.label;
         rec.matched = v.found;
         rec.review = reviewFlags({ wine: w, name, label: v.label, w: got.w, h: got.h, page: src });
+        if (cutApplied) rec.review.push('background removed automatically');
         accepted++;
         break;
       }
@@ -558,6 +584,7 @@ for (const w of wines) {
             wine: w, name, label: vv, viaVision: true,
             localReason: v.reason, w: got.w, h: got.h, page: src,
           });
+          if (cutApplied) rec.review.push('background removed automatically');
           accepted++;
           visionRecovered++;
           break;
