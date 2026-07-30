@@ -41,6 +41,16 @@ func runNotify(cfg config.Config, args []string) error {
 		return err
 	}
 
+	// Checked, not just loaded. model.LoadWines treats a missing file as an empty
+	// catalog — correct for data/wines.json on a first run, catastrophic for the
+	// baseline of a diff: every wine in the portfolio reads as new, and the
+	// client is mailed a digest announcing five thousand arrivals. There is no
+	// safe default for a missing baseline, so this refuses rather than guesses.
+	if _, err := os.Stat(*beforePath); err != nil {
+		return fmt.Errorf("notify: before-snapshot not found: %s — refusing to diff against an empty baseline "+
+			"(the workflow copies data/wines.json aside right after checkout; by hand, see docs/operations.md)",
+			*beforePath)
+	}
 	before, err := model.LoadWines(*beforePath)
 	if err != nil {
 		return fmt.Errorf("notify: load %s: %w", *beforePath, err)
