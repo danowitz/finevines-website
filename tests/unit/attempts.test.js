@@ -115,4 +115,41 @@ describe('persistence', () => {
     await writeFile(path, '{ this is not json');
     assert.deepEqual(await loadAttempts(path), {});
   });
+
+  test('realistic SKUs stay in one lexicographic order, not object-enumeration order', async () => {
+    // Plain objects reorder any all-digit key ("180118") ahead of every other
+    // key, in ascending numeric order, no matter what order it was inserted
+    // in. Most catalog SKUs are all-digit, so a naive "insert into an object
+    // in sorted order, then JSON.stringify it" implementation would split the
+    // file into a numeric block followed by a non-numeric block instead of
+    // one sorted order. Inspect the written TEXT here, not
+    // JSON.parse + Object.keys — parsing back into an object would launder
+    // away the exact bug this guards against.
+    const dir = await mkdtemp(join(tmpdir(), 'attempts-'));
+    const path = join(dir, 'image-attempts.json');
+    const attempts = {};
+    // Inserted out of order on purpose. Correct lexicographic order is
+    // 180118, 603742*, 911042, AB1201 — note the starred SKU sorts BETWEEN
+    // the two numeric ones, which only a real string sort gets right; naive
+    // object-key enumeration would pull both numeric keys to the front
+    // (180118, 911042) and push 603742* to the end.
+    recordAttempt(attempts, '911042', 'miss', NOW);
+    recordAttempt(attempts, 'AB1201', 'miss', NOW);
+    recordAttempt(attempts, '603742*', 'imported', NOW);
+    recordAttempt(attempts, '180118', 'imported', NOW);
+    await saveAttempts(attempts, path);
+
+    const raw = await readFile(path, 'utf8');
+    const positions = ['180118', '603742*', '911042', 'AB1201'].map((sku) =>
+      raw.indexOf(`"${sku}"`),
+    );
+    assert.ok(
+      positions.every((p) => p >= 0),
+      'every SKU must appear in the file',
+    );
+    assert.ok(
+      positions[0] < positions[1] && positions[1] < positions[2] && positions[2] < positions[3],
+      `expected 180118, 603742*, 911042, AB1201 in that order in the file text, got positions ${JSON.stringify(positions)}`,
+    );
+  });
 });

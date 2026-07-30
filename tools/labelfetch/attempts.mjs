@@ -47,10 +47,29 @@ export async function loadAttempts(path = LEDGER_PATH) {
 // saveAttempts writes the ledger with sorted keys and a trailing newline: it is
 // committed to a public repo, so it has to diff one SKU at a time instead of
 // reshuffling on every run.
+//
+// The sort is done by hand-building the JSON text from a sorted array of
+// [sku, record] pairs rather than by inserting into a plain object in sorted
+// order and letting JSON.stringify walk it. A plain object cannot carry an
+// arbitrary string-sort key order: JS enumerates any key that reads as a
+// canonical integer index (e.g. "180118") ahead of every other key, in
+// ascending NUMERIC order, regardless of insertion order — and most catalog
+// SKUs are all-digit strings. That silently splits the file into a numeric
+// block followed by a non-numeric block instead of one lexicographic order.
 export async function saveAttempts(attempts, path = LEDGER_PATH) {
-  const sorted = {};
-  for (const sku of Object.keys(attempts).sort()) sorted[sku] = attempts[sku];
-  await writeFile(path, JSON.stringify(sorted, null, 1) + '\n');
+  const skus = Object.keys(attempts).sort();
+  const entries = skus.map((sku) => {
+    // Re-indent the record's own JSON so it nests correctly under the
+    // 1-space top-level indent: every line but the opening "{" gets one more
+    // leading space.
+    const body = JSON.stringify(attempts[sku], null, 1)
+      .split('\n')
+      .map((line, i) => (i === 0 ? line : ` ${line}`))
+      .join('\n');
+    return ` ${JSON.stringify(sku)}: ${body}`;
+  });
+  const text = entries.length ? `{\n${entries.join(',\n')}\n}\n` : '{}\n';
+  await writeFile(path, text);
 }
 
 // isDue reports whether the image stage should try this SKU on this run.
