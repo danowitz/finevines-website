@@ -5,9 +5,9 @@
   "description": "Dev-only test harness for the FineVines static site. Nothing here ships: the site is Go-built static HTML plus hand-written IIFE scripts served directly, with no bundler and no runtime dependencies. This package exists solely so the browser-side logic can be tested.",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/unit/ tests/e2e/",
-    "test:unit": "node --test tests/unit/",
-    "test:e2e": "node --test tests/e2e/",
+    "test": "node --test tests/unit tests/e2e",
+    "test:unit": "node --test tests/unit",
+    "test:e2e": "node --test tests/e2e",
     "build": "go run ./cmd/finevines build"
   },
   "devDependencies": {
