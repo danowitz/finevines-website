@@ -183,8 +183,9 @@ const html = `<!doctype html>
 </p>
 <p class="sum">Four moves per card: <b>click the bottle picture</b> to confirm it (turns green — goes live on the
 next import), <b>&#10007; wrong</b> rejects everything (the wine goes back to the fetch queue), click a
-different candidate to swap it in, or <b>paste an image URL</b> you found yourself. A card you don't
-touch stays in the queue. Then <b>Download decisions</b> and run
+different candidate to swap it in, or <b>paste an image URL</b> you found yourself. A bottle photographed in a scene is fine to pick —
+the background is removed automatically when decisions are applied (a second subject in frame still
+gets refused). A card you don't touch stays in the queue. Then <b>Download decisions</b> and run
 <code>node tools/labelfetch/decide.mjs --apply</code>.</p>
 <p class="sum"><b>text on bottle</b> is what OCR actually read off that picture — it is the evidence
 the match was made on, so a wrong image usually names a different estate there.</p>

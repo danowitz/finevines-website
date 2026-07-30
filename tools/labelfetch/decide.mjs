@@ -73,6 +73,26 @@ async function fetchImage(url) {
   } catch { return null; }
 }
 
+// cutBackground strips a scene background locally (tools/labelfetch/bgcut.py,
+// rembg) and flattens onto white, in place. The reviewer picked a bottle
+// photographed in a setting; the pick is right, the setting is what the
+// clean-background gate refuses — so the setting goes. The shape check runs
+// again afterwards and stays the judge: a cut that still shows a second
+// subject (rembg keeps ALL foreground objects) is still refused.
+async function cutBackground(file) {
+  const { execFile } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const run = promisify(execFile);
+  try {
+    await run('python', ['tools/labelfetch/bgcut.py', file, file + '.cut.png']);
+    await rename(file + '.cut.png', file);
+    return true;
+  } catch (e) {
+    console.log(`            background removal failed: ${String(e.message).split('\n')[0]}`);
+    return false;
+  }
+}
+
 // Shape only. The reviewer has already decided this is the right WINE; what
 // still has to hold is that it is a usable product photograph.
 async function checkShape(file) {
@@ -161,7 +181,11 @@ for (const slug of slugs) {
       if (!got) { console.log('            FAILED to fetch'); failed++; pasted--; continue; }
       const dest = join('data/fetched-images', slug + '.png');
       await writeFile(dest, got);
-      const v = await checkShape(dest);
+      let v = await checkShape(dest);
+      if (!v.ok && /no clean background/.test(v.reason || '')) {
+        console.log('            scene background — removing it…');
+        if (await cutBackground(dest)) v = await checkShape(dest);
+      }
       if (!v.ok) { console.log(`            REFUSED: ${v.reason}`); await unlink(dest).catch(() => {}); failed++; pasted--; continue; }
       rec.ok = true;
       rec.file = dest;
@@ -182,6 +206,20 @@ for (const slug of slugs) {
   swapped++;
   console.log(`  SWAP   ${rec.name}\n            -> ${basename(alt.file)} from ${alt.page ? new URL(alt.page).host : '?'}`);
   if (apply) {
+    // Shape-gate the alternate BEFORE touching the staged file: several
+    // alternates were refused precisely for their background, and a swap the
+    // gate ends up refusing must leave the record exactly as it was.
+    let v = await checkShape(alt.file);
+    if (!v.ok && /no clean background/.test(v.reason || '')) {
+      console.log('            scene background — removing it…');
+      if (await cutBackground(alt.file)) v = await checkShape(alt.file);
+    }
+    if (!v.ok) {
+      console.log(`            REFUSED: ${v.reason}`);
+      swapped--;
+      failed++;
+      continue;
+    }
     const dest = join('data/fetched-images', slug + '.png');
     try { await unlink(dest); } catch {}
     await rename(alt.file, dest);
