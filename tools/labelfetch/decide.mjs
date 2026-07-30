@@ -129,6 +129,16 @@ for (const slug of slugs) {
   // pipeline found — a human choosing the image is not a reason to skip
   // checking that it is one bottle on a clean background.
   if (/^https?:\/\//i.test(choice)) {
+    // The same source gate the pipeline applies — a human paste is not exempt.
+    // The _pb_x pattern is Vivino's CDN naming and travels to re-hosting
+    // retailers, where the host check cannot see it.
+    const { blockedBy } = await import('./sources.mjs');
+    const gate = blockedBy(choice) || (/_pb_x\d+/.test(choice) ? 'vivino filename pattern' : '');
+    if (gate) {
+      failed++;
+      console.log(`  BLOCK  ${rec.name}\n            ${gate}: ${choice.slice(0, 70)}`);
+      continue;
+    }
     pasted++;
     console.log(`  PASTE  ${rec.name}
             <- ${choice.slice(0, 78)}`);
@@ -146,6 +156,8 @@ for (const slug of slugs) {
       rec.verifiedBy = 'human (pasted URL)';
       rec.review = [];
       delete rec.humanRejected;
+      // New pixels, stale verdict: the sweep must re-check this file.
+      delete rec.watermarkSwept;
     }
     continue;
   }
@@ -169,6 +181,8 @@ for (const slug of slugs) {
     // evidence than either verifier produces, so the doubts they overrule go.
     rec.review = [];
     rec.alternates = (rec.alternates || []).filter((a) => a.file !== choice);
+    // New pixels, stale verdict: the sweep must re-check this file.
+    delete rec.watermarkSwept;
   }
 }
 
