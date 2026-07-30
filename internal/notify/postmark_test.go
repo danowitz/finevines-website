@@ -95,6 +95,72 @@ func TestPostmarkSender_HTTPFailureIsAnError(t *testing.T) {
 	}
 }
 
+// A 2xx whose body is not the documented JSON must NOT be read as success. An
+// empty body, a corporate proxy's interception page or a Postmark incident page
+// all leave ErrorCode at its zero value, and treating that as "sent" is exactly
+// the silent non-delivery the ErrorCode guard exists to prevent.
+func TestPostmarkSender_UnparseableSuccessBodyIsAnError(t *testing.T) {
+	for _, tc := range []struct{ name, body string }{
+		{"an HTML interception page", "<html><body>Blocked by proxy</body></html>"},
+		{"an empty body", ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Write([]byte(tc.body))
+			}))
+			defer srv.Close()
+
+			s := NewPostmarkSender("pm-token", srv.Client())
+			s.BaseURL = srv.URL
+			err := s.Send(context.Background(), "a@example.com", []string{"b@example.com"}, Message{})
+			if err == nil {
+				t.Fatalf("Send accepted a 200 carrying %s — the digest would silently never arrive", tc.name)
+			}
+		})
+	}
+}
+
+// The unparseable-body error has to carry enough of the response to recognise
+// what intercepted the call, but not a whole HTML page.
+func TestPostmarkSender_UnparseableBodyErrorQuotesABoundedPrefix(t *testing.T) {
+	long := "<html><body>" + strings.Repeat("x", 5000) + "</body></html>"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(long))
+	}))
+	defer srv.Close()
+
+	s := NewPostmarkSender("pm-token", srv.Client())
+	s.BaseURL = srv.URL
+	err := s.Send(context.Background(), "a@example.com", []string{"b@example.com"}, Message{})
+	if err == nil {
+		t.Fatal("Send accepted a 200 with a non-JSON body")
+	}
+	if !strings.Contains(err.Error(), "<html><body>") {
+		t.Errorf("error = %v, want it to quote the start of the offending body", err)
+	}
+	if len(err.Error()) > 500 {
+		t.Errorf("error is %d chars — the whole page leaked into the log", len(err.Error()))
+	}
+}
+
+// notify makes exactly one outbound call, as the LAST step of the nightly
+// pipeline. An unbounded client turns a stalled connection into a job that hangs
+// until the workflow's own multi-hour timeout kills it.
+func TestNewPostmarkSender_NilClientFallbackIsBounded(t *testing.T) {
+	s := NewPostmarkSender("pm-token", nil)
+	if s.HTTP == nil {
+		t.Fatal("NewPostmarkSender(nil) left HTTP nil")
+	}
+	if s.HTTP.Timeout == 0 {
+		t.Error("the fallback client has no Timeout — a stalled connection would hang the nightly run")
+	}
+	// The fallback must be its own client: mutating the shared http.DefaultClient
+	// would silently impose this timeout on every other caller in the binary.
+	if s.HTTP == http.DefaultClient {
+		t.Error("the fallback is http.DefaultClient itself — bounding it would leak into every other client")
+	}
+}
+
 func TestPostmarkSender_NoRecipientsIsAnError(t *testing.T) {
 	s := NewPostmarkSender("pm-token", http.DefaultClient)
 	if err := s.Send(context.Background(), "a@example.com", nil, Message{}); err == nil {

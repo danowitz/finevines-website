@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
+	"unicode/utf8"
 )
 
 // defaultPostmarkBaseURL is Postmark's API host. Stored on the sender rather
@@ -34,11 +36,22 @@ type PostmarkSender struct {
 	HTTP    *http.Client
 }
 
-// NewPostmarkSender builds a sender. hc may be nil, in which case
-// http.DefaultClient is used.
+// sendTimeout bounds the single outbound call this package makes. The digest is
+// the LAST step of the nightly pipeline, so an unbounded client turns one
+// stalled connection into a workflow that hangs until its own multi-hour job
+// timeout kills it — long after the catalog work it is reporting on finished.
+// Thirty seconds is generous for one small JSON POST.
+const sendTimeout = 30 * time.Second
+
+// NewPostmarkSender builds a sender. hc may be nil, in which case a bounded
+// client is used.
+//
+// The nil fallback is deliberately NOT http.DefaultClient: that client has no
+// Timeout, and giving it one here would silently impose this package's deadline
+// on every other caller sharing it.
 func NewPostmarkSender(token string, hc *http.Client) *PostmarkSender {
 	if hc == nil {
-		hc = http.DefaultClient
+		hc = &http.Client{Timeout: sendTimeout}
 	}
 	return &PostmarkSender{Token: token, BaseURL: defaultPostmarkBaseURL, HTTP: hc}
 }
@@ -87,15 +100,47 @@ func (s *PostmarkSender) Send(ctx context.Context, from string, to []string, m M
 	body, _ := io.ReadAll(resp.Body)
 
 	var parsed postmarkResponse
-	_ = json.Unmarshal(body, &parsed)
+	unmarshalErr := json.Unmarshal(body, &parsed)
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("postmark: status %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+		return fmt.Errorf("postmark: status %d: %s", resp.StatusCode, bodyPrefix(body))
+	}
+	// A 2xx we cannot parse is NOT a success. An empty body, a corporate proxy's
+	// interception page or a Postmark incident page all leave ErrorCode at its
+	// zero value, and returning nil here would log "digest sent" while nobody
+	// was mailed — the same silent non-delivery the ErrorCode check below exists
+	// to catch.
+	if unmarshalErr != nil {
+		return fmt.Errorf("postmark: status %d but the response was not the documented JSON (%v): %s",
+			resp.StatusCode, unmarshalErr, bodyPrefix(body))
 	}
 	if parsed.ErrorCode != 0 {
 		return fmt.Errorf("postmark: error %d: %s", parsed.ErrorCode, parsed.Message)
 	}
 	return nil
+}
+
+// maxBodyPrefix bounds how much of an unexpected response reaches the error, and
+// through it the workflow log: enough to recognise a proxy notice or an incident
+// page, not so much that a full HTML document is pasted into the run output.
+const maxBodyPrefix = 200
+
+// bodyPrefix renders an unexpected response body for an error message.
+func bodyPrefix(body []byte) string {
+	s := strings.TrimSpace(string(body))
+	if s == "" {
+		return "(empty body)"
+	}
+	if len(s) <= maxBodyPrefix {
+		return s
+	}
+	// Trim back to a rune boundary so a split multi-byte character does not turn
+	// the error into mojibake.
+	cut := s[:maxBodyPrefix]
+	for len(cut) > 0 && !utf8.ValidString(cut) {
+		cut = cut[:len(cut)-1]
+	}
+	return cut + "…"
 }
 
 // Recipients splits FINEVINES_NOTIFY_TO's comma-separated list, trimming each

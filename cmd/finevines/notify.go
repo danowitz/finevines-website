@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/gritautomation/finevines-website/internal/config"
@@ -81,7 +80,12 @@ func runNotify(cfg config.Config, args []string) error {
 	}
 	to := notify.Recipients(cfg.NotifyTo)
 
-	sender := notify.NewPostmarkSender(cfg.PostmarkToken, http.DefaultClient)
+	// nil, not http.DefaultClient: the nil fallback is a client with a send
+	// timeout. This is the last step of the nightly pipeline, and an unbounded
+	// client would let one stalled connection hold the whole job open until its
+	// own multi-hour timeout. That bound is why context.Background() is enough
+	// here — the deadline lives on the client.
+	sender := notify.NewPostmarkSender(cfg.PostmarkToken, nil)
 	if err := sender.Send(context.Background(), cfg.NotifyFrom, to, msg); err != nil {
 		return fmt.Errorf("notify: %w", err)
 	}
