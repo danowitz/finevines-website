@@ -69,6 +69,8 @@ const VERBOSE = has('verbose') || opt('slug', '') !== '';
 const USE_VISION = has('vision');
 const VISION_MODEL = opt('vision-model', 'gpt-4.1-nano');
 let VISION_KEY = '';
+let CSE_KEY = '';
+let CSE_CX = '';
 let visionCalls = 0;
 let visionRecovered = 0;
 
@@ -114,6 +116,57 @@ function catalogName(w) {
   return w.producer && !name.toLowerCase().startsWith(w.producer.toLowerCase())
     ? `${w.producer} ${name}`
     : name;
+}
+
+// googleDiscover asks the Custom Search JSON API for image results and
+// returns their CONTEXT pages — the product pages the images live on — so
+// they flow through the same extract/gate/verify chain as DDG candidates.
+// A second discovery source, not a replacement: measured on a 20-wine sample
+// of DDG failures (2026-07-29 spike, tools/labelfetch/googlespike.mjs), CSE
+// found a gate-surviving candidate for 18, of which 3 machine-verified and
+// ~5 more were the right wine recoverable in review.
+//
+// Optional by construction: no FINEVINES_GOOGLE_CSE_KEY/_CX in .env means no
+// Google rung, and ANY error (including the 429 that follows the free
+// 100-query day on the test key) just returns [] — the pipeline continues
+// DDG-only rather than dying mid-run.
+let cseDown = false; // once quota is gone, stop burning a request per wine
+async function googleDiscover(query) {
+  if (!CSE_KEY || !CSE_CX || cseDown) return [];
+  try {
+    const params = new URLSearchParams({
+      key: CSE_KEY, cx: CSE_CX, q: query, searchType: 'image', num: '8',
+      imgSize: 'large', imgType: 'photo', safe: 'active',
+    });
+    const res = await fetch('https://www.googleapis.com/customsearch/v1?' + params, {
+      // The GRIT-Hub test key is referer-restricted to grithub.app.
+      headers: { Referer: 'https://finevines.grithub.app' },
+    });
+    if (res.status === 429 || res.status === 403) {
+      cseDown = true;
+      console.log(`     google discovery off for this run (HTTP ${res.status} — quota)`);
+      return [];
+    }
+    if (!res.ok) return [];
+    const items = (await res.json()).items || [];
+    // The direct image URL leads, its context page follows as backup: the
+    // spike's verified wins came from the direct link (navigating Chrome to
+    // it yields a one-image page bestImageOn reads normally), while a context
+    // page can bury or lazy-load the image the API indexed off it.
+    const urls = [];
+    for (const it of items) {
+      const img = it.link || '';
+      const ctx = it.image?.contextLink || '';
+      // The Vivino filename pattern travels to re-hosting retailers; the host
+      // gate can't see it, the URL of the image itself can.
+      if (blockedBy(img) || blockedBy(ctx) || /_pb_x\d+/.test(img)) continue;
+      if (img) urls.push(img);
+      if (ctx) urls.push(ctx);
+    }
+    return urls;
+  } catch {
+    return [];
+  }
 }
 
 // discover returns candidate product-page URLs, best first.
@@ -402,6 +455,12 @@ if (USE_VISION) {
   }
   console.log(`vision fallback: ${VISION_MODEL}`);
 }
+{
+  const env = await readFile('.env', 'utf8');
+  CSE_KEY = env.match(/^FINEVINES_GOOGLE_CSE_KEY=(.*)$/m)?.[1]?.trim() || '';
+  CSE_CX = env.match(/^FINEVINES_GOOGLE_CSE_CX=(.*)$/m)?.[1]?.trim() || '';
+  if (CSE_KEY && CSE_CX) console.log('google discovery: on (Custom Search JSON API)');
+}
 
 await mkdir(OUT_DIR, { recursive: true });
 await mkdir(ALT_DIR, { recursive: true });
@@ -428,6 +487,19 @@ for (const w of wines) {
     pages = (await discover(page, searchQuery(w))).slice(0, MAX_CANDIDATES);
   } catch (e) {
     rec.error = 'discover: ' + String(e.message).split('\n')[0];
+  }
+  // Google image search sees product pages DDG misses (measured: candidates
+  // for 18 of 20 DDG failures). Its context pages join the same queue —
+  // deduped by host so the run doesn't visit one shop twice for one wine.
+  {
+    const seen = new Set(pages.map((p) => new URL(p).host));
+    for (const u of await googleDiscover(searchQuery(w))) {
+      const h = new URL(u).host;
+      if (seen.has(h)) continue;
+      seen.add(h);
+      pages.push(u);
+      if (pages.length >= MAX_CANDIDATES * 2) break;
+    }
   }
 
   for (const src of pages) {
