@@ -12,12 +12,19 @@
 // scale — and a grid of those jostles. Consistency is the whole point of the
 // exercise, so it is applied at the moment of import rather than left to CSS.
 //
-//   node tools/labelfetch/import.mjs           # dry run: report what would change
-//   node tools/labelfetch/import.mjs --apply   # write it
-import { readFile, writeFile, access, mkdir } from 'node:fs/promises';
+//   node tools/labelfetch/import.mjs                        # dry run: report what would change
+//   node tools/labelfetch/import.mjs --apply                # write it
+//   node tools/labelfetch/import.mjs --apply --clean-only   # only records with no review flags
+//
+// Whether each record may be promoted is decided by importrules.mjs (tested):
+// watermarked records are refused unconditionally, and --clean-only skips
+// anything still carrying a review flag so the flagged set waits for its
+// human pass in review.html.
+import { readFile, writeFile, access, mkdir, unlink } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
+import { shouldImport } from './importrules.mjs';
 
 const run = promisify(execFile);
 const MANIFEST = 'data/fetched-images/manifest.json';
@@ -26,6 +33,7 @@ const WINES = 'data/wines.json';
 const NORMALIZER = 'imgnorm.exe';
 
 const apply = process.argv.includes('--apply');
+const cleanOnly = process.argv.includes('--clean-only');
 const exists = async (p) => {
   try {
     await access(p);
@@ -56,17 +64,18 @@ await mkdir(IMG_DIR, { recursive: true });
 let changed = 0;
 let skipped = 0;
 for (const rec of staged) {
-  const wine = bySlug.get(rec.slug);
-  if (!wine) {
-    console.log(`  skip  ${rec.slug} — no such wine in the catalog`);
+  // A manifest entry whose staged file was later purged is stale, not
+  // importable — without this check the dry-run over-reports what a real
+  // import would write.
+  if (!(await exists(rec.file))) {
+    console.log(`  skip  ${rec.slug} — staged file missing (purged after fetch)`);
     skipped++;
     continue;
   }
-  // Never overwrite a real photograph the catalog already holds. Only the
-  // generated SVG fallback is replaced; anything else is an editorial choice
-  // someone made and this is not the tool to reverse it.
-  if (wine.imagePath && !wine.imagePath.endsWith('.svg')) {
-    console.log(`  skip  ${rec.slug} — already has a photograph (${wine.imagePath})`);
+  const wine = bySlug.get(rec.slug);
+  const verdict = shouldImport(rec, wine, { cleanOnly });
+  if (!verdict.import) {
+    console.log(`  skip  ${rec.slug} — ${verdict.reason}`);
     skipped++;
     continue;
   }
@@ -80,6 +89,12 @@ for (const rec of staged) {
       skipped++;
       continue;
     }
+    // The Go image pipeline removes the sibling extension when a wine flips
+    // label<->photo (enrich.writeImageFile); do the same here so the stale
+    // SVG placeholder doesn't ship as an orphan asset next to the new .jpg.
+    try {
+      await unlink(join(IMG_DIR, rec.slug + '.svg'));
+    } catch {}
     wine.imagePath = dest.replace(/\\/g, '/');
     // 'scraped-web' is the canonical model.ImageScrapedWeb value. It must be
     // one the Go side classifies as a REAL image (model.ImageFieldSource ->

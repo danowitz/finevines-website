@@ -22,6 +22,9 @@
 // regional variants are covered without listing each.
 export const BLOCKED = [
   'vivino',
+  // iDealwine brands its auction photos the same way — found the hard way by
+  // the 2026-07-29 watermark sweep, in images re-hosted on clean retail hosts.
+  'idealwine',
   'wine-searcher',
   'winesearcher',
   'gettyimages',

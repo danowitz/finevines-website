@@ -11,6 +11,14 @@ describe('blocked image sources', () => {
     assert.equal(blockedBy('https://www.vivino.com/search/wines?q=x'), 'vivino');
   });
 
+  test('iDealwine is blocked — auction-house photos carry an iDealwine mark', () => {
+    // Found by the 2026-07-29 watermark sweep: several staged images fetched
+    // from clean retailer hosts turned out to be re-hosted iDealwine photos.
+    // Block the source outright, same reasoning as Vivino.
+    assert.equal(blockedBy('https://www.idealwine.com/uk/wine/1.jpg'), 'idealwine');
+    assert.equal(blockedBy('https://media.idealwine.biz/photos/x.png'), 'idealwine');
+  });
+
   test('stock libraries are blocked', () => {
     for (const u of [
       'https://media.gettyimages.com/id/1/photo.jpg',
