@@ -3,6 +3,11 @@
 #
 #   fetch + verify  ->  watermark sweep  ->  import survivors
 #
+# Deliberately incremental: a bounded slice of the wines still lacking a
+# photograph each night, not all of them (see the fetch step). Every stage is
+# resumable from the committed ledger and manifest, so the coverage figure climbs
+# a little every night rather than in one run that cannot finish.
+#
 # Both verification stages are HARD GATES with no override path (design spec §A
 # step 3). An image that fails the shape check or whose label does not name the
 # wine never reaches the manifest as ok; an image carrying a Vivino or stock
@@ -25,14 +30,35 @@ go build -o imgcheck ./tools/imgcheck
 go build -o imgnorm ./tools/imgnorm
 echo "::endgroup::"
 
-echo "::group::Fetch and verify (imageless + due only)"
-# --missing     : only wines still on the SVG label fallback
-# --due-only    : and only those the attempt ledger says are due (30-day backoff)
-# --all         : no sampling — the whole due set
-# --vision-first: read the label with the vision model, then apply imgcheck's
-#                 identity rules to that text. Required on Linux: imgcheck's
-#                 local OCR is a PowerShell shell-out (tools/imgcheck/ocr.ps1).
-node tools/labelfetch/pipeline.mjs --all --missing --due-only --vision-first
+echo "::group::Fetch and verify (imageless + due only, up to WINES_PER_RUN)"
+# --missing        : only wines still on the SVG label fallback
+# --due-only       : and only those the attempt ledger says are due (30-day backoff)
+# --n              : at most this many wines tonight (see the budget note below)
+# --budget-minutes : and no longer than this, whatever happens
+# --vision-first   : read the label with the vision model, then apply imgcheck's
+#                    identity rules to that text. Required on Linux: imgcheck's
+#                    local OCR is a PowerShell shell-out (tools/imgcheck/ocr.ps1).
+#
+# THIS STAGE IS BOUNDED, and that is the whole design. On night one every one of
+# the ~1,700 imageless wines is due (the seeded ledger holds only 'imported'
+# records), and an unbounded run over that set cannot finish inside the
+# workflow's timeout-minutes. A killed job is not a slow night: the per-wine
+# ledger writes are lost, because the commit-back step never runs, so the
+# following night re-searches exactly the same wines and dies exactly the same
+# way — for ever.
+#
+# Bounded, the stage CONVERGES instead. Every wine it reaches is recorded, found
+# or not; a recorded miss is not due again for 30 days; so the due set shrinks by
+# roughly WINES_PER_RUN a night and coverage climbs run over run. Clearing the
+# night-one backlog takes a couple of weeks, and no single night can wedge it.
+#
+# Overridable from the workflow if the numbers need tuning against real runner
+# timings; the defaults are sized for the 300-minute job timeout with enrich,
+# build and deploy still to come after this.
+node tools/labelfetch/pipeline.mjs \
+  --n "${WINES_PER_RUN:-150}" \
+  --budget-minutes "${IMAGE_BUDGET_MINUTES:-120}" \
+  --missing --due-only --vision-first
 echo "::endgroup::"
 
 echo "::group::Watermark sweep (hard gate)"

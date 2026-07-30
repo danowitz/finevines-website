@@ -191,8 +191,14 @@ Each run, in this order:
    skipped by their `sourceHash`, so nothing is re-sent to OpenAI.
 3. **`tools/labelfetch/cistage.sh`** sources bottle photographs for wines that
    have none and are due per `data/image-attempts.json` (a 30-day backoff after a
-   failed search). An image must pass **both** the label/shape verification and
-   the watermark sweep to be imported; there is no override in CI.
+   failed search) — **up to 150 wines and 120 minutes per night**, whichever comes
+   first. The cap is what makes the stage converge: each night records its
+   results, a recorded miss is not retried for 30 days, so the due set shrinks and
+   coverage climbs run over run instead of one unbounded run hitting the job
+   timeout and losing everything it learned. An image must pass **both** the
+   label/shape verification and the watermark sweep to be imported; there is no
+   override in CI, and an image the sweep could not reach a verdict on is refused
+   too.
 4. **`finevines build`** renders `dist/`.
 5. **`finevines deploy`** uploads the changed files to Bunny.net and purges both
    pull zones.

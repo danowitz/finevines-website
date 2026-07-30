@@ -87,6 +87,28 @@ export function isDue(attempts, sku, now = new Date(), retryDays = RETRY_DAYS) {
   return now.getTime() - last >= retryDays * 86400000;
 }
 
+// shouldRecordAttempt reports whether a run learned enough about a wine to write
+// the ledger at all.
+//
+// The 30-day backoff is only defensible if a recorded miss means somebody
+// actually looked. On the vision-first path CI runs, "looking" is a network call
+// to OpenAI for the label text — and a 429 or a 502 says nothing whatsoever about
+// the wine. Recording that as a miss benches a never-evaluated wine for a month,
+// and the month after it can be benched the same way again, so a wine whose photo
+// is sitting on its producer's website never gets found.
+//
+// The distinction is therefore "was a candidate EVALUATED", not "did a candidate
+// pass":
+//   - accepted, or any candidate judged: record. A judged-and-refused candidate is
+//     a real miss and the backoff is exactly right for it.
+//   - no candidates at all: record. Search returning nothing IS the answer.
+//   - candidates found but none could be judged: do NOT record. The wine stays due
+//     and the next run tries it again.
+export function shouldRecordAttempt({ accepted = false, evaluated = 0, unevaluated = 0 } = {}) {
+  if (accepted || evaluated > 0) return true;
+  return unevaluated === 0;
+}
+
 // recordAttempt stamps an attempt onto the ledger, incrementing the per-SKU
 // count. Mutates and returns attempts so a caller can record inside a loop and
 // save once at the end.

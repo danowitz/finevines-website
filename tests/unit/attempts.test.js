@@ -8,6 +8,7 @@ import {
   saveAttempts,
   isDue,
   recordAttempt,
+  shouldRecordAttempt,
   RETRY_DAYS,
 } from '../../tools/labelfetch/attempts.mjs';
 
@@ -151,5 +152,38 @@ describe('persistence', () => {
       positions[0] < positions[1] && positions[1] < positions[2] && positions[2] < positions[3],
       `expected 180118, 603742*, 911042, AB1201 in that order in the file text, got positions ${JSON.stringify(positions)}`,
     );
+  });
+});
+
+// The 30-day backoff is only fair if a recorded miss means the wine was actually
+// looked at. On the CI-primary vision-first path the label read is a network call
+// to OpenAI, and a 429 or a 502 is not evidence about the wine — recording it as
+// a miss benches a never-evaluated wine for a month, and next month it can be
+// benched again the same way.
+describe('whether a run learned enough about a wine to write the ledger', () => {
+  test('an accepted image is recorded — import upgrades it to imported', () => {
+    assert.equal(shouldRecordAttempt({ accepted: true, evaluated: 1, unevaluated: 0 }), true);
+  });
+
+  test('candidates that were judged and refused are a real miss', () => {
+    assert.equal(shouldRecordAttempt({ accepted: false, evaluated: 3, unevaluated: 0 }), true);
+  });
+
+  test('a wine with no candidates at all is a real miss — the search IS the answer', () => {
+    assert.equal(shouldRecordAttempt({ accepted: false, evaluated: 0, unevaluated: 0 }), true);
+  });
+
+  test('candidates that could not be evaluated are NOT a miss — the wine stays due', () => {
+    assert.equal(shouldRecordAttempt({ accepted: false, evaluated: 0, unevaluated: 2 }), false);
+  });
+
+  test('one unevaluable candidate among evaluated ones is still a miss', () => {
+    // The wine did get judged, just not on every candidate. Leaving it due on
+    // that basis would defeat the backoff for any wine with one flaky host.
+    assert.equal(shouldRecordAttempt({ accepted: false, evaluated: 2, unevaluated: 1 }), true);
+  });
+
+  test('an accepted image is recorded even if another candidate failed transport', () => {
+    assert.equal(shouldRecordAttempt({ accepted: true, evaluated: 1, unevaluated: 1 }), true);
   });
 });

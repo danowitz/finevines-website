@@ -287,6 +287,13 @@ Step by step:
 - **image stage failed** — no image reached `assets/img/wines/` unless it passed
   both gates. `data/image-attempts.json` was written per wine, so a retry does
   not re-search what was already tried.
+
+  Note what is NOT a failure: the stage does at most 150 wines and 120 minutes a
+  night and then stops, exit 0, having logged `stopped after N min: the
+  120-minute budget is spent`. Wines it did not reach stay due for tomorrow. It
+  will take a couple of weeks of nightly runs to work through the wines that have
+  never been searched, and the coverage figure in the digest should climb a
+  little each night — that is the stage working, not stalling.
 - **deploy failed** — `.bunny-manifest.json` was NOT saved and the CDN was NOT
   purged. The next run re-diffs against the old manifest and retries exactly the
   files that never uploaded.
