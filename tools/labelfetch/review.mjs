@@ -95,6 +95,7 @@ const card = (r, { chosen }) => {
         <img src="${esc(src(file))}" loading="lazy" alt="">
         <span class="opt-src">${page ? `<a href="${esc(page)}" target="_blank" rel="noopener">${esc(hostOf(page))} &#8599;</a>` : esc(hostOf(page))}</span>
         ${why ? `<span class="opt-why">${esc(why)}</span>` : ''}
+        ${why && /no clean background/.test(why) ? '<span class="opt-fix">pick it &mdash; background is removed automatically</span>' : ''}
         ${label ? `<span class="opt-label" title="the text OCR read off this bottle — the evidence the match was made on">text on bottle: ${esc(String(label).slice(0, 70))}</span>` : ''}
       </label>`;
 
@@ -117,7 +118,7 @@ const card = (r, { chosen }) => {
         <input type="radio" name="${esc(r.slug)}" value="__none__">
         <span class="opt-none">&#10007; wrong<br>none of these</span>
         <a class="opt-search" href="${esc(googleURL(w, r))}" target="_blank" rel="noopener">search images &rarr;</a>
-        <input class="opt-url" type="url" placeholder="paste image URL"
+        <input class="opt-url" type="url" placeholder="paste image URL — scenes OK"
                data-slug="${esc(r.slug)}"
                title="Right-click an image in the search results, Copy image address, paste here. It is fetched, checked and normalised like any other candidate.">
       </label>
@@ -157,6 +158,7 @@ const html = `<!doctype html>
   .opt-src a:hover { text-decoration: underline; }
   .search { font-size: 11px; color: #6b1630; align-self: flex-start; }
   .opt-why { color: #9a2b2b; font-size: 10px; }
+  .opt-fix { color: #2e6b3f; font-size: 10px; }
   .opt-label { color: #43352a; font-size: 10px; font-style: italic; }
   .opt.wrong { justify-content: center; align-items: center; text-align: center; background: #faf6ee; }
   .opt.wrong:has(input:checked) { border-color: #9a2b2b; background: #fdf0f0; }
@@ -215,6 +217,11 @@ const count = () => document.getElementById('n').textContent = Object.keys(chose
 // navigate without confirming.
 document.addEventListener('click', e => {
   if (e.target.closest('a')) return;
+  // Clicking a label dispatches a SECOND, synthetic click targeted at its
+  // radio. Handling both toggled the confirmation on and instantly off —
+  // "clicking does nothing". Only the person's own click (img, badge, label
+  // chrome) counts; the input-targeted echo is ignored.
+  if (e.target.tagName === 'INPUT') return;
   const lab = e.target.closest('.opt.proposed');
   if (!lab) return;
   const radio = lab.querySelector('input[type=radio]');
