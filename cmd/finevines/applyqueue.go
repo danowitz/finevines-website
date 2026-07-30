@@ -64,7 +64,17 @@ func (n execNormalizer) Normalize(ctx context.Context, src, dst string) error {
 func findImgnorm() (string, error) {
 	for _, c := range imgnormCandidates {
 		if _, err := os.Stat(c); err == nil {
-			return filepath.Join(".", c), nil
+			// Absolutised deliberately. os/exec resolves a command name with no
+			// path separator against $PATH ONLY, never the working directory —
+			// and filepath.Join(".", "imgnorm") cleans straight back down to
+			// "imgnorm", separator and all. Returning the relative form would
+			// therefore fail to exec the very binary this Stat just found, on
+			// Linux CI exactly as on Windows.
+			abs, err := filepath.Abs(c)
+			if err != nil {
+				return "", fmt.Errorf("applyqueue: resolving %s: %w", c, err)
+			}
+			return abs, nil
 		}
 	}
 	return "", fmt.Errorf("applyqueue: no imgnorm binary in the working directory — build it first:\n  go build -o imgnorm ./tools/imgnorm")

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gritautomation/finevines-website/internal/enrich"
@@ -85,7 +86,13 @@ type Result struct {
 //   - An action naming a SKU the catalog does not hold IS ledgered, with the
 //     reason. Leaving it unrecorded would have every future run retry it
 //     forever and the queue would never drain.
-//   - The queue file is deleted last, and only if there was anything in it.
+//   - The queue file is deleted last, only if there was anything in it, and ONLY
+//     when every action either applied or was skipped. A batch containing a
+//     failure leaves the queue in place: keeping the action out of the ledger is
+//     only half of "the next run retries it" — if the queue were cleared anyway
+//     there would be nothing left to retry FROM, and a 502 on one reviewer's
+//     candidate download would lose their correction permanently. Re-reading a
+//     queue whose healthy actions already landed is free: the ledger skips them.
 //     Deleting rather than truncating is safe even though the console may append
 //     mid-drain: the console rewrites the whole file, so an action that
 //     reappears is simply re-read next run and skipped by the ledger.
@@ -113,6 +120,7 @@ func Apply(ctx context.Context, in Input) (Result, error) {
 		res.Applied = append(res.Applied, entry)
 	}
 
+	failed := 0
 	for _, a := range in.Actions {
 		if res.Ledger.Has(a.ID) {
 			res.Skipped++
@@ -128,7 +136,9 @@ func Apply(ctx context.Context, in Input) (Result, error) {
 
 		outcome, err := applyOne(ctx, in, &res, i, a)
 		if err != nil {
-			// Not ledgered: the next run retries it.
+			// Not ledgered AND the queue is kept below: together those are what
+			// make "the next run retries it" true.
+			failed++
 			log("applyqueue: action %s (%s, SKU %s) failed, will retry next run: %v",
 				a.ID, a.Kind, a.SKU, err)
 			continue
@@ -137,8 +147,23 @@ func Apply(ctx context.Context, in Input) (Result, error) {
 		record(a, outcome)
 	}
 
+	// A failure anywhere in the batch keeps the whole queue file. The successful
+	// actions in it are already ledgered, so re-reading them next run costs one
+	// skip apiece; the failed ones get a real second chance instead of being
+	// deleted along with everything else.
+	if failed > 0 {
+		log("applyqueue: %d of %d action(s) failed — leaving %s in place so they retry next run "+
+			"(the ones that landed are ledgered and will be skipped)",
+			failed, len(in.Actions), in.QueuePath)
+		return res, nil
+	}
+
 	if err := in.Store.Delete(ctx, in.QueuePath); err != nil {
-		return res, fmt.Errorf("applyqueue: clear %s (actions already applied — the ledger stops them re-applying): %w",
+		// The caller aborts here without persisting the catalog or the ledger, so
+		// the next run re-reads this same queue and re-applies the batch from
+		// scratch. That is safe (every action kind is idempotent against a given
+		// wine) but it is NOT the ledger protecting us — nothing was written.
+		return res, fmt.Errorf("applyqueue: clear %s (nothing persisted yet, so the next run re-applies this batch from scratch): %w",
 			in.QueuePath, err)
 	}
 	return res, nil
@@ -185,6 +210,22 @@ func swapImage(ctx context.Context, in Input, w *model.Wine, a Action) (string, 
 		// labels are gitignored build artifacts precisely so nothing has to
 		// carry them around.
 		return "reverted to the generated label", nil
+	}
+
+	// sourceUrl is REQUIRED on a real swap (design spec §B, the wire contract):
+	// it becomes the wine's ImageSourceURL, and "where did this picture come
+	// from" has to stay answerable from data/wines.json alone — the client's
+	// accepted copyright posture rests on that being true for every scraped
+	// image. Rejected BEFORE any side effect, and deliberately as a failure
+	// rather than a ledgered outcome: a ledgered swap can never be corrected,
+	// whereas a failed one keeps the queue (see Apply) so the console can repost
+	// the same action ID with the provenance filled in. The CandidateNone
+	// fallback above is the one legitimate exemption — a generated label has no
+	// external source to cite.
+	if strings.TrimSpace(a.Payload.SourceURL) == "" {
+		return "", fmt.Errorf("image-swap names candidate %s but carries no sourceUrl; "+
+			"provenance is required on every real image (only the %q fallback is exempt)",
+			a.Payload.Candidate, CandidateNone)
 	}
 
 	storagePath := path.Join(in.CandidateDir, a.Payload.Candidate)

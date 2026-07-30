@@ -183,6 +183,9 @@ func TestApply_ImageSwapWritesTheCandidateAndKeepsProvenance(t *testing.T) {
 	}
 }
 
+// The CandidateNone fallback is the one image-swap exempt from the sourceUrl
+// requirement: a deterministically generated label has no external source to
+// cite. This payload carries no sourceUrl and must still apply.
 func TestApply_ImageSwapToNoneFallsBackToTheSVGLabel(t *testing.T) {
 	store := &fakeStore{files: map[string][]byte{}}
 	in := baseInput(t, store, []Action{{
@@ -334,8 +337,11 @@ func TestApply_UnknownSKUIsRecordedNotRetriedForever(t *testing.T) {
 func TestApply_AFailedActionIsNotLedgeredAndDoesNotAbortTheDrain(t *testing.T) {
 	store := &fakeStore{files: map[string][]byte{}, failOn: "_review/candidates/AB1201/cand-2.png"}
 	in := baseInput(t, store, []Action{
+		// A complete, valid swap: the sourceUrl is present so this fails on the
+		// unreachable STORAGE, not on provenance validation — otherwise this test
+		// would stop covering the transport-failure path it exists for.
 		{ID: "a1", SKU: "AB1201", Reviewer: "barbara", Kind: ActionImageSwap,
-			Payload: Payload{Candidate: "AB1201/cand-2.png"}},
+			Payload: Payload{Candidate: "AB1201/cand-2.png", SourceURL: "https://example-producer.fr/vins/"}},
 		{ID: "a2", SKU: "MB5110", Reviewer: "george", Kind: ActionTextFeedback,
 			Payload: Payload{Note: "says oaked; this wine is unoaked"}},
 	})
@@ -349,6 +355,118 @@ func TestApply_AFailedActionIsNotLedgeredAndDoesNotAbortTheDrain(t *testing.T) {
 	}
 	if !res.Ledger.Has("a2") {
 		t.Error("the drain stopped at the failure instead of continuing")
+	}
+}
+
+// Leaving an action out of the ledger only means "retry it next run" if there is
+// still a queue to retry FROM. Clearing the queue on a batch that contained a
+// failure would lose that reviewer's correction permanently — not applied, not
+// ledgered, not in the digest, and no longer in the queue. So: a failure keeps
+// the file, and the following run drains it for real.
+func TestApply_KeepsTheQueueWhenAnActionFailedThenDrainsItOnTheRetry(t *testing.T) {
+	store := &fakeStore{
+		files:  map[string][]byte{"_review/candidates/AB1201/cand-2.png": []byte("candidate-bytes")},
+		failOn: "_review/candidates/AB1201/cand-2.png",
+	}
+	in := baseInput(t, store, []Action{
+		{ID: "a1", SKU: "AB1201", Reviewer: "barbara", Kind: ActionImageSwap,
+			Payload: Payload{Candidate: "AB1201/cand-2.png", SourceURL: "https://example-producer.fr/vins/"}},
+		{ID: "a2", SKU: "MB5110", Reviewer: "george", Kind: ActionTextFeedback,
+			Payload: Payload{Note: "says oaked; this wine is unoaked"}},
+	})
+
+	first, err := Apply(context.Background(), in)
+	if err != nil {
+		t.Fatalf("first Apply returned error: %v", err)
+	}
+	if len(store.deleted) != 0 {
+		t.Fatalf("store.deleted = %v — a batch containing a failure must leave the queue in place", store.deleted)
+	}
+	if first.Ledger.Has("a1") {
+		t.Error("the failed swap was ledgered — it would never be retried")
+	}
+	if !first.Ledger.Has("a2") {
+		t.Error("the healthy action in the same batch did not land")
+	}
+
+	// The next run: the same queue is re-read, carrying the ledger, catalog and
+	// flags the first run produced. Storage is healthy this time.
+	store.failOn = ""
+	second := in
+	second.Ledger, second.Wines, second.Flags = first.Ledger, first.Wines, first.Flags
+	second.Texts = &fakeTexts{}
+
+	res, err := Apply(context.Background(), second)
+	if err != nil {
+		t.Fatalf("second Apply returned error: %v", err)
+	}
+	if res.Skipped != 1 {
+		t.Errorf("res.Skipped = %d, want 1 — a2 already landed on the first run", res.Skipped)
+	}
+	if n := len(second.Texts.(*fakeTexts).notes); n != 0 {
+		t.Errorf("the enricher was called %d times for the already-applied text action", n)
+	}
+	if len(res.Applied) != 1 || res.Applied[0].ID != "a1" {
+		t.Errorf("res.Applied = %+v, want exactly the retried a1", res.Applied)
+	}
+	if !res.Ledger.Has("a1") {
+		t.Error("the retried swap was not ledgered on the second run")
+	}
+	// The retry did the real work, provenance and all.
+	w := find(t, res.Wines, "AB1201")
+	if w.ImageSourceURL != "https://example-producer.fr/vins/" || w.ImageSource != model.ImageScrapedWeb {
+		t.Errorf("the retried swap did not apply: %q / %q", w.ImageSourceURL, w.ImageSource)
+	}
+	if _, err := os.Stat(filepath.Join(in.ImgDir, "bart-marsannay-la-montagne-2019.jpg")); err != nil {
+		t.Errorf("the retried swap wrote no image: %v", err)
+	}
+	// Only now, with nothing left failing, is the queue cleared.
+	if len(store.deleted) != 1 || store.deleted[0] != "_review/queue.json" {
+		t.Errorf("store.deleted = %v, want the queue cleared once the batch fully drained", store.deleted)
+	}
+}
+
+// sourceUrl is REQUIRED on a real image-swap: it becomes the wine's
+// ImageSourceURL, and the client's accepted copyright posture depends on that
+// provenance being answerable from data/wines.json alone. A swap missing it must
+// be rejected BEFORE it touches anything, and must NOT be ledgered — a ledgered
+// swap could never be corrected, whereas a failure keeps the queue so the
+// console can repost the same ID with the URL filled in.
+func TestApply_ImageSwapWithoutASourceURLIsRejectedBeforeAnySideEffect(t *testing.T) {
+	store := &fakeStore{files: map[string][]byte{
+		"_review/candidates/AB1201/cand-2.png": []byte("candidate-bytes"),
+	}}
+	in := baseInput(t, store, []Action{{
+		ID: "a1", Reviewer: "barbara", SKU: "AB1201", Kind: ActionImageSwap,
+		Payload: Payload{Candidate: "AB1201/cand-2.png"}, // no sourceUrl
+	}})
+
+	res, err := Apply(context.Background(), in)
+	if err != nil {
+		t.Fatalf("Apply returned error: %v", err)
+	}
+	if len(res.Applied) != 0 || res.Ledger.Has("a1") {
+		t.Errorf("a swap with no sourceUrl was applied/ledgered: %+v", res.Applied)
+	}
+	// Nothing on disk moved: no jpg written, the existing label still in place.
+	if _, err := os.Stat(filepath.Join(in.ImgDir, "bart-marsannay-la-montagne-2019.jpg")); !os.IsNotExist(err) {
+		t.Error("a rejected swap still wrote an image")
+	}
+	if _, err := os.Stat(filepath.Join(in.ImgDir, "bart-marsannay-la-montagne-2019.svg")); err != nil {
+		t.Errorf("a rejected swap removed the existing label: %v", err)
+	}
+	if n := len(in.Norm.(*fakeNorm).calls); n != 0 {
+		t.Errorf("the normalizer ran %d time(s) for a rejected swap", n)
+	}
+	// And the catalog row is untouched.
+	w := find(t, res.Wines, "AB1201")
+	if w.ImageSource != model.ImageGeneratedLabel || w.ImageSourceURL != "" ||
+		w.ImagePath != "assets/img/wines/bart-marsannay-la-montagne-2019.svg" {
+		t.Errorf("a rejected swap changed the catalog: %q / %q / %q", w.ImageSource, w.ImageSourceURL, w.ImagePath)
+	}
+	// It stays queued, so a corrected repost of the same action ID can land.
+	if len(store.deleted) != 0 {
+		t.Errorf("store.deleted = %v — a rejected swap must leave the queue for a corrected repost", store.deleted)
 	}
 }
 
