@@ -164,8 +164,14 @@ if (apply) {
       delete rec.watermarkSweptPending;
       rec.watermarkSwept = true;
     }
-    // A verdict supersedes whatever stopped an earlier pass from reaching one.
-    if (rec.watermarkSwept) delete rec.watermarkSweepError;
+    // A verdict supersedes whatever stopped any pass from reaching one — in both
+    // directions. Once a record is swept it stays swept, so a --recheck-clean
+    // pass that fails on transport must not leave a stale error behind on a
+    // record that already carries a real verdict.
+    if (rec.watermarkSwept) {
+      delete rec.watermarkSweepError;
+      delete rec.watermarkSweepErrorPending;
+    }
     if (rec.watermarkSweepErrorPending) {
       rec.watermarkSweepError = rec.watermarkSweepErrorPending;
       delete rec.watermarkSweepErrorPending;
