@@ -246,3 +246,87 @@ If you say "not now" to publishing in either skill, the change is saved and will
 The 301 map accumulates in `data/lifecycle-redirects.json` (committed with
 the catalog) and ships inside `dist/redirects.json`, which the Bunny Edge
 middleware serves. No operator action is ever required.
+
+---
+
+## Runbook: the GitHub Actions pipeline
+
+### Where to look
+- **Actions tab → `pipeline`** for runs. `gh run list --workflow=pipeline.yml`
+  from a terminal; `gh run view <id> --log` for the full log.
+- A failed run emails the repo owner automatically (GitHub's own notification).
+  The digest email is for content changes, not CI health — the two are separate
+  on purpose.
+
+### Triggering a run by hand
+```
+gh workflow run pipeline.yml
+gh run watch
+```
+
+### When a step fails
+Nothing partial is ever persisted as if complete. Specifically:
+- **applyqueue failed** — the queue is not cleared and nothing was committed. The
+  next run re-reads the same actions; `data/queue-ledger.json` stops anything
+  that did apply from applying twice. Safe to just re-run.
+- **enrich failed** — `data/wines.json` holds whatever the last checkpoint saved
+  (every 50 wines). Wines that succeeded now hash-match and are skipped on the
+  retry, so nothing is re-billed.
+- **image stage failed** — no image reached `assets/img/wines/` unless it passed
+  both gates. `data/image-attempts.json` was written per wine, so a retry does
+  not re-search what was already tried.
+- **deploy failed** — `.bunny-manifest.json` was NOT saved and the CDN was NOT
+  purged. The next run re-diffs against the old manifest and retries exactly the
+  files that never uploaded.
+- **commit-back was rejected twice** — a human pushed mid-run. The deploy already
+  happened; the site is live and correct, but the repo has not caught up. Re-run
+  the pipeline: it re-diffs and commits.
+- **notify failed** — everything shipped; only the email did not. The most likely
+  cause is `FINEVINES_NOTIFY_FROM` not being a confirmed Postmark sender
+  signature (Postmark returns HTTP 200 with a non-zero `ErrorCode` for that).
+
+### After a bot commit lands, never use "Re-run failed jobs"
+`notify` is the last step in the pipeline, so the failure that sends an operator
+to the Actions "Re-run failed jobs" button is almost always `notify` itself —
+and by then the bot's commit-back has already landed on `master`. A re-run
+checks out that same master, so the before/after snapshot it takes captures the
+**after** state (the run has nothing left to diff against itself), `notify`
+finds no changes, and the job goes green having sent no digest — silently, on
+the exact night an email mattered most.
+
+To re-send the digest by hand instead, check out **at the bot commit itself**
+(if later commits have landed since, `data/wines.json` at `HEAD` is no longer
+that run's after-state, so this only works from the bot commit, not from
+whatever is on `master` now):
+
+```
+git show <bot-commit>~1:data/wines.json > /tmp/before.json
+./finevines notify -before /tmp/before.json
+```
+
+Add `-dry` to preview the digest without sending it through Postmark.
+
+### Rotating a secret
+`gh secret set <NAME>`, then `gh workflow run pipeline.yml` to confirm. Secrets
+are never printed in logs; a step that needs one and does not have it fails with
+`set <NAME> in .env (or the environment) before running <subcommand>`.
+
+### Stopping the pipeline
+Disable the workflow: `gh workflow disable pipeline.yml`. The nightly schedule
+and every trigger stop; `deploy.bat` remains available on the workstation.
+
+### Launch steps still open (repo-admin + live credentials required)
+These have not been done yet — they need someone with repository admin rights
+and the real production credentials, not just a code change:
+1. **Configure the 16 GitHub Actions repository secrets** (Settings → Secrets
+   and variables → Actions). See the table in the README's
+   [pipeline section](../README.md#6-the-automated-pipeline-github-actions) for
+   the exact names and what each one is; verify each against
+   `.github/workflows/pipeline.yml`'s `env:` block before setting it — a typo
+   here is a silent empty value at 2:15am.
+2. **Set Settings → Actions → General → Workflow permissions to Read and
+   write**, so the bot commit-back can push to `master`.
+3. **Run the first manual `workflow_dispatch`** (`gh workflow run pipeline.yml`)
+   as the acceptance run, and read its log end to end (`gh run watch`, then
+   `gh run view <id> --log`) before trusting the nightly schedule to run
+   unattended.
