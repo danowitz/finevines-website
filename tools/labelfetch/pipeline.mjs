@@ -547,6 +547,10 @@ if (!(await exists(VERIFIER))) {
 }
 
 let wines = JSON.parse(await readFile('data/wines.json', 'utf8')).filter((w) => w.slug && w.name);
+// Kept before any filtering so the empty-selection guard below can tell "the
+// filters left nothing" (convergence, exit 0) from "the catalog itself is empty"
+// (a broken invocation, exit 2).
+const catalogSize = wines.length;
 const attempts = await loadAttempts();
 const only = opt('slug', '');
 if (only) {
@@ -572,9 +576,32 @@ if (only) {
       : Array.from({ length: n }, (_, i) => wines[Math.floor((i + 0.5) * (wines.length / n))]).filter(Boolean);
   }
 }
+// An empty selection is TWO different situations, and conflating them is what
+// wedges the nightly pipeline.
+//
+// "Nothing is due tonight" is the image stage SUCCEEDING. Once the night-one
+// backlog has been worked through — roughly a fortnight at --n 150 — the due set
+// empties, and it stays empty until the 30-day backoff starts returning wines.
+// For those weeks an exit 2 here is fatal: `set -euo pipefail` in cistage.sh
+// kills the stage, and build, deploy, commit-back and notify never run. The site
+// stops updating because image sourcing finished its work.
+//
+// A malformed invocation is a different thing and still exits 2. The two cases
+// that are actually distinguishable: a --slug naming no wine (a typo), and a
+// catalog that yielded nothing at all (wrong working directory, truncated file —
+// a missing data/wines.json already throws out of the readFile above). Anything
+// else empty is the filters having nothing left to offer, which is convergence.
 if (!wines.length) {
-  console.error('no wines selected');
-  process.exit(2);
+  if (only) {
+    console.error(`no wine in the catalog has slug ${only}`);
+    process.exit(2);
+  }
+  if (!catalogSize) {
+    console.error('data/wines.json holds no usable wines (no slug/name) — wrong directory, or a truncated file');
+    process.exit(2);
+  }
+  console.log('no wines due tonight — image stage is converged; nothing to do');
+  process.exit(0);
 }
 
 if (USE_VISION) {

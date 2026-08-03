@@ -293,7 +293,10 @@ Step by step:
   120-minute budget is spent`. Wines it did not reach stay due for tomorrow. It
   will take a couple of weeks of nightly runs to work through the wines that have
   never been searched, and the coverage figure in the digest should climb a
-  little each night — that is the stage working, not stalling.
+  little each night — that is the stage working, not stalling. Once that backlog
+  is cleared the step logs `no wines due tonight — image stage is converged;
+  nothing to do` and exits 0 on most nights, until the 30-day backoff starts
+  returning wines. That is the finished state, not a fault.
 - **deploy failed** — `.bunny-manifest.json` was NOT saved and the CDN was NOT
   purged. The next run re-diffs against the old manifest and retries exactly the
   files that never uploaded.

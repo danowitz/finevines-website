@@ -4,9 +4,17 @@
 #   fetch + verify  ->  watermark sweep  ->  import survivors
 #
 # Deliberately incremental: a bounded slice of the wines still lacking a
-# photograph each night, not all of them (see the fetch step). Every stage is
-# resumable from the committed ledger and manifest, so the coverage figure climbs
-# a little every night rather than in one run that cannot finish.
+# photograph each night, not all of them (see the fetch step). The coverage figure
+# climbs a little every night rather than in one run that cannot finish.
+#
+# What carries between nights is the attempt LEDGER (data/image-attempts.json,
+# committed) and the imported images themselves. The staging directory and its
+# manifest do not — data/fetched-images/ is gitignored, so every run starts with an
+# empty staging area and anything not imported tonight is re-fetched from scratch
+# whenever the wine next comes due. That is why a wine whose image was verified but
+# could not be watermark-swept is recorded 'unevaluated' rather than 'miss': there
+# is no staged file for a later sweep to pick up, so the only recovery is redoing
+# the search, and a 30-day backoff would prevent it.
 #
 # Both verification stages are HARD GATES with no override path (design spec §A
 # step 3). An image that fails the shape check or whose label does not name the
@@ -60,6 +68,19 @@ node tools/labelfetch/pipeline.mjs \
   --budget-minutes "${IMAGE_BUDGET_MINUTES:-120}" \
   --missing --due-only --vision-first
 echo "::endgroup::"
+
+# Nothing staged means nothing to sweep or import, and that is a normal night —
+# the fetch step exits 0 having found no wine due (see pipeline.mjs's
+# empty-selection guard), which is what every night looks like once the backlog is
+# worked through. The staging directory is gitignored, so a fresh runner starts
+# with no manifest at all: without this guard the sweep would ENOENT and import
+# would exit 2, and `set -e` would take build, deploy, commit-back and notify down
+# with them on the very nights the image stage had nothing left to do.
+if [ ! -f data/fetched-images/manifest.json ]; then
+  echo "no images staged this run — nothing to sweep or import"
+  echo "image stage complete"
+  exit 0
+fi
 
 echo "::group::Watermark sweep (hard gate)"
 # --apply records each verdict on the manifest record: hit or clean, the record

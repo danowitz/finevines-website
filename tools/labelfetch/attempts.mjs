@@ -23,13 +23,26 @@ export const LEDGER_PATH = 'data/image-attempts.json';
 // within the month.
 export const RETRY_DAYS = 30;
 
-// The only outcomes a record may carry. 'imported' is terminal — the wine has
-// its photograph. 'miss' is everything else: nothing found, nothing that passed
-// the shape gate, a watermark hit, a normalise failure. They are one outcome on
-// purpose: from the ledger's point of view they all mean "no photograph yet, try
-// again after the backoff", and distinguishing them would invite per-reason
-// backoffs nobody has asked for.
-const OUTCOMES = new Set(['imported', 'miss']);
+// The only outcomes a record may carry.
+//
+// 'imported' is terminal — the wine has its photograph. 'miss' is everything the
+// stage actually decided against: nothing found, nothing that passed the shape
+// gate, a watermark hit, a normalise failure. Those are one outcome on purpose —
+// from the ledger's point of view they all mean "no photograph yet, try again
+// after the backoff", and distinguishing them would invite per-reason backoffs
+// nobody has asked for.
+//
+// 'unevaluated' is the outcome that carries NO backoff (see isDue), and it is not
+// a per-reason refinement of 'miss' — it is the absence of a decision. It exists
+// because two things in this pipeline can stop a wine from being judged at all
+// while looking exactly like a refusal: the vision endpoint being unreachable
+// when the label is read (pipeline.mjs), and the watermark sweep failing to reach
+// a verdict on an image that WAS found and verified (import.mjs, where the C2
+// gate refuses an unswept record and the staged file then dies with the runner,
+// data/fetched-images/ being gitignored). A 30-day bench earned by an OpenAI 429
+// is a wine that never gets its photograph, so those runs record this instead and
+// the wine stays due. The count still increments, so the history is not lost.
+const OUTCOMES = new Set(['imported', 'miss', 'unevaluated']);
 
 // loadAttempts reads the ledger. A missing file is first-run behaviour; a
 // CORRUPT file is also treated as empty rather than fatal, because the ledger is
@@ -74,14 +87,16 @@ export async function saveAttempts(attempts, path = LEDGER_PATH) {
 
 // isDue reports whether the image stage should try this SKU on this run.
 //
-// Unknown SKU: yes. Already imported: never again. A miss: only once the backoff
-// has elapsed. A record whose timestamp cannot be read: yes — biasing to retry,
-// because a corrupt record reading as "not due" would silently exclude a wine
-// from image sourcing forever and nobody would ever notice.
+// Unknown SKU: yes. Already imported: never again. Left unevaluated: yes, at
+// once — nothing was decided, so there is nothing to back off from. A miss: only
+// once the backoff has elapsed. A record whose timestamp cannot be read: yes —
+// biasing to retry, because a corrupt record reading as "not due" would silently
+// exclude a wine from image sourcing forever and nobody would ever notice.
 export function isDue(attempts, sku, now = new Date(), retryDays = RETRY_DAYS) {
   const rec = attempts?.[sku];
   if (!rec) return true;
   if (rec.outcome === 'imported') return false;
+  if (rec.outcome === 'unevaluated') return true;
   const last = Date.parse(rec.lastAttempted ?? '');
   if (Number.isNaN(last)) return true;
   return now.getTime() - last >= retryDays * 86400000;

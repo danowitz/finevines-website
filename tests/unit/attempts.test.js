@@ -20,6 +20,17 @@ describe('which wines the image stage should try', () => {
     assert.equal(isDue({}, 'AB1201', NOW), true);
   });
 
+  // The third outcome, and the reason it exists: pipeline.mjs writes the ledger
+  // BEFORE the watermark sweep and the import run, so an image that was found and
+  // verified can still be refused afterwards for want of a sweep verdict — and the
+  // staged file dies with the runner, because data/fetched-images/ is gitignored.
+  // Recording that as a miss would bench a wine whose photograph was found and
+  // then thrown away, for thirty days, on the strength of an OpenAI 429.
+  test('a wine left unevaluated is due again immediately, however recent', () => {
+    const attempts = { AB1201: { lastAttempted: daysAgo(0), outcome: 'unevaluated', attempts: 2 } };
+    assert.equal(isDue(attempts, 'AB1201', NOW), true);
+  });
+
   test('a wine whose photograph was imported is never due again', () => {
     const attempts = { AB1201: { lastAttempted: daysAgo(400), outcome: 'imported', attempts: 1 } };
     assert.equal(isDue(attempts, 'AB1201', NOW), false);
@@ -80,6 +91,20 @@ describe('recording an attempt', () => {
     recordAttempt(attempts, 'AB1201', 'miss', NOW);
     recordAttempt(attempts, 'AB1201', 'imported', NOW);
     assert.equal(attempts.AB1201.outcome, 'imported');
+    assert.equal(isDue(attempts, 'AB1201', new Date('2027-01-01T00:00:00Z')), false);
+  });
+
+  test('unevaluated is a recordable outcome and keeps the attempt history', () => {
+    const attempts = { AB1201: { lastAttempted: daysAgo(40), outcome: 'miss', attempts: 3 } };
+    recordAttempt(attempts, 'AB1201', 'unevaluated', NOW);
+    assert.equal(attempts.AB1201.outcome, 'unevaluated');
+    assert.equal(attempts.AB1201.attempts, 4);
+  });
+
+  test('a later import still wins over unevaluated', () => {
+    const attempts = {};
+    recordAttempt(attempts, 'AB1201', 'unevaluated', NOW);
+    recordAttempt(attempts, 'AB1201', 'imported', NOW);
     assert.equal(isDue(attempts, 'AB1201', new Date('2027-01-01T00:00:00Z')), false);
   });
 

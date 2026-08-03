@@ -61,6 +61,30 @@ describe('import selection rules', () => {
     assert.match(shouldImport(r, placeholderWine(), {}).reason, /HTTP 500/);
   });
 
+  // An unswept refusal is the ONE refusal that says nothing about the image. The
+  // caller has to be able to tell it apart without matching on prose, because the
+  // wine must not be benched for thirty days over it: the image was found and
+  // verified, and it is about to be thrown away with the runner.
+  test('an unswept refusal is marked unresolved so the ledger can stay open', () => {
+    const v = shouldImport(rec({ watermarkSwept: undefined }), placeholderWine(), {});
+    assert.equal(v.import, false);
+    assert.equal(v.unresolved, true);
+  });
+
+  test('every settled refusal is NOT unresolved', () => {
+    const watermarked = rec();
+    flagWatermark(watermarked, 'vivino');
+    for (const [what, v] of [
+      ['watermarked', shouldImport(watermarked, placeholderWine(), {})],
+      ['no such wine', shouldImport(rec(), undefined, {})],
+      ['already photographed', shouldImport(rec(), placeholderWine({ imagePath: 'assets/img/wines/x.jpg' }), {})],
+      ['flagged under cleanOnly', shouldImport(rec({ review: ['low resolution'] }), placeholderWine(), { cleanOnly: true })],
+    ]) {
+      assert.equal(v.import, false, what);
+      assert.ok(!v.unresolved, `${what} must not read as unresolved — it is a decision`);
+    }
+  });
+
   test('a swept-clean record imports', () => {
     assert.equal(shouldImport(rec({ watermarkSwept: true }), placeholderWine(), {}).import, true);
   });
