@@ -61,7 +61,93 @@ const clean = ok.filter((r) => !r.review?.length);
 //   - candidates where two DIFFERENT hosts show the same artwork (imghash
 //     twin, the cross-source consensus rule) are sorted first and badged.
 const SUBJECT_REFUSAL = /no clean background|multiple subjects|too wide|too narrow|no subject|fills the frame/;
-const rescuable = (a) => onDisk(a.file) && !SUBJECT_REFUSAL.test(a.why || '');
+
+// The recorded refusal reason cannot be trusted to say "this is a bottle":
+// the nightly fetch runs --vision-first (Linux has no local OCR), which skips
+// the local shape gate — so a retailer logo collage reaches the label check
+// and records an IDENTITY refusal. Caught by the operator seeing exactly that
+// collage lead a card (2026-08-03). The pixels are re-judged here with the
+// same shape gate (label check skipped via the -label stub), and the verdict
+// is cached on the alternate so later regenerations cost nothing.
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { binPath } from './env.mjs';
+const runCmd = promisify(execFile);
+let manifestDirty = false;
+async function subjectOk(a) {
+  if (a.subjectOk !== undefined) return a.subjectOk;
+  try {
+    JSON.parse((await runCmd(binPath('imgcheck'), ['-json', '-img', a.file, '-name', 'x', '-label', 'x'])).stdout);
+    a.subjectOk = true;
+  } catch (e) {
+    try {
+      const v = JSON.parse(e.stdout);
+      a.subjectOk = !(v.stage === 'shape' || v.stage === 'decode');
+    } catch {
+      a.subjectOk = false;
+    }
+  }
+  manifestDirty = true;
+  return a.subjectOk;
+}
+for (const r of all) {
+  for (const a of r.alternates || []) {
+    if (onDisk(a.file) && !SUBJECT_REFUSAL.test(a.why || '')) await subjectOk(a);
+  }
+}
+
+// Display-only vision screen, the third signal. The shape gate is geometry
+// and a portrait grid of dark tiles passes it as "one bottle-ish subject" —
+// the operator's Saratoga collage did exactly that. The vision model is asked
+// one thing: is this a single-bottle product photo? Its verdict only ever
+// HIDES a candidate from the sheet; it never accepts anything — the repo's
+// rule that vision must not override the shape check for publication stands
+// (it once accepted a plated steak that way; see verifyText in pipeline.mjs).
+// Worst case here is hiding a rescuable bottle, bounded and recoverable via
+// the search links. Verdicts cache on the alternate (displayOk).
+import { openaiKey } from './env.mjs';
+const VISION_KEY = await openaiKey();
+async function displayOk(a) {
+  if (a.displayOk !== undefined) return a.displayOk;
+  if (!VISION_KEY) return true; // no key — screen off, sheet still works
+  try {
+    const b64 = (await readFile(a.file)).toString('base64');
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + VISION_KEY },
+      body: JSON.stringify({
+        model: 'gpt-4.1-nano',
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text:
+              'Is this image a product photo of a SINGLE bottle (wine, spirits or similar)? ' +
+              'A logo, a collage or grid of images, food, a person, a room, or several products is not. ' +
+              'Answer strictly as JSON: {"single_bottle_product_photo":true|false}.' },
+            { type: 'image_url', image_url: { url: 'data:image/png;base64,' + b64, detail: 'low' } },
+          ],
+        }],
+        max_completion_tokens: 30,
+      }),
+    });
+    if (!res.ok) return true; // no verdict — do not hide on a transport error
+    const j = await res.json();
+    const v = JSON.parse((j.choices?.[0]?.message?.content || '').replace(/^```(?:json)?|```$/gm, '').trim());
+    a.displayOk = v.single_bottle_product_photo === true;
+    manifestDirty = true;
+    return a.displayOk;
+  } catch {
+    return true;
+  }
+}
+for (const r of all) {
+  for (const a of r.alternates || []) {
+    if (onDisk(a.file) && !SUBJECT_REFUSAL.test(a.why || '') && a.subjectOk !== false) await displayOk(a);
+  }
+}
+
+const rescuable = (a) =>
+  onDisk(a.file) && !SUBJECT_REFUSAL.test(a.why || '') && a.subjectOk !== false && a.displayOk !== false;
 
 const missedWithOptions = all.filter((r) => !r.ok && (r.alternates || []).some(rescuable));
 const missedBare = all.filter((r) => !r.ok && !(r.alternates || []).some(rescuable));
@@ -69,10 +155,6 @@ const missedBare = all.filter((r) => !r.ok && !(r.alternates || []).some(rescuab
 // Twin detection per card: pairwise imghash over the rescuable candidates.
 // The map answers "does this file have a same-artwork twin on another host,
 // and at what distance" — used for both ordering and the badge.
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-import { binPath } from './env.mjs';
-const runCmd = promisify(execFile);
 const CONSENSUS_MAX = 14;
 const twinOf = new Map(); // file -> {host, distance}
 {
@@ -256,8 +338,9 @@ gets refused). A card you don't touch stays in the queue. Then <b>Download decis
 <p class="sum"><b>text on bottle</b> is what OCR actually read off that picture — it is the evidence
 the match was made on, so a wrong image usually names a different estate there.</p>
 
-${section('Found nothing — choose one', missedWithOptions, { chosen: false })}
+${section('Two sources show the same bottle — near-certain, pick it', missedWithOptions.filter((r) => (r.alternates || []).some((a) => rescuable(a) && twinOf.has(a.file))), { chosen: false })}
 ${section('Flagged — check these', flagged, { chosen: true })}
+${section('Single candidates, no corroboration — weakest evidence, judge by the label text', missedWithOptions.filter((r) => !(r.alternates || []).some((a) => rescuable(a) && twinOf.has(a.file))), { chosen: false })}
 ${section('No flags raised', clean, { chosen: true })}
 ${missedBare.length ? `<h2>No candidates at all — ${missedBare.length}</h2><p class="sum">${missedBare.map((r) => esc(r.name)).slice(0, 60).join(' &middot; ')}${missedBare.length > 60 ? ' &hellip;' : ''}</p>` : ''}
 
@@ -340,6 +423,8 @@ function save() {
 `;
 
 await writeFile(OUT_HTML, html);
+// Cache the subject re-check verdicts so the next regeneration is instant.
+if (manifestDirty) await writeFile(MANIFEST, JSON.stringify(manifest, null, 1));
 
 const csv = [
   'slug,sku,producer,name,vintage,flags,label_read,source,alternates',
