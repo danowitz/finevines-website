@@ -100,7 +100,7 @@ var digestTmpl = template.Must(template.New("digest").Parse(`
 </ul>
 {{end}}
 <h2 style="font-size:17px;font-weight:normal;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid #d8d0c4;padding-bottom:6px">The portfolio today</h2>
-<p style="font-size:15px;line-height:1.7">{{.D.Coverage.Wines}} wines published. {{.D.Coverage.RealImages}} of them ({{.D.Coverage.RealImagePct}}%) show a real bottle photograph; the rest show a printed label until a photograph is found. Sourced detail across the portfolio averages {{.D.Coverage.MeanMetadata}} out of 100.</p>
+<p style="font-size:15px;line-height:1.7">{{.D.Coverage.Wines}} wines published. {{.D.Coverage.RealImages}} of them ({{.D.Coverage.RealImagePct}}%) show a real bottle photograph; the rest show a printed label until a photograph is found. Descriptive detail — grape, region, and tasting notes — is sourced automatically and deepens with every run.</p>
 <p style="font-size:13px;color:#7a7168;line-height:1.6">Sent automatically after a catalog run that changed something. <a href="{{.Root}}/portfolio/" style="color:#6b1f2a">Browse the portfolio</a></p>
 </div>
 `))
@@ -154,8 +154,8 @@ func renderText(d RunDiff, root string) string {
 	fmt.Fprintf(&b, "\nTHE PORTFOLIO TODAY\n-------------------\n"+
 		"  %d wines published.\n"+
 		"  %d (%d%%) show a real bottle photograph; the rest show a printed label.\n"+
-		"  Sourced detail averages %d out of 100.\n",
-		d.Coverage.Wines, d.Coverage.RealImages, d.Coverage.RealImagePct, d.Coverage.MeanMetadata)
+		"  Descriptive detail — grape, region, and tasting notes — is sourced automatically and deepens with every run.\n",
+		d.Coverage.Wines, d.Coverage.RealImages, d.Coverage.RealImagePct)
 	fmt.Fprintf(&b, "\nSent automatically after a catalog run that changed something.\n%s/portfolio/\n", root)
 	return b.String()
 }

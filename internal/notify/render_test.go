@@ -67,11 +67,17 @@ func TestRender_BothBodiesCarryEverySectionAndItsLinks(t *testing.T) {
 			"george",
 			"574",
 			"26%",
-			"61",
+			"Descriptive detail — grape, region, and tasting notes — is sourced automatically and deepens with every run.",
 		} {
 			if !strings.Contains(body, want) {
 				t.Errorf("%s is missing %q", name, want)
 			}
+		}
+		// The old "averages N out of 100" framing reads as a failing grade to a
+		// client reader and was replaced (2026-08-03). Coverage.MeanMetadata still
+		// gets computed for future use; it just isn't rendered into this sentence.
+		if strings.Contains(body, "out of 100") {
+			t.Errorf("%s still renders the retired coverage-score sentence", name)
 		}
 	}
 	if !strings.Contains(m.HTMLBody, `src="https://finevines.com/assets/img/wines/altocedro-ano-cero-malbec-2024.jpg"`) {
