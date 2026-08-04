@@ -43,11 +43,11 @@ const wineNeedsImage = (slug) => {
   const w = wines.get(slug);
   return !w || !w.imagePath || w.imagePath.endsWith('.svg');
 };
-const ok = all.filter((r) => r.ok && onDisk(r.file) && wineNeedsImage(r.slug));
+let ok = all.filter((r) => r.ok && onDisk(r.file) && wineNeedsImage(r.slug));
 const moot = all.filter((r) => r.ok && onDisk(r.file) && !wineNeedsImage(r.slug)).length;
 const stale = all.filter((r) => r.ok && !onDisk(r.file)).length;
-const flagged = ok.filter((r) => r.review?.length);
-const clean = ok.filter((r) => !r.review?.length);
+let flagged = ok.filter((r) => r.review?.length);
+let clean = ok.filter((r) => !r.review?.length);
 // A wine that found nothing but has candidates on disk is the best possible
 // use of this page — BUT only candidates that could plausibly be rescued.
 // The alternates pile is the verifier's reject bin, and most of it (plated
@@ -149,7 +149,7 @@ for (const r of all) {
 const rescuable = (a) =>
   onDisk(a.file) && !SUBJECT_REFUSAL.test(a.why || '') && a.subjectOk !== false && a.displayOk !== false;
 
-const missedWithOptions = all.filter((r) => !r.ok && (r.alternates || []).some(rescuable));
+let missedWithOptions = all.filter((r) => !r.ok && (r.alternates || []).some(rescuable));
 const missedBare = all.filter((r) => !r.ok && !(r.alternates || []).some(rescuable));
 
 // Twin detection per card: pairwise imghash over the rescuable candidates.
@@ -186,6 +186,46 @@ const twinOf = new Map(); // file -> {host, distance}
       }
     } catch {}
   }
+}
+
+// One card per WINE, not per vintage row. The catalog stores a row per
+// vintage, but a decision belongs to the wine: an imported image spreads to
+// sibling vintages via tools/vintageshare in the promote cycle, so showing
+// the 2019 and the 2021 as separate cards asks the reviewer the same question
+// twice (operator-caught, 2026-08-04). The representative is the record with
+// the strongest evidence; its card lists the vintages the decision covers.
+const identityOf = (slug) => {
+  const w = wines.get(slug);
+  return w ? ((w.producer || '') + ' ' + (w.name || '')).toLowerCase().replace(/[^a-z0-9]+/g, '-') : slug;
+};
+const hasTwinEvidence = (r) =>
+  Boolean(r.corroboratedBy) ||
+  (r.file && twinOf.has(r.file)) ||
+  (r.alternates || []).some((a) => rescuable(a) && twinOf.has(a.file));
+const evidenceScore = (r) =>
+  (hasTwinEvidence(r) ? 4 : 0) + (r.ok ? 2 : 0) + Math.min((r.alternates || []).filter(rescuable).length, 9) / 10;
+{
+  const groups = new Map();
+  for (const r of [...ok, ...missedWithOptions]) {
+    const k = identityOf(r.slug);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  }
+  const okReps = [];
+  const missedReps = [];
+  for (const rs of groups.values()) {
+    rs.sort((a, b) => evidenceScore(b) - evidenceScore(a));
+    const rep = rs[0];
+    rep.siblingVintages = rs
+      .slice(1)
+      .map((x) => wines.get(x.slug)?.vintage || 'NV')
+      .filter(Boolean);
+    (rep.ok ? okReps : missedReps).push(rep);
+  }
+  ok = okReps;
+  missedWithOptions = missedReps;
+  flagged = ok.filter((r) => r.review?.length);
+  clean = ok.filter((r) => !r.review?.length);
 }
 
 await mkdir('out-bottle', { recursive: true });
@@ -244,16 +284,19 @@ const card = (r, { chosen }) => {
         ${label ? `<span class="opt-label" title="the text OCR read off this bottle — the evidence the match was made on">text on bottle: ${esc(String(label).slice(0, 70))}</span>` : ''}
       </label>`;
 
+  const trust = hasTwinEvidence(r) ? 'two-sources' : r.ok ? 'verified' : 'single';
   return `
-  <figure class="${r.review?.length ? 'flag' : chosen ? 'ok' : 'none'}" data-slug="${esc(r.slug)}">
+  <figure class="${r.review?.length ? 'flag' : chosen ? 'ok' : 'none'}" data-slug="${esc(r.slug)}" data-trust="${trust}">
     <figcaption>
       <b>${esc(title)}</b>
       <span class="meta">${esc([w.vintage, w.region || w.country, w.varietal].filter(Boolean).join(' · '))}</span>
       <span class="sku">SKU ${esc(w.sku || '?')}</span>
+      ${r.siblingVintages?.length ? `<span class="vints">decision also covers: ${esc(r.siblingVintages.join(' · '))} (image is shared across vintages on import)</span>` : ''}
       <span class="search">search:
         <a href="${esc(googleURL(w, r))}" target="_blank" rel="noopener">Google Images</a> &middot;
         <a href="${esc(searchURL(w, r))}" target="_blank" rel="noopener"
            title="the same query the pipeline searched to find these candidates">DuckDuckGo (pipeline's)</a></span>
+      ${r.corroboratedBy ? `<span class="corr">&#10003; corroborated: ${esc(r.corroboratedBy)}</span>` : ''}
       ${(r.review || []).map((f) => `<span class="why">${esc(f)}</span>`).join('')}
     </figcaption>
     <div class="opts">
@@ -291,6 +334,14 @@ const html = `<!doctype html>
   .meta { color: #6e5d4e; font-size: 11.5px; }
   .sku { color: #6b1630; font-size: 11px; font-family: ui-monospace, monospace; }
   .why { color: #8a6a2f; font-size: 11px; background: #f1e6c9; border-radius: 3px; padding: 2px 5px; align-self: flex-start; }
+  .corr { color: #2e6b3f; font-size: 11px; background: #e2eadd; border-radius: 3px; padding: 2px 5px; align-self: flex-start; font-weight: 600; }
+  .vints { color: #6b1630; font-size: 11px; font-style: italic; }
+  #filters { position: sticky; top: 0; z-index: 5; background: #faf6ee; padding: 10px 0; display: flex; gap: 8px;
+             align-items: center; border-bottom: 1px solid #ece0cd; margin-bottom: 8px; }
+  #filters .chip { font: inherit; font-size: 12.5px; padding: 6px 12px; border: 1px solid #d8c6a8;
+                   border-radius: 15px; background: #fff; cursor: pointer; color: #43352a; }
+  #filters .chip.active { background: #6b1630; color: #f4ece0; border-color: #6b1630; }
+  #filters .chip b { font-variant-numeric: tabular-nums; }
   .opts { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
   .opt { flex: 0 0 116px; display: flex; flex-direction: column; gap: 3px; cursor: pointer;
          border: 2px solid transparent; border-radius: 5px; padding: 5px; }
@@ -337,6 +388,14 @@ gets refused). A card you don't touch stays in the queue. Then <b>Download decis
 <code>node tools/labelfetch/decide.mjs --apply</code>.</p>
 <p class="sum"><b>text on bottle</b> is what OCR actually read off that picture — it is the evidence
 the match was made on, so a wrong image usually names a different estate there.</p>
+
+<div id="filters">
+  <span class="meta">show:</span>
+  <button class="chip active" data-filter="all">all</button>
+  <button class="chip" data-filter="two-sources">&#10003;&#10003; two sources agree</button>
+  <button class="chip" data-filter="verified">verified, flagged</button>
+  <button class="chip" data-filter="single">uncorroborated</button>
+</div>
 
 ${section('Two sources show the same bottle — near-certain, pick it', missedWithOptions.filter((r) => (r.alternates || []).some((a) => rescuable(a) && twinOf.has(a.file))), { chosen: false })}
 ${section('Flagged — check these', flagged, { chosen: true })}
@@ -412,6 +471,27 @@ document.addEventListener('paste', e => {
   const t = e.target;
   if (t.classList && t.classList.contains('opt-url')) setTimeout(() => t.dispatchEvent(new Event('change', {bubbles:true})), 0);
 });
+// Trust filter: chips show only cards at that evidence level, and a section
+// heading disappears with its last visible card. Counts are stamped once.
+{
+  const figs = [...document.querySelectorAll('figure[data-trust]')];
+  for (const chip of document.querySelectorAll('#filters .chip')) {
+    const f = chip.dataset.filter;
+    const n = f === 'all' ? figs.length : figs.filter((x) => x.dataset.trust === f).length;
+    chip.innerHTML += ' <b>' + n + '</b>';
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#filters .chip').forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+      for (const x of figs) x.style.display = f === 'all' || x.dataset.trust === f ? '' : 'none';
+      for (const grid of document.querySelectorAll('.grid')) {
+        const any = [...grid.querySelectorAll('figure')].some((x) => x.style.display !== 'none');
+        grid.style.display = any ? '' : 'none';
+        const h = grid.previousElementSibling;
+        if (h && h.tagName === 'H2') h.style.display = any ? '' : 'none';
+      }
+    });
+  }
+}
 function save() {
   const blob = new Blob([JSON.stringify(chosen, null, 1)], {type: 'application/json'});
   const a = document.createElement('a');
