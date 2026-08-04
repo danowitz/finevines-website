@@ -36,6 +36,7 @@ set -euo pipefail
 echo "::group::Build the image helpers"
 go build -o imgcheck ./tools/imgcheck
 go build -o imgnorm ./tools/imgnorm
+go build -o imghash ./tools/imghash
 echo "::endgroup::"
 
 echo "::group::Fetch and verify (imageless + due only, up to WINES_PER_RUN)"
@@ -81,6 +82,17 @@ if [ ! -f data/fetched-images/manifest.json ]; then
   echo "image stage complete"
   exit 0
 fi
+
+echo "::group::Cross-source consensus"
+# Two candidates fetched from DIFFERENT hosts showing the same bottle artwork
+# is strong evidence the search converged on the right product — independent
+# retailers photograph what they actually sell, and two wrong candidates
+# rarely agree. This corroborates vision-only accepts (flag lifted) and
+# promotes a cross-host twin pair's better half where nothing was accepted.
+# MUST run before the sweep: a promoted file has never been swept, and the
+# sweep below is the hard gate that clears it for import.
+node tools/labelfetch/consensus.mjs --apply
+echo "::endgroup::"
 
 echo "::group::Watermark sweep (hard gate)"
 # --apply records each verdict on the manifest record: hit or clean, the record
