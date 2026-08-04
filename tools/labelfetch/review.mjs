@@ -49,9 +49,62 @@ const stale = all.filter((r) => r.ok && !onDisk(r.file)).length;
 const flagged = ok.filter((r) => r.review?.length);
 const clean = ok.filter((r) => !r.review?.length);
 // A wine that found nothing but has candidates on disk is the best possible
-// use of this page: nothing is proposed, and the alternatives are one click away.
-const missedWithOptions = all.filter((r) => !r.ok && (r.alternates || []).some((a) => onDisk(a.file)));
-const missedBare = all.filter((r) => !r.ok && !(r.alternates || []).some((a) => onDisk(a.file)));
+// use of this page — BUT only candidates that could plausibly be rescued.
+// The alternates pile is the verifier's reject bin, and most of it (plated
+// food, retailer logo collages, lifestyle scenes) has zero rescue value and
+// buries the one real bottle. Display policy, learned from the operator
+// staring at an Instagram logo above the fold (2026-08-03):
+//   - a candidate refused for its SUBJECT (scene, multipack, no subject,
+//     too wide/narrow, cropped) is not shown — it is not a bottle shot;
+//   - a candidate refused on IDENTITY ("label does not name") or quality is
+//     shown — that is a real bottle whose pairing needs a human;
+//   - candidates where two DIFFERENT hosts show the same artwork (imghash
+//     twin, the cross-source consensus rule) are sorted first and badged.
+const SUBJECT_REFUSAL = /no clean background|multiple subjects|too wide|too narrow|no subject|fills the frame/;
+const rescuable = (a) => onDisk(a.file) && !SUBJECT_REFUSAL.test(a.why || '');
+
+const missedWithOptions = all.filter((r) => !r.ok && (r.alternates || []).some(rescuable));
+const missedBare = all.filter((r) => !r.ok && !(r.alternates || []).some(rescuable));
+
+// Twin detection per card: pairwise imghash over the rescuable candidates.
+// The map answers "does this file have a same-artwork twin on another host,
+// and at what distance" — used for both ordering and the badge.
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { binPath } from './env.mjs';
+const runCmd = promisify(execFile);
+const CONSENSUS_MAX = 14;
+const twinOf = new Map(); // file -> {host, distance}
+{
+  const hostOfUrl = (u) => {
+    try {
+      return new URL(u).host.replace(/^www\./, '');
+    } catch {
+      return '';
+    }
+  };
+  for (const r of [...missedWithOptions, ...all.filter((x) => x.ok && onDisk(x.file))]) {
+    const cands = [
+      ...(r.ok && onDisk(r.file) ? [{ file: r.file, page: r.page }] : []),
+      ...(r.alternates || []).filter(rescuable),
+    ];
+    if (cands.length < 2) continue;
+    try {
+      const { stdout } = await runCmd(binPath('imghash'), cands.map((c) => c.file));
+      for (const p of JSON.parse(stdout).pairs) {
+        const A = cands[p.a];
+        const B = cands[p.b];
+        const ha = hostOfUrl(A.page);
+        const hb = hostOfUrl(B.page);
+        if (p.distance > CONSENSUS_MAX || !ha || ha === hb) continue;
+        if (!twinOf.has(A.file) || twinOf.get(A.file).distance > p.distance)
+          twinOf.set(A.file, { host: hb, distance: p.distance });
+        if (!twinOf.has(B.file) || twinOf.get(B.file).distance > p.distance)
+          twinOf.set(B.file, { host: ha, distance: p.distance });
+      }
+    } catch {}
+  }
+}
 
 await mkdir('out-bottle', { recursive: true });
 
@@ -82,7 +135,16 @@ const googleURL = (w, r) => `https://www.google.com/search?udm=2&q=${searchTerms
 
 const card = (r, { chosen }) => {
   const w = wines.get(r.slug) || {};
-  const alts = (r.alternates || []).filter((a) => onDisk(a.file));
+  // Rescuable bottles only, twin-confirmed pairs first, then by refusal kind;
+  // capped so a card is a choice, not a scroll.
+  const alts = (r.alternates || [])
+    .filter(rescuable)
+    .sort((a, b) => {
+      const ta = twinOf.has(a.file) ? twinOf.get(a.file).distance : 999;
+      const tb = twinOf.has(b.file) ? twinOf.get(b.file).distance : 999;
+      return ta - tb;
+    })
+    .slice(0, 5);
   const title = [w.producer, w.name].filter(Boolean).join(' — ') || r.name;
   // The host is a link to the product page the image was fetched from, so
   // the reviewer can see the picture in its retail context in one click.
@@ -94,6 +156,7 @@ const card = (r, { chosen }) => {
         ${i === 0 && chosen ? '<span class="confirm-badge">click picture to confirm &#10003;</span>' : ''}
         <img src="${esc(src(file))}" loading="lazy" alt="">
         <span class="opt-src">${page ? `<a href="${esc(page)}" target="_blank" rel="noopener">${esc(hostOf(page))} &#8599;</a>` : esc(hostOf(page))}</span>
+        ${twinOf.has(file) ? `<span class="opt-twin">&#10003; same bottle also on ${esc(twinOf.get(file).host)}</span>` : ''}
         ${why ? `<span class="opt-why">${esc(why)}</span>` : ''}
         ${why && /no clean background/.test(why) ? '<span class="opt-fix">pick it &mdash; background is removed automatically</span>' : ''}
         ${label ? `<span class="opt-label" title="the text OCR read off this bottle — the evidence the match was made on">text on bottle: ${esc(String(label).slice(0, 70))}</span>` : ''}
@@ -159,6 +222,7 @@ const html = `<!doctype html>
   .search { font-size: 11px; color: #6b1630; align-self: flex-start; }
   .opt-why { color: #9a2b2b; font-size: 10px; }
   .opt-fix { color: #2e6b3f; font-size: 10px; }
+  .opt-twin { color: #2e6b3f; font-size: 10px; font-weight: 700; }
   .opt-label { color: #43352a; font-size: 10px; font-style: italic; }
   .opt.wrong { justify-content: center; align-items: center; text-align: center; background: #faf6ee; }
   .opt.wrong:has(input:checked) { border-color: #9a2b2b; background: #fdf0f0; }
