@@ -28,7 +28,8 @@ export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
   if (
     wine.imagePath &&
     !wine.imagePath.endsWith('.svg') &&
-    wine.imageSource !== 'generated-photo'
+    wine.imageSource !== 'generated-photo' &&
+    wine.imageSource !== 'label-scan'
   ) {
     return { import: false, reason: `already has a photograph (${wine.imagePath})` };
   }

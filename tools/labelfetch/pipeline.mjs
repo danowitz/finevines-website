@@ -575,7 +575,10 @@ if (only) {
   // fetch must keep hunting for those wines, or generated becomes forever.
   if (has('missing'))
     wines = wines.filter(
-      (w) => (w.imagePath || '').endsWith('.svg') || w.imageSource === 'generated-photo'
+      (w) =>
+        (w.imagePath || '').endsWith('.svg') ||
+        w.imageSource === 'generated-photo' ||
+        w.imageSource === 'label-scan'
     );
   if (DUE_ONLY) {
     const before = wines.length;

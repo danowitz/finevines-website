@@ -37,6 +37,17 @@ describe('import selection rules', () => {
     assert.match(v.reason, /already has a photograph/);
   });
 
+  test('a label scan IS replaced by a staged real image', () => {
+    // The old site's flat label scans (95% of its images, audit 2026-08-04)
+    // are stand-ins exactly like generated photos.
+    const v = shouldImport(
+      rec(),
+      placeholderWine({ imagePath: 'assets/img/wines/x.jpg', imageSource: 'label-scan' }),
+      {}
+    );
+    assert.equal(v.import, true);
+  });
+
   test('a generated photo IS replaced by a staged real image', () => {
     // The generated tail is a stand-in, not a photograph: the Go pipeline
     // already treats generated-* as replaceable (enrich.hasRealImage), and
