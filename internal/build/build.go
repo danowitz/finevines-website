@@ -730,8 +730,8 @@ func spaceJoin(parts ...string) string {
 // quantity in CASES (FV_OnHand_Qty__c's true unit, verified live 2026-07-29 —
 // this line originally mis-read StockQty as bottles; the fractional part is a
 // broken case) and the case pack the product name encodes (12 when it doesn't
-// say): "205 bottles · 17 cs + 1"; a holding short of one full case reads
-// "8 bottles · broken case". Composed HERE, once, and shipped verbatim in both
+// say): "205 bottles · 17 cases + 1"; a holding short of one full case is just
+// its bottle count. Composed HERE, once, and shipped verbatim in both
 // the server-rendered cards and the catalog-index (indexEntry.Avail) so
 // portfolio.js never re-derives it — the two renderings must stay identical.
 func availability(w model.Wine) string {
@@ -750,10 +750,17 @@ func availability(w model.Wine) string {
 	}
 	s := fmt.Sprintf("%s %s", comma(b), unit)
 	cs, rem := b/pack, b%pack
+	// Client-facing vocabulary only (2026-08-04): "broken case" and the "cs"
+	// abbreviation are warehouse shorthand. A holding short of a full case is
+	// just its bottle count; full cases spell the word out.
 	if cs == 0 {
-		return s + " · broken case"
+		return s
 	}
-	s += fmt.Sprintf(" · %d cs", cs)
+	caseWord := "cases"
+	if cs == 1 {
+		caseWord = "case"
+	}
+	s += fmt.Sprintf(" · %d %s", cs, caseWord)
 	if rem > 0 {
 		s += fmt.Sprintf(" + %d", rem)
 	}

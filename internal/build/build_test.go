@@ -895,6 +895,29 @@ func hashTree(t *testing.T, root string) map[string]string {
 // assets/, the build reproduces into dist/, so the site never ships a broken
 // image. Before this, only `enrich` called label.Generate, so the SVGs had to
 // be committed or a fresh clone built a site full of broken <img>s.
+// TestAvailabilityUsesClientFacingLanguage: "broken case" and the "cs"
+// abbreviation are warehouse vocabulary and were rendering on the public
+// catalog (client-caught 2026-08-04). The line reads in bottles and full
+// cases, nothing else.
+func TestAvailabilityUsesClientFacingLanguage(t *testing.T) {
+	mk := func(cases float64, pack int) model.Wine {
+		return model.Wine{Name: "X", StockCases: cases, CasePack: pack}
+	}
+	for _, tc := range []struct {
+		cases float64
+		pack  int
+		want  string
+	}{
+		{0.667, 12, "8 bottles"},
+		{17.083, 12, "205 bottles · 17 cases + 1"},
+		{1, 12, "12 bottles · 1 case"},
+	} {
+		if got := availability(mk(tc.cases, tc.pack)); got != tc.want {
+			t.Errorf("availability(%v cases, pack %d) = %q, want %q", tc.cases, tc.pack, got, tc.want)
+		}
+	}
+}
+
 func TestBuildGeneratesMissingLabels(t *testing.T) {
 	dist := t.TempDir()
 	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
