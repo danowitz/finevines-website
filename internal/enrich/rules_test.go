@@ -45,6 +45,13 @@ func TestEligible(t *testing.T) {
 		{"guarded word only as a substring stays eligible", wine(func(w *salesforce.WineRaw) {
 			w.Name = "Chateau Sampleton Rouge"
 		}), true},
+		// Nameless rows (2026-08-03): a Salesforce bookkeeping row (SKU
+		// 513001, 10,000 "cases") published with an empty name/producer/slug,
+		// rendering a broken catalog page and appearing in the client digest
+		// as ", (513001)". A nameless product is never publishable, no matter
+		// how much stock it claims.
+		{"empty name is never publishable", wine(func(w *salesforce.WineRaw) { w.Name = "" }), false},
+		{"whitespace-only name is never publishable", wine(func(w *salesforce.WineRaw) { w.Name = "   " }), false},
 		// Whole-bottles floor (2026-07-29): QuickBooks rounding dust must not
 		// list effectively-empty wines, but a single real bottle still counts.
 		{"QB rounding dust (0.00001 cases) is not stock", wine(func(w *salesforce.WineRaw) {

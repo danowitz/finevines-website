@@ -34,6 +34,11 @@ var nonWine = regexp.MustCompile(`(?i)\b(freight|surcharge|shipping|deposit|samp
 //     passes every other clause in the live org, so it is denied by SKU.
 //   - non-wine exclusion (see nonWine): added 2026-07-29 after freight
 //     surcharges were found on the public catalog.
+//   - nameless rows: excluded 2026-08-03 (SKU 513001, a Salesforce
+//     bookkeeping row with 10,000 fake "cases" and an empty name/producer/
+//     slug/vintage) rendered a broken catalog page and showed up in the
+//     client digest as ", (513001)". An empty or whitespace-only name is
+//     never publishable, no matter how much stock the row claims.
 //   - whole bottles, not "cases > 0": added 2026-07-29. FV_OnHand_Qty__c is
 //     fractional CASES and the live org carries QuickBooks rounding dust
 //     (0.00001-case rows) that a plain >0 test — or its ceiled StockQty
@@ -52,7 +57,8 @@ func Eligible(w salesforce.WineRaw) bool {
 // stock-like clauses in Eligible, identity/policy clauses here.
 func Merchandisable(w salesforce.WineRaw) bool {
 	return !strings.HasPrefix(w.SKU, "9") && w.ReadyToSell &&
-		w.SKU != "SBTL" && !nonWine.MatchString(w.Name) && !nonWine.MatchString(w.Producer)
+		w.SKU != "SBTL" && !nonWine.MatchString(w.Name) && !nonWine.MatchString(w.Producer) &&
+		strings.TrimSpace(w.Name) != ""
 }
 
 // BottlesOnHand converts a roster row's on-hand cases to whole bottles, using

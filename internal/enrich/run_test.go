@@ -338,7 +338,7 @@ func TestRun_CheckpointsProgressMidRun(t *testing.T) {
 	dataPath := filepath.Join(dir, "wines.json")
 	imgDir := filepath.Join(dir, "img")
 
-	rawKeep := salesforce.WineRaw{ID: "SF-KEEP", SKU: "AB1111", Producer: "Chateau Keep", StockQty: 5, ReadyToSell: true}
+	rawKeep := salesforce.WineRaw{ID: "SF-KEEP", SKU: "AB1111", Producer: "Chateau Keep", Name: "Reserve", StockQty: 5, ReadyToSell: true}
 	rawFast := salesforce.WineRaw{ID: "SF-FAST", SKU: "CD2222", Producer: "Fast Winery", Name: "Fast Wine", StockQty: 10, ReadyToSell: true}
 	rawBlock1 := salesforce.WineRaw{ID: "SF-BLOCK1", SKU: "EF3333", Producer: "Block One", Name: "Block Wine 1", StockQty: 6, ReadyToSell: true}
 	rawBlock2 := salesforce.WineRaw{ID: "SF-BLOCK2", SKU: "GH4444", Producer: "Block Two", Name: "Block Wine 2", StockQty: 7, ReadyToSell: true}
@@ -359,7 +359,7 @@ func TestRun_CheckpointsProgressMidRun(t *testing.T) {
 	src := &fakeSource{roster: []salesforce.WineRaw{rawKeep, rawFast, rawBlock1, rawBlock2, rawPending}}
 
 	seed := []model.Wine{
-		{ID: "SF-KEEP", SourceHash: SourceHash(rawKeep), SKU: "AB1111", Producer: "Chateau Keep", Slug: "chateau-keep"},
+		{ID: "SF-KEEP", SourceHash: SourceHash(rawKeep), SKU: "AB1111", Producer: "Chateau Keep", Name: "Reserve", Slug: "chateau-keep"},
 		{
 			ID: "SF-PENDING", SourceHash: "stale-hash-does-not-match", SKU: "IJ5555",
 			Producer: "Pending Winery", Name: "Pending Wine", Vintage: "2021", // vs. rawPending's 2022 -> hash mismatch -> Diff.Enrich

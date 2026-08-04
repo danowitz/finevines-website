@@ -1,33 +1,5 @@
 [
  {
-  "id": "01tF00000035kKbIAI",
-  "sourceHash": "f66ac603d46055859df24096d3e2111b1313a9c019dd83a933d6f7258e878f7a",
-  "sku": "513001",
-  "producer": "",
-  "name": "",
-  "vintage": "",
-  "stockQty": 10000,
-  "stockCases": 10000,
-  "varietal": "",
-  "region": "",
-  "appellation": "",
-  "style": "",
-  "description": "A  from the estate.",
-  "sommelierNotes": "Serve at the temperature typical for its style.",
-  "imagePath": "assets/img/wines/.svg",
-  "imageSource": "generated-label",
-  "sources": {
-   "color": "derived",
-   "description": "derived",
-   "image": "derived",
-   "sommelierNotes": "derived"
-  },
-  "metadataScore": 0,
-  "matchConfidence": 40,
-  "enrichedAt": "2026-07-27T23:11:31Z",
-  "slug": ""
- },
- {
   "id": "01tPL000005RX53YAG",
   "sourceHash": "a5f2d204464274ff83ac963c8242c7657701ca317321fe83dae331d5b39e1dae",
   "sku": "620401",
