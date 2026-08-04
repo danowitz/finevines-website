@@ -60,6 +60,15 @@ for (const rec of Object.values(manifest)) {
     purged++; // stale manifest entry — the file was purged after fetch
     continue;
   }
+  // A human who looked at the pixels outranks any number of model votes — in
+  // BOTH directions. watermarkClearedBy records a visual inspection that
+  // overrode a model flag (first case: the 1+1=3 cava's hand-scrawled label,
+  // which the model repeatedly mis-read as an overlay). Without this, every
+  // --recheck-clean pass would re-flag what a person has already cleared.
+  if (rec.watermarkClearedBy) {
+    alreadySwept++;
+    continue;
+  }
   if (isWatermarked(rec) || (rec.watermarkSwept && !recheckClean)) {
     alreadySwept++;
     continue;

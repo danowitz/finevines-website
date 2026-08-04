@@ -58,7 +58,7 @@
   "bottleSize": "750ml",
   "drinkWindow": "2025‑2030",
   "imagePath": "assets/img/wines/1-1-3-un-mes-un-fan-tres-1-1-3-cava-brut.jpg",
-  "imageSource": "generated-photo",
+  "imageSource": "scraped-web",
   "sources": {
    "abv": "found",
    "appellation": "found",
@@ -70,15 +70,15 @@
    "drinkWindow": "found",
    "finish": "found",
    "foodPairings": "found",
-   "image": "derived",
+   "image": "found",
    "palate": "found",
    "sommelierNotes": "derived"
   },
-  "metadataScore": 77,
+  "metadataScore": 85,
   "matchConfidence": 95,
   "enrichedAt": "2026-07-29T07:06:52Z",
   "slug": "1-1-3-un-mes-un-fan-tres-1-1-3-cava-brut",
-  "imageSourceUrl": ""
+  "imageSourceUrl": "https://bassins.com/cdn/shop/files/0091552_nv-113-cava-brut.jpg?v=1768359807&width=800"
  },
  {
   "id": "01t2I0000089loeQAA",
@@ -7043,8 +7043,8 @@
   "style": "",
   "description": "A CABERNET SAUVIGNON from CALIFORNIA - NAPA - PRITCHARD HILL.",
   "sommelierNotes": "Serve at the temperature typical for its style.",
-  "imagePath": "assets/img/wines/brand-12-brand-napa-valley-proprietary-red-3-750-12.svg",
-  "imageSource": "generated-label",
+  "imagePath": "assets/img/wines/brand-napa-valley-proprietary-red-2012.jpg",
+  "imageSource": "generated-photo",
   "sources": {
    "color": "derived",
    "country": "salesforce",
@@ -7055,7 +7055,8 @@
   "metadataScore": 8,
   "matchConfidence": 40,
   "enrichedAt": "2026-07-27T23:11:32Z",
-  "slug": "brand-napa-valley-proprietary-red-2012"
+  "slug": "brand-napa-valley-proprietary-red-2012",
+  "imageSourceUrl": ""
  },
  {
   "id": "01t2I000007H04wQAC",
@@ -7085,8 +7086,8 @@
   ],
   "bottleSize": "750 ml",
   "drinkWindow": "2026–2040",
-  "imagePath": "assets/img/wines/brand-16-brand-napa-valley-proprietary-red-blend-napa-valley-12-750-16.svg",
-  "imageSource": "generated-label",
+  "imagePath": "assets/img/wines/brand-napa-valley-proprietary-red-blend-napa-valley-2016.jpg",
+  "imageSource": "generated-photo",
   "sources": {
    "abv": "missing",
    "appellation": "found",
@@ -7105,7 +7106,8 @@
   "metadataScore": 38,
   "matchConfidence": 85,
   "enrichedAt": "2026-07-29T07:05:06Z",
-  "slug": "brand-napa-valley-proprietary-red-blend-napa-valley-2016"
+  "slug": "brand-napa-valley-proprietary-red-blend-napa-valley-2016",
+  "imageSourceUrl": ""
  },
  {
   "id": "01tPL000008q8uXYAQ",
@@ -11137,7 +11139,7 @@
   "description": "A CHARDONNAY from BURGUNDY, C D NUITS.",
   "sommelierNotes": "Serve at the temperature typical for its style.",
   "imagePath": "assets/img/wines/charlopin-parizot-bcl11-domaine-philippe-charlopin-parizot-bourgogne-blanc-2011.jpg",
-  "imageSource": "generated-photo",
+  "imageSource": "generated-label",
   "sources": {
    "color": "derived",
    "country": "salesforce",

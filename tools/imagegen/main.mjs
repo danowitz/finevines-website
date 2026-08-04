@@ -94,20 +94,29 @@ function labeledPrompt(w) {
     (from ? ` from ${from}` : '') +
     `. The label must be legible and read EXACTLY: "${idn}${w.vintage ? ' ' + w.vintage : ''}" — ` +
     `spell every word precisely as given, no other prominent text. Correct bottle shape, glass color ` +
-    `and closure for the style. Neutral warm-grey backdrop, soft key light, subtle reflection, ` +
-    `no props, bottle fills the frame.`
+    `and closure for the style. Seamless pure white studio background — the catalog composites every ` +
+    `bottle on white, and a grey backdrop ships as a visible grey box (found live 2026-08-03). ` +
+    `Soft key light, no props, bottle fills the frame.`
   );
 }
 
 function blankPrompt(w) {
+  // The product CATEGORY must be in the prompt even though the label is
+  // blank: "a single amber bottle" for a bourbon produced a beer bottle with
+  // a crown cap (shipped live 2026-08-03 — the shape check can't tell beer
+  // from bourbon). The wine's own name carries the category; the label
+  // instruction keeps its words off the glass.
   const descriptors = [w.color, w.varietal].filter(Boolean).join(' ');
   const from = w.region || w.country || '';
   return (
-    `Photorealistic studio product photograph of a single ${descriptors || 'wine'} bottle` +
-    (from ? ` in the style of ${from}` : '') +
-    `, wearing a completely blank unmarked cream paper label with no text, no logos, no graphics ` +
-    `of any kind. Correct bottle shape, glass color and closure for the style. Neutral warm-grey ` +
-    `backdrop, soft key light, subtle reflection, no props, bottle fills the frame.`
+    `Photorealistic studio product photograph of a single bottle of the kind used for ` +
+    `"${catalogName(w)}"` +
+    (descriptors ? ` (${descriptors})` : '') +
+    (from ? ` from ${from}` : '') +
+    `, but wearing a completely blank unmarked cream paper label with no text, no logos, no ` +
+    `graphics of any kind. Correct bottle shape, glass color and closure for this kind of ` +
+    `product — a wine bottle for wine, a spirits bottle for spirits, never a beer bottle. ` +
+    `Seamless pure white studio background, soft key light, no props, bottle fills the frame.`
   );
 }
 
