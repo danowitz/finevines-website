@@ -41,7 +41,10 @@ const onDisk = (f) => !!f && existsSync(f);
 // keeps the queue shrinking as imports and vintage-sharing land.
 const wineNeedsImage = (slug) => {
   const w = wines.get(slug);
-  return !w || !w.imagePath || w.imagePath.endsWith('.svg');
+  if (!w || !w.imagePath || w.imagePath.endsWith('.svg')) return true;
+  // Stand-ins want upgrading too: a label scan or a generated bottle renders,
+  // but a staged real photograph beats either and import will take it.
+  return w.imageSource === 'label-scan' || w.imageSource === 'generated-photo';
 };
 let ok = all.filter((r) => r.ok && onDisk(r.file) && wineNeedsImage(r.slug));
 const moot = all.filter((r) => r.ok && onDisk(r.file) && !wineNeedsImage(r.slug)).length;
