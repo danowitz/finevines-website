@@ -17,7 +17,10 @@ import (
 // "remit"/"remittance" added 2026-07-29: a remittance-address memo row
 // (SKU "REMIT TO", 10,000 fake cases) was publishing the P.O. Box on the
 // public catalog — and no addresses appear anywhere on the site.
-var nonWine = regexp.MustCompile(`(?i)\b(freight|surcharge|shipping|deposit|sample|samples|display|misc|remit|remittance)\b`)
+// "free goods"/"in lieu of" added 2026-08-04: a billing memo row ("FREE
+// GOODS PROVIDED IN LIEU OF PRICE REDUCTION") wore a wine page long enough
+// to reach the image pipeline's quarantine, which is what surfaced it.
+var nonWine = regexp.MustCompile(`(?i)\b(freight|surcharge|shipping|deposit|sample|samples|display|misc|remit|remittance|free\s+goods|in\s+lieu\s+of)\b`)
 
 // Eligible implements the confirmed web-eligibility rule (compiled constant):
 // a wine is shown on the site when at least one actual bottle is on hand, its

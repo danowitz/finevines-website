@@ -42,6 +42,11 @@ func TestEligible(t *testing.T) {
 		{"remittance-address memo row (no addresses on the site)", wine(func(w *salesforce.WineRaw) {
 			w.SKU, w.Name = "REMIT TO", "PLEASE NOTE OUR REMITTANCE ADDRESS:\nP.O. BOX 1649\nMELROSE PARK, IL 60161-1649"
 		}), false},
+		// 2026-08-04: a billing memo row ("FREE GOODS PROVIDED IN LIEU OF
+		// PRICE REDUCTION") reached the image pipeline wearing a wine page.
+		{"free-goods billing memo row", wine(func(w *salesforce.WineRaw) {
+			w.Name = "FREE GOODS PROVIDED IN LIEU OF PRICE REDUCTION"
+		}), false},
 		{"guarded word only as a substring stays eligible", wine(func(w *salesforce.WineRaw) {
 			w.Name = "Chateau Sampleton Rouge"
 		}), true},
