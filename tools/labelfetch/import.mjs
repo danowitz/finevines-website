@@ -25,12 +25,14 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { shouldImport } from './importrules.mjs';
+import { binPath } from './env.mjs';
+import { loadAttempts, recordAttempt, saveAttempts } from './attempts.mjs';
 
 const run = promisify(execFile);
 const MANIFEST = 'data/fetched-images/manifest.json';
 const IMG_DIR = 'assets/img/wines';
 const WINES = 'data/wines.json';
-const NORMALIZER = 'imgnorm.exe';
+const NORMALIZER = binPath('imgnorm');
 
 const apply = process.argv.includes('--apply');
 const cleanOnly = process.argv.includes('--clean-only');
@@ -55,6 +57,7 @@ if (!(await exists(MANIFEST))) {
 const manifest = JSON.parse(await readFile(MANIFEST, 'utf8'));
 const wines = JSON.parse(await readFile(WINES, 'utf8'));
 const bySlug = new Map(wines.map((w) => [w.slug, w]));
+const attempts = await loadAttempts();
 
 const staged = Object.values(manifest).filter((r) => r.ok && r.file);
 console.log(`${staged.length} verified images staged\n`);
@@ -63,6 +66,7 @@ await mkdir(IMG_DIR, { recursive: true });
 
 let changed = 0;
 let skipped = 0;
+let unresolved = 0;
 for (const rec of staged) {
   // A manifest entry whose staged file was later purged is stale, not
   // importable — without this check the dry-run over-reports what a real
@@ -77,6 +81,27 @@ for (const rec of staged) {
   if (!verdict.import) {
     console.log(`  skip  ${rec.slug} — ${verdict.reason}`);
     skipped++;
+    // An UNRESOLVED refusal must reopen the wine's ledger entry.
+    //
+    // pipeline.mjs writes the ledger before this step runs, and writes 'miss'
+    // even for a wine whose image it accepted — import is what upgrades the ones
+    // it actually writes to 'imported'. That works for every settled refusal, but
+    // not for this one: the image was found, verified, and is refused only
+    // because the watermark sweep could not reach a verdict on it. The staged
+    // file does not survive the runner (data/fetched-images/ is gitignored), so
+    // leaving the 'miss' in place would discard a real photograph AND bench the
+    // wine for thirty days on the strength of an OpenAI 429 — and nothing in a
+    // later run would ever reveal that had happened.
+    //
+    // 'unevaluated' carries no backoff, so the wine is due again on the next run
+    // and the search is simply redone. Same principle as readLabel's
+    // transport-vs-verdict split in pipeline.mjs: an absent decision is not a
+    // negative one.
+    const sku = rec.sku ?? wine?.sku;
+    if (verdict.unresolved && sku) {
+      recordAttempt(attempts, sku, 'unevaluated');
+      unresolved++;
+    }
     continue;
   }
 
@@ -118,6 +143,7 @@ for (const rec of staged) {
       wine.metadataScore = Math.round((100 * real) / scored.length);
     }
   }
+  if (rec.sku ?? wine.sku) recordAttempt(attempts, rec.sku ?? wine.sku, 'imported');
   console.log(`  ${apply ? 'wrote' : 'would'} ${rec.slug}.jpg  <- ${rec.page ? new URL(rec.page).host : '?'}`);
   changed++;
 }
@@ -125,6 +151,19 @@ for (const rec of staged) {
 if (apply && changed) {
   await writeFile(WINES, JSON.stringify(wines, null, 1) + '\n');
   console.log(`\nwrote ${changed} images to ${IMG_DIR}/ and updated ${WINES}`);
-} else {
+} else if (!apply) {
   console.log(`\n${changed} would change, ${skipped} skipped. Re-run with --apply to write.`);
+}
+// The ledger is saved on its own condition, not on `changed`. A run that imported
+// nothing but reopened a wine the sweep could not clear has a ledger change and no
+// catalog change, and dropping it would leave that wine benched for thirty days —
+// the exact outcome the reopening exists to prevent.
+if (apply && (changed || unresolved)) {
+  await saveAttempts(attempts);
+}
+if (unresolved) {
+  console.log(
+    `${unresolved} verified image(s) refused for want of a watermark verdict — ` +
+      `those wines were left DUE${apply ? '' : ' (would be)'}, not recorded as misses`
+  );
 }

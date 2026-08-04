@@ -27,9 +27,10 @@
 //    wrong producer's bottle on 2 of 6 wines. Only the label settles it.
 //
 // Usage:
-//   node tools/labelfetch/pipeline.mjs --n 20            # sample the catalog
-//   node tools/labelfetch/pipeline.mjs --all --missing   # every wine lacking a photo
+//   node tools/labelfetch/pipeline.mjs --n 20            # at most 20 wines, spread across the selection
+//   node tools/labelfetch/pipeline.mjs --all --missing   # every wine lacking a photo, no cap
 //   node tools/labelfetch/pipeline.mjs --slug some-wine  # one wine, verbose
+//   node tools/labelfetch/pipeline.mjs --n 150 --budget-minutes 120   # what CI runs
 import { readFile, writeFile, mkdir, access, rename } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -37,6 +38,8 @@ import { join } from 'node:path';
 import { openBrowser } from '../../tests/helpers/browser.js';
 import { blockedBy } from './sources.mjs';
 import { tokens, normalize } from './match.mjs';
+import { binPath, openaiKey, envOrFile } from './env.mjs';
+import { loadAttempts, isDue, recordAttempt, saveAttempts, shouldRecordAttempt } from './attempts.mjs';
 
 const run = promisify(execFile);
 
@@ -46,7 +49,7 @@ const OUT_DIR = 'data/fetched-images';
 const ALT_DIR = 'data/fetched-images/alternates';
 const MAX_ALTERNATES = 4;
 const MANIFEST = join(OUT_DIR, 'manifest.json');
-const VERIFIER = 'imgcheck.exe';
+const VERIFIER = binPath('imgcheck');
 
 // How many search results to try before giving up on a wine. Three is a
 // deliberate ceiling: past that the results stop being the wine asked for and
@@ -56,6 +59,11 @@ const VERIFIER = 'imgcheck.exe';
 const MAX_CANDIDATES = 5;
 const PACING_MS = 1200;
 const NAV_TIMEOUT = 30000;
+// How hard to retry the vision label read before giving up on a CANDIDATE (see
+// readLabel). Bounded on purpose: three attempts is at most 45s of backoff, and
+// the alternative to spending more is simply leaving the wine due for tomorrow.
+const MAX_LABEL_ATTEMPTS = 3;
+const LABEL_BACKOFF_MS = 15_000;
 
 const args = process.argv.slice(2);
 const has = (k) => args.includes('--' + k);
@@ -64,15 +72,51 @@ const opt = (k, d) => {
   return i >= 0 ? args[i + 1] : d;
 };
 const VERBOSE = has('verbose') || opt('slug', '') !== '';
-// Vision fallback is opt-in: the pipeline runs without an API key, just at a
-// lower recovery rate.
-const USE_VISION = has('vision');
+// Vision label reading is opt-in: the pipeline runs without an API key, just at
+// a lower recovery rate.
+//
+// --vision-first is what makes the pipeline work on Linux AT ALL. imgcheck's
+// stage-2 label read shells out to the Windows OCR engine
+// (tools/imgcheck/ocr.ps1), so on ubuntu-latest it exits 1 printing nothing,
+// verify() reports stage 'verifier', and the vision second chance below never
+// fires because it only reconsiders a 'label' refusal. Reading the label with
+// the vision model FIRST and passing the text to imgcheck via -label skips
+// local OCR entirely.
+//
+// Both hard gates survive that inversion. -single-bottle is still NOT passed
+// (see verifyText), so stage 1 — the shape check, pure Go — still decides from
+// pixels whether this is one bottle on a sweep; and the identity decision still
+// goes through the one tested match() inside imgcheck rather than being taken on
+// the model's word.
+const VISION_FIRST = has('vision-first');
+const USE_VISION = has('vision') || VISION_FIRST;
 const VISION_MODEL = opt('vision-model', 'gpt-4.1-nano');
+// --due-only consults the committed attempt ledger so a nightly run does not
+// re-search the ~1,700 wines that have already been looked for and not found.
+const DUE_ONLY = has('due-only');
+// --budget-minutes stops the wine loop cleanly once the run has spent that long,
+// and exits 0.
+//
+// A wine count is not a time bound. Per-wine cost here ranges from ~8 seconds
+// (no search results) to several minutes (ten product pages, three candidates
+// each, a 30s navigation timeout on any of them), so any --n large enough to be
+// worth running has a worst case measured in hours. Unattended, that worst case
+// is not a slow night — it is the job hitting the workflow's timeout, being
+// killed, and losing every ledger write it made, because the commit-back step
+// never runs. The next night then repeats it identically. A clean stop keeps the
+// misses recorded, which is what makes the due set shrink.
+const BUDGET_MS = Math.max(0, parseFloat(opt('budget-minutes', '0')) || 0) * 60_000;
+const STARTED_AT = Date.now();
 let VISION_KEY = '';
 let CSE_KEY = '';
 let CSE_CX = '';
 let visionCalls = 0;
 let visionRecovered = 0;
+// Wines left due because the vision endpoint could not be reached. Reported at
+// the end of the run: a night where this is large is a night the coverage figure
+// did not move, and the reason has to be visible rather than inferred from a
+// suspiciously low accepted count.
+let transportFailures = 0;
 
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
@@ -298,41 +342,87 @@ async function bestImageOn(page, url) {
 //
 // gpt-4.1-nano by measurement: best of seven models benchmarked, and cheapest,
 // at $0.0002 an image.
+//
+// Returns {text, error}. The two are not interchangeable and the caller must not
+// collapse them:
+//
+//   {text: 'CHATEAU ...', error: null}  the model read the label
+//   {text: null, error: null}           the model looked and saw nothing legible
+//   {text: null, error: 'HTTP 429'}     nobody looked; this is not evidence
+//
+// The third case is the one that used to be missing. An unhandled fetch rejection
+// here propagated out of the wine loop and killed the entire run — and on the
+// vision-first path CI uses, that is the run's primary code path, so one TCP reset
+// took down applyqueue's committed state with it. A 429 was quieter and worse: it
+// returned null, read as "nothing legible", and recorded a ledger miss that
+// benched a wine nobody had evaluated for thirty days.
 async function readLabel(file) {
   const b64 = (await readFile(file)).toString('base64');
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + VISION_KEY },
-    body: JSON.stringify({
-      model: VISION_MODEL,
-      messages: [
-        {
-          role: 'user',
-          content: [
+  for (let attempt = 1; ; attempt++) {
+    let res;
+    try {
+      res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: 'Bearer ' + VISION_KEY },
+        body: JSON.stringify({
+          model: VISION_MODEL,
+          messages: [
             {
-              type: 'text',
-              text:
-                'Transcribe the text printed on the label of this wine bottle. ' +
-                'Answer strictly as JSON: {"single_bottle":true|false,"label_text":"<every word you can read>"}. ' +
-                'Transcribe only what is actually legible in the image. If a line is too small or blurred to read, ' +
-                'leave it out rather than guessing. If there is no bottle, set single_bottle false.',
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text:
+                    'Transcribe the text printed on the label of this wine bottle. ' +
+                    'Answer strictly as JSON: {"single_bottle":true|false,"label_text":"<every word you can read>"}. ' +
+                    'Transcribe only what is actually legible in the image. If a line is too small or blurred to read, ' +
+                    'leave it out rather than guessing. If there is no bottle, set single_bottle false.',
+                },
+                // detail:low costs a fraction of high and is ample for reading a
+                // label's largest lines, which are the identifying ones.
+                { type: 'image_url', image_url: { url: 'data:image/png;base64,' + b64, detail: 'low' } },
+              ],
             },
-            // detail:low costs a fraction of high and is ample for reading a
-            // label's largest lines, which are the identifying ones.
-            { type: 'image_url', image_url: { url: 'data:image/png;base64,' + b64, detail: 'low' } },
           ],
-        },
-      ],
-      max_completion_tokens: 800,
-    }),
-  });
-  if (!res.ok) return null;
-  const j = await res.json();
-  try {
-    const v = JSON.parse((j.choices?.[0]?.message?.content || '').replace(/^```(?:json)?|```$/gm, '').trim());
-    return v && v.single_bottle && v.label_text ? String(v.label_text) : null;
-  } catch {
-    return null;
+          max_completion_tokens: 800,
+        }),
+      });
+    } catch (e) {
+      // A thrown fetch is a transport fault — DNS, TLS, reset connection. Same
+      // retry ladder as a 5xx, and the same verdict if it keeps happening.
+      if (attempt < MAX_LABEL_ATTEMPTS) {
+        await sleep(attempt * LABEL_BACKOFF_MS);
+        continue;
+      }
+      return { text: null, error: String(e.message || e).split('\n')[0] };
+    }
+    // Same shape as watermarksweep.mjs's ladder: linear backoff, bounded
+    // attempts. Fewer attempts than the sweep's five, because this runs inside a
+    // per-wine loop with a wall-clock budget rather than over a fixed worklist —
+    // a wine is cheap to leave for tomorrow, and burning the budget on backoff
+    // starves every wine after it.
+    if ((res.status === 429 || res.status >= 500) && attempt < MAX_LABEL_ATTEMPTS) {
+      await sleep(attempt * LABEL_BACKOFF_MS);
+      continue;
+    }
+    if (!res.ok) return { text: null, error: `HTTP ${res.status}` };
+    let j;
+    try {
+      j = await res.json();
+    } catch (e) {
+      // A 200 whose body did not arrive intact is a transport failure too, not a
+      // model that saw nothing.
+      return { text: null, error: 'unreadable response body' };
+    }
+    try {
+      const v = JSON.parse((j.choices?.[0]?.message?.content || '').replace(/^```(?:json)?|```$/gm, '').trim());
+      // An unparseable or bottle-less reply IS a verdict: the model answered and
+      // its answer does not identify a wine. Only a failure to GET an answer
+      // counts as unevaluated.
+      return { text: v && v.single_bottle && v.label_text ? String(v.label_text) : null, error: null };
+    } catch {
+      return { text: null, error: null };
+    }
   }
 }
 
@@ -435,6 +525,33 @@ async function verify(file, name, producer) {
   }
 }
 
+// verifyVisionFirst reads the label with the vision model and then applies the
+// SAME identity rules through the same binary, returning a verdict shaped
+// exactly like verify()'s so the calling loop needs no other change.
+//
+// It is the only path that works on Linux (see VISION_FIRST above). Note what it
+// does NOT do: it does not pass -single-bottle, so the local shape gate still
+// runs and can still refuse; and it does not let the model decide identity, only
+// read the text. An empty or near-empty read is a refusal, not a pass — a wine
+// was once accepted on a photograph of grapes because a blank string was allowed
+// through here.
+async function verifyVisionFirst(file, name, producer) {
+  const { text, error } = await readLabel(file);
+  // A transport failure is NOT a refusal. It is reported as its own stage so the
+  // wine loop can tell "this candidate is not the wine" (a miss, backoff earned)
+  // from "nobody could look at this candidate" (no ledger entry, still due).
+  if (error) {
+    return { accept: false, stage: 'transport', transport: true, label: '', reason: `could not read the label: ${error}` };
+  }
+  if (!text || text.trim().length < 3) {
+    return { accept: false, stage: 'label', label: text || '', reason: 'nothing legible on the label' };
+  }
+  const ok = await verifyText(file, name, producer, text);
+  return ok
+    ? { accept: true, stage: 'label', label: text, verifiedBy: VISION_MODEL }
+    : { accept: false, stage: 'label', label: text, reason: 'the label does not name this wine' };
+}
+
 // --- main --------------------------------------------------------------------
 
 if (!(await exists(VERIFIER))) {
@@ -443,37 +560,88 @@ if (!(await exists(VERIFIER))) {
 }
 
 let wines = JSON.parse(await readFile('data/wines.json', 'utf8')).filter((w) => w.slug && w.name);
+// Kept before any filtering so the empty-selection guard below can tell "the
+// filters left nothing" (convergence, exit 0) from "the catalog itself is empty"
+// (a broken invocation, exit 2).
+const catalogSize = wines.length;
+const attempts = await loadAttempts();
 const only = opt('slug', '');
 if (only) {
   wines = wines.filter((w) => w.slug === only);
 } else {
-  if (has('missing')) wines = wines.filter((w) => (w.imagePath || '').endsWith('.svg'));
+  // "Missing" includes the generated stand-ins: a gpt-image-1 bottle
+  // (imageSource generated-photo) fills the page until a real photograph is
+  // found, and importrules lets a verified real image overwrite it — so the
+  // fetch must keep hunting for those wines, or generated becomes forever.
+  if (has('missing'))
+    wines = wines.filter(
+      (w) => (w.imagePath || '').endsWith('.svg') || w.imageSource === 'generated-photo'
+    );
+  if (DUE_ONLY) {
+    const before = wines.length;
+    wines = wines.filter((w) => isDue(attempts, w.sku));
+    console.log(`due per the attempt ledger: ${wines.length} of ${before} imageless wines`);
+  }
   wines = wines.filter((w) => !SPIRIT.test(w.name));
   wines.sort((a, b) => a.slug.localeCompare(b.slug));
   if (!has('all')) {
     const n = parseInt(opt('n', '20'), 10);
-    wines = Array.from({ length: n }, (_, i) => wines[Math.floor((i + 0.5) * (wines.length / n))]).filter(Boolean);
+    // --n is a CAP as well as a sampler, and the short-circuit matters: the
+    // stride formula repeats indices once wines.length < n (with 10 due wines and
+    // n=150 it yields the same slug fifteen times over), and a repeated wine is
+    // re-searched from scratch at full cost. CI passes a large --n precisely to
+    // bound a nightly run whose due set shrinks below it over time.
+    wines = wines.length <= n
+      ? wines
+      : Array.from({ length: n }, (_, i) => wines[Math.floor((i + 0.5) * (wines.length / n))]).filter(Boolean);
   }
 }
+// An empty selection is TWO different situations, and conflating them is what
+// wedges the nightly pipeline.
+//
+// "Nothing is due tonight" is the image stage SUCCEEDING. Once the night-one
+// backlog has been worked through — roughly a fortnight at --n 150 — the due set
+// empties, and it stays empty until the 30-day backoff starts returning wines.
+// For those weeks an exit 2 here is fatal: `set -euo pipefail` in cistage.sh
+// kills the stage, and build, deploy, commit-back and notify never run. The site
+// stops updating because image sourcing finished its work.
+//
+// A malformed invocation is a different thing and still exits 2. The two cases
+// that are actually distinguishable: a --slug naming no wine (a typo), and a
+// catalog that yielded nothing at all (wrong working directory, truncated file —
+// a missing data/wines.json already throws out of the readFile above). Anything
+// else empty is the filters having nothing left to offer, which is convergence.
 if (!wines.length) {
-  console.error('no wines selected');
-  process.exit(2);
+  if (only) {
+    console.error(`no wine in the catalog has slug ${only}`);
+    process.exit(2);
+  }
+  if (!catalogSize) {
+    console.error('data/wines.json holds no usable wines (no slug/name) — wrong directory, or a truncated file');
+    process.exit(2);
+  }
+  console.log('no wines due tonight — image stage is converged; nothing to do');
+  process.exit(0);
 }
 
 if (USE_VISION) {
-  VISION_KEY = (await readFile('.env', 'utf8')).match(/^OPENAI_API_KEY=(.*)$/m)?.[1]?.trim() || '';
+  VISION_KEY = await openaiKey();
   if (!VISION_KEY) {
-    console.error('--vision needs OPENAI_API_KEY in .env');
+    console.error('--vision needs OPENAI_API_KEY in the environment or .env');
     process.exit(2);
   }
-  console.log(`vision fallback: ${VISION_MODEL}`);
+  console.log(`vision label reading: ${VISION_MODEL}${VISION_FIRST ? ' (first, local OCR skipped)' : ' (fallback)'}`);
 }
-{
-  const env = await readFile('.env', 'utf8');
-  CSE_KEY = env.match(/^FINEVINES_GOOGLE_CSE_KEY=(.*)$/m)?.[1]?.trim() || '';
-  CSE_CX = env.match(/^FINEVINES_GOOGLE_CSE_CX=(.*)$/m)?.[1]?.trim() || '';
-  if (CSE_KEY && CSE_CX) console.log('google discovery: on (Custom Search JSON API)');
-}
+// Same env-then-.env resolution as the OpenAI key, via the shared helper: an
+// environment variable wins outright, .env is a tolerant fallback, and either
+// key simply missing — no .env file at all included — leaves discovery off
+// rather than crashing the run. A direct, unconditional readFile('.env') here
+// used to ENOENT-kill the whole script on any machine without a .env file,
+// which is exactly ubuntu-latest, the one place this pipeline most needs to
+// keep running.
+CSE_KEY = await envOrFile('FINEVINES_GOOGLE_CSE_KEY');
+CSE_CX = await envOrFile('FINEVINES_GOOGLE_CSE_CX');
+if (CSE_KEY && CSE_CX) console.log('google discovery: on (Custom Search JSON API)');
 
 await mkdir(OUT_DIR, { recursive: true });
 await mkdir(ALT_DIR, { recursive: true });
@@ -487,13 +655,27 @@ let accepted = 0;
 let attempted = 0;
 const rejectReasons = {};
 
+let budgetSpent = false;
 for (const w of wines) {
+  // Checked between wines, never inside one: a wine abandoned halfway has a
+  // half-written manifest record and no ledger entry, which is exactly the
+  // ambiguous state a clean stop exists to avoid.
+  if (BUDGET_MS && Date.now() - STARTED_AT >= BUDGET_MS) {
+    budgetSpent = true;
+    break;
+  }
   const dest = join(OUT_DIR, w.slug + '.png');
   if (manifest[w.slug]?.ok && (await exists(dest))) continue;
   attempted++;
 
   const name = catalogName(w);
   const rec = { slug: w.slug, name, ok: false, tried: [] };
+  // Per-wine bookkeeping for the ledger decision at the bottom of the loop:
+  // how many candidates got a real verdict, and how many could not be looked at
+  // at all. See attempts.shouldRecordAttempt for why the two must not be merged.
+  let evaluated = 0;
+  let unevaluated = 0;
+  let stalled = false;
 
   let pages = [];
   try {
@@ -533,19 +715,37 @@ for (const w of wines) {
     // with the bottle, and the bottle is frequently the second or third image.
     for (const got of cands) {
       await writeFile(dest, got.bytes);
-      let v = await verify(dest, name, w.producer);
+      let v = VISION_FIRST
+        ? await verifyVisionFirst(dest, name, w.producer)
+        : await verify(dest, name, w.producer);
       // A right-wine bottle photographed against a backdrop is recoverable:
       // strip the background and judge the RESULT with the same rules. Only
       // the clean-background refusal triggers this — a multi-subject sweep
       // stays refused, because rembg keeps every foreground object (measured
-      // 2026-07-30: the wall vanished, the plated steak survived).
+      // 2026-07-30: the wall vanished, the plated steak survived). A transport
+      // verdict is exempt: rembg cannot fix an unreachable vision endpoint.
       let cutApplied = false;
-      if (!v.accept && /no clean background/.test(v.reason || '')) {
+      if (!v.transport && !v.accept && /no clean background/.test(v.reason || '')) {
         if (await cutBackground(dest)) {
           cutApplied = true;
-          v = await verify(dest, name, w.producer);
+          v = VISION_FIRST
+            ? await verifyVisionFirst(dest, name, w.producer)
+            : await verify(dest, name, w.producer);
         }
       }
+      if (v.transport) {
+        // Abandon the WINE, not just the candidate. A transport verdict means the
+        // vision endpoint is unreachable or rate-limited right now, and that is
+        // never a per-candidate condition — grinding through nine more pages
+        // would spend the run's whole budget re-confirming the same outage. The
+        // wine goes back in the pool untouched.
+        unevaluated++;
+        transportFailures++;
+        rec.tried.push({ src: got.src, why: v.reason, stage: v.stage });
+        stalled = true;
+        break;
+      }
+      evaluated++;
       if (v.accept) {
         rec.ok = true;
         rec.file = dest;
@@ -557,17 +757,22 @@ for (const w of wines) {
         rec.review = reviewFlags({ wine: w, name, label: v.label, w: got.w, h: got.h, page: src });
         if (cutApplied) rec.review.push('background removed automatically');
         accepted++;
+        if (VISION_FIRST) rec.verifiedBy = VISION_MODEL;
         break;
       }
-      // Second chance: re-read the label with a better OCR, then apply the
-      // SAME identity rules. Vision supplies evidence; it does not decide.
-      if (USE_VISION && v.stage !== 'decode') {
+      // The second chance only exists for the local-OCR path; in vision-first
+      // mode the model has already read the label, so re-reading it would just
+      // pay twice for the same answer.
+      if (USE_VISION && !VISION_FIRST && v.stage !== 'decode') {
         visionCalls++;
         // Only reconsider a LABEL refusal. A shape refusal stands: see
         // verifyText. And an empty read is not evidence — a wine was accepted
         // on a picture of grapes with nothing legible on it because a blank
         // string was allowed through here.
-        const text = v.stage === 'label' ? await readLabel(dest) : null;
+        // The local verifier already reached a real verdict on this candidate, so
+        // a transport failure here costs only the second chance — it does not make
+        // the candidate unevaluated, and the ledger miss below stays correct.
+        const { text } = v.stage === 'label' ? await readLabel(dest) : { text: null };
         const vv = text && text.trim().length >= 3
           ? await verifyText(dest, name, w.producer, text)
           : null;
@@ -609,7 +814,7 @@ for (const w of wines) {
       rec.tried.push({ src: got.src, why: v.reason || 'rejected', stage: v.stage, missing: v.missing });
       rejectReasons[v.reason || 'unknown'] = (rejectReasons[v.reason || 'unknown'] || 0) + 1;
     }
-    if (rec.ok) break;
+    if (rec.ok || stalled) break;
     await sleep(PACING_MS);
   }
 
@@ -624,7 +829,23 @@ for (const w of wines) {
   }
 
   manifest[w.slug] = rec;
-  const mark = rec.ok ? (rec.review?.length ? 'OK? ' : 'OK  ') : 'MISS';
+  // Record the attempt as a MISS regardless of whether an image was ACCEPTED.
+  // import.mjs upgrades the ones it actually writes to 'imported' afterwards.
+  // Recording pessimistically first is deliberate: a run that dies between fetch
+  // and import still leaves the attempt on record, so the next night does not
+  // re-burn the same search.
+  //
+  // But only when this run actually evaluated something — shouldRecordAttempt
+  // draws that line. A wine whose candidates could not be looked at stays due,
+  // because a 30-day bench earned by an OpenAI 429 is a wine that never gets its
+  // photograph.
+  if (w.sku && shouldRecordAttempt({ accepted: rec.ok, evaluated, unevaluated })) {
+    recordAttempt(attempts, w.sku, 'miss');
+    await saveAttempts(attempts);
+  } else if (w.sku) {
+    console.log(`     left due: ${unevaluated} candidate(s) could not be evaluated, nothing judged`);
+  }
+  const mark = rec.ok ? (rec.review?.length ? 'OK? ' : 'OK  ') : stalled ? 'WAIT' : 'MISS';
   console.log(`${mark} ${name.slice(0, 56).padEnd(56)} ${rec.ok ? new URL(rec.page).host : (rec.tried[0]?.why || rec.error || 'no candidates')}`);
   if (VERBOSE && rec.ok) console.log(`       label: ${rec.label?.slice(0, 90)}`);
   if (VERBOSE && !rec.ok) rec.tried.forEach((t) => console.log(`       tried ${new URL(t.src).host}: ${t.why}`));
@@ -635,6 +856,12 @@ for (const w of wines) {
 
 await browser.close();
 
+if (budgetSpent) {
+  console.log(
+    `\nstopped after ${Math.round((Date.now() - STARTED_AT) / 60_000)} min: the ${BUDGET_MS / 60_000}-minute budget ` +
+      `is spent, ${wines.length - attempted} of ${wines.length} selected wines not reached (they stay due for the next run)`
+  );
+}
 console.log(`\naccepted ${accepted}/${attempted}  (${attempted ? Math.round((100 * accepted) / attempted) : 0}%)`);
 if (Object.keys(rejectReasons).length) {
   console.log('rejections by reason:');
@@ -644,6 +871,11 @@ if (Object.keys(rejectReasons).length) {
 }
 if (USE_VISION) {
   console.log(`vision: ${visionCalls} calls, recovered ${visionRecovered} the local verifier had refused`);
+}
+if (transportFailures) {
+  console.log(
+    `vision transport failures: ${transportFailures} — those wines were NOT recorded as misses and stay due`
+  );
 }
 const flagged = Object.values(manifest).filter((r) => r.ok && r.review?.length).length;
 const clean = Object.values(manifest).filter((r) => r.ok && !r.review?.length).length;

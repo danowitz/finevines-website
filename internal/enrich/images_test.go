@@ -218,12 +218,25 @@ func TestResolveImage_SiblingCleanup_PhotoToLabelRemovesStaleJPEG(t *testing.T) 
 }
 
 // TestResolveImage_ImagePathIsSiteRelativeFormEvenOnWindows mirrors the
-// production call shape (imgDir = ".../assets/img/wines") and asserts the
-// returned imagePath is forward-slash form with no leading slash, matching
-// how templates/wine.html.tmpl and build.go's search-index build the <img
-// src> ("/" + w.ImagePath) and "img" fields.
+// production call shape (imgDir = "assets/img/wines", relative to the
+// process's cwd — see cmd/finevines/main.go's enrich.Run call) and asserts
+// the returned imagePath is forward-slash form with no leading slash,
+// matching how templates/wine.html.tmpl and build.go's search-index build
+// the <img src> ("/" + w.ImagePath) and "img" fields.
+//
+// t.Chdir into a scratch dir first: writeImageFile returns imgDir itself
+// (slash-converted), not a path relative to some site root, so the
+// no-leading-slash assertion only holds when imgDir is relative like real
+// callers pass it. An imgDir built by joining onto t.TempDir() (absolute)
+// used to pass here by accident on Windows only, because an absolute
+// Windows path starts with a drive letter, not "/" — so it doesn't fail
+// the "no leading slash" check even though it's not a site-relative path.
+// The same absolute imgDir on Linux starts with "/" and correctly fails,
+// which is what caught this: ubuntu-latest CI run
+// https://github.com/danowitz/finevines-website/actions/runs/30515039066.
 func TestResolveImage_ImagePathIsSiteRelativeFormEvenOnWindows(t *testing.T) {
-	imgDir := filepath.Join(t.TempDir(), "assets", "img", "wines")
+	t.Chdir(t.TempDir())
+	imgDir := filepath.Join("assets", "img", "wines")
 	provider := &fakeImageProvider{fn: func(ctx context.Context, prompt string) ([]byte, error) {
 		return []byte("jpeg bytes"), nil
 	}}

@@ -30,3 +30,31 @@ func IdentityMatches(raw salesforce.WineRaw, w model.Wine) bool {
 		normalize.Text(raw.Varietal) == w.Varietal &&
 		normalize.Text(raw.Region) == w.Region
 }
+
+// RawFromWine reconstructs the salesforce.WineRaw an enrichment call needs from
+// a catalog row. It exists for the one path where something OTHER than a roster
+// pull triggers enrichment: a reviewer's text-feedback note (internal/queue),
+// where the only record of the wine is the one already in data/wines.json.
+//
+// ReadyToSell is set true unconditionally — the wine is IN the catalog, so it
+// already passed enrich.Eligible on the run that put it there, and the field is
+// not read by the enrichment prompt anyway. StockQty/StockCases/CasePack are
+// carried across for completeness rather than because the prompt uses them.
+func RawFromWine(w model.Wine) salesforce.WineRaw {
+	return salesforce.WineRaw{
+		ID:          w.ID,
+		SKU:         w.SKU,
+		Producer:    w.Producer,
+		Name:        w.Name,
+		Vintage:     w.Vintage,
+		Varietal:    w.Varietal,
+		Region:      w.Region,
+		Country:     w.Country,
+		Appellation: w.Appellation,
+		Style:       w.Style,
+		StockQty:    w.StockQty,
+		StockCases:  w.StockCases,
+		CasePack:    w.CasePack,
+		ReadyToSell: true,
+	}
+}

@@ -122,6 +122,41 @@ func (c *BunnyClient) Delete(ctx context.Context, relPath string) error {
 	return nil
 }
 
+// Download GETs relPath from the storage zone. It is the read side of the same
+// zone Upload writes to, and exists for internal/queue: the review console's
+// change queue (_review/queue.json) and the candidate images its reviewers pick
+// live in the storage zone, on a path the public pull zone does not serve.
+//
+// A 404 returns empty bytes and no error, mirroring Delete's treatment of the
+// same status: "the console has never written a queue" is the state of the zone
+// until the first reviewer clicks something, and every nightly run before then
+// would otherwise fail on it.
+func (c *BunnyClient) Download(ctx context.Context, relPath string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.storageURL(relPath), nil)
+	if err != nil {
+		return nil, fmt.Errorf("bunny download %s: building request: %w", relPath, err)
+	}
+	req.Header.Set("AccessKey", c.StorageKey)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("bunny download %s: %w", relPath, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("bunny download %s: status %d: %s", relPath, resp.StatusCode, readBody(resp))
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("bunny download %s: reading body: %w", relPath, err)
+	}
+	return data, nil
+}
+
 // Purge clears every configured Pull Zone's CDN cache (PullZoneID may be
 // comma-separated — see its doc comment). Call this once, after all
 // Upload/Delete calls for a deploy have completed, so stale edge copies of

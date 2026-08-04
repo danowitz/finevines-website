@@ -148,9 +148,19 @@ vite.config.ts.timestamp-*
 # Finevines Go build (cmd/finevines)
 .env
 dist/
-.bunny-manifest.json
 finevines.exe
 *.exe
+
+# .bunny-manifest.json is deliberately TRACKED, not ignored. It is the hash of
+# every file currently on Bunny.net, and it is what makes `deploy` upload only
+# what changed. CI checks out fresh every run, so an untracked manifest would
+# make every nightly run re-upload the whole site and purge the CDN. The
+# pipeline commits it back after each deploy.
+
+# Per-run scratch state for the CI pipeline (before-snapshot for the digest,
+# the applied-action log). Written by one run, read by `notify` later in the
+# SAME run, never committed.
+.run/
 
 # Editor workspace file (personal, not shared)
 *.code-workspace

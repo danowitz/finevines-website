@@ -173,6 +173,86 @@ two Claude Code skills in `plugins/finevines-news` and `plugins/finevines-team`.
 contact details, their client-confirmation state, and homepage wine curation. All four feed the same build and
 deploy path, but the website build itself never talks to Salesforce or an AI service.
 
+## 6. The automated pipeline (GitHub Actions)
+
+Since 2026-07-29 the publish path runs unattended in GitHub Actions rather than
+from one Windows machine. `.github/workflows/pipeline.yml` runs on every push to
+`master`, nightly at 08:15 UTC (about 2:15am Central), on manual dispatch, and
+on a `repository_dispatch` of type `review-console` fired by the review console.
+Runs queue rather than overlap.
+
+Each run, in this order:
+
+1. **`finevines applyqueue`** drains `_review/queue.json` from the Bunny storage
+   zone: image swaps, text corrections, and flags submitted by reviewers. Every
+   applied action ID is recorded in `data/queue-ledger.json`, so a crashed or
+   re-fired run never applies the same correction twice.
+2. **`finevines enrich`** pulls the live Salesforce roster. Unchanged wines are
+   skipped by their `sourceHash`, so nothing is re-sent to OpenAI.
+3. **`tools/labelfetch/cistage.sh`** sources bottle photographs for wines that
+   have none and are due per `data/image-attempts.json` (a 30-day backoff after a
+   failed search) — **up to 150 wines and 120 minutes per night**, whichever comes
+   first. The cap is what makes the stage converge: each night records its
+   results, a recorded miss is not retried for 30 days, so the due set shrinks and
+   coverage climbs run over run instead of one unbounded run hitting the job
+   timeout and losing everything it learned. An image must pass **both** the
+   label/shape verification and the watermark sweep to be imported; there is no
+   override in CI, and an image the sweep could not reach a verdict on is refused
+   too.
+4. **`finevines build`** renders `dist/`.
+5. **`finevines deploy`** uploads the changed files to Bunny.net and purges both
+   pull zones.
+6. **A bot commit** returns `data/`, the imported photographs under
+   `assets/img/wines/`, and `.bunny-manifest.json` to `master` with the message
+   `pipeline: nightly run [skip ci]`. The repo remains the source of truth and
+   every automated change is auditable in git history.
+7. **`finevines notify`** emails a digest through Postmark — but only if the run
+   changed something. It lists new wines, delistings, rewritten notes, newly
+   imported photographs (with thumbnails and their source URLs), corrections
+   applied, and the portfolio's coverage figures, each linking to the live page.
+
+`.github/workflows/ci.yml` is the separate, credential-free gate that runs on
+every push and pull request: build, `go test ./...`, the Node unit tests, and a
+mock-mode (`FINEVINES_SF_MOCK`) pipeline run that never touches Salesforce,
+OpenAI or Bunny.net.
+
+### Secrets to configure
+
+All are GitHub Actions **repository** secrets (Settings → Secrets and variables →
+Actions). The repo is public, so the pipeline workflow deliberately has no
+`pull_request` trigger — a fork PR can never reach any of these.
+
+| Secret | What it is |
+| --- | --- |
+| `FINEVINES_SF_BASE_URL` | Salesforce instance URL |
+| `FINEVINES_SF_CLIENT_ID` | Connected App consumer key |
+| `FINEVINES_SF_CLIENT_SECRET` | Connected App consumer secret |
+| `OPENAI_API_KEY` | Enrichment, vision label reading, watermark sweep |
+| `FINEVINES_BUNNY_STORAGE_ZONE` | Storage zone name |
+| `FINEVINES_BUNNY_STORAGE_KEY` | Storage zone password |
+| `FINEVINES_BUNNY_STORAGE_ENDPOINT` | Regional storage host |
+| `FINEVINES_BUNNY_API_KEY` | Account API key (purge, Edge Scripting) |
+| `FINEVINES_BUNNY_PULL_ZONE_ID` | Both pull zone IDs, comma-separated |
+| `FINEVINES_BUNNY_SCRIPT_ID` | Redirect middleware's Edge Script ID |
+| `FINEVINES_GA_ID` | GA4 measurement ID |
+| `FINEVINES_SITE_BASE_URL` | Canonical site URL |
+| `POSTMARK_TOKEN` | Postmark **server** token for the digest |
+| `FINEVINES_NOTIFY_TO` | Comma-separated digest recipients |
+| `FINEVINES_NOTIFY_FROM` | Confirmed Postmark sender signature |
+| `FINEVINES_REVIEW_HMAC_SECRET` | Magic-link signing key (used by the review console) |
+
+The first fifteen are read directly out of `pipeline.yml`'s `env:` block.
+`FINEVINES_REVIEW_HMAC_SECRET` is the sixteenth: nothing in this workflow reads
+it yet — it is set up now because it belongs to the same secret inventory and
+the review console (a separate, not-yet-built piece) will need it.
+
+Also required once: **Settings → Actions → General → Workflow permissions** set
+to **Read and write**, so the bot commit can push.
+
+The review console's GitHub PAT is **not** a repository secret. It lives as a
+Bunny Edge Script secret: fine-grained, this repo only, Actions: write for
+`repository_dispatch` and nothing else.
+
 ## Building
 
 Requires Go (see `go.mod` for the version). From the repo root:
@@ -200,11 +280,21 @@ go test ./...
 
 ## Running it
 
-`deploy.bat` (repo root) runs the full nightly pipeline — `enrich`, then `build`, then `deploy` — and stops
-immediately when a step reports an error. The deployment retry behavior and its non-atomic storage upload
-caveat are described above. See **[`docs/operations.md`](docs/operations.md)** for the full runbook: every
-`.env` credential and where it comes from, running `deploy.bat` by hand, setting up a nightly Windows Task
-Scheduler run, what the summary output means, and how to install and use the two Claude skills.
+The pipeline normally runs itself — see **[6. The automated pipeline](#6-the-automated-pipeline-github-actions)**
+above. To trigger it by hand: `gh workflow run pipeline.yml`, or the *Run
+workflow* button on the Actions tab.
+
+`deploy.bat` (repo root) remains the **local fallback** for when GitHub Actions
+is unavailable or a run needs to be reproduced on a workstation. It runs
+`enrich`, then `build`, then `deploy`, stopping at the first error. It does not
+drain the review queue, source images, or send a digest — those are pipeline-only
+steps. **Commit `data/` and `.bunny-manifest.json` after running it**, or the
+next pipeline run will diff against stale state and re-upload the whole site.
+
+See **[`docs/operations.md`](docs/operations.md)** for the full runbook: every
+credential and where it comes from, running the pipeline by hand, reading a run's
+summary output, what to do when a step fails, and how to install and use the two
+Claude skills.
 
 ## Proprietary Notice
 

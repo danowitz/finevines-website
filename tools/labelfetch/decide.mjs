@@ -18,6 +18,9 @@
 //   node tools/labelfetch/decide.mjs --file other.json  # a different download
 import { readFile, writeFile, rename, unlink, access } from 'node:fs/promises';
 import { join, basename } from 'node:path';
+import { binPath } from './env.mjs';
+
+const VERIFIER = binPath('imgcheck');
 
 const MANIFEST = 'data/fetched-images/manifest.json';
 const args = process.argv.slice(2);
@@ -100,7 +103,7 @@ async function checkShape(file) {
   const { promisify } = await import('node:util');
   const run = promisify(execFile);
   try {
-    const { stdout } = await run('imgcheck.exe', ['-json', '-img', file, '-name', 'x', '-label', 'x']);
+    const { stdout } = await run(VERIFIER, ['-json', '-img', file, '-name', 'x', '-label', 'x']);
     const v = JSON.parse(stdout);
     return { ok: true, label: v.label };
   } catch (e) {

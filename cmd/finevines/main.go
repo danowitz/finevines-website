@@ -40,6 +40,10 @@ func main() {
 		runErr = runRedirects(cfg, os.Args[2:])
 	case "deploy":
 		runErr = runDeploy(cfg)
+	case "applyqueue":
+		runErr = runApplyQueue(cfg, os.Args[2:])
+	case "notify":
+		runErr = runNotify(cfg, os.Args[2:])
 	case "report":
 		runErr = runReport()
 	default:
@@ -52,7 +56,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: finevines <enrich|build|redirects|deploy|report>")
+	fmt.Fprintln(os.Stderr, "usage: finevines <enrich|build|redirects|deploy|applyqueue|notify|report>")
 }
 
 // reportPath is where the enrichment coverage report is written — a LOCAL,

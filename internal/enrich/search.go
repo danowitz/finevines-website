@@ -115,15 +115,32 @@ copyrighted text verbatim. Never invent critic scores, prices, awards, or
 provenance; if unsure, mark the field "derived" or "missing" and keep the copy
 general. Respond with ONLY the JSON object, no prose around it.`
 
-// Enrich runs one web-search-grounded enrichment for w. The model is asked for
-// a bare JSON object; if the response can't be parsed into a usable
-// EnrichResult, Enrich retries once before giving up (LLM output occasionally
-// drifts from the requested shape, and a same-call retry is cheap insurance
-// without masking a persistently broken prompt or endpoint).
+// Enrich runs one web-search-grounded enrichment for w. See EnrichWithNote: this
+// is that call with no human correction attached, so there is one request shape
+// and one retry policy for both paths.
 func (e *OpenAIEnricher) Enrich(ctx context.Context, w salesforce.WineRaw) (EnrichResult, error) {
+	return e.EnrichWithNote(ctx, w, "")
+}
+
+// EnrichWithNote is Enrich with a reviewer's correction attached.
+//
+// The note is fed VERBATIM and placed AFTER the wine's facts, under an explicit
+// heading, so the model reads it as a correction TO those facts rather than as
+// another one of them. That ordering is the whole value of the text-feedback
+// action: "says oaked; this wine is unoaked" is a human overruling the web, and
+// paraphrasing or burying it would lose the override.
+//
+// If the response can't be parsed into a usable EnrichResult, the call is
+// retried once before giving up (LLM output occasionally drifts from the
+// requested shape, and a same-call retry is cheap insurance without masking a
+// persistently broken prompt or endpoint).
+func (e *OpenAIEnricher) EnrichWithNote(ctx context.Context, w salesforce.WineRaw, note string) (EnrichResult, error) {
 	prompt := fmt.Sprintf(
 		"Producer: %s\nWine: %s\nVintage: %s\nVarietal: %s\nRegion: %s\nAppellation: %s\nStyle: %s\nSKU: %s",
 		w.Producer, w.Name, w.Vintage, w.Varietal, w.Region, w.Appellation, w.Style, w.SKU)
+	if strings.TrimSpace(note) != "" {
+		prompt += "\n\nCORRECTION FROM THE FINEVINES TEAM (authoritative, overrides anything you find on the web):\n" + note
+	}
 
 	reqObj := map[string]any{
 		"model":             e.model,

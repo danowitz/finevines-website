@@ -8,9 +8,16 @@
 // detail:high (the mark is small and low-contrast; detail:low can erase it).
 //
 // Incremental: with --apply, every verdict is recorded on the manifest record
-// (hits as a watermark flag import refuses, cleans as watermarkSwept), so a
-// re-run only spends on records that have never produced a verdict — rate-
+// (watermarkSwept either way, plus a watermark flag import refuses on a hit), so
+// a re-run only spends on records that have never produced a verdict — rate-
 // limited or crashed runs just get re-run until the unchecked count is zero.
+//
+// A record with NO verdict is left unswept on purpose, and importrules.mjs
+// refuses to promote it. "Unchecked" is not "clean": an error or an unparseable
+// reply means nobody has looked at that image, and a watermark that publishes
+// on such a night can never be swept out again — the catalog will by then hold
+// a real photograph, which import refuses to overwrite. The reason is written to
+// the record as watermarkSweepError so the import log can name it.
 //
 // The model's verdicts are not deterministic, and a missed watermark is the
 // expensive direction (it ships on the site), so a single clean verdict is not
@@ -25,6 +32,7 @@
 //   node tools/labelfetch/watermarksweep.mjs --apply --recheck-clean   # re-vote the cleans
 import { readFile, writeFile, access } from 'node:fs/promises';
 import { parseVerdict, flagWatermark, isWatermarked } from './watermark.mjs';
+import { openaiKey } from './env.mjs';
 
 const MANIFEST = 'data/fetched-images/manifest.json';
 const MODEL = 'gpt-4.1-nano';
@@ -34,9 +42,9 @@ const apply = process.argv.includes('--apply');
 const recheckClean = process.argv.includes('--recheck-clean');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const KEY = (await readFile('.env', 'utf8')).match(/^OPENAI_API_KEY=(.*)$/m)?.[1]?.trim() || '';
+const KEY = await openaiKey();
 if (!KEY) {
-  console.error('needs OPENAI_API_KEY in .env');
+  console.error('needs OPENAI_API_KEY in the environment or .env');
   process.exit(2);
 }
 
@@ -118,7 +126,14 @@ await Promise.all(
       }
       done++;
       if (!verdict) {
-        unchecked.push(rec.slug + (error ? ` (${error})` : ' (unparseable verdict)'));
+        // Recorded ON THE RECORD, not just in this run's console output: import
+        // refuses anything the sweep has not cleared, and the operator reading
+        // "skip <slug> — watermark sweep has not cleared this image (HTTP 429)"
+        // in the import log needs the sweep's reason to have survived the run
+        // that produced it.
+        const why = error || 'unparseable verdict';
+        rec.watermarkSweepErrorPending = why; // committed below under --apply
+        unchecked.push(`${rec.slug} (${why})`);
       } else if (verdict.watermark) {
         hits.push({ rec, mark: verdict.mark });
         console.log(`  MARK  ${rec.slug} — ${verdict.mark || 'unnamed mark'}`);
@@ -135,17 +150,42 @@ console.log(`\n${done} swept: ${hits.length} watermarked, ${cleans} clean, ${unc
 for (const u of unchecked) console.log(`  unchecked ${u}`);
 
 if (apply) {
-  for (const { rec, mark } of hits) flagWatermark(rec, mark);
+  for (const { rec, mark } of hits) {
+    flagWatermark(rec, mark);
+    // watermarkSwept means "a verdict exists for this image", not "this image is
+    // clean" — a hit is a verdict too. Import reads the two fields in order
+    // (confirmed mark first, then swept-at-all), so setting it here keeps the
+    // skip line naming the actual watermark instead of the weaker "never
+    // checked", and stops a re-run paying to re-examine a settled hit.
+    rec.watermarkSwept = true;
+  }
   for (const rec of Object.values(manifest)) {
     if (rec.watermarkSweptPending) {
       delete rec.watermarkSweptPending;
       rec.watermarkSwept = true;
     }
+    // A verdict supersedes whatever stopped any pass from reaching one — in both
+    // directions. Once a record is swept it stays swept, so a --recheck-clean
+    // pass that fails on transport must not leave a stale error behind on a
+    // record that already carries a real verdict.
+    if (rec.watermarkSwept) {
+      delete rec.watermarkSweepError;
+      delete rec.watermarkSweepErrorPending;
+    }
+    if (rec.watermarkSweepErrorPending) {
+      rec.watermarkSweepError = rec.watermarkSweepErrorPending;
+      delete rec.watermarkSweepErrorPending;
+    }
   }
   await writeFile(MANIFEST, JSON.stringify(manifest, null, 1));
-  console.log(`\nrecorded ${hits.length} watermark flags and ${cleans} clean verdicts in ${MANIFEST}`);
+  console.log(
+    `\nrecorded ${hits.length} watermark flags, ${cleans} clean verdicts and ${unchecked.length} unchecked reasons in ${MANIFEST}`
+  );
 } else {
-  for (const rec of Object.values(manifest)) delete rec.watermarkSweptPending;
+  for (const rec of Object.values(manifest)) {
+    delete rec.watermarkSweptPending;
+    delete rec.watermarkSweepErrorPending;
+  }
   if (hits.length) console.log('\nre-run with --apply to record these in the manifest');
 }
 if (unchecked.length) console.log('re-run to retry the unchecked ones (already-swept records are skipped)');

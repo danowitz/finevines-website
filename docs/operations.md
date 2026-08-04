@@ -8,8 +8,9 @@ developer looking for the technical README, see [`../README.md`](../README.md) i
 
 ## What this tool does
 
-`finevines.exe` is one small program that does four jobs. You'll mostly never run these one at a time — the
-`deploy.bat` file (see below) runs the first three together in the right order.
+`finevines.exe` is one small program that does four jobs. **Normally you run none of them**: the site updates
+itself every night in the cloud (see "The nightly run" below). This table is here so the output makes sense when
+you read it, and for the rare occasion GRIT asks you to run something by hand.
 
 | Command | Plain-language description |
 |---|---|
@@ -40,13 +41,17 @@ values below.
 - `FINEVINES_SF_CLIENT_SECRET` — the Connected App's Consumer Secret.
 - `FINEVINES_SF_API_VERSION` — optional; leave blank and the tool picks a sensible default.
 
-**Anthropic (Claude)** — needed for `enrich` (writes tasting notes) and for both Claude skills below (writing
-news posts and updating the team page):
-- `ANTHROPIC_API_KEY` — an API key from Anthropic's console. GRIT can help set up the account.
+**OpenAI** — needed for `enrich` (researches each wine and writes its tasting notes), for `applyqueue` (rewrites
+a wine's notes when a reviewer sends a correction), and for the image stage (reads bottle labels and sweeps for
+watermarks). One key covers all three:
+- `OPENAI_API_KEY` — an API key from OpenAI's platform console. GRIT can help set up the account.
+- `FINEVINES_OPENAI_MODEL` — optional; leave blank and the tool picks a sensible default.
 
-**Image generation (Gemini)** — needed for `enrich`'s bottle photos:
-- `FINEVINES_GEMINI_API_KEY` — an API key from Google's Gemini/AI Studio console.
-- `FINEVINES_IMAGE_MODEL` — optional; leave blank and the tool picks a sensible default.
+**Postmark** — needed only for `notify`, the nightly digest email. Not used by anything you run by hand:
+- `POSTMARK_TOKEN` — the Postmark **server** token.
+- `FINEVINES_NOTIFY_FROM` — the confirmed Postmark sender signature the digest is sent from. This has to be a
+  mailbox someone reads: the digest invites a reply when a bottle photo looks wrong.
+- `FINEVINES_NOTIFY_TO` — who gets the digest, comma-separated.
 
 **Bunny.net (hosting)** — needed for `deploy`, and for the "publish now" option in the two Claude skills. All
 of these come from the Bunny.net account dashboard once FineVines has a Bunny.net account set up:
@@ -81,9 +86,22 @@ Everything lives together in one folder — call it the "repo root." That folder
 
 ---
 
-## Running it by hand
+## The nightly run
 
-Double-click `deploy.bat`, or open a Command Prompt window in the repo-root folder and type:
+The site updates itself. Every night at **2:15am Central** a GitHub Actions workflow runs the whole cycle in the
+cloud — reviewer corrections, Salesforce refresh, bottle photographs, build, upload, and a digest email
+summarising what changed. Nothing on the office machine has to be switched on, and there is nothing to schedule.
+The full detail is under "Runbook: the GitHub Actions pipeline" further down.
+
+**There is exactly one nightly publisher, and it is the pipeline.** Do not schedule `deploy.bat` (or anything
+else) to run on a timer. Two publishers would fight: each keeps its own record of what is already uploaded, and a
+workstation run from a stale copy of the repo can re-upload the whole site, or put yesterday's wine list back
+over today's.
+
+## Running `deploy.bat` by hand (the manual fallback)
+
+`deploy.bat` exists for one situation: GitHub Actions is unavailable and something needs to go live now. Ask GRIT
+first if you have the option. Double-click it, or open a Command Prompt window in the repo-root folder and type:
 
 ```
 deploy.bat
@@ -96,31 +114,10 @@ half-finished run never goes live. A normal run prints progress as it goes, endi
 - `FAILED - see output above. The site was NOT updated.` — something went wrong; the previous, still-working
   version of the site is untouched. See "If something fails," below.
 
----
-
-## Running it automatically every night (Windows Task Scheduler)
-
-GRIT will typically set this up during launch, but here's the click path if it ever needs to be recreated on a
-new machine:
-
-1. Open the Start menu, type **Task Scheduler**, and open it.
-2. In the right-hand panel, click **Create Basic Task...**
-3. Name it something like `FineVines Nightly Site Update`, click **Next**.
-4. Under **Trigger**, choose **Daily**, click **Next**, set the start time to **2:00 AM**, click **Next**.
-5. Under **Action**, choose **Start a program**, click **Next**.
-6. In **Program/script**, click **Browse...** and select `deploy.bat` inside the repo-root folder.
-7. In **Start in (optional)**, type (or paste) the full path to the repo-root folder itself — for example
-   `C:\FineVines\finevines-website`. This step matters: without it, the task won't be able to find `.env` or
-   `finevines.exe`.
-8. Click **Next**, then **Finish**.
-9. Find the new task in the Task Scheduler Library list, right-click it, choose **Properties**.
-10. On the **General** tab, select **Run whether user is logged on or not**, so it still runs overnight even if
-    nobody's signed in on the machine. You'll be prompted for that Windows user's password — enter it and click
-    **OK**.
-11. Optional but recommended: on the **Settings** tab, check "Run task as soon as possible after a scheduled
-    start is missed," in case the machine is off or asleep at 2 AM.
-
-To test it without waiting for 2 AM: right-click the task in the list and choose **Run**.
+Two things it does **not** do. It skips the pipeline-only steps — it does not apply reviewer corrections, source
+bottle photographs, or send the digest email. And it does not save its own results anywhere but this machine:
+whatever it changed has to be committed back to the repository, or the next nightly run will compare against
+stale records and re-upload the entire site. GRIT does that part — tell them you ran it.
 
 ---
 
@@ -166,7 +163,10 @@ deploy: uploaded 42, deleted 3, purged
 
 ---
 
-## If something fails
+## If a manual `deploy.bat` run fails
+
+(For a failed *nightly* run, see "Runbook: the GitHub Actions pipeline → When a step fails" below — the nightly
+run emails GRIT automatically, so this section is only for something you started yourself.)
 
 `deploy.bat` is written so that a failure at any step stops the whole run — nothing partial ever goes live.
 If you see `FAILED - see output above. The site was NOT updated.`:
@@ -224,8 +224,8 @@ happened.
 Same idea — say something like "Add Jane to the About page" or "Take George's old photo down," and Claude will
 walk you through it, then offer to publish the change the same way.
 
-If you say "not now" to publishing in either skill, the change is saved and will simply go live the next time
-`deploy.bat` runs (e.g. the next 2 AM cycle).
+If you say "not now" to publishing in either skill, the change is saved and will simply go live on the next
+nightly run.
 
 ---
 
@@ -246,3 +246,136 @@ If you say "not now" to publishing in either skill, the change is saved and will
 The 301 map accumulates in `data/lifecycle-redirects.json` (committed with
 the catalog) and ships inside `dist/redirects.json`, which the Bunny Edge
 middleware serves. No operator action is ever required.
+
+---
+
+## Runbook: the GitHub Actions pipeline
+
+### Where to look
+- **Actions tab → `pipeline`** for runs. `gh run list --workflow=pipeline.yml`
+  from a terminal; `gh run view <id> --log` for the full log.
+- A failed run emails the repo owner automatically (GitHub's own notification).
+  The digest email is for content changes, not CI health — the two are separate
+  on purpose.
+
+### Triggering a run by hand
+```
+gh workflow run pipeline.yml
+gh run watch
+```
+
+### When a step fails
+The site is never left half-published, and the repo never records work that did
+not happen. One thing is NOT true, and it matters: a reviewer's correction can be
+applied to the catalog in step 1 and then lost, because the catalog and the
+ledger only reach the repo at the bot commit in step 6. If enrich, the image
+stage, build or deploy fails in between, the run dies with those changes in a
+discarded workspace. That is why every batch is archived before it is applied —
+see "Recovering a lost review batch" below.
+
+Step by step:
+- **applyqueue failed** — the queue is not cleared and nothing was committed. The
+  next run re-reads the same actions; `data/queue-ledger.json` stops anything
+  that did apply from applying twice. Safe to just re-run.
+- **applyqueue succeeded but a LATER step failed** — the queue was cleared, and
+  the corrections it applied were never committed. They are not lost: the batch
+  was archived first. Re-run the pipeline and, if the reviewer's fix is still
+  missing from the site afterwards, restore it from the archive (below).
+- **enrich failed** — `data/wines.json` holds whatever the last checkpoint saved
+  (every 50 wines). Wines that succeeded now hash-match and are skipped on the
+  retry, so nothing is re-billed.
+- **image stage failed** — no image reached `assets/img/wines/` unless it passed
+  both gates. `data/image-attempts.json` was written per wine, so a retry does
+  not re-search what was already tried.
+
+  Note what is NOT a failure: the stage does at most 150 wines and 120 minutes a
+  night and then stops, exit 0, having logged `stopped after N min: the
+  120-minute budget is spent`. Wines it did not reach stay due for tomorrow. It
+  will take a couple of weeks of nightly runs to work through the wines that have
+  never been searched, and the coverage figure in the digest should climb a
+  little each night — that is the stage working, not stalling. Once that backlog
+  is cleared the step logs `no wines due tonight — image stage is converged;
+  nothing to do` and exits 0 on most nights, until the 30-day backoff starts
+  returning wines. That is the finished state, not a fault.
+- **deploy failed** — `.bunny-manifest.json` was NOT saved and the CDN was NOT
+  purged. The next run re-diffs against the old manifest and retries exactly the
+  files that never uploaded.
+- **commit-back was rejected twice** — a human pushed mid-run. The deploy already
+  happened; the site is live and correct, but the repo has not caught up. Re-run
+  the pipeline: it re-diffs and commits.
+- **notify failed** — everything shipped; only the email did not. The most likely
+  cause is `FINEVINES_NOTIFY_FROM` not being a confirmed Postmark sender
+  signature (Postmark returns HTTP 200 with a non-zero `ErrorCode` for that).
+
+### Recovering a lost review batch
+Before `applyqueue` applies anything, it copies the whole batch to the Bunny
+storage zone as `_review/queue-applied-<run id>.json` — the same format as
+`_review/queue.json`, so recovery is a copy rather than a repair. The run log
+names the file:
+
+```
+applyqueue: archived 3 queued action(s) to _review/queue-applied-1234567890.json before applying them (recover a lost batch by copying that file back to _review/queue.json)
+```
+
+Find that line with `gh run view <id> --log | grep archived`. To replay the
+batch, download the archive from the storage zone (Bunny dashboard → the storage
+zone → `_review/`, or the Storage API) and upload it back as
+`_review/queue.json`, then trigger a run. Re-applying is safe: the ledger skips
+every action that already landed, so only the lost ones are done again.
+
+The archives are never deleted, and `_review/` is not served by the public pull
+zone — nothing there is reachable from finevines.com.
+
+### After a bot commit lands, never use "Re-run failed jobs"
+`notify` is the last step in the pipeline, so the failure that sends an operator
+to the Actions "Re-run failed jobs" button is almost always `notify` itself —
+and by then the bot's commit-back has already landed on `master`. A re-run
+checks out that same master, so the before/after snapshot it takes captures the
+**after** state (the run has nothing left to diff against itself), `notify`
+finds no changes, and the job goes green having sent no digest — silently, on
+the exact night an email mattered most.
+
+To re-send the digest by hand instead, check out **at the bot commit itself**
+(if later commits have landed since, `data/wines.json` at `HEAD` is no longer
+that run's after-state, so this only works from the bot commit, not from
+whatever is on `master` now):
+
+```
+git show <bot-commit>~1:data/wines.json > /tmp/before.json
+./finevines notify -before /tmp/before.json
+```
+
+Add `-dry` to preview the digest without sending it through Postmark.
+
+### Rotating a secret
+`gh secret set <NAME>`, then `gh workflow run pipeline.yml` to confirm. Secrets
+are never printed in logs; a step that needs one and does not have it fails with
+`set <NAME> in .env (or the environment) before running <subcommand>`.
+
+### Stopping the pipeline
+Disable the workflow: `gh workflow disable pipeline.yml`. The nightly schedule
+and every trigger stop; `deploy.bat` remains available on the workstation.
+
+### Launch steps still open (repo-admin + live credentials required)
+These have not been done yet — they need someone with repository admin rights
+and the real production credentials, not just a code change:
+1. **Configure the 16 GitHub Actions repository secrets** (Settings → Secrets
+   and variables → Actions). See the table in the README's
+   [pipeline section](../README.md#6-the-automated-pipeline-github-actions) for
+   the exact names and what each one is; verify each against
+   `.github/workflows/pipeline.yml`'s `env:` block before setting it — a typo
+   here is a silent empty value at 2:15am.
+2. **Set Settings → Actions → General → Workflow permissions to Read and
+   write**, so the bot commit-back can push to `master`.
+3. **Run the first manual `workflow_dispatch`** (`gh workflow run pipeline.yml`)
+   as the acceptance run, and read its log end to end (`gh run watch`, then
+   `gh run view <id> --log`) before trusting the nightly schedule to run
+   unattended.
+4. **Point `FINEVINES_NOTIFY_FROM` at a mailbox someone actually reads.** The
+   digest tells George that if a photograph shows the wrong bottle he should
+   reply and it will be replaced — and a reply goes to this address. Until the
+   review console ships, that reply is his only channel for a correction, so an
+   unread sender address means corrections are silently discarded. A confirmed
+   Postmark sender signature on a monitored mailbox satisfies both requirements
+   at once; if the sending address has to stay unmonitored, set a Postmark
+   `ReplyTo` on the message instead and monitor that.
