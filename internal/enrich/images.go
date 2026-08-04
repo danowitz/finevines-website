@@ -165,6 +165,15 @@ func ResolveImage(ctx context.Context, provider ImageProvider, w salesforce.Wine
 	if hasRealImage(prev) {
 		return prev.ImagePath, prev.ImageSource, nil
 	}
+	// Stand-ins survive re-enrichment too: a generated photo or a flat label
+	// scan is worse than a real photograph but better than the SVG label, and
+	// the IMPORT pipeline — not enrichment — is what upgrades them (both are
+	// replaceable there, and the fetch pipeline keeps hunting those wines).
+	// Only the SVG label itself is fair game for regeneration here.
+	if prev != nil && prev.ImagePath != "" &&
+		(prev.ImageSource == model.ImageGeneratedPhoto || prev.ImageSource == model.ImageLabelScan) {
+		return prev.ImagePath, prev.ImageSource, nil
+	}
 
 	if err := os.MkdirAll(imgDir, 0o755); err != nil {
 		return "", "", fmt.Errorf("resolve image: mkdir %s: %w", imgDir, err)

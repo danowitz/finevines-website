@@ -47,6 +47,32 @@ func collectLogs(t *testing.T) (logFn func(string, ...any), get func() []string)
 		}
 }
 
+// A generated photo or a label scan is a STAND-IN the import pipeline
+// replaces with a real photograph; re-enrichment must keep it, not downgrade
+// it to the SVG label. Without this, the 2026-08-04 catalog-wide re-enrichment
+// would have wiped 46 verified gpt-image bottles and ~510 label scans.
+func TestResolveImage_StandInImagesSurviveReenrichment(t *testing.T) {
+	for _, source := range []string{model.ImageGeneratedPhoto, model.ImageLabelScan} {
+		imgDir := t.TempDir()
+		provider := &fakeImageProvider{fn: func(ctx context.Context, prompt string) ([]byte, error) {
+			t.Errorf("provider must not be invoked when prev wears a %s stand-in", source)
+			return nil, nil
+		}}
+		prev := &model.Wine{
+			ImagePath:   "assets/img/wines/" + resolveImageBase + ".jpg",
+			ImageSource: source,
+		}
+		logFn, _ := collectLogs(t)
+		gotPath, gotSource, err := ResolveImage(context.Background(), provider, resolveImageWine, "a prompt", imgDir, prev, logFn)
+		if err != nil {
+			t.Fatalf("[%s] ResolveImage returned error: %v", source, err)
+		}
+		if gotPath != prev.ImagePath || gotSource != source {
+			t.Errorf("[%s] = (%q, %q), want the stand-in kept (%q, %q)", source, gotPath, gotSource, prev.ImagePath, source)
+		}
+	}
+}
+
 func TestResolveImage_ProviderSuccessWritesJPEGAndReturnsPhotoSource(t *testing.T) {
 	imgDir := t.TempDir()
 	wantBytes := []byte("fake jpeg bytes from provider")

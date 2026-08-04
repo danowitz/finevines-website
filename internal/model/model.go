@@ -25,6 +25,13 @@ const (
 	ImageOldSite          = "old-site"          // FineVines' own photo, harvested from the old finevines.com
 	ImageScrapedWeb       = "scraped-web"       // real bottle/label image found via web search
 	ImageScrapedGoogle    = "scraped-google"    // real image via Google image-search fallback
+	// ImageLabelScan marks a flat label scan wearing a wine's image slot — the
+	// old finevines.com photographed LABELS, not bottles (audit 2026-08-04:
+	// 468 of 492 old-site images), and some scraped finds are the same. A scan
+	// renders (better than nothing) but is a stand-in like a generated photo:
+	// replaceable by any real bottle shot, hunted by the fetch pipeline, and
+	// preserved (not SVG-downgraded) across re-enrichment.
+	ImageLabelScan = "label-scan"
 )
 
 // FieldSource records where one enriched field's value came from, so the
@@ -95,7 +102,7 @@ func ImageFieldSource(imageSource string) FieldSource {
 		return SourceFound
 	case "":
 		return SourceMissing
-	default: // generated-photo, generated-label
+	default: // generated-photo, generated-label, label-scan
 		return SourceDerived
 	}
 }
