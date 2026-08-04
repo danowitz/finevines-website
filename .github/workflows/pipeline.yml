@@ -76,8 +76,11 @@ jobs:
       # Site.
       FINEVINES_SITE_BASE_URL: ${{ secrets.FINEVINES_SITE_BASE_URL }}
       FINEVINES_GA_ID: ${{ secrets.FINEVINES_GA_ID }}
-      # Digest email.
-      POSTMARK_TOKEN: ${{ secrets.POSTMARK_TOKEN }}
+      # Digest email — submission through the client's SMTP relay.
+      FINEVINES_SMTP_HOST: ${{ secrets.FINEVINES_SMTP_HOST }}
+      FINEVINES_SMTP_PORT: ${{ secrets.FINEVINES_SMTP_PORT }}
+      FINEVINES_SMTP_USER: ${{ secrets.FINEVINES_SMTP_USER }}
+      FINEVINES_SMTP_PASS: ${{ secrets.FINEVINES_SMTP_PASS }}
       FINEVINES_NOTIFY_TO: ${{ secrets.FINEVINES_NOTIFY_TO }}
       FINEVINES_NOTIFY_FROM: ${{ secrets.FINEVINES_NOTIFY_FROM }}
 
@@ -105,7 +108,7 @@ jobs:
 
       # --ignore-scripts: every secret above is job-level env, so an install
       # script would run with the Salesforce credentials, the OpenAI key, the
-      # Bunny keys and the Postmark token in its environment, on a public repo.
+      # Bunny keys and the SMTP relay password in its environment, on a public repo.
       # The only runtime dependency is puppeteer-core, which has no meaningful
       # install script — so closing that path costs nothing.
       - run: npm ci --ignore-scripts

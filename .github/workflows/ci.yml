@@ -1,7 +1,7 @@
 # The cheap gate. Everything here is safe on a fork's pull request because this
 # workflow declares NO secrets at all: the pipeline is exercised in mock mode
 # (FINEVINES_SF_MOCK), which reads the embedded sample roster instead of the
-# live Salesforce org, and never reaches OpenAI, Bunny.net or Postmark.
+# live Salesforce org, and never reaches OpenAI, Bunny.net or the mail relay.
 #
 # Its real job is cross-platform assurance. The whole publish path was written
 # and only ever run on one Windows machine; this is what catches a hardcoded

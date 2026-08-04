@@ -84,9 +84,12 @@ func TestRunNotify_MissingBeforeSnapshotIsRefusedBeforeAnythingIsLoaded(t *testi
 	t.Chdir(t.TempDir())
 
 	// Credentials are deliberately present. If the guard were missing or ran too
-	// late, this test would reach the Postmark sender, and "no send attempted" is
+	// late, this test would reach the SMTP sender, and "no send attempted" is
 	// exactly what it is asserting.
-	cfg := config.Config{PostmarkToken: "tok", NotifyFrom: "a@example.com", NotifyTo: "b@example.com"}
+	cfg := config.Config{
+		SMTPHost: "send.example.com", SMTPPort: 587, SMTPUser: "u", SMTPPass: "p",
+		NotifyFrom: "a@example.com", NotifyTo: "b@example.com",
+	}
 	err := runNotify(cfg, []string{"-before", "no/such/wines-before.json"})
 	if err == nil {
 		t.Fatal("runNotify accepted a missing -before snapshot; it would diff the whole catalog against nothing")
@@ -95,5 +98,57 @@ func TestRunNotify_MissingBeforeSnapshotIsRefusedBeforeAnythingIsLoaded(t *testi
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("error %q does not mention %q", err, want)
 		}
+	}
+}
+
+// A run that DID change something must not try to send with half a relay
+// configuration: the failure has to name the missing secret, because the only
+// person who will read it is looking at a 2:15am workflow log.
+func TestRunNotify_EverySMTPSecretIsRequiredBeforeSending(t *testing.T) {
+	full := config.Config{
+		SMTPHost: "send.example.com", SMTPPort: 587, SMTPUser: "u", SMTPPass: "p",
+		NotifyFrom: "catalog@finevines.biz", NotifyTo: "george@example.com",
+	}
+	for _, tc := range []struct {
+		name string
+		drop func(*config.Config)
+		want string
+	}{
+		{"host", func(c *config.Config) { c.SMTPHost = "" }, "FINEVINES_SMTP_HOST"},
+		{"port", func(c *config.Config) { c.SMTPPort = 0 }, "FINEVINES_SMTP_PORT"},
+		{"user", func(c *config.Config) { c.SMTPUser = "" }, "FINEVINES_SMTP_USER"},
+		{"password", func(c *config.Config) { c.SMTPPass = "" }, "FINEVINES_SMTP_PASS"},
+		{"from", func(c *config.Config) { c.NotifyFrom = "" }, "FINEVINES_NOTIFY_FROM"},
+		{"to", func(c *config.Config) { c.NotifyTo = "" }, "FINEVINES_NOTIFY_TO"},
+	} {
+		t.Run("missing "+tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			t.Chdir(dir)
+			// A real change, so the run gets past the no-changes short-circuit and
+			// reaches the credential check.
+			writeWines(t, filepath.Join(dir, "wines-before.json"), `[]`)
+			writeWines(t, filepath.Join(dir, "data", "wines.json"),
+				`[{"sku":"1001","slug":"a-wine","producer":"Domaine A","name":"A Wine","stockQty":5}]`)
+
+			cfg := full
+			tc.drop(&cfg)
+			err := runNotify(cfg, []string{"-before", "wines-before.json"})
+			if err == nil {
+				t.Fatalf("runNotify sent the digest with %s unset", tc.want)
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Errorf("error %q does not name the missing %s", err, tc.want)
+			}
+		})
+	}
+}
+
+func writeWines(t *testing.T, path, body string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
 	}
 }

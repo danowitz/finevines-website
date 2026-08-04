@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/gritautomation/finevines-website/internal/config"
 	"github.com/gritautomation/finevines-website/internal/model"
@@ -36,7 +37,7 @@ func runNotify(cfg config.Config, args []string) error {
 	appliedPath := flags.String("applied", ".run/queue-applied.json",
 		"this run's applied review-console actions, written by applyqueue")
 	dry := flags.Bool("dry", false,
-		"print the digest instead of sending it (no Postmark call, no credentials needed)")
+		"print the digest instead of sending it (no relay connection, no credentials needed)")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -78,8 +79,14 @@ func runNotify(cfg config.Config, args []string) error {
 		return nil
 	}
 
+	// The relay endpoint has no defaults: guessing a host or a port would fail
+	// at 2:15am in a workflow log nobody is watching, so every piece is demanded
+	// by name up front.
 	requiredEnv := []struct{ name, value string }{
-		{"POSTMARK_TOKEN", cfg.PostmarkToken},
+		{"FINEVINES_SMTP_HOST", cfg.SMTPHost},
+		{"FINEVINES_SMTP_PORT", portValue(cfg.SMTPPort)},
+		{"FINEVINES_SMTP_USER", cfg.SMTPUser},
+		{"FINEVINES_SMTP_PASS", cfg.SMTPPass},
 		{"FINEVINES_NOTIFY_FROM", cfg.NotifyFrom},
 		{"FINEVINES_NOTIFY_TO", cfg.NotifyTo},
 	}
@@ -90,12 +97,12 @@ func runNotify(cfg config.Config, args []string) error {
 	}
 	to := notify.Recipients(cfg.NotifyTo)
 
-	// nil, not http.DefaultClient: the nil fallback is a client with a send
-	// timeout. This is the last step of the nightly pipeline, and an unbounded
-	// client would let one stalled connection hold the whole job open until its
-	// own multi-hour timeout. That bound is why context.Background() is enough
-	// here — the deadline lives on the client.
-	sender := notify.NewPostmarkSender(cfg.PostmarkToken, nil)
+	// The constructed sender carries its own send timeout. This is the last step
+	// of the nightly pipeline, and net/smtp has no timeout of its own, so an
+	// unbounded send would let one stalled relay hold the whole job open until
+	// its multi-hour workflow timeout. That bound is why context.Background() is
+	// enough here — the deadline lives on the sender.
+	sender := notify.NewSMTPSender(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPass)
 	if err := sender.Send(context.Background(), cfg.NotifyFrom, to, msg); err != nil {
 		return fmt.Errorf("notify: %w", err)
 	}
@@ -104,6 +111,16 @@ func runNotify(cfg config.Config, args []string) error {
 	log.Printf("notify: %d new, %d delisted, %d photographs, %d notes rewritten, %d review fixes",
 		len(d.NewWines), len(d.Delisted), len(d.NewImages), len(d.TextRefreshed), len(d.QueueActions))
 	return nil
+}
+
+// portValue renders the relay port for the required-env check above, so an
+// unset port reads as the missing FINEVINES_SMTP_PORT it is rather than as a
+// connection attempt to port 0.
+func portValue(port int) string {
+	if port <= 0 {
+		return ""
+	}
+	return strconv.Itoa(port)
 }
 
 // loadApplied reads applyqueue's run log. A missing file means applyqueue did not

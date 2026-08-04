@@ -92,7 +92,10 @@ func TestRedirectsMapURLOverride(t *testing.T) {
 }
 
 func TestLoad_NotifySettings(t *testing.T) {
-	t.Setenv("POSTMARK_TOKEN", "pm-token")
+	t.Setenv("FINEVINES_SMTP_HOST", "send.smtp.com")
+	t.Setenv("FINEVINES_SMTP_PORT", "587")
+	t.Setenv("FINEVINES_SMTP_USER", "finevines")
+	t.Setenv("FINEVINES_SMTP_PASS", "relay-secret")
 	t.Setenv("FINEVINES_NOTIFY_TO", "george@example.com,barbara@example.com")
 	t.Setenv("FINEVINES_NOTIFY_FROM", "catalog@finevines.biz")
 
@@ -100,14 +103,42 @@ func TestLoad_NotifySettings(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load returned error: %v", err)
 	}
-	if cfg.PostmarkToken != "pm-token" {
-		t.Errorf("PostmarkToken = %q", cfg.PostmarkToken)
+	if cfg.SMTPHost != "send.smtp.com" {
+		t.Errorf("SMTPHost = %q", cfg.SMTPHost)
+	}
+	if cfg.SMTPPort != 587 {
+		t.Errorf("SMTPPort = %d, want 587", cfg.SMTPPort)
+	}
+	if cfg.SMTPUser != "finevines" || cfg.SMTPPass != "relay-secret" {
+		t.Errorf("SMTP credentials = %q / %q", cfg.SMTPUser, cfg.SMTPPass)
 	}
 	if cfg.NotifyTo != "george@example.com,barbara@example.com" {
 		t.Errorf("NotifyTo = %q", cfg.NotifyTo)
 	}
 	if cfg.NotifyFrom != "catalog@finevines.biz" {
 		t.Errorf("NotifyFrom = %q", cfg.NotifyFrom)
+	}
+}
+
+// An unset port is 0, not an error — every other subcommand loads the same
+// Config and none of them mail anything, so `build` must not fail because the
+// relay was never configured. `notify` is where the requirement is enforced.
+func TestLoad_UnsetSMTPPortIsZeroNotAnError(t *testing.T) {
+	cfg, err := Load("nonexistent.env")
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	if cfg.SMTPPort != 0 {
+		t.Errorf("SMTPPort = %d with nothing set, want 0", cfg.SMTPPort)
+	}
+}
+
+// A typo'd port must be loud. Silently falling back to 0 (or to 587) would send
+// the digest somewhere nobody chose, or fail at 2:15am with a confusing error.
+func TestLoad_UnparseableSMTPPortIsAnError(t *testing.T) {
+	t.Setenv("FINEVINES_SMTP_PORT", "five-eight-seven")
+	if _, err := Load("nonexistent.env"); err == nil {
+		t.Fatal("Load accepted a non-numeric FINEVINES_SMTP_PORT")
 	}
 }
 

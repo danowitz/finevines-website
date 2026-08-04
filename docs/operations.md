@@ -47,10 +47,14 @@ watermarks). One key covers all three:
 - `OPENAI_API_KEY` — an API key from OpenAI's platform console. GRIT can help set up the account.
 - `FINEVINES_OPENAI_MODEL` — optional; leave blank and the tool picks a sensible default.
 
-**Postmark** — needed only for `notify`, the nightly digest email. Not used by anything you run by hand:
-- `POSTMARK_TOKEN` — the Postmark **server** token.
-- `FINEVINES_NOTIFY_FROM` — the confirmed Postmark sender signature the digest is sent from. This has to be a
-  mailbox someone reads: the digest invites a reply when a bottle photo looks wrong.
+**Mail relay (SMTP)** — needed only for `notify`, the nightly digest email. Not used by anything you run by
+hand. Fine Vines sends through smtp.com's relay; these come from that account:
+- `FINEVINES_SMTP_HOST` — the relay's submission host.
+- `FINEVINES_SMTP_PORT` — `587` for STARTTLS (the usual one) or `465` for implicit TLS. Either way the
+  connection is encrypted before the password is sent; a relay that will not encrypt fails the send.
+- `FINEVINES_SMTP_USER` / `FINEVINES_SMTP_PASS` — the relay's SMTP credentials.
+- `FINEVINES_NOTIFY_FROM` — the address the digest is sent from. It has to be one the relay is authorised to
+  send for (SPF/DKIM), and a mailbox someone reads: the digest invites a reply when a bottle photo looks wrong.
 - `FINEVINES_NOTIFY_TO` — who gets the digest, comma-separated.
 
 **Bunny.net (hosting)** — needed for `deploy`, and for the "publish now" option in the two Claude skills. All
@@ -303,9 +307,13 @@ Step by step:
 - **commit-back was rejected twice** — a human pushed mid-run. The deploy already
   happened; the site is live and correct, but the repo has not caught up. Re-run
   the pipeline: it re-diffs and commits.
-- **notify failed** — everything shipped; only the email did not. The most likely
-  cause is `FINEVINES_NOTIFY_FROM` not being a confirmed Postmark sender
-  signature (Postmark returns HTTP 200 with a non-zero `ErrorCode` for that).
+- **notify failed** — everything shipped; only the email did not. The error
+  quotes the relay's own reply, and the usual causes read straight off it: a
+  `535` means the relay rejected `FINEVINES_SMTP_USER`/`FINEVINES_SMTP_PASS`; a
+  `550` on MAIL FROM means the relay will not send for `FINEVINES_NOTIFY_FROM`;
+  a `550` naming a recipient means that address in `FINEVINES_NOTIFY_TO` was
+  refused. A STARTTLS complaint means the port is wrong — 587 and 465 negotiate
+  TLS differently, and the send refuses to fall back to cleartext.
 
 ### Recovering a lost review batch
 Before `applyqueue` applies anything, it copies the whole batch to the Bunny
@@ -345,7 +353,7 @@ git show <bot-commit>~1:data/wines.json > /tmp/before.json
 ./finevines notify -before /tmp/before.json
 ```
 
-Add `-dry` to preview the digest without sending it through Postmark.
+Add `-dry` to preview the digest without connecting to the relay.
 
 ### Rotating a secret
 `gh secret set <NAME>`, then `gh workflow run pipeline.yml` to confirm. Secrets
@@ -359,7 +367,7 @@ and every trigger stop; `deploy.bat` remains available on the workstation.
 ### Launch steps still open (repo-admin + live credentials required)
 These have not been done yet — they need someone with repository admin rights
 and the real production credentials, not just a code change:
-1. **Configure the 16 GitHub Actions repository secrets** (Settings → Secrets
+1. **Configure the 19 GitHub Actions repository secrets** (Settings → Secrets
    and variables → Actions). See the table in the README's
    [pipeline section](../README.md#6-the-automated-pipeline-github-actions) for
    the exact names and what each one is; verify each against
@@ -375,7 +383,8 @@ and the real production credentials, not just a code change:
    digest tells George that if a photograph shows the wrong bottle he should
    reply and it will be replaced — and a reply goes to this address. Until the
    review console ships, that reply is his only channel for a correction, so an
-   unread sender address means corrections are silently discarded. A confirmed
-   Postmark sender signature on a monitored mailbox satisfies both requirements
-   at once; if the sending address has to stay unmonitored, set a Postmark
-   `ReplyTo` on the message instead and monitor that.
+   unread sender address means corrections are silently discarded. An address
+   the relay is authorised to send for, on a monitored mailbox, satisfies both
+   requirements at once; if the sending address has to stay unmonitored, add a
+   `Reply-To` header pointing at a mailbox that is watched (a small change in
+   `internal/notify/smtp.go`).

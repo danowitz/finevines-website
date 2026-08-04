@@ -206,10 +206,11 @@ Each run, in this order:
    `assets/img/wines/`, and `.bunny-manifest.json` to `master` with the message
    `pipeline: nightly run [skip ci]`. The repo remains the source of truth and
    every automated change is auditable in git history.
-7. **`finevines notify`** emails a digest through Postmark — but only if the run
-   changed something. It lists new wines, delistings, rewritten notes, newly
-   imported photographs (with thumbnails and their source URLs), corrections
-   applied, and the portfolio's coverage figures, each linking to the live page.
+7. **`finevines notify`** emails a digest through the client's SMTP relay — but
+   only if the run changed something. It lists new wines, delistings, rewritten
+   notes, newly imported photographs (with thumbnails and their source URLs),
+   corrections applied, and the portfolio's coverage figures, each linking to
+   the live page.
 
 `.github/workflows/ci.yml` is the separate, credential-free gate that runs on
 every push and pull request: build, `go test ./...`, the Node unit tests, and a
@@ -236,13 +237,16 @@ Actions). The repo is public, so the pipeline workflow deliberately has no
 | `FINEVINES_BUNNY_SCRIPT_ID` | Redirect middleware's Edge Script ID |
 | `FINEVINES_GA_ID` | GA4 measurement ID |
 | `FINEVINES_SITE_BASE_URL` | Canonical site URL |
-| `POSTMARK_TOKEN` | Postmark **server** token for the digest |
+| `FINEVINES_SMTP_HOST` | Mail relay's submission host |
+| `FINEVINES_SMTP_PORT` | 587 (STARTTLS) or 465 (implicit TLS) |
+| `FINEVINES_SMTP_USER` | Relay SMTP AUTH username |
+| `FINEVINES_SMTP_PASS` | Relay SMTP AUTH password |
 | `FINEVINES_NOTIFY_TO` | Comma-separated digest recipients |
-| `FINEVINES_NOTIFY_FROM` | Confirmed Postmark sender signature |
+| `FINEVINES_NOTIFY_FROM` | Address the digest is sent from (relay-authorised, monitored) |
 | `FINEVINES_REVIEW_HMAC_SECRET` | Magic-link signing key (used by the review console) |
 
-The first fifteen are read directly out of `pipeline.yml`'s `env:` block.
-`FINEVINES_REVIEW_HMAC_SECRET` is the sixteenth: nothing in this workflow reads
+The first eighteen are read directly out of `pipeline.yml`'s `env:` block.
+`FINEVINES_REVIEW_HMAC_SECRET` is the nineteenth: nothing in this workflow reads
 it yet — it is set up now because it belongs to the same secret inventory and
 the review console (a separate, not-yet-built piece) will need it.
 

@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-// Message is one rendered digest. Both bodies are always produced: Postmark
-// sends whichever the reader's client can display, and the plain-text version is
-// also what shows in a notification preview.
+// Message is one rendered digest. Both bodies are always produced: they go out
+// as a multipart/alternative so the reader's client displays whichever it can,
+// and the plain-text version is also what shows in a notification preview.
 type Message struct {
 	Subject  string
 	HTMLBody string

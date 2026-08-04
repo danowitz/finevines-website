@@ -11,8 +11,8 @@
 // nobody opens.
 //
 // Diff and Render are pure functions over two catalog snapshots. Only
-// PostmarkSender touches the network, behind the Sender interface, so no test
-// ever sends mail.
+// SMTPSender touches the network, behind the Sender interface, so no test ever
+// sends mail to anyone.
 package notify
 
 import (
