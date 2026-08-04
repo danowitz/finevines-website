@@ -98,9 +98,25 @@ for (const [slug, rec] of Object.entries(manifest)) {
       rec.corroboratedBy = `${other.host} (imghash distance ${t.distance})`;
     }
   } else {
-    // Case B: promote the better half of a twin pair as the proposed pick.
+    // Case B: promote the better half of a twin pair as the proposed pick —
+    // AFTER the shape gate. Cross-host agreement proves the image belongs to
+    // this wine's world, NOT that it is a bottle: a winemaker's press
+    // portrait syndicates identically across retail sites and was promoted by
+    // exactly this path until the operator saw a man on the review sheet
+    // (2026-08-04). Same gate as decide.mjs's paste path.
     const t = twins[0];
     const pick = entries[t.a]; // imghash preserved input order; sizes differ little — first is fine
+    let shapeOk = false;
+    try {
+      JSON.parse((await run(binPath('imgcheck'), ['-json', '-img', pick.file, '-name', 'x', '-label', 'x'])).stdout);
+      shapeOk = true;
+    } catch (e) {
+      try {
+        const v = JSON.parse(e.stdout);
+        shapeOk = !(v.stage === 'shape' || v.stage === 'decode');
+      } catch {}
+    }
+    if (!shapeOk) continue;
     promoted++;
     console.log(`PICK ${slug} — ${entries[t.a].host} + ${entries[t.b].host} agree (distance ${t.distance})`);
     if (apply) {
