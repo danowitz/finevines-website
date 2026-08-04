@@ -27,10 +27,26 @@ describe('import selection rules', () => {
     assert.match(v.reason, /no such wine/);
   });
 
-  test('a wine that already has a photograph is never overwritten', () => {
-    const v = shouldImport(rec(), placeholderWine({ imagePath: 'assets/img/wines/x.jpg' }), {});
+  test('a wine that already has a REAL photograph is never overwritten', () => {
+    const v = shouldImport(
+      rec(),
+      placeholderWine({ imagePath: 'assets/img/wines/x.jpg', imageSource: 'scraped-web' }),
+      {}
+    );
     assert.equal(v.import, false);
     assert.match(v.reason, /already has a photograph/);
+  });
+
+  test('a generated photo IS replaced by a staged real image', () => {
+    // The generated tail is a stand-in, not a photograph: the Go pipeline
+    // already treats generated-* as replaceable (enrich.hasRealImage), and
+    // import must agree or the tail becomes permanently fake.
+    const v = shouldImport(
+      rec(),
+      placeholderWine({ imagePath: 'assets/img/wines/x.jpg', imageSource: 'generated-photo' }),
+      {}
+    );
+    assert.equal(v.import, true);
   });
 
   test('a watermarked record is refused even without cleanOnly', () => {

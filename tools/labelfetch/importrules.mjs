@@ -20,9 +20,16 @@ export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
     return { import: false, reason: 'no such wine in the catalog' };
   }
   // Never overwrite a real photograph the catalog already holds. Only the
-  // generated SVG fallback is replaced; anything else is an editorial choice
-  // someone made and this is not the tool to reverse it.
-  if (wine.imagePath && !wine.imagePath.endsWith('.svg')) {
+  // generated stand-ins are replaced — the SVG label and the gpt-image-1
+  // photo (imageSource generated-photo) — matching enrich.hasRealImage on
+  // the Go side: a generated image is a placeholder wearing better clothes,
+  // and a verified real photograph always outranks it. Anything else is an
+  // editorial choice someone made and this is not the tool to reverse it.
+  if (
+    wine.imagePath &&
+    !wine.imagePath.endsWith('.svg') &&
+    wine.imageSource !== 'generated-photo'
+  ) {
     return { import: false, reason: `already has a photograph (${wine.imagePath})` };
   }
   // The invariant is "no image publishes until the sweep has LOOKED at it", not
