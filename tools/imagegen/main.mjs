@@ -127,12 +127,24 @@ async function generate(prompt) {
       headers: { 'content-type': 'application/json', authorization: 'Bearer ' + KEY },
       body: JSON.stringify({ model: MODEL, prompt, size: '1024x1536', quality: QUALITY }),
     });
-    if (res.status === 429 && attempt < 5) {
-      await sleep(attempt * 15_000);
-      continue;
+    if (!res.ok) {
+      const text = await res.text();
+      // The org auto-reloads credits in small increments (observed 2026-08-04:
+      // enrichment ran in ~500-wine slices between top-ups). An exhausted
+      // balance means WAIT for the reload, not fail through the whole pool
+      // marking every remaining wine as an error.
+      if (res.status === 429 && /credit_balance_exhausted|no credits remaining/i.test(text)) {
+        console.log('  …credits exhausted — waiting 5 min for auto-reload');
+        await sleep(300_000);
+        continue;
+      }
+      if (res.status === 429 && attempt < 5) {
+        await sleep(attempt * 15_000);
+        continue;
+      }
+      throw new Error(`HTTP ${res.status}: ${text.slice(0, 120)}`);
     }
     const j = await res.json();
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${JSON.stringify(j.error).slice(0, 100)}`);
     return Buffer.from(j.data[0].b64_json, 'base64');
   }
 }
