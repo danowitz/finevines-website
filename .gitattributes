@@ -4,6 +4,15 @@
 data/wines.json text eol=lf
 data/news/*.json text eol=lf
 
+# Fingerprinted asset SOURCES must be byte-identical on every machine, or two
+# builders compute two different fingerprints for the same file and their
+# deploys delete each other's uploads. Found live 2026-08-05: a Windows (CRLF)
+# checkout and an LF build each shipped its own site.<hash>.css, the shared
+# deploy manifest masked the divergence, and the homepage lost its CSS twice
+# in two days. LF everywhere ends the war.
+assets/css/** text eol=lf
+assets/js/** text eol=lf
+
 # Golden fixtures are compared byte-for-byte by tests — never translate their
 # line endings. MUST stay last so it overrides the *.svg rule above.
 *.golden.svg -text
