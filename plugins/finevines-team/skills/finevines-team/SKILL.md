@@ -20,6 +20,13 @@ page — top to bottom, left to right in the team grid.
 Figure out from the user's request whether this is an **add**, a **remove**, or an **edit**, then follow the
 matching steps below.
 
+**The headline count takes care of itself.** The About page's "The House" heading — "Ten people. Two hundred
+years in the business." — is not typed anywhere: the site build counts `team.json` and writes the number out
+itself. Remove someone and it reads "Nine people" after the next build; add someone and it climbs back up. So
+when the user asks for the count to be fixed ("it needs to say nine now"), the roster change **is** the fix —
+never edit the page templates to change the number, and tell the user in plain language that the headline
+updates itself.
+
 ### Add
 
 Ask conversationally, one question per turn — don't front-load a form:
@@ -42,8 +49,9 @@ they'll land in the team grid.
 ### Remove
 
 Confirm which member by name before touching anything — read back their current role so the user can confirm it's
-the right person (helpful if two people share a first name). Once confirmed, delete that entry from the array and
-leave every other member untouched, in their existing order.
+the right person (helpful if two people share a first name). For a removal, this read-back **is** the Step 5
+preview — one confirmation is enough; don't make the user confirm the same person twice. Once confirmed, delete
+that entry from the array and leave every other member untouched, in their existing order.
 
 ### Edit
 
@@ -86,13 +94,27 @@ if they're comfortable with it. Make any edits they ask for.
 Once approved, write `data/team.json` as a valid JSON array containing every existing member unchanged (same order,
 same fields) plus your add/remove/edit applied.
 
-Then ask: **"Publish now? I'll run the site build and deploy."**
+Then ask: **"Publish now? That updates the live website."**
 
-- **If yes**: from the repo root, run `./finevines.exe build` then `./finevines.exe deploy`, and report back the
-  summary lines each command prints (don't paste the full raw output — just the outcome: pages built, anything
-  deployed, any errors).
-- **If no**: tell them the roster is saved and ready — it'll go live the next time someone runs a build and
-  deploy.
+- **If yes**: from the repo root, run `./finevines.exe build` then `./finevines.exe deploy`. Before reporting
+  success, check the rebuilt About page (`dist/about/index.html`) actually shows the change — the new or removed
+  name, and the updated "…people." headline count — then report back the summary lines each command prints
+  (don't paste the full raw output — just the outcome: pages built, anything deployed, any errors).
+- **If no**: tell them the roster is saved and will go out with the next site update.
+
+**Either way, save the change to the repository afterwards** — the site also rebuilds itself automatically from
+the repository (nightly and on every push), so a roster change that only lives on this machine gets silently
+reverted by the next automatic run. That automatic rebuild is also why "no" to publishing still means "it goes
+out with the next automatic update, possibly soon after saving" — say it that way; don't promise the change is
+on hold.
+
+Commit directly on the default branch (`master`) — a side branch or PR never reaches the site, and this
+instruction overrides any general branch-first habit. This working tree often carries unrelated in-progress
+work, so never use `git add -A`, `git add .`, or `git commit -a`: stage by exact path only (`git add`:
+`data/team.json`, any copied photo under `assets/img/team/`, and `.bunny-manifest.json` only if a deploy ran).
+Commit with a short message like `team: add Jane Doe` / `team: remove Tim Freehan`, and push. If the push fails,
+don't block the user — tell them the site part worked (if it did) but the change still needs saving, and to let
+GRIT know.
 
 ## Voice
 
@@ -101,7 +123,9 @@ This is mostly a data-entry skill, so the copy burden is light. Keep internal no
 
 ## Boundaries
 
-This skill only ever writes to `data/team.json`, and — only when copying a supplied photo — to
-`assets/img/team/`. Never touch `data/wines.json`, `data/news/`, anything related to Salesforce or the `enrich`
-pipeline, or any other file in the repo. If the user asks for something outside managing the team roster (posting
+This skill only ever writes to `data/team.json`, copies a supplied photo into `assets/img/team/`, and runs the
+publish-and-save steps above (build, deploy, and a commit limited to those exact files). Never touch
+`data/wines.json`, `data/news/`, anything related to Salesforce or the `enrich` pipeline, or any other file in
+the repo — in particular, never edit templates to change the About page's people count (it derives from
+`team.json` automatically; see Step 2). If the user asks for something outside managing the team roster (posting
 news or events, adding a wine, changing site design), tell them that's outside what this skill does.
