@@ -222,10 +222,21 @@ async function verifyBlank(file) {
 
 const tally = { labeled: 0, retried: 0, blank: 0, failed: 0, images: 0 };
 let sinceCheckpoint = 0;
-for (const w of batch) {
+// Serialize wines.json checkpoint writes: workers run concurrently, and two
+// overlapping writeFiles to the same path could interleave into corrupt JSON.
+let checkpointChain = Promise.resolve();
+const checkpoint = () => (checkpointChain = checkpointChain.then(() =>
+  writeFile(WINES, JSON.stringify(wines, null, 1) + '\n')));
+
+// CONCURRENCY wines in flight at once. Generation dominates each wine's wall
+// time (~60-90s at high quality), so 3 workers stay well under the org's
+// 5 images/min ceiling; the 429 backoff in generate() absorbs any brush with
+// it. Raise only if the org limit rises too.
+const CONCURRENCY = 3;
+async function processWine(w) {
   if (dry) {
     console.log(`DRY  ${w.slug}\n     ${labeledPrompt(w).slice(0, 140)}…`);
-    continue;
+    return;
   }
   const tmp = join(TMP, w.slug + '.png');
   let source = null; // 'labeled' | 'labeled-retry' | 'blank'
@@ -244,12 +255,12 @@ for (const w of batch) {
   } catch (e) {
     console.log(`ERR  ${w.slug} — ${String(e.message).split('\n')[0]}`);
     tally.failed++;
-    continue;
+    return;
   }
   if (!source) {
     console.log(`FAIL ${w.slug} — nothing verifiable generated; SVG label stays`);
     tally.failed++;
-    continue;
+    return;
   }
 
   const dest = join(IMG_DIR, w.slug + '.jpg');
@@ -258,7 +269,7 @@ for (const w of batch) {
   } catch (e) {
     console.log(`FAIL ${w.slug} — normalise: ${String(e.message).split('\n')[0]}`);
     tally.failed++;
-    continue;
+    return;
   }
   try { await unlink(join(IMG_DIR, w.slug + '.svg')); } catch {}
   w.imagePath = dest.replace(/\\/g, '/');
@@ -273,14 +284,25 @@ for (const w of batch) {
 
   // Checkpoint every 10 so a crash mid-chunk loses minutes, not the run.
   if (++sinceCheckpoint >= 10) {
-    await writeFile(WINES, JSON.stringify(wines, null, 1) + '\n');
     sinceCheckpoint = 0;
+    await checkpoint();
   }
 }
 
-if (!dry && (tally.labeled + tally.retried + tally.blank)) {
-  await writeFile(WINES, JSON.stringify(wines, null, 1) + '\n');
+// Worker pool: each worker pulls the next unclaimed wine until the batch is
+// drained. JS is single-threaded, so the shared cursor and tally are safe.
+let cursor = 0;
+async function worker() {
+  while (cursor < batch.length) {
+    await processWine(batch[cursor++]);
+  }
 }
+await Promise.all(Array.from({ length: Math.min(CONCURRENCY, batch.length) }, worker));
+
+if (!dry && (tally.labeled + tally.retried + tally.blank)) {
+  await checkpoint();
+}
+await checkpointChain;
 console.log(
   `\n${tally.labeled} labeled first-try, ${tally.retried} on retry, ${tally.blank} blank fallback, ${tally.failed} failed` +
   `\n${tally.images} images generated ≈ $${(tally.images * COST_PER_IMAGE).toFixed(2)}`
