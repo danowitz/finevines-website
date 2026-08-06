@@ -63,7 +63,10 @@ describe('portfolio — client-side catalog', () => {
     await hydrated(page, '/portfolio/');
 
     const total = await count(page);
-    assert.ok(total > 2000, `expected a full catalog, got ${total} wines`);
+    // The grid shows one card per WINE (vintages collapsed since 2026-08-05),
+    // so the full catalog is ~1,900 grouped cards over ~2,600 rows. The floor
+    // only needs to prove the whole index hydrated, not one 48-card page.
+    assert.ok(total > 1500, `expected a full catalog, got ${total} wines`);
     assert.equal(await cards(page), 48, 'page 1 should render one full page of cards');
 
     // The engine must be paginating the WHOLE catalog, not just this page.
@@ -163,6 +166,13 @@ describe('portfolio — client-side catalog', () => {
     const before = await count(page);
 
     await page.type('#portfolio-search', 'chardonnay');
+    // Wait for the URL to carry the FULL query, not just for the count to
+    // drop: the debounced URL write can fire mid-typing on a slow runner
+    // ("ch" narrowed the count, the assert then read a half-typed q).
+    await page.waitForFunction(
+      () => new URL(location.href).searchParams.get('q') === 'chardonnay',
+      { timeout: 5000 }
+    );
     await page.waitForFunction(
       (b) => parseInt(document.querySelector('#portfolio-count').textContent.replace(/[^\d]/g, ''), 10) < b,
       { timeout: 5000 },
