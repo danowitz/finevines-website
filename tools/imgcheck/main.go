@@ -49,6 +49,11 @@ func main() {
 	// the second opinion can never be heard.
 	givenSingle := flag.Bool("single-bottle", false, "caller confirms one bottle; skips the local shape gate")
 	producer := flag.String("producer", "", "the wine's producer; when given, only its words are required")
+	// The catalog itself, so the verifier can ask whether the label could be a
+	// DIFFERENT wine by the same producer — the blind spot that published 551
+	// wrong photographs before 2026-08-06 (see cuvee.go). Absent file: the
+	// sibling rule stands down and behaviour is exactly as before.
+	winesPath := flag.String("wines", "data/wines.json", "catalog, for telling a producer's wines apart")
 	flag.Parse()
 	if *imgPath == "" || *name == "" {
 		fmt.Fprintln(os.Stderr, "need -img and -name")
@@ -161,7 +166,7 @@ func main() {
 		}
 	}
 
-	m := matchWithProducer(*name, *producer, text, LoadIndex(*indexPath))
+	m := matchWithSiblings(*name, *producer, text, LoadIndex(*indexPath), LoadSiblings(*winesPath))
 	out.Want, out.Found, out.Missing = m.identifying, m.found, m.missing
 	out.Stage = "label"
 	if !*asJSON {
