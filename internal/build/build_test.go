@@ -1375,6 +1375,92 @@ func TestBuild_UnavailableWineHasPageButIsHiddenFromBrowse(t *testing.T) {
 	}
 }
 
+// TestBuild_VintagesCollapseToOnePortfolioCard is the Acre regression: two
+// Salesforce rows that are the same wine in different vintages (identical
+// producer and cuvée name) must render as ONE portfolio card — vintages
+// listed together, stock summed — not one card per vintage. Both vintages
+// keep their own detail pages; the card leads with the newest vintage.
+func TestBuild_VintagesCollapseToOnePortfolioCard(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		{ID: "SF-1", SKU: "ACR118", Producer: "Acre", Name: "Napa Valley Cabernet Sauvignon", Vintage: "2018",
+			Slug: "acre-napa-valley-cabernet-sauvignon-2018", Description: "d", ImagePath: "assets/img/wines/acre18.svg",
+			StockCases: 20.25, CasePack: 12, StockQty: 21, MetadataScore: 1},
+		{ID: "SF-2", SKU: "ACR119", Producer: "Acre", Name: "Napa Valley Cabernet Sauvignon", Vintage: "2019",
+			Slug: "acre-napa-valley-cabernet-sauvignon-2019", Description: "d", ImagePath: "assets/img/wines/acre19.svg",
+			StockCases: 37 + 4.0/12, CasePack: 12, StockQty: 38, MetadataScore: 2},
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. The portfolio grid has ONE card for the pair: the newest vintage's
+	// slug carries it, the older vintage's slug is absent from the grid.
+	portfolio := readFile(t, filepath.Join(dist, "portfolio", "index.html"))
+	if strings.Count(portfolio, `class="wine-card"`) != 1 {
+		t.Errorf("want exactly 1 wine card, got %d", strings.Count(portfolio, `class="wine-card"`))
+	}
+	if !strings.Contains(portfolio, "acre-napa-valley-cabernet-sauvignon-2019") {
+		t.Error("card must link the newest vintage's detail page")
+	}
+	if strings.Contains(portfolio, "acre-napa-valley-cabernet-sauvignon-2018") {
+		t.Error("older vintage must not get its own card")
+	}
+	// 2. The card lists both vintages, newest first, and sums the stock:
+	// 243 + 448 bottles = 691 = 57 cases of 12 + 7.
+	if !strings.Contains(portfolio, `<span class="vintage">2019 · 2018</span>`) {
+		t.Error("card must list both vintages newest-first")
+	}
+	// html/template escapes "+" to &#43; (same as every prior build).
+	if !strings.Contains(portfolio, "691 bottles · 57 cases &#43; 7") {
+		t.Error("card availability must sum both vintages' stock")
+	}
+
+	// 3. The catalog index collapses the same way: one entry, vints carrying
+	// the full vintage list for the JS filter, avail aggregated.
+	idx := readFile(t, globOne(t, filepath.Join(dist, "assets", "catalog-index*.json")))
+	var entries []struct {
+		Slug    string   `json:"slug"`
+		Vintage string   `json:"vintage"`
+		Vints   []string `json:"vints"`
+		Avail   string   `json:"avail"`
+	}
+	if err := json.Unmarshal([]byte(idx), &entries); err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("want 1 catalog-index entry, got %d", len(entries))
+	}
+	e := entries[0]
+	if e.Slug != "acre-napa-valley-cabernet-sauvignon-2019" {
+		t.Errorf("index entry slug = %q, want the newest vintage's", e.Slug)
+	}
+	if e.Vintage != "2019" {
+		t.Errorf("index entry vintage = %q, want 2019 (drives sort + default facet)", e.Vintage)
+	}
+	if !reflect.DeepEqual(e.Vints, []string{"2019", "2018"}) {
+		t.Errorf("index entry vints = %v, want [2019 2018]", e.Vints)
+	}
+	if e.Avail != "691 bottles · 57 cases + 7" {
+		t.Errorf("index entry avail = %q, want the aggregated line", e.Avail)
+	}
+
+	// 4. Both vintages keep their own detail pages.
+	for _, slug := range []string{"acre-napa-valley-cabernet-sauvignon-2018", "acre-napa-valley-cabernet-sauvignon-2019"} {
+		if _, err := os.Stat(filepath.Join(dist, "wines", slug, "index.html")); err != nil {
+			t.Errorf("detail page for %s missing: %v", slug, err)
+		}
+	}
+}
+
 // TestBuild_CollidingSlugActivePageWins guards the render-order hazard noted
 // in the delisting-lifecycle review: delisted wines render AFTER active
 // ones (see Run's renderWine loop), so if a slug were ever shared between an

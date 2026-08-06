@@ -375,7 +375,7 @@ type newsPostPage struct {
 type portfolioPage struct {
 	page
 	Facets []facetGroup
-	Wines  []model.Wine // this page's slice only (≤ portfolioPageSize)
+	Wines  []cardWine // this page's slice of grouped cards only (≤ portfolioPageSize)
 
 	// IndexURL is the content-hashed catalog-index URL portfolio.js fetches to
 	// drive client-side filtering/sorting/pagination. Hashing lets Bunny cache
@@ -415,6 +415,10 @@ type indexEntry struct {
 	// Avail is the pre-composed availability line ("74 bottles · 6 cs + 2");
 	// see availability(). Empty when out of stock.
 	Avail string `json:"avail,omitempty"`
+	// Vints is the group's full vintage list (newest first) when the card
+	// collapses more than one vintage; portfolio.js uses it for the vintage
+	// facet and the card's vintage span, falling back to Vintage when absent.
+	Vints []string `json:"vints,omitempty"`
 }
 
 func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error {
@@ -555,11 +559,14 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	// their own unit: writeCatalogIndex must run first so the hashed index URL
 	// is known before the pages that embed it are rendered, and renderPortfolio
 	// contributes every /portfolio/ + /portfolio/page/N/ path to the sitemap.
-	indexURL, err := writeCatalogIndex(distDir, s.Wines)
+	// Both browse surfaces render from the same grouped card list: one card
+	// per wine (vintages collapsed), while the detail pages below stay per-row.
+	cards := portfolioCards(s.Wines)
+	indexURL, err := writeCatalogIndex(distDir, cards)
 	if err != nil {
 		return err
 	}
-	portfolioPaths, err := renderPortfolio(tmpl, distDir, s, indexURL)
+	portfolioPaths, err := renderPortfolio(tmpl, distDir, s, cards, indexURL)
 	if err != nil {
 		return err
 	}
@@ -740,7 +747,14 @@ func availability(w model.Wine) string {
 		return ""
 	}
 	pack := catalog.PackOf(w)
-	b := int(cases*float64(pack) + 0.5)
+	return availLine(int(cases*float64(pack)+0.5), pack)
+}
+
+// availLine formats a bottle count with its case arithmetic. pack <= 0 means
+// the packs behind the count vary (a mixed-format group), so the line stays a
+// bottle count only — "cases" isn't one unit across a 6-pack magnum row and a
+// 12-pack 750ml row.
+func availLine(b, pack int) string {
 	if b <= 0 {
 		return ""
 	}
@@ -749,6 +763,9 @@ func availability(w model.Wine) string {
 		unit = "bottle"
 	}
 	s := fmt.Sprintf("%s %s", comma(b), unit)
+	if pack <= 0 {
+		return s
+	}
 	cs, rem := b/pack, b%pack
 	// Client-facing vocabulary only (2026-08-04): "broken case" and the "cs"
 	// abbreviation are warehouse shorthand. A holding short of a full case is
@@ -765,6 +782,77 @@ func availability(w model.Wine) string {
 		s += fmt.Sprintf(" + %d", rem)
 	}
 	return s
+}
+
+// cardWine is one portfolio card: a wine group's representative row plus the
+// group-wide facts the card presents. The grid shows one card per WINE
+// (producer + cuvée, per catalog.Build), not one per Salesforce row — two
+// vintages of the same wine collapse into a single card (the Acre 2018/2019
+// regression). Every row still gets its own detail page; only the browse
+// surfaces (grid + catalog-index) collapse.
+type cardWine struct {
+	model.Wine
+	// Vints is every vintage in the group, newest first, blanks dropped.
+	Vints []string
+	// Avail is the availability line summed across the whole group.
+	Avail string
+}
+
+// VintLabel is the card's vintage span: the group's vintages joined with a
+// middot ("2019 · 2018"); a single-vintage card reads exactly as before.
+func (c cardWine) VintLabel() string { return strings.Join(c.Vints, " · ") }
+
+// portfolioCards collapses catalog rows into one card per wine. The
+// representative row — supplying the card's link, image, and copy — is the
+// newest vintage's best-enriched row, so the card leads with the current
+// release; stock is summed across every row in the group.
+func portfolioCards(wines []model.Wine) []cardWine {
+	groups := catalog.Build(wines)
+	cards := make([]cardWine, 0, len(groups))
+	for _, g := range groups {
+		rep := g.Vintages[0].Wines[0]
+		for _, w := range g.Vintages[0].Wines {
+			if w.MetadataScore > rep.MetadataScore {
+				rep = w
+			}
+		}
+		var vints []string
+		for _, v := range g.Vintages {
+			if strings.TrimSpace(v.Year) != "" {
+				vints = append(vints, v.Year)
+			}
+		}
+		cards = append(cards, cardWine{Wine: rep, Vints: vints, Avail: groupAvailability(g)})
+	}
+	return cards
+}
+
+// groupAvailability composes one availability line for a whole group by
+// summing bottles across its rows. The case arithmetic carries over only when
+// every in-stock row shares one case pack; mixed packs fall back to the
+// bottle count alone (see availLine).
+func groupAvailability(g catalog.Group) string {
+	bottles, pack := 0, 0
+	uniform := true
+	for _, v := range g.Vintages {
+		for _, w := range v.Wines {
+			cases := catalog.OnHandCases(w)
+			if cases <= 0 {
+				continue
+			}
+			p := catalog.PackOf(w)
+			bottles += int(cases*float64(p) + 0.5)
+			if pack == 0 {
+				pack = p
+			} else if p != pack {
+				uniform = false
+			}
+		}
+	}
+	if !uniform {
+		pack = 0
+	}
+	return availLine(bottles, pack)
 }
 
 // spellNum spells a small count as a capitalized word ("Ten"), for counts
@@ -965,21 +1053,33 @@ const portfolioPageSize = 48
 // every first /portfolio/ visit; at ~2,600 wines this is a few hundred KB,
 // which Bunny gzips. Entries follow wines' order (already slug-sorted in
 // wines.json), so the index lines up with the server-rendered card order.
-func writeCatalogIndex(distDir string, wines []model.Wine) (string, error) {
-	entries := make([]indexEntry, len(wines))
-	for i, w := range wines {
+func writeCatalogIndex(distDir string, cards []cardWine) (string, error) {
+	entries := make([]indexEntry, len(cards))
+	for i, c := range cards {
+		// The entry's vintage leads with the group's newest year (drives the
+		// sort and the default facet value); the full list rides in vints only
+		// when the card actually collapses more than one vintage.
+		vintage := c.Vintage
+		if len(c.Vints) > 0 {
+			vintage = c.Vints[0]
+		}
+		var vints []string
+		if len(c.Vints) > 1 {
+			vints = c.Vints
+		}
 		entries[i] = indexEntry{
-			Slug:     w.Slug,
-			SKU:      w.SKU,
-			Producer: w.Producer,
-			Name:     w.Name,
-			Vintage:  w.Vintage,
-			Region:   w.Region,
-			Varietal: w.Varietal,
-			Country:  w.Country,
-			Color:    w.Color,
-			Img:      "/" + w.ImagePath,
-			Avail:    availability(w),
+			Slug:     c.Slug,
+			SKU:      c.SKU,
+			Producer: c.Producer,
+			Name:     c.Name,
+			Vintage:  vintage,
+			Region:   c.Region,
+			Varietal: c.Varietal,
+			Country:  c.Country,
+			Color:    c.Color,
+			Img:      "/" + c.ImagePath,
+			Avail:    c.Avail,
+			Vints:    vints,
 		}
 	}
 	data, err := json.Marshal(entries)
@@ -1040,9 +1140,9 @@ func portfolioPageURL(n int) string {
 // Facets are computed ONCE over the whole cleaned catalog (not per page): the
 // client engine filters against the full catalog-index, so the same complete
 // set of facet values must be offered on every page.
-func renderPortfolio(tmpl *template.Template, distDir string, s *site, indexURL string) ([]string, error) {
+func renderPortfolio(tmpl *template.Template, distDir string, s *site, cards []cardWine, indexURL string) ([]string, error) {
 	facets := buildFacets(s.Wines)
-	total := len(s.Wines)
+	total := len(cards)
 	pageCount := (total + portfolioPageSize - 1) / portfolioPageSize
 	if pageCount < 1 {
 		pageCount = 1 // always render at least /portfolio/, even with zero wines
@@ -1058,9 +1158,9 @@ func renderPortfolio(tmpl *template.Template, distDir string, s *site, indexURL 
 		if end > total {
 			end = total
 		}
-		var pageWines []model.Wine
+		var pageWines []cardWine
 		if start < total {
-			pageWines = s.Wines[start:end]
+			pageWines = cards[start:end]
 		}
 
 		// Page 1 keeps the plain "Portfolio" title; later pages carry a

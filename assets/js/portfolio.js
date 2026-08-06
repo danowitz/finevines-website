@@ -99,6 +99,18 @@
     function matchesSearch(it) {
       return !q || it._search.indexOf(q) !== -1;
     }
+    // facetValues returns every value an entry carries for a facet. All facets
+    // are single-valued except vintage: a card that collapses several vintages
+    // of one wine ships the full list in `vints` (newest first; `vintage`
+    // stays the newest year for sorting) — the card must match ANY of them.
+    function facetValues(it, k) {
+      if (k === 'vintage' && it.vints && it.vints.length) return it.vints;
+      return it[k] ? [it[k]] : [];
+    }
+    function hasAny(s, values) {
+      for (var i = 0; i < values.length; i++) if (s.has(values[i])) return true;
+      return false;
+    }
     // matchesFacetsExcept applies every selected facet EXCEPT `except` (pass
     // null to apply them all). This one predicate powers both the final filter
     // and the per-facet counts.
@@ -107,7 +119,7 @@
         var k = FACET_KEYS[i];
         if (k === except) continue;
         var s = sel[k];
-        if (s.size && !s.has(it[k])) return false;
+        if (s.size && !hasAny(s, facetValues(it, k))) return false;
       }
       return true;
     }
@@ -124,12 +136,15 @@
       // Full filter (all facets) → results.
       if (matchesFacetsExcept(it, null)) filtered.push(it);
       // Per-facet counts: for facet k, count it when all facets EXCEPT k match.
+      // A collapsed card counts once under EACH of its vintages.
       for (var ci = 0; ci < FACET_KEYS.length; ci++) {
         var k = FACET_KEYS[ci];
-        var val = it[k];
-        if (!val) continue;
+        var vals = facetValues(it, k);
+        if (!vals.length) continue;
         if (matchesFacetsExcept(it, k)) {
-          facetCounts[k][val] = (facetCounts[k][val] || 0) + 1;
+          for (var vi = 0; vi < vals.length; vi++) {
+            facetCounts[k][vals[vi]] = (facetCounts[k][vals[vi]] || 0) + 1;
+          }
         }
       }
     }
@@ -342,12 +357,16 @@
     }
     var h3 = document.createElement('h3');
     h3.textContent = w.name;
-    if (w.vintage) {
+    // A collapsed card lists every vintage in the group ("2019 · 2018", from
+    // vints, newest first) — mirroring the template's VintLabel; a plain card
+    // shows its single vintage as before.
+    var vintLabel = (w.vints && w.vints.length) ? w.vints.join(' · ') : w.vintage;
+    if (vintLabel) {
       // The vintage rides in its own de-emphasized span (see the template).
       h3.appendChild(document.createTextNode(' '));
       var vint = document.createElement('span');
       vint.className = 'vintage';
-      vint.textContent = w.vintage;
+      vint.textContent = vintLabel;
       h3.appendChild(vint);
     }
     body.appendChild(h3);

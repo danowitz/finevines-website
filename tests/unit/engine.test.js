@@ -146,6 +146,35 @@ describe('facet counts', () => {
   });
 });
 
+describe('collapsed vintages (vints)', () => {
+  // A card that collapses several vintages of one wine ships vintage = newest
+  // year plus vints = the full list (see build.go's writeCatalogIndex). The
+  // vintage facet must treat the card as ALL of its years, not just the newest.
+  const GROUPED = [
+    { slug: 'acre-2019', name: 'Napa Cab', producer: 'Acre', region: 'Napa', varietal: 'Cabernet', vintage: '2019', vints: ['2019', '2018'], country: 'USA' },
+    { slug: 'solo', name: 'Cornas', producer: 'Clape', region: 'Rhone', varietal: 'Syrah', vintage: '2018', country: 'France' },
+  ];
+  const grouped = () => new Engine(GROUPED.map((w) => ({ ...w })));
+
+  test('a vintage selection matches any year in the group', () => {
+    const r = grouped().query({ selectedFacets: { vintage: ['2018'] } });
+    assert.deepEqual(slugs(r).sort(), ['acre-2019', 'solo']);
+  });
+
+  test('the newest year still matches too', () => {
+    assert.deepEqual(slugs(grouped().query({ selectedFacets: { vintage: ['2019'] } })), ['acre-2019']);
+  });
+
+  test('facet counts count the group under every one of its years', () => {
+    assert.deepEqual(counts(grouped().query({}), 'vintage'), { 2019: 1, 2018: 2 });
+  });
+
+  test('entries without vints behave exactly as before', () => {
+    const r = grouped().query({ selectedFacets: { vintage: ['2018'], country: ['France'] } });
+    assert.deepEqual(slugs(r), ['solo']);
+  });
+});
+
 describe('sorting', () => {
   test('producer is the default, with name as a stable tiebreak', () => {
     assert.deepEqual(slugs(engine().query({})), ['clape', 'lamy-b', 'lamy-a', 'ridge-a', 'ridge-b', 'roulot']);
