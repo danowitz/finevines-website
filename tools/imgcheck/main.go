@@ -54,7 +54,18 @@ func main() {
 	// wrong photographs before 2026-08-06 (see cuvee.go). Absent file: the
 	// sibling rule stands down and behaviour is exactly as before.
 	winesPath := flag.String("wines", "data/wines.json", "catalog, for telling a producer's wines apart")
+	// -batch judges many pairings against one loaded catalog: TAB-separated
+	// name/producer/label on stdin, "1" or "0" per line on stdout. See batch.go
+	// for why (setup, not judging, dominates the per-pairing cost).
+	batch := flag.Bool("batch", false, "judge name<TAB>producer<TAB>label lines from stdin")
 	flag.Parse()
+	if *batch {
+		if err := runBatch(os.Stdin, os.Stdout, LoadIndex(*indexPath), LoadSiblings(*winesPath)); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
 	if *imgPath == "" || *name == "" {
 		fmt.Fprintln(os.Stderr, "need -img and -name")
 		os.Exit(2)
