@@ -99,9 +99,22 @@ func (s Siblings) discriminators(name, producer string) [][]string {
 	if len(family) < 2 {
 		return nil
 	}
+	// The producer's own words are struck out. Callers pass a producer-led name
+	// ("Altocedro Malbec Gran Reserva") while catalog rows store the name alone
+	// ("Malbec Reserva"), so the estate word appears in this wine and in no
+	// sibling — making it look like the very thing that tells them apart. Any
+	// label bearing the estate name then satisfied the rule and the check did
+	// nothing at all. What must separate two wines by one producer is the
+	// CUVEE; the estate is already required by the producer rule.
+	estate := map[string]bool{}
+	for _, w := range words(producer) {
+		estate[w] = true
+	}
 	mine := map[string]bool{}
 	for _, w := range words(name) {
-		mine[w] = true
+		if !estate[w] {
+			mine[w] = true
+		}
 	}
 	var out [][]string
 	for _, sib := range family {

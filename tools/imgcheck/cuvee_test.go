@@ -116,6 +116,27 @@ func TestShorterLabelStillPasses(t *testing.T) {
 	}
 }
 
+// The pipeline passes a PRODUCER-LED name ("Altocedro Malbec Gran Reserva"),
+// while catalog rows store the name alone ("Malbec Reserva"). That asymmetry
+// made the producer's own word look like a discriminator — present in the
+// wine's words, absent from every sibling's — so any label bearing the estate
+// name satisfied the rule and the whole check silently did nothing. The
+// discriminator must be about the CUVEE; the estate is already required
+// separately by the producer rule.
+func TestProducerNameIsNotADiscriminator(t *testing.T) {
+	sib := testSiblings()
+	r := matchWithSiblings("Altocedro Malbec Gran Reserva", "Altocedro",
+		"Altocedro Malbec Reserva", nil, sib)
+	if r.ok {
+		t.Error("the Reserva label was accepted for the Gran Reserva: the estate name is not a discriminator")
+	}
+	// ...and the correct label still passes with the same producer-led name.
+	if ok := matchWithSiblings("Altocedro Malbec Gran Reserva", "Altocedro",
+		"ALTOCEDRO GRAN RESERVA MALBEC", nil, sib).ok; !ok {
+		t.Error("the Gran Reserva's own label must still pass")
+	}
+}
+
 func TestNoSiblingIndexKeepsOldBehaviour(t *testing.T) {
 	// With no sibling knowledge (an absent index) the rule cannot ask its
 	// question, and must fall back to the producer rule rather than refuse
