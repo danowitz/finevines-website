@@ -40,6 +40,8 @@ const CONCURRENCY = 4;
 const MAX_ATTEMPTS = 5;
 const apply = process.argv.includes('--apply');
 const recheckClean = process.argv.includes('--recheck-clean');
+const slugArg = process.argv.indexOf('--slug');
+const onlySlug = slugArg >= 0 ? process.argv[slugArg + 1] || '' : '';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const KEY = await openaiKey();
@@ -55,6 +57,7 @@ const staged = [];
 let purged = 0;
 let alreadySwept = 0;
 for (const rec of Object.values(manifest)) {
+  if (onlySlug && rec.slug !== onlySlug) continue;
   if (!(rec.ok && rec.file)) continue;
   if (!(await exists(rec.file))) {
     purged++; // stale manifest entry — the file was purged after fetch

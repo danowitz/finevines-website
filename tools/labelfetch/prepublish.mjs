@@ -116,11 +116,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const apply = process.argv.includes('--apply');
   const cleanOnly = process.argv.includes('--clean-only');
   const redo = process.argv.includes('--redo');
+  const slugArg = process.argv.indexOf('--slug');
+  const onlySlug = slugArg >= 0 ? process.argv[slugArg + 1] || '' : '';
   const manifestPath = 'data/fetched-images/manifest.json';
   const wines = JSON.parse(await readFile('data/wines.json', 'utf8'));
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   const bySlug = new Map(wines.map((w) => [w.slug, w]));
   const candidates = Object.values(manifest).filter((rec) =>
+    (!onlySlug || rec.slug === onlySlug) &&
     isPrepublishCandidate(rec, bySlug.get(rec.slug), { cleanOnly }) &&
     (redo || rec.prepublishIdentityVerified !== true)
   );

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { test } from 'node:test';
 
 const wines = JSON.parse(readFileSync('data/wines.json', 'utf8'));
@@ -13,7 +13,7 @@ test('catalog image policy', async (t) => {
   await t.test('every claimed photograph or label scan exists', () => {
     const missing = wines
       .filter((wine) => wine.imageSource !== 'generated-label')
-      .filter((wine) => !wine.imagePath || !existsSync(wine.imagePath))
+      .filter((wine) => !wine.imagePath || !existsSync(wine.imagePath) || statSync(wine.imagePath).size === 0)
       .map((wine) => `${wine.slug}: ${wine.imagePath || '(empty)'}`);
     assert.deepEqual(missing, []);
   });
