@@ -25,7 +25,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { shouldImport } from './importrules.mjs';
-import { winesForSlug } from './importapply.mjs';
+import { wineForImageUpgrade, winesForSlug } from './importapply.mjs';
 import { binPath } from './env.mjs';
 import { loadAttempts, recordAttempt, saveAttempts } from './attempts.mjs';
 
@@ -59,7 +59,6 @@ if (!(await exists(MANIFEST))) {
 
 const manifest = JSON.parse(await readFile(MANIFEST, 'utf8'));
 const wines = JSON.parse(await readFile(WINES, 'utf8'));
-const bySlug = new Map(wines.map((w) => [w.slug, w]));
 const attempts = await loadAttempts();
 
 const staged = Object.values(manifest).filter((r) => r.ok && r.file && (!onlySlug || r.slug === onlySlug));
@@ -79,7 +78,7 @@ for (const rec of staged) {
     skipped++;
     continue;
   }
-  const wine = bySlug.get(rec.slug);
+  const wine = wineForImageUpgrade(wines, rec.slug);
   const verdict = shouldImport(rec, wine, { cleanOnly });
   if (!verdict.import) {
     console.log(`  skip  ${rec.slug} — ${verdict.reason}`);

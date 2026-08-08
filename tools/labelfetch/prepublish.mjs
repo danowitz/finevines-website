@@ -12,6 +12,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { extname, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { openaiKey } from './env.mjs';
+import { wineForImageUpgrade } from './importapply.mjs';
 
 const MODEL = 'gpt-4.1';
 
@@ -121,10 +122,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const manifestPath = 'data/fetched-images/manifest.json';
   const wines = JSON.parse(await readFile('data/wines.json', 'utf8'));
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
-  const bySlug = new Map(wines.map((w) => [w.slug, w]));
   const candidates = Object.values(manifest).filter((rec) =>
     (!onlySlug || rec.slug === onlySlug) &&
-    isPrepublishCandidate(rec, bySlug.get(rec.slug), { cleanOnly }) &&
+    isPrepublishCandidate(rec, wineForImageUpgrade(wines, rec.slug), { cleanOnly }) &&
     (redo || rec.prepublishIdentityVerified !== true)
   );
   console.log(`${candidates.length} staged image(s) require independent full-resolution identity verification`);
@@ -143,7 +143,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   async function worker() {
     while (cursor < candidates.length) {
       const rec = candidates[cursor++];
-      const wine = bySlug.get(rec.slug);
+      const wine = wineForImageUpgrade(wines, rec.slug);
       const { verdict, error } = await judge(key, rec, wine);
       const outcome = applyIdentityVerdict(rec, verdict, error);
       tally[outcome]++;
