@@ -1,4 +1,8 @@
-// Generates verified gpt-image-1 bottle photos for the catalog tail the web
+console.error('imagegen is disabled: Fine Vines does not publish invented product packaging; use verified real-photo cleanup or the neutral SVG fallback');
+process.exit(2);
+
+// Historical implementation retained temporarily for auditability. It is
+// unreachable by policy. Generates gpt-image-1 bottle photos for the catalog tail the web
 // cannot photograph. Chunked by design — the operator approves spend per run.
 //
 //   node tools/imagegen/main.mjs --n 50            # generate for 50 placeholder wines

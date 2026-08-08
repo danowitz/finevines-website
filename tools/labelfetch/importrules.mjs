@@ -57,6 +57,21 @@ export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
       reason: `watermark sweep has not cleared this image${why} — not imported, and the wine stays due`,
     };
   }
+  // The OCR/identity match that stages a candidate is necessary but not
+  // sufficient: the 2026-08 full-resolution audit found hundreds of
+  // same-producer/wrong-cuvee bottles that had passed the first matcher. A
+  // second, independent full-resolution reading must affirmatively name this
+  // wine before publication. Missing/malformed/network outcomes fail closed
+  // and stay due; a well-formed negative is a settled refusal.
+  if (rec.prepublishIdentityVerified !== true) {
+    return {
+      import: false,
+      unresolved: rec.prepublishIdentityVerified === undefined || rec.prepublishIdentityUnavailable === true,
+      reason: rec.prepublishIdentityUnavailable
+        ? `prepublish identity check unavailable (${rec.prepublishIdentityError || 'no opinion'})`
+        : 'prepublish identity check did not affirm this exact wine',
+    };
+  }
   if (cleanOnly && (rec.review || []).length) {
     return { import: false, reason: `flagged for review (${rec.review.join('; ')})` };
   }

@@ -898,7 +898,7 @@ func comma(n int) string {
 // wine whose ImagePath has no file behind it, and returns once dist can render
 // the catalog with no broken image.
 //
-// This makes the ~2,200 generated labels a genuine BUILD ARTIFACT rather than
+// This makes the neutral unavailable-image SVG a genuine BUILD ARTIFACT rather than
 // committed source. Before this, only `enrich` ever called label.Generate
 // (internal/enrich/images.go), so a fresh clone without the SVGs checked in
 // built a site full of broken images — which is why they were checked in at
@@ -910,7 +910,7 @@ func comma(n int) string {
 //
 // Only genuinely missing files are generated, so a real bottle photograph (the
 // 478 .jpg entries matched from the old site) is never overwritten by a
-// generated label. label.Generate is deterministic — the same wine always
+// neutral fallback. label.Generate is deterministic and product-neutral — every wine
 // yields byte-identical SVG, with no clock and no randomness — so this
 // preserves TestBuildIsDeterministic.
 func ensureLabels(distDir string, wines []model.Wine) error {
@@ -925,7 +925,7 @@ func ensureLabels(distDir string, wines []model.Wine) error {
 		} else if !os.IsNotExist(err) {
 			return err
 		}
-		// Only ever synthesise an SVG label. A missing .jpg means a photo we
+		// Only ever synthesize the neutral SVG. A missing .jpg means a photo we
 		// expected is genuinely gone, and silently writing a vector label in
 		// its place would hide that; the wine's imagePath needs correcting in
 		// the data instead.
