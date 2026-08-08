@@ -26,7 +26,7 @@ that the new site is already live in production.
 flowchart LR
     QB["QuickBooks inventory"] -->|"existing sync"| SF["Salesforce"]
     SF -->|"finevines enrich"| JSON["data/wines.json"]
-    ENRICH["Claude text + Imagen bottle image<br/>or generated-label fallback"] --> JSON
+    ENRICH["OpenAI text + verified source photo<br/>or neutral unavailable-image fallback"] --> JSON
     ENRICH --> IMAGES["assets/img/wines/"]
     JSON --> BUILD["finevines build"]
     IMAGES --> BUILD
@@ -129,8 +129,9 @@ Enrichment is incremental rather than regenerating the full catalog every night:
    eligible.
 5. For each wine being enriched, ask Claude for a grounded tasting description, sommelier notes, and an image
    prompt based on the available source fields.
-6. Send the image prompt to Google's Imagen API. If image generation is rejected or unavailable, generate a
-   deterministic wine-branded SVG label instead. A manually supplied producer image is preserved.
+6. Preserve a verified source photograph. If none is available, use the
+   deterministic, product-neutral unavailable-image SVG. Invented bottle and
+   label artwork is never published.
 7. Save the resulting wine records to `data/wines.json` and their images under `assets/img/wines/`.
 
 The initial live run may process the entire catalog. Later runs process only the differences. Work is performed
@@ -147,7 +148,7 @@ repeating all completed enrichment.
 | `internal/enrich/rules.go` | Applies the stock and SKU web-eligibility rule. |
 | `internal/enrich/hash.go` and `diff.go` | Detect new, changed, unchanged, and removed wines. |
 | `internal/enrich/text.go` | Calls Claude and validates the description, sommelier notes, and image prompt. |
-| `internal/enrich/imagen.go` and `images.go` | Calls Imagen, stores bottle images, preserves supplied images, and selects the fallback. |
+| `internal/enrich/images.go` | Preserves verified source images and selects the neutral fallback. |
 | `internal/label/label.go` | Generates the deterministic SVG wine-label fallback. |
 | `internal/model/model.go` | Defines the JSON contract and atomically reads/writes `data/wines.json`. |
 

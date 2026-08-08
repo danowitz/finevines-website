@@ -7,7 +7,14 @@ import { flagWatermark } from '../../tools/labelfetch/watermark.mjs';
 // clean. The unswept shape is the interesting one and is spelled out in the
 // tests that need it, because "nobody has checked this image yet" is precisely
 // the state that used to import.
-const rec = (over = {}) => ({ ok: true, file: 'data/fetched-images/x.png', slug: 'x', watermarkSwept: true, ...over });
+const rec = (over = {}) => ({
+  ok: true,
+  file: 'data/fetched-images/x.png',
+  slug: 'x',
+  watermarkSwept: true,
+  prepublishIdentityVerified: true,
+  ...over,
+});
 const placeholderWine = (over = {}) => ({
   slug: 'x',
   imagePath: 'assets/img/wines/x.svg',
@@ -81,6 +88,18 @@ describe('import selection rules', () => {
     const v = shouldImport(r, placeholderWine(), {});
     assert.equal(v.import, false);
     assert.match(v.reason, /watermark sweep/);
+  });
+
+  test('a candidate without an affirmative independent prepublish verdict is refused', () => {
+    const missing = shouldImport(rec({ prepublishIdentityVerified: undefined }), placeholderWine(), {});
+    assert.equal(missing.import, false);
+    assert.match(missing.reason, /prepublish identity/i);
+    assert.equal(missing.unresolved, true);
+
+    const refused = shouldImport(rec({ prepublishIdentityVerified: false }), placeholderWine(), {});
+    assert.equal(refused.import, false);
+    assert.match(refused.reason, /prepublish identity/i);
+    assert.ok(!refused.unresolved);
   });
 
   test('the refusal names why the sweep could not check it', () => {

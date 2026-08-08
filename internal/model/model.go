@@ -19,8 +19,8 @@ import (
 // The first three are the original generated/producer set; the scraped-* pair
 // is the search-scrape chain's real-image outcomes.
 const (
-	ImageGeneratedPhoto   = "generated-photo"   // AI-generated photorealistic bottle
-	ImageGeneratedLabel   = "generated-label"   // deterministic SVG label (guaranteed floor)
+	ImageGeneratedPhoto   = "generated-photo"   // legacy value; migrated away and never newly produced
+	ImageGeneratedLabel   = "generated-label"   // legacy persisted key for the neutral unavailable-image SVG
 	ImageProducerSupplied = "producer-supplied" // supplied by the producer/importer
 	ImageOldSite          = "old-site"          // FineVines' own photo, harvested from the old finevines.com
 	ImageScrapedWeb       = "scraped-web"       // real bottle/label image found via web search
@@ -92,7 +92,7 @@ func ParseFieldSource(s string) FieldSource {
 }
 
 // ImageFieldSource classifies an ImageSource value for provenance scoring: a
-// producer-supplied or scraped real image counts as found; an AI-generated
+// producer-supplied or scraped real image counts as found; a legacy generated
 // photo or the SVG-label fallback counts as derived; empty is missing. Callers
 // set Wine.Sources["image"] = ImageFieldSource(w.ImageSource) so the image
 // participates in MetadataScore consistently.
