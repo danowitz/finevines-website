@@ -37,7 +37,7 @@ export function parseIdentityVerdict(content) {
   return { namesThisWine: v.names_this_wine, label: String(v.label ?? '') };
 }
 
-// revertToLabel puts a wine back on its generated SVG label — the guaranteed
+// revertToLabel puts a wine back on its neutral unavailable-image SVG — the guaranteed
 // no-broken-image fallback — and clears the provenance of the photo being
 // pulled. Returns the image file that should now be deleted, or null when the
 // wine was already on its label (so a re-run is a harmless no-op). Mutates the
@@ -73,7 +73,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const wines = JSON.parse(await readFile(WINES, 'utf8'));
   const bySlug = new Map(wines.map((w) => [w.slug, w]));
 
-  // pull reverts the named wines to their SVG label, deletes the pulled photo
+  // pull reverts the named wines to the neutral SVG, deletes the pulled photo
   // files, saves the catalog, and records what it did.
   async function pull(list) {
     let n = 0;
@@ -87,7 +87,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     }
     await writeFile(WINES, JSON.stringify(wines, null, 1) + '\n');
     await writeFile('out-bottle/ai-review/arbitration-pulled.txt', list.join('\n') + '\n');
-    console.log(`\nreverted ${n} wines to their SVG label; slugs in out-bottle/ai-review/arbitration-pulled.txt`);
+    console.log(`\nreverted ${n} wines to the neutral image placeholder; slugs in out-bottle/ai-review/arbitration-pulled.txt`);
     return n;
   }
 

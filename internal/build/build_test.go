@@ -934,9 +934,12 @@ func TestBuildGeneratesMissingLabels(t *testing.T) {
 	if !bytes.HasPrefix(bytes.TrimSpace(got), []byte("<svg")) {
 		t.Errorf("generated label is not an SVG document, starts: %.40q", got)
 	}
-	// It must be the wine's OWN label, not a placeholder.
-	if !bytes.Contains(got, []byte("DOMAINE PETIT-CLOS")) {
-		t.Error("generated label does not carry the wine's producer")
+	// It must be the product-neutral fallback, never invented packaging.
+	if !bytes.Contains(got, []byte("Product image unavailable")) {
+		t.Error("generated SVG does not carry the unavailable-image message")
+	}
+	if bytes.Contains(got, []byte("DOMAINE PETIT-CLOS")) {
+		t.Error("neutral fallback must not carry the wine's producer")
 	}
 
 	// A missing .jpg/.webp is a data error (a photo we expected is gone) and

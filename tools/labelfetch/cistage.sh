@@ -103,15 +103,16 @@ echo "::group::Watermark sweep (hard gate)"
 node tools/labelfetch/watermarksweep.mjs --apply
 echo "::endgroup::"
 
+echo "::group::Independent full-resolution identity gate"
+# A second model must affirm the exact producer/cuvee identity from the staged
+# full-resolution file. Missing, unavailable, or negative verdicts fail closed.
+node tools/labelfetch/prepublish.mjs --clean-only --apply
+echo "::endgroup::"
+
 echo "::group::Import survivors"
-# NOT --clean-only. Review flags ("low resolution", "vintage on label is 2019")
-# are informational, not gates, and in CI there is no human to clear them — so
-# holding flagged-but-verified images back would mean they never publish at all.
-# The digest email lists every newly imported image with its flags so a reader
-# can catch a bad one, and the console can swap it. This is the risk Joel
-# accepted on 2026-07-29 (spec §Risks 1), recorded here so it is not re-decided
-# by accident.
-node tools/labelfetch/import.mjs --apply
+# Only unflagged candidates that passed both hard gates publish automatically.
+# Flagged candidates remain staged for human review.
+node tools/labelfetch/import.mjs --apply --clean-only
 echo "::endgroup::"
 
 echo "image stage complete"

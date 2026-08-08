@@ -190,8 +190,8 @@ func TestRun_FullPipeline(t *testing.T) {
 	if newWine.Description == "" || newWine.Description == "ORIGINAL untouched description" {
 		t.Errorf("SF-NEW Description = %q, want fake-generated text", newWine.Description)
 	}
-	if newWine.ImageSource != model.ImageGeneratedPhoto {
-		t.Errorf("SF-NEW ImageSource = %q, want %q", newWine.ImageSource, model.ImageGeneratedPhoto)
+	if newWine.ImageSource != model.ImageGeneratedLabel {
+		t.Errorf("SF-NEW ImageSource = %q, want neutral fallback %q", newWine.ImageSource, model.ImageGeneratedLabel)
 	}
 
 	prod, ok := byID["SF-PROD"]
@@ -219,8 +219,8 @@ func TestRun_FullPipeline(t *testing.T) {
 		t.Errorf("want 2 Texts.Enrich calls (SF-NEW, SF-PROD), got %v", calls)
 	}
 
-	if got := images.callCount(); got != 1 {
-		t.Errorf("want 1 image-provider call (only SF-NEW; SF-PROD preserved via prev), got %d", got)
+	if got := images.callCount(); got != 0 {
+		t.Errorf("image generation must stay disabled, got %d provider calls", got)
 	}
 }
 
@@ -228,9 +228,9 @@ func TestRun_FullPipeline(t *testing.T) {
 // re-enriches a wine's TEXT, but a real image the catalog already holds —
 // old-site, scraped-web, scraped-google, producer-supplied (anything
 // ImageFieldSource classifies as found) — must survive untouched: same path,
-// same source, same provenance URL, no image-provider call. Only generated
-// placeholders (SVG label, AI photo) are re-resolved, since replacing those
-// with a real image is an upgrade.
+// same source, same provenance URL, no image-provider call. A legacy generated
+// photo is replaced with the neutral fallback; only the verified-photo import
+// pipeline may upgrade it later.
 func TestRun_RealImagesPreservedAcrossReEnrich(t *testing.T) {
 	dir := t.TempDir()
 	dataPath := filepath.Join(dir, "wines.json")
@@ -313,12 +313,12 @@ func TestRun_RealImagesPreservedAcrossReEnrich(t *testing.T) {
 	if !ok {
 		t.Fatal("SF-GEN missing from output")
 	}
-	if gen.ImageSource != model.ImageGeneratedPhoto {
-		t.Errorf("SF-GEN placeholder must be re-resolved (upgradeable), got source=%q", gen.ImageSource)
+	if gen.ImageSource != model.ImageGeneratedLabel {
+		t.Errorf("SF-GEN must become the neutral fallback, got source=%q", gen.ImageSource)
 	}
 
-	if got := images.callCount(); got != 1 {
-		t.Errorf("want 1 image-provider call (only SF-GEN; real images preserved), got %d", got)
+	if got := images.callCount(); got != 0 {
+		t.Errorf("image generation must stay disabled, got %d provider calls", got)
 	}
 }
 

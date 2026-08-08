@@ -129,26 +129,13 @@ func imageCandidate(sku, foundURL string, oldImages map[string]string) (url, sou
 	return "", ""
 }
 
-// ResolveImage resolves the bottle image for one wine via a first-success-
-// wins chain (design spec §5):
+// ResolveImage preserves verified source photographs and otherwise writes the
+// product-neutral unavailable-image SVG. It intentionally never invokes the
+// ImageProvider: invented product packaging is not publishable catalog media.
+// The provider parameter remains temporarily for source compatibility while
+// the older generation implementations are retired.
 //
-//  1. Real-image guard: if prev already carries a real image (hasRealImage —
-//     producer-supplied, old-site, or scraped), it is returned untouched and
-//     provider is never invoked — enrich must never overwrite a real
-//     photograph with a generated one.
-//  2. Generated photo: provider.GenerateJPEG renders a photorealistic bottle
-//     photo, written to <imgDir>/<slug>.jpg (source model.ImageGeneratedPhoto).
-//  3. Label floor: ANY provider error — the ErrImageRejected sentinel or an
-//     ordinary transport/network error — falls back to the deterministic
-//     label.Generate SVG, written to <imgDir>/<slug>.svg (source
-//     model.ImageGeneratedLabel). label.Generate never fails, so this step is
-//     the guaranteed floor: a run must never die mid-catalog because one
-//     generation call was flaky or content-rejected. A warning is emitted via
-//     log so an operator can see the fallback rate across a run.
-//
-// ResolveImage returns a non-nil error only for filesystem failures
-// (MkdirAll/WriteFile/Remove) — image-generation failures are handled by
-// falling back, never propagated as an error.
+// ResolveImage returns a non-nil error only for filesystem failures.
 //
 // Files are named by the wine's SEO slug (producer-wine-vintage), matching its
 // page URL. Whichever branch writes a file also deletes the sibling extension
@@ -162,16 +149,17 @@ func imageCandidate(sku, foundURL string, oldImages map[string]string) (url, sou
 // portfolio.html.tmpl prepend "/" to, and build.go's search-index "img"
 // field builds the same way.
 func ResolveImage(ctx context.Context, provider ImageProvider, w salesforce.WineRaw, prompt, imgDir string, prev *model.Wine, log func(string, ...any)) (imagePath, imageSource string, err error) {
+	_ = ctx
+	_ = provider
+	_ = prompt
+	_ = log
 	if hasRealImage(prev) {
 		return prev.ImagePath, prev.ImageSource, nil
 	}
-	// Stand-ins survive re-enrichment too: a generated photo or a flat label
-	// scan is worse than a real photograph but better than the SVG label, and
-	// the IMPORT pipeline — not enrichment — is what upgrades them (both are
-	// replaceable there, and the fetch pipeline keeps hunting those wines).
-	// Only the SVG label itself is fair game for regeneration here.
-	if prev != nil && prev.ImagePath != "" &&
-		(prev.ImageSource == model.ImageGeneratedPhoto || prev.ImageSource == model.ImageLabelScan) {
+	// A verified flat label scan survives re-enrichment. The import pipeline may
+	// later upgrade it to a verified bottle photograph. Generated photos do not
+	// survive: they are replaced by the neutral unavailable-image SVG.
+	if prev != nil && prev.ImagePath != "" && prev.ImageSource == model.ImageLabelScan {
 		return prev.ImagePath, prev.ImageSource, nil
 	}
 
@@ -184,16 +172,6 @@ func ResolveImage(ctx context.Context, provider ImageProvider, w salesforce.Wine
 	// rich filenames are what image search ranks on, far better than an opaque
 	// SKU. The slug is deterministic, so re-running enrich reuses the same name.
 	base := model.Slugify(w.Producer, w.Name, w.Vintage)
-
-	if data, genErr := provider.GenerateJPEG(ctx, prompt); genErr == nil {
-		p, err := writeImageFile(imgDir, base, "jpg", "svg", data)
-		if err != nil {
-			return "", "", err
-		}
-		return p, model.ImageGeneratedPhoto, nil
-	} else if log != nil {
-		log("image generation failed for SKU %s, falling back to label: %v", w.SKU, genErr)
-	}
 
 	p, err := writeImageFile(imgDir, base, "svg", "jpg", label.Generate(w))
 	if err != nil {

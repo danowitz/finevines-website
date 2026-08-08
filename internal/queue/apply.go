@@ -260,7 +260,7 @@ func applyOne(ctx context.Context, in Input, res *Result, i int, a Action) (stri
 }
 
 // swapImage replaces the wine's photograph with the candidate the reviewer
-// picked, or drops back to the SVG label when they rejected all of them.
+// picked, or drops back to the neutral unavailable-image SVG when they rejected all of them.
 //
 // The candidate goes through the normalizer rather than straight to disk: the
 // catalog's images are all 600x900 with the bottle at a fixed height, and a raw
@@ -279,7 +279,7 @@ func swapImage(ctx context.Context, in Input, w *model.Wine, a Action) (string, 
 		// SVG deterministically from the wine's own fields, and the generated
 		// labels are gitignored build artifacts precisely so nothing has to
 		// carry them around.
-		return "reverted to the generated label", nil
+		return "reverted to the neutral image placeholder", nil
 	}
 
 	// sourceUrl is REQUIRED on a real swap (design spec §B, the wire contract):
@@ -290,7 +290,7 @@ func swapImage(ctx context.Context, in Input, w *model.Wine, a Action) (string, 
 	// rather than a ledgered outcome: a ledgered swap can never be corrected,
 	// whereas a failed one keeps the queue (see Apply) so the console can repost
 	// the same action ID with the provenance filled in. The CandidateNone
-	// fallback above is the one legitimate exemption — a generated label has no
+	// fallback above is the one legitimate exemption — the neutral SVG has no
 	// external source to cite.
 	if strings.TrimSpace(a.Payload.SourceURL) == "" {
 		return "", fmt.Errorf("image-swap names candidate %s but carries no sourceUrl; "+

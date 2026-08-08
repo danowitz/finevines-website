@@ -52,6 +52,8 @@ type result struct {
 }
 
 func main() {
+	fatal(fmt.Errorf("invented product-packaging generation is disabled; use verified real-photo cleanup or the neutral SVG fallback"))
+
 	quality := flag.String("quality", "medium", "gpt-image-1 quality tier: low|medium|high")
 	outDir := flag.String("out", "out-imagedryrun", "output directory (never data/ or assets/)")
 	skusFlag := flag.String("skus", "", "comma-separated SKUs to render instead of the representative pick")

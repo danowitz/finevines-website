@@ -155,17 +155,10 @@ func runEnrich(cfg config.Config) error {
 		imgs = enrich.LabelOnlyProvider{}
 	} else {
 		enr = enrich.NewOpenAIEnricher(cfg.OpenAIAPIKey, cfg.OpenAIModel, "", http.DefaultClient)
-		// Image *generation* is optional: without FINEVINES_GEMINI_API_KEY the
-		// chain still runs — kept real images, old-site photos, and web-found
-		// images all work; only the generated-photo rung is skipped, and such
-		// wines get the guaranteed SVG label instead (.env.example: Imagen is
-		// being migrated to gpt-image-1, so the key is often absent).
-		if cfg.GeminiAPIKey == "" {
-			log.Printf("enrich: FINEVINES_GEMINI_API_KEY not set — skipping photo generation, wines without a real image get the SVG label")
-			imgs = enrich.LabelOnlyProvider{}
-		} else {
-			imgs = enrich.NewImagenClient(cfg.GeminiAPIKey, cfg.ImageModel, "", http.DefaultClient)
-		}
+		// Product-image generation is disabled. Verified source photographs are
+		// preserved; missing imagery receives the neutral SVG fallback.
+		log.Printf("enrich: product image generation disabled - wines without a verified source photo get the neutral unavailable-image SVG")
+		imgs = enrich.LabelOnlyProvider{}
 	}
 
 	// Old-site image manifest (tools/oldimages): SKU -> FineVines' own photo,
