@@ -804,6 +804,32 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
   transition: border-color .15s ease, color .15s ease, background .15s ease; }
 .wine-detail .wine-vintages a:hover { border-color: var(--gold); color: var(--bordeaux-700); background: var(--parchment-100); }
 
+/* ---- Old-site importer prose (data/oldsite-prose/extracted.json) ------
+   Four kinds, each visually distinct: Facts reuse the .tasting definition-
+   list treatment (structured data reads as structured data); From the
+   Archive is plain body prose, same register as the description above it;
+   From the Producer is italicized to mark the shift in speaker; quotes reuse
+   the .callout box (see below) with their own labeled variant so an
+   unattributed quotation still visibly reads as a quotation. */
+.wine-heritage { margin-top: 34px; padding-top: 30px; border-top: 1px solid var(--line); }
+.wine-heritage > div + div { margin-top: 28px; }
+.wine-heritage h2 {
+  font-family: var(--sans); text-transform: uppercase; letter-spacing: .14em;
+  font-size: 12.5px; color: var(--gold-dark); margin: 0 0 12px; }
+.wine-heritage .heritage-facts dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 20px; margin: 0; }
+.wine-heritage .heritage-facts dt { font-family: var(--sans); font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); align-self: baseline; padding-top: 2px; }
+.wine-heritage .heritage-facts dd { margin: 0; color: var(--ink); }
+.wine-heritage .heritage-producer p { font-style: italic; color: var(--ink-700); }
+.wine-heritage .heritage-quotes blockquote + blockquote { margin-top: 16px; }
+.wine-heritage .heritage-quotes blockquote.wine-quote::before {
+  content: "In their words"; display: block; font-family: var(--sans); font-size: 11px;
+  font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--bordeaux-700);
+  font-style: normal; margin-bottom: 8px; }
+.wine-heritage .heritage-quotes blockquote p { font-style: italic; margin: 0; }
+.wine-heritage .heritage-quotes blockquote footer {
+  margin-top: 10px; font-family: var(--sans); font-size: 11.5px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--cork-600); font-style: normal; }
+
 /* ---- Callout / sommelier aside ---------------------------------------- */
 .callout { background: #fff; border-left: 4px solid var(--gold); border-radius: 0 10px 10px 0; padding: 20px 24px; margin: 26px 0; box-shadow: 0 12px 30px -22px rgba(61, 14, 28, .45); }
 .callout p { margin: 0; color: var(--ink-700); }

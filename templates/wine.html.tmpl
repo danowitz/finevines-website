@@ -105,6 +105,46 @@
           <ul>{{range .Wine.FoodPairings}}<li>{{.}}</li>{{end}}</ul>
         </div>
         {{end}}
+        {{/* Old-site importer copy (data/oldsite-prose/extracted.json,
+             joined by SKU at build time — see build.go's buildWineProse).
+             This is FineVines' own prior website content, captured before
+             the old site goes offline at cutover; it complements rather than
+             repeats the AI-enriched Description/Tasting above. Renders
+             nothing at all — no empty heading, no stray rule — for a wine
+             with no entry, or one whose every paragraph was filtered by the
+             brand-voice/no-addresses guards (see wineProse.HasContent). */}}
+        {{if .Prose.HasContent}}
+        <div class="wine-heritage">
+          {{if .Prose.Facts}}
+          <div class="heritage-facts">
+            <h2>Vineyard &amp; Cellar</h2>
+            <dl>
+              {{range .Prose.Facts}}<dt>{{.Label}}</dt><dd>{{.Value}}</dd>{{end}}
+            </dl>
+          </div>
+          {{end}}
+          {{if .Prose.TastingNote}}
+          <div class="heritage-notes">
+            <h2>From the Archive</h2>
+            {{range .Prose.TastingNote}}<p>{{.}}</p>{{end}}
+          </div>
+          {{end}}
+          {{if .Prose.ProducerCopy}}
+          <div class="heritage-producer">
+            <h2>From the Producer</h2>
+            {{range .Prose.ProducerCopy}}<p>{{.}}</p>{{end}}
+          </div>
+          {{end}}
+          {{if .Prose.Quotes}}
+          <div class="heritage-quotes">
+            {{range .Prose.Quotes}}<blockquote class="callout wine-quote">
+              <p>{{.Text}}</p>
+              {{if .Attribution}}<footer>{{.Attribution}}</footer>{{end}}
+            </blockquote>{{end}}
+          </div>
+          {{end}}
+        </div>
+        {{end}}
         {{/* Other vintages of this same wine, newest first. The portfolio
              collapses vintages into one card that links only the current
              release, so these links are the ONLY internal path to an older

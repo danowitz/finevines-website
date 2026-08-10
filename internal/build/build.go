@@ -90,6 +90,15 @@ type site struct {
 	// (trailing year), loaded by loadSite for the homepage credibility
 	// ledger. Zero (file absent) ⇒ the ledger omits its accounts entry.
 	AccountsServed int
+	// OldSiteProse is data/oldsite-prose/extracted.json indexed by SKU (see
+	// model.LoadOldSiteProse), loaded by loadSite. renderWine joins it
+	// against each wine's own SKU to build that wine's wineProse — a SEPARATE
+	// side file joined at build time, deliberately never merged into
+	// wines.json (see CLAUDE.md: enrich rewrites wines.json nightly from
+	// Salesforce+OpenAI and commits it back, which would clobber anything
+	// merged in). Empty (file absent or malformed) ⇒ every wine's Prose is
+	// zero-value and renders no section.
+	OldSiteProse map[string]model.OldSiteProse
 }
 
 // page is the template data shared by every page: the site's data plus this
@@ -303,6 +312,176 @@ type winePage struct {
 	// both the visible nav and the BreadcrumbList JSON-LD, so the two can
 	// never describe different paths.
 	Crumbs []crumb
+	// Prose is this wine's old-site importer copy (data/oldsite-prose/
+	// extracted.json, joined by SKU — see site.OldSiteProse and
+	// buildWineProse). Zero value (no SKU match, or the file was absent/
+	// malformed) renders no section at all.
+	Prose wineProse
+}
+
+// wineProse is winePage's rendering-safe view of one wine's old-site prose:
+// facts, third-person tasting notes, producer-voiced copy, and quotations,
+// captured once from the old finevines.com before it goes offline at
+// cutover (see CLAUDE.md). Built by buildWineProse, which runs every free-
+// text value through cleanOldSiteProse — the same brand-voice/no-addresses
+// guards enforced elsewhere on the site (see tradeWordRE, oldSiteBannedContactRE)
+// — DROPPING (never rewriting) any paragraph, fact, or quote that trips
+// them: this is a producer's or importer's own words, not FineVines' new
+// copy, so silently editing it would misrepresent what was actually said.
+type wineProse struct {
+	// Facts is ordered (not a map) so the definition list renders in a fixed,
+	// readable sequence — see oldSiteFactLabels — rather than Go's
+	// randomized map order.
+	Facts []proseFact
+	// TastingNote is third-person editorial prose salvaged from the old
+	// site — distinct from Wine.Description (the new AI-written copy) even
+	// though both are prose, which is why the template gives this its own
+	// "From the Archive" heading rather than folding it silently into the
+	// description paragraph above it.
+	TastingNote []string
+	// ProducerCopy is the producer's own first-person voice. Rendered under
+	// an explicit "From the Producer" heading (or equivalent) so a reader
+	// never mistakes it for FineVines speaking about itself.
+	ProducerCopy []string
+	Quotes       []wineProseQuote
+}
+
+// HasContent reports whether this wine has ANY old-site prose left to show
+// after cleanOldSiteProse filtering, so wine.html.tmpl renders the whole
+// section — wrapper, heading, everything — only when there is something to
+// say. A wine with no extracted.json entry, or one whose every paragraph got
+// filtered out by the brand-voice/no-addresses guards, must render no
+// section at all: no empty heading, no stray rule (CLAUDE.md).
+func (p wineProse) HasContent() bool {
+	return len(p.Facts) > 0 || len(p.TastingNote) > 0 || len(p.ProducerCopy) > 0 || len(p.Quotes) > 0
+}
+
+// proseFact is one row of the old-site facts definition list: a readable
+// label (never the raw JSON key) and its value.
+type proseFact struct{ Label, Value string }
+
+// wineProseQuote is one old-site quotation. Attribution is often empty (see
+// model.OldSiteQuote) — the template must still wrap Text in a <blockquote>
+// even then, so an unattributed quote reads as a quotation and never as
+// FineVines' own words about their own wine.
+type wineProseQuote struct{ Text, Attribution string }
+
+// oldSiteFactLabels is the fixed display order and readable label for each
+// data/oldsite-prose/extracted.json facts key. Any subset may be present on
+// a given entry (see model.OldSiteProse); buildWineProse renders only the
+// keys that are.
+var oldSiteFactLabels = []struct{ key, label string }{
+	{"vineyard", "Vineyard"},
+	{"soil", "Soil"},
+	{"yield", "Yield"},
+	{"vinification", "Vinification"},
+	{"aging", "Aging"},
+	{"productionVolume", "Production"},
+	{"harvestMethod", "Harvest"},
+}
+
+// buildWineProse converts one model.OldSiteProse join hit (or its zero value,
+// for a wine with no entry) into winePage's rendering-safe wineProse. Every
+// free-text value is passed through cleanOldSiteProse; anything it rejects is
+// simply absent from the result, which is how a partially-clean entry (e.g.
+// one bad paragraph among several good ones) still renders its clean
+// siblings while dropping only the offending paragraph.
+func buildWineProse(m model.OldSiteProse) wineProse {
+	var out wineProse
+	for _, spec := range oldSiteFactLabels {
+		v, ok := m.Facts[spec.key]
+		if !ok {
+			continue
+		}
+		if v = cleanOldSiteProse(v); v != "" {
+			out.Facts = append(out.Facts, proseFact{Label: spec.label, Value: v})
+		}
+	}
+	for _, p := range m.TastingNote {
+		if p = cleanOldSiteProse(p); p != "" {
+			out.TastingNote = append(out.TastingNote, p)
+		}
+	}
+	for _, p := range m.ProducerCopy {
+		if p = cleanOldSiteProse(p); p != "" {
+			out.ProducerCopy = append(out.ProducerCopy, p)
+		}
+	}
+	for _, q := range m.Quotes {
+		text := cleanOldSiteProse(q.Quote)
+		if text == "" {
+			continue
+		}
+		out.Quotes = append(out.Quotes, wineProseQuote{Text: text, Attribution: strings.TrimSpace(q.Attribution)})
+	}
+	return out
+}
+
+// tradeWordRE matches the standalone word "trade" (case-insensitive). It is a
+// brand-voice guard, not a word-censor: it exists because "the trade" is not
+// George's vocabulary for the wholesale business (client direction,
+// 2026-07-29), and it must never reach a proper noun or fixed legal term
+// that happens to contain "trade" — those are always legitimate and must
+// stay in the copy. Two exemptions are load-bearing:
+//   - "trademark" never matches: \b requires a word boundary right after
+//     "trade", and "trademark" has none (the "m" is a word character) — this
+//     is why "trademark law" in the legal page needs no special-casing.
+//   - "Federal Trade Commission" WOULD match "Trade" as a standalone word
+//     (it has boundaries on both sides), so it is stripped out by
+//     tradeWordAllowlistRE, applied to a copy of the bytes, before this
+//     regex ever runs. Naming the regulator that enforces COPPA is required,
+//     accurate content — the brand-voice rule was never meant to reach it,
+//     and a prior version of this task wrongly deleted the sentence to
+//     satisfy this exact test. Do not repeat that: if a new legal term or
+//     proper noun containing "trade" shows up, add it to the allowlist
+//     rather than rewriting the copy around it.
+//
+// buildWineProse also runs old-site prose through this same regex (via
+// cleanOldSiteProse) — the old finevines.com's own importer copy is not
+// exempt from the brand-voice rule just because FineVines didn't write it
+// for THIS rebuild; the client's direction was "never" (see
+// TestBuild_OldSiteProseSectionHasNoBannedContentOrTradeWord, which is
+// exactly this: a real paragraph from the six Paul Jaboulet Aîné Hermitage la
+// Chapelle SKUs uses "trade marked name" and must never reach rendered HTML).
+var tradeWordRE = regexp.MustCompile(`(?i)\btrade\b`)
+
+// tradeWordAllowlistRE matches known proper nouns/fixed legal terms that
+// legitimately contain the standalone word "trade" and must be exempted
+// from the tradeWordRE brand-voice guard above — see its comment.
+var tradeWordAllowlistRE = regexp.MustCompile(`Federal Trade Commission`)
+
+// oldSiteBannedContactRE matches the address/fax fragments the client's
+// no-addresses direction (2026-07-29) forbids anywhere on the site — the
+// same literal list TestPrivacyPolicyAndLegalPagesHaveNoBannedContactDetails
+// and TestNotFoundPageHasNoBannedContentOrTradeWord guard elsewhere. Old-site
+// prose is scraped text FineVines did not write for this rebuild, so a
+// paragraph tripping this guard is dropped whole by cleanOldSiteProse rather
+// than edited.
+var oldSiteBannedContactRE = regexp.MustCompile(`(?i)P\.?\s?O\.?\s?Box|Fax|60160|Thomas St|Melrose`)
+
+// cleanOldSiteProse validates one piece of scraped old-site prose against the
+// site's hard content rules and returns it trimmed, or "" if it trips either
+// guard:
+//   - oldSiteBannedContactRE (no addresses anywhere, ever)
+//   - tradeWordRE, after tradeWordAllowlistRE exemptions (never the
+//     standalone word "trade" in client-facing copy)
+//
+// A tripped value is DROPPED, never rewritten: see wineProse's doc comment
+// for why silently editing a producer's or importer's own words would be
+// worse than omitting a sentence.
+func cleanOldSiteProse(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	if oldSiteBannedContactRE.MatchString(s) {
+		return ""
+	}
+	scanned := tradeWordAllowlistRE.ReplaceAllString(s, "")
+	if tradeWordRE.MatchString(scanned) {
+		return ""
+	}
+	return s
 }
 
 // crumb is one step of a breadcrumb trail: a label and the page it points at.
@@ -745,6 +924,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 				WineName:     spaceJoin(w.Name, w.Vintage),
 				WineURL:      path,
 			}),
+			Prose: buildWineProse(s.OldSiteProse[w.SKU]),
 		}
 		// Prefer the wine's own photo as its share image, but only when it's a
 		// raster the social scrapers actually render — an .svg (or .webp)
@@ -1744,6 +1924,11 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 		return nil, fmt.Errorf("load accounts-served: %w", err)
 	}
 	s.AccountsServed = accounts.Accounts
+	// oldsite-prose/extracted.json is optional and, unlike every other loader
+	// above, never fails the build even when present-but-malformed — see
+	// model.LoadOldSiteProse's doc comment. A missing or broken file simply
+	// means no wine renders the old-site-prose section.
+	s.OldSiteProse = model.LoadOldSiteProse(filepath.Join(dataDir, "oldsite-prose", "extracted.json"))
 	// team.json is optional until seeded
 	if data, err := os.ReadFile(filepath.Join(dataDir, "team.json")); err == nil {
 		if err := jsonUnmarshal(data, &s.Team); err != nil {

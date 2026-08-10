@@ -683,30 +683,11 @@ func TestPrivacyPolicyAndLegalPagesHaveNoBannedContactDetails(t *testing.T) {
 	}
 }
 
-// tradeWordRE matches the standalone word "trade" (case-insensitive). It is a
-// brand-voice guard, not a word-censor: it exists because "the trade" is not
-// George's vocabulary for the wholesale business (client direction,
-// 2026-07-29), and it must never reach a proper noun or fixed legal term
-// that happens to contain "trade" — those are always legitimate and must
-// stay in the copy. Two exemptions are load-bearing:
-//   - "trademark" never matches: \b requires a word boundary right after
-//     "trade", and "trademark" has none (the "m" is a word character) — this
-//     is why "trademark law" in the legal page needs no special-casing.
-//   - "Federal Trade Commission" WOULD match "Trade" as a standalone word
-//     (it has boundaries on both sides), so it is stripped out by
-//     tradeWordAllowlistRE, applied to a copy of the bytes, before this
-//     regex ever runs. Naming the regulator that enforces COPPA is required,
-//     accurate content — the brand-voice rule was never meant to reach it,
-//     and a prior version of this task wrongly deleted the sentence to
-//     satisfy this exact test. Do not repeat that: if a new legal term or
-//     proper noun containing "trade" shows up, add it to the allowlist
-//     rather than rewriting the copy around it.
-var tradeWordRE = regexp.MustCompile(`(?i)\btrade\b`)
-
-// tradeWordAllowlistRE matches known proper nouns/fixed legal terms that
-// legitimately contain the standalone word "trade" and must be exempted
-// from the tradeWordRE brand-voice guard above — see its comment.
-var tradeWordAllowlistRE = regexp.MustCompile(`Federal Trade Commission`)
+// tradeWordRE and tradeWordAllowlistRE now live in build.go, not here: the
+// old-site-prose join (buildWineProse) needs the same brand-voice guard at
+// RENDER time (dropping a scraped paragraph that trips it), not just at test
+// time, so the regexes moved to production code. See build.go's doc comment
+// on tradeWordRE for the full rationale — it is unchanged, just relocated.
 
 // TestPrivacyPolicyAndLegalPagesAvoidTheWordTrade guards the client's
 // brand-voice vocabulary rule (directed 2026-07-29 — "trade" isn't George's
@@ -2829,5 +2810,266 @@ func TestBuild_MergesLifecycleRedirectsIntoDist(t *testing.T) {
 	}
 	if got["/wines/renamed-old/"] != "/wines/renamed-new/" {
 		t.Errorf("dist/redirects.json missing lifecycle entry from a full Run, got %v", got)
+	}
+}
+
+// ---- Old-site importer prose (data/oldsite-prose/extracted.json) ---------
+//
+// The old finevines.com's importer copy — facts, third-person tasting notes,
+// producer-voiced copy, and quotations — captured once before the old site
+// goes offline at cutover (see CLAUDE.md). It is joined against wines.json by
+// SKU at BUILD TIME (never merged into wines.json — enrich rewrites that file
+// nightly and would clobber anything merged in) and rendered below the
+// existing tasting notes on the wine detail page, each of the four kinds
+// visually distinct. A wine with no entry renders nothing at all: no empty
+// heading, no stray rule.
+
+// oldSiteProseTestdata writes data/oldsite-prose/extracted.json into data
+// (a copy of testdata) with two wines covered — AB1234 (Hubert Lamy) gets a
+// clean, fully-populated entry; CD5678 (Domaine Petit-Clos) gets an entry
+// carrying one paragraph with the banned standalone word "trade" and one
+// producer-copy paragraph with a banned contact detail (P.O. Box), both of
+// which must be dropped whole rather than rewritten. EF9012 (Ridgeview) is
+// deliberately left with NO entry, covering the no-section case in the same
+// build. Returns the entries written, for tests that want the exact text.
+func oldSiteProseTestdata(t *testing.T, data string) []model.OldSiteProse {
+	t.Helper()
+	entries := []model.OldSiteProse{
+		{
+			SKU:       "AB1234",
+			Slug:      "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021",
+			WineName:  "Hubert Lamy Saint-Aubin 1er Cru",
+			SourceURL: "https://www.finevines.com/portfolio/hubert-lamy/saint-aubin",
+			Facts: map[string]string{
+				"vineyard":     "Derrière chez Édouard, Saint-Aubin",
+				"soil":         "Kimmeridgian limestone, clay-marl",
+				"vinification": "18 months in oak, 50% new",
+			},
+			TastingNote: []string{
+				"A hillside parcel farmed since the 1950s, its clay-limestone soils give a saline minerality that carries through every vintage.",
+			},
+			ProducerCopy: []string{
+				"We have farmed this parcel by hand for three generations, believing terroir speaks loudest when the winemaker steps aside.",
+			},
+			Quotes: []model.OldSiteQuote{
+				{Quote: "Bright, chiseled, and built for the cellar.", Attribution: "Vigneron's Journal"},
+				{Quote: "A quietly thrilling white that rewards patience."}, // no attribution
+			},
+		},
+		{
+			SKU:      "CD5678",
+			Slug:     "domaine-petit-clos-cotes-du-rhone-villages-2022",
+			WineName: "Domaine Petit-Clos Côtes du Rhône Villages",
+			Facts: map[string]string{
+				"yield": "36hL/ha",
+			},
+			TastingNote: []string{
+				"This cuvée built its trade reputation on consistency.",     // standalone "trade" — must be dropped
+				"A generous blend showing garrigue and dark cherry fruit.", // must survive
+			},
+			ProducerCopy: []string{
+				"Write the estate via P.O. Box 42 for allocations.", // banned contact detail — must be dropped
+			},
+		},
+	}
+	dir := filepath.Join(data, "oldsite-prose")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeJSON(t, filepath.Join(dir, "extracted.json"), entries)
+	return entries
+}
+
+func TestBuild_WinePageRendersOldSiteProse(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	oldSiteProseTestdata(t, data)
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	page := readFile(t, filepath.Join(dist, "wines", "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021", "index.html"))
+	for _, want := range []string{
+		// Facts: a definition list with readable labels, not raw JSON keys.
+		"Vineyard", "Derrière chez Édouard, Saint-Aubin",
+		"Soil", "Kimmeridgian limestone, clay-marl",
+		"Vinification", "18 months in oak, 50% new",
+		// tastingNote prose.
+		"A hillside parcel farmed since the 1950s",
+		// producerCopy, marked as the producer's own voice.
+		"From the Producer",
+		"We have farmed this parcel by hand for three generations",
+		// Quotes.
+		"Bright, chiseled, and built for the cellar.",
+		"Vigneron&#39;s Journal", // html/template escapes the apostrophe
+	} {
+		if !strings.Contains(page, want) {
+			t.Errorf("wine page with old-site prose missing %q", want)
+		}
+	}
+}
+
+// TestBuild_WinePageWithoutOldSiteProseRendersNoSection covers the majority
+// case: a wine with no extracted.json entry gets no section at all — no
+// empty heading, no stray rule (per CLAUDE.md's explicit instruction).
+func TestBuild_WinePageWithoutOldSiteProseRendersNoSection(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	oldSiteProseTestdata(t, data) // covers AB1234/CD5678 only — EF9012 is deliberately absent
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	page := readFile(t, filepath.Join(dist, "wines", "ridgeview-cellars-estate-cabernet-sauvignon-2020", "index.html"))
+	for _, unwanted := range []string{"wine-heritage", "From the Producer", "From the Archive", "Vineyard &amp; Cellar", "<blockquote"} {
+		if strings.Contains(page, unwanted) {
+			t.Errorf("wine page with no old-site prose entry must not render %q", unwanted)
+		}
+	}
+}
+
+// TestBuild_OldSiteProseQuotesRenderAsBlockquotes covers the client's
+// explicit concern: an unattributed quotation must still read as a
+// quotation, and never as FineVines' own words about their own wine.
+func TestBuild_OldSiteProseQuotesRenderAsBlockquotes(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	oldSiteProseTestdata(t, data)
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	page := readFile(t, filepath.Join(dist, "wines", "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021", "index.html"))
+	if n := strings.Count(page, "<blockquote"); n != 2 {
+		t.Fatalf("wine page has %d <blockquote> elements, want 2 (one per quote)", n)
+	}
+	attributed := page[strings.Index(page, "Bright, chiseled"):]
+	attributed = attributed[:min(len(attributed), 400)]
+	if !strings.Contains(attributed, "Vigneron&#39;s Journal") { // html/template escapes the apostrophe
+		t.Error("an attributed quote must show its attribution near the quote text")
+	}
+	unattributed := page[strings.Index(page, "A quietly thrilling white"):]
+	if !strings.Contains(unattributed, "<blockquote") && !strings.Contains(page[:strings.Index(page, "A quietly thrilling white")], "<blockquote") {
+		t.Error("the unattributed quote must still be wrapped in a <blockquote>")
+	}
+}
+
+// TestBuild_MissingOldSiteProseLeavesBuildClean covers the ordinary case:
+// plain testdata carries no data/oldsite-prose/extracted.json at all (see
+// testdata's directory listing), so the build must succeed exactly as every
+// other build_test.go case expects, and no wine page anywhere renders the
+// section.
+func TestBuild_MissingOldSiteProseLeavesBuildClean(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	for _, slug := range []string{
+		"hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021",
+		"domaine-petit-clos-cotes-du-rhone-villages-2022",
+		"ridgeview-cellars-estate-cabernet-sauvignon-2020",
+	} {
+		page := readFile(t, filepath.Join(dist, "wines", slug, "index.html"))
+		if strings.Contains(page, "wine-heritage") {
+			t.Errorf("%s: must not render the old-site-prose section when extracted.json is absent", slug)
+		}
+	}
+}
+
+// TestBuild_MalformedOldSiteProseLeavesBuildClean covers the degrade-to-
+// nothing contract for a file that exists but fails to parse: the build must
+// still succeed and every wine page must render cleanly, exactly as if the
+// file were absent.
+func TestBuild_MalformedOldSiteProseLeavesBuildClean(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Join(data, "oldsite-prose")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "extracted.json"), []byte("{ not valid json"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	page := readFile(t, filepath.Join(dist, "wines", "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021", "index.html"))
+	if strings.Contains(page, "wine-heritage") {
+		t.Error("a malformed extracted.json must degrade to no section, not break the build")
+	}
+}
+
+// TestBuild_OldSiteProseSectionHasNoBannedContentOrTradeWord is the hard
+// guard: even though oldSiteProseTestdata's CD5678 fixture plants a
+// standalone "trade" and a P.O. Box in the source prose (as the real
+// extracted.json does for six SKUs — the Paul Jaboulet Aîné Hermitage la
+// Chapelle entries — see the session report), neither may ever reach
+// rendered HTML. The offending paragraph is dropped whole; its clean
+// siblings still render.
+func TestBuild_OldSiteProseSectionHasNoBannedContentOrTradeWord(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	oldSiteProseTestdata(t, data)
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	page := readFile(t, filepath.Join(dist, "wines", "domaine-petit-clos-cotes-du-rhone-villages-2022", "index.html"))
+	banned := []string{"P.O. Box", "PO Box", "Fax", "60160", "Thomas St", "Melrose"}
+	for _, bad := range banned {
+		if strings.Contains(page, bad) {
+			t.Errorf("wine page must not contain banned contact detail %q", bad)
+		}
+	}
+	scanned := tradeWordAllowlistRE.ReplaceAllString(page, "")
+	if loc := tradeWordRE.FindStringIndex(scanned); loc != nil {
+		start := loc[0] - 20
+		if start < 0 {
+			start = 0
+		}
+		end := loc[1] + 20
+		if end > len(scanned) {
+			end = len(scanned)
+		}
+		t.Errorf("wine page contains the standalone word %q near %q", scanned[loc[0]:loc[1]], scanned[start:end])
+	}
+	// The paragraph that tripped the guard must be gone entirely...
+	if strings.Contains(page, "built its trade reputation") {
+		t.Error("the paragraph containing standalone \"trade\" must be dropped, not merely have the word removed")
+	}
+	if strings.Contains(page, "Write the estate via") {
+		t.Error("the producer-copy paragraph containing a banned contact detail must be dropped")
+	}
+	// ...but its clean sibling paragraph must still render.
+	if !strings.Contains(page, "A generous blend showing garrigue and dark cherry fruit.") {
+		t.Error("a clean sibling paragraph must still render after a banned paragraph is dropped")
+	}
+	// And the section itself must still appear for this wine (facts +
+	// surviving tasting note), even though producerCopy ended up empty.
+	if !strings.Contains(page, "wine-heritage") {
+		t.Error("wine page must still render the section from its surviving content")
+	}
+	if strings.Contains(page, "From the Producer") {
+		t.Error("producerCopy fully filtered to empty must not render its heading")
 	}
 }
