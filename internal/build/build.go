@@ -1401,7 +1401,88 @@ func usableWines(wines []model.Wine) []model.Wine {
 		}
 		out = append(out, w)
 	}
-	return out
+	return collapseSpellingVariants(out)
+}
+
+// classifiedFields are the fields a visitor filters and browses the catalog
+// BY, as opposed to reads. Each one is both a portfolio facet and a
+// collection dimension, which is exactly why their spelling has to be
+// consistent: an inconsistent one splits a filter.
+var classifiedFields = []struct {
+	name string
+	get  func(*model.Wine) *string
+}{
+	{"producer", func(w *model.Wine) *string { return &w.Producer }},
+	{"region", func(w *model.Wine) *string { return &w.Region }},
+	{"varietal", func(w *model.Wine) *string { return &w.Varietal }},
+	{"country", func(w *model.Wine) *string { return &w.Country }},
+}
+
+// collapseSpellingVariants rewrites each classified field to ONE spelling per
+// slug across the whole catalog.
+//
+// Salesforce spells some values more than one way: "Burgundy - C d Nuits",
+// "Burgundy, C d Nuits" and "Burgundy C d Nuits" are one region; "Cabernet /
+// Merlot", "Cabernet/ Merlot" and "Cabernet/merlot" are one blend. Eleven
+// values are split this way across 223 rows, and every collision in the live
+// data is punctuation — never two genuinely different things.
+//
+// Split, they are worse than untidy. The portfolio rail offers them as
+// separate checkboxes, so ticking one hides the wines filed under another
+// spelling: a filter that lies about the catalog. The collection pages
+// already merged by slug, so the two surfaces disagreed about the same cut.
+//
+// It runs here, at the single load point every surface draws from, rather
+// than as an edit to wines.json — because the next Salesforce sync would
+// re-import the variants and silently re-split the filter. Slugs are NOT
+// re-derived: they are published URLs, and the stored slug stays the address
+// whatever spelling the label settles on.
+//
+// The winner is the spelling most rows use, ties broken alphabetically so the
+// build stays byte-identical run to run.
+func collapseSpellingVariants(wines []model.Wine) []model.Wine {
+	for _, field := range classifiedFields {
+		// slug -> spelling -> how many rows use it.
+		spellings := map[string]map[string]int{}
+		for i := range wines {
+			value := strings.TrimSpace(*field.get(&wines[i]))
+			if value == "" {
+				continue
+			}
+			slug := model.Slugify(value)
+			if slug == "" {
+				continue
+			}
+			if spellings[slug] == nil {
+				spellings[slug] = map[string]int{}
+			}
+			spellings[slug][value]++
+		}
+
+		canonical := make(map[string]string, len(spellings))
+		for slug, counts := range spellings {
+			if len(counts) == 1 {
+				continue // the common case: nothing to choose between
+			}
+			best, bestN := "", -1
+			for value, n := range counts {
+				if n > bestN || (n == bestN && value < best) {
+					best, bestN = value, n
+				}
+			}
+			canonical[slug] = best
+		}
+		if len(canonical) == 0 {
+			continue
+		}
+		for i := range wines {
+			p := field.get(&wines[i])
+			if want, ok := canonical[model.Slugify(strings.TrimSpace(*p))]; ok {
+				*p = want
+			}
+		}
+	}
+	return wines
 }
 
 // proseKey is the descriptive copy a wine detail page is built around. Two

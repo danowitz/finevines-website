@@ -627,6 +627,11 @@ func TestPrivacyPolicyAndLegalPagesBuild(t *testing.T) {
 		"<title>Privacy",
 		`rel="canonical" href="https://finevines.com/privacy-policy/"`,
 		"Privacy Policy",
+		// COPPA's enforcing agency must be named — a proper noun, not
+		// brand-voice copy, so the "trade" vocabulary rule does not reach it
+		// (see tradeWordRE's comment: an earlier version of this task wrongly
+		// deleted this sentence to satisfy that guard).
+		"The Federal Trade Commission",
 	} {
 		if !strings.Contains(string(privacy), want) {
 			t.Errorf("privacy policy page missing %q", want)
@@ -678,17 +683,39 @@ func TestPrivacyPolicyAndLegalPagesHaveNoBannedContactDetails(t *testing.T) {
 	}
 }
 
-// tradeWordRE matches the standalone word "trade" (case-insensitive), never
-// "trademark" — word-boundary matched so "trademark law" (the fixed legal
-// term data/legal/legal.md's capture note explicitly allows, rewritten
-// "trademark law") does not trip it.
+// tradeWordRE matches the standalone word "trade" (case-insensitive). It is a
+// brand-voice guard, not a word-censor: it exists because "the trade" is not
+// George's vocabulary for the wholesale business (client direction,
+// 2026-07-29), and it must never reach a proper noun or fixed legal term
+// that happens to contain "trade" — those are always legitimate and must
+// stay in the copy. Two exemptions are load-bearing:
+//   - "trademark" never matches: \b requires a word boundary right after
+//     "trade", and "trademark" has none (the "m" is a word character) — this
+//     is why "trademark law" in the legal page needs no special-casing.
+//   - "Federal Trade Commission" WOULD match "Trade" as a standalone word
+//     (it has boundaries on both sides), so it is stripped out by
+//     tradeWordAllowlistRE, applied to a copy of the bytes, before this
+//     regex ever runs. Naming the regulator that enforces COPPA is required,
+//     accurate content — the brand-voice rule was never meant to reach it,
+//     and a prior version of this task wrongly deleted the sentence to
+//     satisfy this exact test. Do not repeat that: if a new legal term or
+//     proper noun containing "trade" shows up, add it to the allowlist
+//     rather than rewriting the copy around it.
 var tradeWordRE = regexp.MustCompile(`(?i)\btrade\b`)
 
+// tradeWordAllowlistRE matches known proper nouns/fixed legal terms that
+// legitimately contain the standalone word "trade" and must be exempted
+// from the tradeWordRE brand-voice guard above — see its comment.
+var tradeWordAllowlistRE = regexp.MustCompile(`Federal Trade Commission`)
+
 // TestPrivacyPolicyAndLegalPagesAvoidTheWordTrade guards the client's
-// vocabulary rule (directed 2026-07-29 — "trade" isn't George's word): the
-// old privacy policy's "sell, trade, or otherwise transfer" must publish as
-// "sell, rent, or otherwise transfer", and the old legal page's "trade mark
-// law" must publish as "trademark law".
+// brand-voice vocabulary rule (directed 2026-07-29 — "trade" isn't George's
+// word for the wholesale business): the old privacy policy's "sell, trade,
+// or otherwise transfer" must publish as "sell, rent, or otherwise
+// transfer", and the old legal page's "trade mark law" must publish as
+// "trademark law". It does NOT reach proper nouns/fixed legal terms — see
+// tradeWordAllowlistRE — so "Federal Trade Commission" (COPPA's enforcing
+// agency) stays in the copy.
 func TestPrivacyPolicyAndLegalPagesAvoidTheWordTrade(t *testing.T) {
 	dist := t.TempDir()
 	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
@@ -703,16 +730,17 @@ func TestPrivacyPolicyAndLegalPagesAvoidTheWordTrade(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if loc := tradeWordRE.FindIndex(got); loc != nil {
+		scanned := tradeWordAllowlistRE.ReplaceAll(got, nil)
+		if loc := tradeWordRE.FindIndex(scanned); loc != nil {
 			start := loc[0] - 20
 			if start < 0 {
 				start = 0
 			}
 			end := loc[1] + 20
-			if end > len(got) {
-				end = len(got)
+			if end > len(scanned) {
+				end = len(scanned)
 			}
-			t.Errorf("%s contains the standalone word %q near %q", filepath.Join(rel...), got[loc[0]:loc[1]], got[start:end])
+			t.Errorf("%s contains the standalone word %q near %q", filepath.Join(rel...), scanned[loc[0]:loc[1]], scanned[start:end])
 		}
 	}
 }
@@ -1856,6 +1884,81 @@ func TestBuild_VintagesSharingProseCanonicaliseToTheNewest(t *testing.T) {
 	}
 	if !strings.Contains(newest, `href="/wines/bauda-centive-2023/"`) {
 		t.Error("the duplicate must still be reachable — canonical is not removal")
+	}
+}
+
+// TestBuild_SpellingVariantsCollapseToOneValue is a filter-correctness bug,
+// not a cosmetic one. Salesforce spells some values more than one way —
+// "Burgundy - C d Nuits", "Burgundy, C d Nuits" and "Burgundy C d Nuits" are
+// one region; "Cabernet / Merlot", "Cabernet/ Merlot" and "Cabernet/merlot"
+// are one blend. 11 values are split this way across 223 rows.
+//
+// Left split, the portfolio rail offers them as SEPARATE checkboxes, so
+// ticking one silently hides wines filed under another spelling — a filter
+// that quietly lies about the catalog. The collection pages already merged
+// them by slug, which made the two surfaces disagree about the same cut.
+//
+// Collapsing happens at the single load point every surface draws from, so
+// the rail, the client engine, the catalog-index, the collections, and the
+// detail pages cannot disagree — and it keeps working when the next
+// Salesforce sync re-imports the variants, which a one-off data edit would
+// not.
+func TestBuild_SpellingVariantsCollapseToOneValue(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	// Majority spelling wins: two rows say "Burgundy - C d Nuits", one says
+	// "Burgundy, C d Nuits".
+	wines := []model.Wine{
+		collectionWine("a-2021", "Estate A", "Rouge", "Burgundy - C d Nuits", "Pinot Noir", "2021"),
+		collectionWine("b-2021", "Estate B", "Rouge", "Burgundy - C d Nuits", "Pinot Noir", "2021"),
+		collectionWine("c-2021", "Estate C", "Rouge", "Burgundy, C d Nuits", "Pinot Noir", "2021"),
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. The rail offers ONE region checkbox, carrying the majority spelling.
+	portfolio := readFile(t, filepath.Join(dist, "portfolio", "index.html"))
+	if got := strings.Count(portfolio, `data-facet="region"`); got != 1 {
+		t.Errorf("region facet offers %d checkboxes, want 1", got)
+	}
+	if !strings.Contains(portfolio, `data-facet="region" value="Burgundy - C d Nuits"`) {
+		t.Error("the surviving value must be the majority spelling")
+	}
+	if strings.Contains(portfolio, "Burgundy, C d Nuits") {
+		t.Error("the minority spelling must not survive anywhere on the page")
+	}
+
+	// 2. The client engine filters against the catalog-index, so every entry
+	// there must carry the canonical spelling too — otherwise ticking the box
+	// would match two of the three wines.
+	idx := readFile(t, globOne(t, filepath.Join(dist, "assets", "catalog-index*.json")))
+	if strings.Contains(idx, "Burgundy, C d Nuits") {
+		t.Error("the catalog-index must not carry a variant spelling")
+	}
+	if got := strings.Count(idx, `"region":"Burgundy - C d Nuits"`); got != 3 {
+		t.Errorf("catalog-index has %d wines under the canonical region, want 3", got)
+	}
+
+	// 3. The detail page shows the canonical spelling, not the raw variant.
+	odd := readFile(t, filepath.Join(dist, "wines", "c-2021", "index.html"))
+	if strings.Contains(odd, "Burgundy, C d Nuits") {
+		t.Error("a wine's own page must show the canonical spelling")
+	}
+
+	// 4. And it is one collection holding all three.
+	page := readFile(t, filepath.Join(dist, "regions", "burgundy-c-d-nuits", "index.html"))
+	for _, slug := range []string{"a-2021", "b-2021", "c-2021"} {
+		if !strings.Contains(page, slug) {
+			t.Errorf("the merged region collection is missing %s", slug)
+		}
 	}
 }
 
