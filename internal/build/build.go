@@ -602,7 +602,14 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		}
 		return nil
 	}
-	for _, w := range s.Wines {
+	// One slug is one page. Two ACTIVE rows can normalize to the same slug —
+	// almost always the same wine in two bottle formats, which a
+	// producer/name/vintage slug cannot tell apart because size lives in none
+	// of the three. Rendering per-row wrote the same file twice AND pushed the
+	// path into the sitemap twice (91 duplicate <loc> entries on the live
+	// catalog), so the row list is collapsed to one representative per slug
+	// first.
+	for _, w := range dedupeBySlug(s.Wines) {
 		if err := renderWine(w, false); err != nil {
 			return err
 		}
@@ -1223,6 +1230,37 @@ func usableWines(wines []model.Wine) []model.Wine {
 			continue
 		}
 		out = append(out, w)
+	}
+	return out
+}
+
+// dedupeBySlug collapses rows that share a slug to one row each, keeping
+// first-seen order so the build stays byte-identical run to run.
+//
+// The survivor is the best-enriched row (highest MetadataScore) — the same
+// rule catalog.Build uses to pick a group's Representative, so the detail
+// page a collision produces is the page the portfolio card already links to
+// rather than a second, differently-worded one. Ties keep the first row,
+// which is stable because wines.json load order is.
+//
+// Each collision is logged: it is a real data problem (two Salesforce rows
+// the catalog cannot distinguish by URL) and should be fixed upstream, not
+// silently absorbed here.
+func dedupeBySlug(wines []model.Wine) []model.Wine {
+	at := make(map[string]int, len(wines))
+	out := make([]model.Wine, 0, len(wines))
+	for _, w := range wines {
+		i, seen := at[w.Slug]
+		if !seen {
+			at[w.Slug] = len(out)
+			out = append(out, w)
+			continue
+		}
+		log.Printf("build: slug %q is claimed by more than one active wine (SKU %s and SKU %s) — rendering one page from the better-enriched row",
+			w.Slug, out[i].SKU, w.SKU)
+		if w.MetadataScore > out[i].MetadataScore {
+			out[i] = w
+		}
 	}
 	return out
 }

@@ -1502,6 +1502,59 @@ func TestBuild_CollidingSlugActivePageWins(t *testing.T) {
 	}
 }
 
+// TestBuild_CollidingActiveSlugsRenderOnePageAndOneSitemapEntry is the
+// bottle-size regression. 79 producer|name|vintage keys in the live catalog
+// carry more than one active row — almost always the same wine in two
+// formats (a 375ml half and a 750ml), which model.Slugify cannot tell apart
+// because size lives in neither the producer, the name, nor the vintage.
+//
+// Rendering per-row meant the second row's page silently overwrote the
+// first's and BOTH pushed the same path into the sitemap, so dist/ shipped
+// 2,642 <loc> entries for 2,551 real pages — 91 duplicates. A duplicate
+// <loc> is a self-inflicted crawl-budget bug: Google fetches the URL twice
+// and treats the sitemap as lower quality.
+//
+// One slug is one page. The best-enriched row supplies it (matching
+// catalog.Build's representative rule, so the page a collision produces is
+// the same page the portfolio card links to), and the path joins the
+// sitemap exactly once.
+func TestBuild_CollidingActiveSlugsRenderOnePageAndOneSitemapEntry(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		{ID: "SF-375", SKU: "750127", Producer: "Jose Dhondt", Name: "Champagne Brut Blanc De Blancs", Vintage: "2019",
+			Slug: "jose-dhondt-champagne-brut-blanc-de-blancs-2019", Description: "the half bottle row",
+			ImagePath: "assets/img/wines/a.svg", BottleSize: "375ml", MetadataScore: 1},
+		{ID: "SF-750", SKU: "750126", Producer: "Jose Dhondt", Name: "Champagne Brut Blanc De Blancs", Vintage: "2019",
+			Slug: "jose-dhondt-champagne-brut-blanc-de-blancs-2019", Description: "the standard bottle row",
+			ImagePath: "assets/img/wines/b.svg", BottleSize: "750 ml", MetadataScore: 5},
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. The sitemap lists the shared path exactly once.
+	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
+	const loc = "<loc>https://finevines.com/wines/jose-dhondt-champagne-brut-blanc-de-blancs-2019/</loc>"
+	if got := strings.Count(sitemap, loc); got != 1 {
+		t.Errorf("sitemap lists the colliding wine %d times, want exactly 1", got)
+	}
+
+	// 2. The surviving page is the better-enriched row's, not whichever
+	// happened to render last.
+	page := readFile(t, filepath.Join(dist, "wines", "jose-dhondt-champagne-brut-blanc-de-blancs-2019", "index.html"))
+	if !strings.Contains(page, "the standard bottle row") {
+		t.Error("the best-enriched row must supply the page for a colliding slug")
+	}
+}
+
 // readFile reads path and fails the test on error, returning the contents as
 // a string for strings.Contains checks against rendered dist/ output.
 func readFile(t *testing.T, path string) string {
