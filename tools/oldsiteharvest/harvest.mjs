@@ -41,11 +41,19 @@ const work = pages.slice(0, LIMIT)
 console.log(`${pages.length} old-site product pages known; harvesting ${work.length}`)
 
 // Resume: never re-fetch what a previous run already stored.
-const done = existsSync(MANIFEST) ? JSON.parse(readFileSync(MANIFEST, 'utf8')) : []
-const seen = new Set(done.map((d) => d.oldPath))
-if (seen.size) console.log(`resuming — ${seen.size} already harvested`)
+// --retry-empty re-attempts pages a previous pass recorded as image-less.
+// The first pass matched only one of Drupal's two image path shapes and wrote
+// 246 false "no image" verdicts; without this they would be skipped forever by
+// the resume logic, which is the worst kind of silent data loss — an error that
+// looks like a completed run.
+const RETRY_EMPTY = process.argv.includes('--retry-empty')
 
-const results = [...done]
+const done = existsSync(MANIFEST) ? JSON.parse(readFileSync(MANIFEST, 'utf8')) : []
+const keep = RETRY_EMPTY ? done.filter((d) => d.images.length) : done
+const seen = new Set(keep.map((d) => d.oldPath))
+if (seen.size) console.log(`resuming — ${seen.size} already harvested${RETRY_EMPTY ? `, retrying ${done.length - keep.length} empty` : ''}`)
+
+const results = [...keep]
 const failures = []
 
 function fileNameFor(imageUrl) {
@@ -79,8 +87,45 @@ async function harvest(oldPath) {
   if (!res.ok) throw new Error('page HTTP ' + res.status)
   const html = await res.text()
 
-  // Drupal keeps product imagery under /sites/default/files/product/.
-  const urls = [...new Set([...html.matchAll(/https?:\/\/[^"'\s]*\/sites\/default\/files\/product\/[^"'\s)\\]+/g)].map((m) => m[0]))]
+  // Drupal serves product imagery from two shapes, and missing only the second
+  // silently reported 246 pages as image-less on the first pass:
+  //
+  //   /sites/default/files/product/<name>.jpg
+  //   /sites/default/files/styles/product_555/public/images/product/<name>.jpg?itok=…
+  //
+  // The second is an image-STYLE derivative — a resized copy. Prefer the
+  // original by stripping the styles/<style>/public/ segment, and fall back to
+  // the derivative when the original is not there.
+  //
+  // default_images/ is Drupal's own "no image available" placeholder. Importing
+  // those would put an identical grey box on hundreds of wines, which is worse
+  // than the neutral SVG we already show.
+  const raw = [
+    ...new Set([
+      ...[...html.matchAll(/(?:https?:\/\/[^"'\s]*)?\/sites\/default\/files\/[^"'\s)\\]*\/product\/[^"'\s)\\]+/g)].map((m) => m[0]),
+    ]),
+  ]
+    .filter((u) => !/\/default_images\//.test(u))
+    .map((u) => (u.startsWith('http') ? u : OLD + u))
+
+  // Deduplicate on the original path so a page offering several derivative
+  // sizes of one photograph is fetched once.
+  const byOriginal = new Map()
+  for (const u of raw) {
+    const original = u.replace(/\/styles\/[^/]+\/public\//, '/').replace(/\?itok=[^&]*$/, '')
+    if (!byOriginal.has(original)) byOriginal.set(original, u)
+  }
+
+  const urls = []
+  for (const [original, derivative] of byOriginal) {
+    try {
+      const head = await fetchWithRetry(original, { method: 'HEAD' })
+      urls.push(head?.ok ? original : derivative)
+    } catch {
+      urls.push(derivative)
+    }
+  }
+
   if (!urls.length) return { oldPath, target, sku: wine?.sku ?? null, images: [], note: 'no product image on the page' }
 
   const images = []
