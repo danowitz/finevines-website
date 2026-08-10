@@ -1,0 +1,20 @@
+[
+ {
+  "sku": "713130",
+  "choice": "old",
+  "file": "bachelet-bourgogne-rouge-label.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Bachelet%20Bourgogne%20Rouge%20Label.jpg"
+ },
+ {
+  "sku": "260349",
+  "choice": "old",
+  "file": "gilgal-sauvignon-blanc-0.png",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-02/gilgal%20sauvignon%20blanc_0.png"
+ },
+ {
+  "sku": "604273*",
+  "choice": "old",
+  "file": "labels-gen5-zinfandel.png",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Labels_Gen5_Zinfandel.png"
+ }
+]

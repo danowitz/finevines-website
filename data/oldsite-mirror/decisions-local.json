@@ -1,0 +1,142 @@
+[
+ {
+  "sku": "473943",
+  "slug": "domaine-bastide-blanche-bandol-rose-2025",
+  "wineName": "Domaine Bastide Blanche Bandol Rose",
+  "title": "Domaine La Bastide Blanche Bandol Rose",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2019-10\\bandol_20rose_20png_0.png"
+ },
+ {
+  "sku": "712842",
+  "slug": "maison-camille-giroud-chambolle-musigny-1er-cru-les-borniques-2022",
+  "wineName": "Maison Camille Giroud Chambolle Musigny 1ER Cru les Borniques",
+  "title": "Camille Giroud Chambolle-Musigny Les Borniques Premier Cru",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-07\\Chambolle_20Musigny_20Les_20Borniques-2.jpg"
+ },
+ {
+  "sku": "712836",
+  "slug": "maison-camille-giroud-chassagne-montrachet-1er-cru-tonton-marcel-2023",
+  "wineName": "Maison Camille Giroud Chassagne Montrachet 1ER Cru Tonton Marcel",
+  "title": "Camille Giroud Chassagne-Montrachet Tonton Marcel Premier Cru",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-07\\Chassagne_20Montrachet_20Les_20Tontons_20Marcel_201er_20Cru_20-2.jpg"
+ },
+ {
+  "sku": "712818",
+  "slug": "maison-camille-giroud-gevrey-chambertin-1er-cru-lavaut-saint-jacques-2020",
+  "wineName": "Maison Camille Giroud Gevrey Chambertin 1ER Cru Lavaut Saint Jacques",
+  "title": "Camille Giroud Gevrey-Chambertin Lavaut Saint Jacques Premier Cru",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-07\\Camille_20Giroud_20Gevrey-Chambertin_20Lavaut_20Saint_20Jacques_20Premier_20Cru.jpg"
+ },
+ {
+  "sku": "411495",
+  "slug": "domaine-cecile-tremblay-chambolle-musigny-les-cabottes-2021",
+  "wineName": "Domaine Cecile Tremblay Chambolle Musigny les Cabottes",
+  "title": "Domaine Cecile Tremblay Chambolle Musigny Premier Cru Les Cabottes",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2018-10\\cecile_20tremblay_20chambolle_20musigny_20les_20cabottes_20png.png"
+ },
+ {
+  "sku": "660162",
+  "slug": "chauvenet-chopin-domaine-chauvenet-chopin-nuits-saint-georges-1er-cru-les-chaignots-2013",
+  "wineName": "Chauvenet-Chopin Domaine Chauvenet-Chopin Nuits Saint Georges 1er Cru les Chaignots",
+  "title": "Domaine Chauvenet-Chopin Nuits-Saint-Georges Premier Cru Les Chaignots",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-01\\Domaine_20Chauvenet-Chopin_20Nuits-Saint-Georges_20Premier_20Cru_20Les_20Chaignots.jpg"
+ },
+ {
+  "sku": "660161",
+  "slug": "chauvenet-chopin-domaine-chauvenet-chopin-nuits-saint-georges-1er-cru-les-murgers-2013",
+  "wineName": "Chauvenet-Chopin Domaine Chauvenet-Chopin Nuits Saint Georges 1er Cru les Murgers",
+  "title": "Domaine Chauvenet-Chopin Nuits-Saint-Georges Premier Cru Les Murgers",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-01\\Domaine_20Chauvenet-Chopin_20Nuits-Saint-Georges_20Premier_20Cru_20Les_20Murgers.jpg"
+ },
+ {
+  "sku": "411987",
+  "slug": "domaine-collotte-marsannay-les-boivins-2023",
+  "wineName": "Domaine Collotte Marsannay les Boivins",
+  "title": "Domaine Collotte Marsannay Les Boivins",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-01\\Domaine_20Collotte_20Marsannay_20Les_20Boivins.jpg"
+ },
+ {
+  "sku": "780161",
+  "slug": "marcel-deiss-domaine-marcel-deiss-alsace-engelgarten-2022",
+  "wineName": "Marcel Deiss Domaine Marcel Deiss Alsace Engelgarten",
+  "title": "Domaine Marcel Deiss Engelgarten Cru d’Alsace",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-07\\Domaine_20Marcel_20Deiss_20Engelgarten_20Cru_20d_E2_80_99Alsace.jpg"
+ },
+ {
+  "sku": "212183",
+  "slug": "domaine-paul-pernot-puligny-montrachet-1er-cru-clos-de-la-garenne-2024",
+  "wineName": "Domaine Paul Pernot Puligny Montrachet 1er Cru Clos de la Garenne",
+  "title": "Domaine Paul Pernot Puligny-Montrachet Premier Cru Clos de la Garenne",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2019-01\\Pernot_20-_20Puligny_20Garenne.png"
+ },
+ {
+  "sku": "510758",
+  "slug": "groffier-domaine-robert-groffier-chambolle-musigny-1er-cru-les-hauts-doix-2023",
+  "wineName": "Groffier Domaine Robert Groffier Chambolle Musigny 1er Cru les Hauts-Doix",
+  "title": "Domaine Robert Groffier Chambolle-Musigny Premier Cru Les Hauts-Doix",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2018-12\\Groffier_20Chambolle_20Musigny_201er_20CRU_20_Les_20Hautes-Doix__20Front.png"
+ },
+ {
+  "sku": "510750",
+  "slug": "groffier-domaine-robert-groffier-chambolle-musigny-1er-cru-les-sentiers-2022",
+  "wineName": "Groffier Domaine Robert Groffier Chambolle Musigny 1er Cru les Sentiers",
+  "title": "Domaine Robert Groffier Chambolle-Musigny Premier Cru Les Sentiers",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2018-12\\Groffier_20Chambolle_20Musigny_201er_20CRU_20_Les_20Sentiers__20Front.png"
+ },
+ {
+  "sku": "660039",
+  "slug": "serafin-pere-et-fils-gevrey-chambertin-1er-cru-le-fonteny-2014",
+  "wineName": "Serafin Pere et Fils Gevrey Chambertin 1er Cru le Fonteny",
+  "title": "Domaine Sérafin Père et Fils Gevrey-Chambertin Premier Cru Le Fonteny",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-01\\Domaine_20S_C3_A9rafin_20P_C3_A8re_20et_20Fils_20Gevrey-Chambertin_20Premier_20Cru_20Le_20Fonteny.jpg"
+ },
+ {
+  "sku": "215088",
+  "slug": "domaine-sylvain-langoureau-saint-aubin-1er-cru-en-remilly-2024",
+  "wineName": "Domaine Sylvain Langoureau Saint Aubin 1er Cru en Remilly",
+  "title": "Domaine Sylvain Langoureau Saint Aubin Premier Cru En Remilly",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2019-01\\langoureau_20saint-aubin-1er-cru-en-remilly.png"
+ },
+ {
+  "sku": "511265",
+  "slug": "vocoret-domaine-vocoret-chablis-1er-cru-montee-de-tonnerre-2024",
+  "wineName": "Vocoret Domaine Vocoret Chablis 1er Cru Montee de Tonnerre",
+  "title": "Domaine Vocoret Chablis Premier Cru Montée de Tonnerre",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-07\\Domaine_20Vocoret_20Chablis_20Premier_20Cru_20Mont_C3_A9e_20de_20Tonnerre.jpg"
+ },
+ {
+  "sku": "540267",
+  "slug": "jl-chave-selection-saint-joseph-offerus-2024",
+  "wineName": "Jl Chave Selection Saint Joseph Offerus",
+  "title": "JL Chave Sélection Saint-Joseph Offerus",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-07\\JL_20Chave_20S_C3_A9lection_20Saint-Joseph_20Offerus.jpg"
+ },
+ {
+  "sku": "510017",
+  "slug": "ambroise-nuits-saint-georges-1er-cru-les-vaucrains-2011",
+  "wineName": "Ambroise Nuits Saint Georges 1er Cru les Vaucrains",
+  "title": "Maison Ambroise Nuits Saint Georges 1er Cru Les Vaucrains",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\images\\product\\2010_20nuits_20saint_20georges_201er_20cru_20les_20vaucrains_0.jpg"
+ },
+ {
+  "sku": "713616",
+  "slug": "pierre-morey-domaine-pierre-morey-meursault-les-terres-blanches-2021",
+  "wineName": "Pierre Morey Domaine Pierre Morey Meursault les Terres Blanches",
+  "title": "Pierre Morey Meursault Les Terres Blanches",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-07\\Domaine_20Pierre_20Morey_20Meursault_20Les_20Terres_20Blanches.jpg"
+ },
+ {
+  "sku": "713647",
+  "slug": "domaine-pierre-morey-meursault-1er-cru-les-perrieres-2023",
+  "wineName": "Domaine Pierre Morey Meursault 1er Cru les Perrieres",
+  "title": "Pierre Morey Meursault Premier Cru Perrières",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-07\\Pierre_20Morey_20Meursault_20Premier_20Cru_20Perri_C3_A8res.jpg"
+ },
+ {
+  "sku": "713652",
+  "slug": "domaine-pierre-morey-pommard-1er-cru-grands-epenots-2023",
+  "wineName": "Domaine Pierre Morey Pommard 1er Cru Grands Epenots",
+  "title": "Pierre Morey Pommard Premier Cru Grands Epenots",
+  "localFile": "data\\oldsite-full\\assets\\sites\\default\\files\\product\\2020-06\\Pierre_20Morey_20Pommard_20Grands_20Epenots.jpg"
+ }
+]
