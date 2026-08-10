@@ -1,0 +1,40 @@
+{{/*
+  404.html.tmpl — dist/404.html.
+
+  Built by renderNotFound (build.go), NOT by the pages loop in Run: it must
+  never contribute a Path to the sitemap. Dot is a notFoundPage, which embeds
+  page directly (no wrapper type beyond that) — same pattern as
+  about.html.tmpl and legal.html.tmpl, plus its own NoIndex field that always
+  overrides page's site-derived one to true (see notFoundPage's doc comment
+  in build.go).
+
+  Content is a short signpost, not an essay: the site's editorial voice,
+  pointing back at the two places a lost visitor actually wants — the
+  portfolio and a way to get in touch.
+*/}}
+{{define "404"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head" .}}
+</head>
+<body>
+{{template "header" .}}
+<main>
+  <section class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">404</span>
+      <h1>This page has left the cellar.</h1>
+      <p class="lede">The page you're looking for isn't here &mdash; it may have moved, or the address
+        wasn't quite right. From here, the full portfolio is the surest way onward, and the team is
+        always glad to help you find what you're after.</p>
+      <p class="hero-actions">
+        <a class="btn btn-primary" href="/portfolio/">Browse the Portfolio</a>
+        <a class="btn btn-ghost" href="/contact/">Contact Us</a>
+      </p>
+    </div>
+  </section>
+</main>
+{{template "footer" .}}
+</body>
+</html>
+{{end}}

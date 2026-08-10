@@ -54,6 +54,18 @@ type site struct {
 	Team     []model.TeamMember
 	Content  model.SiteContent
 	BaseURL  string
+	// NoIndex is true whenever BaseURL is NOT the production host (see
+	// isProductionHost in sitemap.go) — i.e. for every staging/CDN hostname
+	// this site has ever been deployed to, plus any unset/malformed value.
+	// Promoted through page's embedded *site to every page type (homePage,
+	// winePage, portfolioPage, …) with no per-call-site wiring needed, so
+	// base.html.tmpl's shared "head" template can emit
+	// <meta name="robots" content="noindex"> from a single `.NoIndex` on
+	// EVERY page just by this one field being set correctly here. The 404
+	// page (notFoundPage) is the one deliberate exception: it shadows this
+	// promoted field with its own NoIndex, fixed to true, because an error
+	// page must never be indexed even in production.
+	NoIndex bool
 	// GAID is the Google Analytics 4 measurement ID (G-XXXXXXXXXX), promoted
 	// through page's embedded *site so base.html.tmpl's head can emit the
 	// gtag snippet. Empty by default (analytics off) — which keeps the build
@@ -425,6 +437,23 @@ type newsPostPage struct {
 	Post model.NewsPost
 }
 
+// notFoundPage is dist/404.html — the branded page served for any URL that
+// doesn't match a real one (Bunny's pull-zone error-page wiring is out of
+// scope here; this only produces the file). It reuses page's Title/
+// Description/Path machinery so it shares base.html.tmpl's head/header/
+// footer like every other page, but it is deliberately NOT part of the
+// `pages` slice in Run: it must never contribute its Path to the sitemap
+// (see renderNotFound's call site, which runs outside the paths-collecting
+// loop), and it must never be indexed — including on the production host,
+// where every other page's NoIndex is false. NoIndex here is a plain field,
+// not a promoted one: at depth 0 it shadows page's embedded *site.NoIndex
+// (depth 2), so `.NoIndex` in the template always resolves to this page's
+// own value regardless of which host the rest of the site is indexable on.
+type notFoundPage struct {
+	page
+	NoIndex bool
+}
+
 // portfolioPage carries ONE paginated slice of the catalog — this page's 48
 // wine cards — plus the facet groups (which span the whole catalog, not just
 // this page) and the pagination metadata the template and portfolio.js need.
@@ -774,6 +803,22 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 			return err
 		}
 		paths = append(paths, data.pagePath())
+	}
+
+	// dist/404.html renders last and outside the paths-collecting loop above
+	// on purpose: it is not real content, so it must never reach paths (and
+	// therefore sitemap.xml) the way every canonical page above does.
+	notFound := notFoundPage{
+		page: page{
+			site:        s,
+			Title:       "Page Not Found - FineVines",
+			Description: "The page you're looking for isn't here. Explore the FineVines portfolio or get in touch.",
+			Path:        "/404.html",
+		},
+		NoIndex: true,
+	}
+	if err := renderNotFound(tmpl, distDir, notFound); err != nil {
+		return err
 	}
 
 	if err := writeSitemap(distDir, s.BaseURL, paths); err != nil {
@@ -1671,7 +1716,7 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 		}
 		active = append(active, w)
 	}
-	s := &site{Wines: active, Delisted: delisted, Content: content, BaseURL: baseURL, GAID: gaID}
+	s := &site{Wines: active, Delisted: delisted, Content: content, BaseURL: baseURL, GAID: gaID, NoIndex: !isProductionHost(baseURL)}
 	// hot-sellers.json is optional: written by `finevines enrich` against a
 	// live org (mock/dev runs don't have it), and the homepage simply omits
 	// its sales-driven section when it's absent.
@@ -1907,6 +1952,20 @@ func renderPage(tmpl *template.Template, distDir, rel, name string, data any) er
 	}
 	defer f.Close()
 	return tmpl.ExecuteTemplate(f, name, data)
+}
+
+// renderNotFound writes dist/404.html directly at the dist root, rather than
+// through renderPage's directory-per-page convention (which would produce
+// dist/404/index.html — a page addressable at /404/, not the literal
+// 404.html file Bunny's error-page wiring expects to serve for any unknown
+// URL).
+func renderNotFound(tmpl *template.Template, distDir string, data notFoundPage) error {
+	f, err := os.Create(filepath.Join(distDir, "404.html"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return tmpl.ExecuteTemplate(f, "404", data)
 }
 
 // mergeRedirects publishes dist/redirects.json as the union of every source

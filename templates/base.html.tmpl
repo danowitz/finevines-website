@@ -16,7 +16,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{.Title}}</title>
 <meta name="description" content="{{.Description}}">
-<link rel="canonical" href="{{.BaseURL}}{{.Canonical}}">
+{{/* .NoIndex is promoted from site.NoIndex (build.go) — true on every host
+     except the production domain (finevines.com / www.finevines.com), so a
+     staging or review build never competes with the real site in search
+     results. The 404 page overrides this to always-true regardless of host
+     (see notFoundPage). robots.txt alone isn't enough here: it stops future
+     crawling but can't remove a URL a search engine already indexed, and
+     this meta tag is what actually does that. */}}
+{{if .NoIndex}}<meta name="robots" content="noindex">
+{{end}}<link rel="canonical" href="{{.BaseURL}}{{.Canonical}}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="FineVines">
 <meta property="og:title" content="{{.Title}}">

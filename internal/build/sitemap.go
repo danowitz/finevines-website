@@ -2,9 +2,11 @@ package build
 
 import (
 	"encoding/xml"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 // sitemapURLSet and sitemapURL model the minimal subset of the sitemap
@@ -47,9 +49,49 @@ func writeSitemap(distDir, baseURL string, paths []string) error {
 	return os.WriteFile(filepath.Join(distDir, "sitemap.xml"), out, 0o644)
 }
 
-// writeRobots emits dist/robots.txt: allow every crawler on every path, and
-// point them at the sitemap so URLs don't need individual discovery.
+// isProductionHost reports whether baseURL points at the real public
+// domain — finevines.com or its www alias — the only host this build should
+// ever let search engines index. It fails safe: an unset, malformed, or any
+// other host (the *.b-cdn.net staging zones, finevines.biz, localhost,
+// whatever) all come back false. writeRobots and every page's noindex meta
+// (see site.NoIndex in build.go) derive from this single function, so
+// indexability is never a manual pre-launch step — it flips automatically
+// the moment `finevines build` runs with FINEVINES_SITE_BASE_URL set to the
+// production domain.
+//
+// Hostname normalisation (lowercased, trailing-dot-stripped) mirrors
+// cmd/finevines/main.go's validateClientContentForDeploy host check, so
+// "is this production" means the same thing everywhere in the codebase.
+func isProductionHost(baseURL string) bool {
+	parsed, err := url.Parse(baseURL)
+	if err != nil {
+		return false
+	}
+	host := strings.ToLower(strings.TrimSuffix(parsed.Hostname(), "."))
+	return host == "finevines.com" || host == "www.finevines.com"
+}
+
+// writeRobots emits dist/robots.txt. On the production host this allows
+// every crawler on every path and points them at the sitemap, exactly as
+// before. On any other host — every staging/CDN hostname this build has
+// ever been reachable at — it disallows everything, so a pre-launch or
+// review build never competes with the real domain in search results.
+//
+// The Sitemap: directive is deliberately omitted on non-production builds.
+// Per the Robots Exclusion Protocol, Sitemap: is independent of
+// Allow/Disallow — some crawlers read and follow it even when the whole
+// site is disallowed — so publishing it here would still be handing search
+// engines a complete URL list for a host we are actively telling them not
+// to index. The meta noindex tag (see build.go's site.NoIndex) is what
+// actually keeps already-known staging URLs out of the index; robots.txt's
+// job here is only to stop NEW crawling, and a sitemap line works against
+// that.
 func writeRobots(distDir, baseURL string) error {
-	content := "User-agent: *\nAllow: /\n\nSitemap: " + baseURL + "/sitemap.xml\n"
+	var content string
+	if isProductionHost(baseURL) {
+		content = "User-agent: *\nAllow: /\n\nSitemap: " + baseURL + "/sitemap.xml\n"
+	} else {
+		content = "User-agent: *\nDisallow: /\n"
+	}
 	return os.WriteFile(filepath.Join(distDir, "robots.txt"), []byte(content), 0o644)
 }

@@ -965,6 +965,182 @@ func TestRobotsTxt(t *testing.T) {
 			t.Errorf("robots.txt missing %q", want)
 		}
 	}
+	if strings.Contains(string(robots), "Disallow:") {
+		t.Error("robots.txt for the production host must not carry Disallow")
+	}
+}
+
+// TestRobotsTxtNonProductionDisallowsEverything guards the pre-launch bug a
+// site audit caught: the staging hosts (the Bunny *.b-cdn.net zone and
+// finevines.biz) were served the SAME "Allow: /" + Sitemap robots.txt as
+// production, inviting search engines to index a build whose canonical URLs
+// point at the CDN hostname rather than the real domain. Indexability must
+// derive automatically from FINEVINES_SITE_BASE_URL — see isProductionHost —
+// so the cutover's "rebuild with the production base URL" step is the only
+// thing that ever flips this on; nobody has to remember a manual step.
+func TestRobotsTxtNonProductionDisallowsEverything(t *testing.T) {
+	for _, baseURL := range []string{
+		"https://finevines-com.b-cdn.net",
+		"https://finevines.biz",
+		"http://localhost:8080",
+	} {
+		dist := t.TempDir()
+		if err := Run("testdata", "../../assets", "../../templates", dist, baseURL, ""); err != nil {
+			t.Fatal(err)
+		}
+		robots, err := os.ReadFile(filepath.Join(dist, "robots.txt"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(robots), "User-agent: *") {
+			t.Errorf("%s: robots.txt missing User-agent line", baseURL)
+		}
+		if !strings.Contains(string(robots), "Disallow: /") {
+			t.Errorf("%s: robots.txt must Disallow everything on a non-production host", baseURL)
+		}
+		if strings.Contains(string(robots), "Allow:") {
+			t.Errorf("%s: robots.txt must not Allow anything on a non-production host", baseURL)
+		}
+		// A Sitemap: directive is independent of Allow/Disallow per the
+		// Robots Exclusion Protocol — some crawlers read it even when
+		// everything is disallowed. Advertising a URL list for a host we're
+		// actively telling search engines to ignore defeats the point, so
+		// non-production robots.txt omits the line entirely (see
+		// isProductionHost / writeRobots for the reasoning captured there).
+		if strings.Contains(string(robots), "Sitemap:") {
+			t.Errorf("%s: robots.txt must not advertise a sitemap on a non-production host", baseURL)
+		}
+	}
+}
+
+// TestIsProductionHost pins down the "is this the real domain" rule that
+// robots.txt, the per-page noindex meta tag, and (deliberately) the 404 page
+// all key off of: only finevines.com and its www alias are production.
+// Mirrors cmd/finevines/main.go's validateClientContentForDeploy host check
+// (lowercased, trailing-dot stripped) so "production" means the same thing
+// everywhere in the codebase. Every edge case a live rollout can actually hit
+// — a trailing slash, an explicit port, mixed case, an unset value, a
+// malformed URL — is covered here so the derivation, not a checklist, is
+// what keeps staging out of the index.
+func TestIsProductionHost(t *testing.T) {
+	cases := []struct {
+		baseURL string
+		want    bool
+	}{
+		{"https://finevines.com", true},
+		{"https://www.finevines.com", true},
+		{"https://finevines.com/", true},
+		{"https://finevines.com:8443", true},
+		{"http://finevines.com", true},
+		{"https://FineVines.COM", true},
+		{"https://finevines.com.", true}, // trailing-dot FQDN
+		{"https://finevines-com.b-cdn.net", false},
+		{"https://finevines.biz", false},
+		{"http://localhost:8080", false},
+		{"http://localhost", false},
+		{"", false},
+		{"://bad-url", false},
+	}
+	for _, c := range cases {
+		if got := isProductionHost(c.baseURL); got != c.want {
+			t.Errorf("isProductionHost(%q) = %v, want %v", c.baseURL, got, c.want)
+		}
+	}
+}
+
+// TestNoIndexMetaFollowsProductionHost guards the half of the fix
+// robots.txt alone cannot deliver: robots.txt stops future crawling, but the
+// staging hosts have been live and crawlable for weeks, so search engines
+// may already know some of these URLs. Only an in-page noindex meta tag
+// actually removes an already-discovered URL from the index, which is why
+// it has to be on every page's <head> (base.html.tmpl's shared "head"
+// template), not just declared in robots.txt.
+func TestNoIndexMetaFollowsProductionHost(t *testing.T) {
+	const noindex = `<meta name="robots" content="noindex">`
+
+	nonProdDist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", nonProdDist, "https://finevines-com.b-cdn.net", ""); err != nil {
+		t.Fatal(err)
+	}
+	for _, rel := range [][]string{{"index.html"}, {"about", "index.html"}, {"contact", "index.html"}} {
+		got := readFile(t, filepath.Join(append([]string{nonProdDist}, rel...)...))
+		if !strings.Contains(got, noindex) {
+			t.Errorf("%s: non-production build must carry %s", filepath.Join(rel...), noindex)
+		}
+	}
+
+	prodDist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", prodDist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	for _, rel := range [][]string{{"index.html"}, {"about", "index.html"}, {"contact", "index.html"}} {
+		got := readFile(t, filepath.Join(append([]string{prodDist}, rel...)...))
+		if strings.Contains(got, noindex) {
+			t.Errorf("%s: production build must NOT carry %s", filepath.Join(rel...), noindex)
+		}
+	}
+}
+
+// TestNotFoundPageBuilds guards the missing-404 gap: nothing in dist/
+// currently handles an unknown URL, so visitors fall through to Bunny's
+// default error page. dist/404.html must exist, must be excluded from
+// sitemap.xml (it isn't real content, and paths is the same list every other
+// exclusion — e.g. delisted wines, canonicalised-away vintages — is enforced
+// through), and must carry noindex UNCONDITIONALLY: unlike every other page,
+// this one opts out even on the production host, because an error page
+// should never rank in search results.
+func TestNotFoundPageBuilds(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	notFound, err := os.ReadFile(filepath.Join(dist, "404.html"))
+	if err != nil {
+		t.Fatalf("dist/404.html was not built: %v", err)
+	}
+	if !strings.Contains(string(notFound), `<meta name="robots" content="noindex">`) {
+		t.Error("dist/404.html must carry noindex even on the production host")
+	}
+	if !strings.Contains(string(notFound), "/portfolio/") {
+		t.Error("dist/404.html must offer a way back into the portfolio")
+	}
+	if !strings.Contains(string(notFound), "/contact/") {
+		t.Error("dist/404.html must offer a way to contact FineVines")
+	}
+
+	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
+	if strings.Contains(sitemap, "404") {
+		t.Error("sitemap.xml must not list the 404 page")
+	}
+}
+
+// TestNotFoundPageHasNoBannedContentOrTradeWord applies the same two
+// standing brand-voice/legal guards every other client-facing page gets
+// (see TestPrivacyPolicyAndLegalPagesHaveNoBannedContactDetails and
+// TestPrivacyPolicyAndLegalPagesAvoidTheWordTrade above) to the new 404
+// page, since it is new client-facing copy and nothing else would catch a
+// regression here.
+func TestNotFoundPageHasNoBannedContentOrTradeWord(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	got, err := os.ReadFile(filepath.Join(dist, "404.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	banned := []string{"P.O. Box", "PO Box", "Fax", "60160", "Thomas St", "Melrose"}
+	for _, bad := range banned {
+		if bytes.Contains(got, []byte(bad)) {
+			t.Errorf("404.html must not contain banned contact detail %q", bad)
+		}
+	}
+
+	scanned := tradeWordAllowlistRE.ReplaceAll(got, nil)
+	if loc := tradeWordRE.FindIndex(scanned); loc != nil {
+		t.Errorf("404.html contains the standalone word %q", scanned[loc[0]:loc[1]])
+	}
 }
 
 func TestBuildIsDeterministic(t *testing.T) {
