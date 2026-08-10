@@ -174,25 +174,7 @@ jobs:
       #    untracked-but-not-ignored, and a broad add would commit three
       #    binaries to master every night.
       - name: Commit the run's state back to master
-        run: |
-          git config user.name 'finevines-pipeline[bot]'
-          git config user.email '215369143+finevines-pipeline[bot]@users.noreply.github.com'
-          git add data assets/img/wines .bunny-manifest.json
-          if git diff --cached --quiet; then
-            echo "nothing changed this run — no commit"
-            exit 0
-          fi
-          git commit -m 'pipeline: nightly run [skip ci]'
-          # A human pushing mid-run is the one expected rejection. Rebase and
-          # retry ONCE; if it still fails, fail the run loudly rather than
-          # force-pushing over somebody's work. The next run reconciles: the
-          # deploy already happened, and .bunny-manifest.json is regenerated
-          # from a fresh diff either way.
-          git push origin HEAD:master || {
-            echo "push rejected — rebasing onto origin/master and retrying once"
-            git pull --rebase origin master
-            git push origin HEAD:master
-          }
+        run: bash tools/pipeline/commitback.sh
 
       # 7. Email the digest — only if the run changed something. Runs last so it
       #    reports what actually shipped, and is NOT `if: always()`: a failed run
