@@ -1665,6 +1665,39 @@ func TestBuild_CollidingActiveSlugsRenderOnePageAndOneSitemapEntry(t *testing.T)
 	}
 }
 
+// TestBuild_HubIndexesAreReachableFromEveryPage: 500-odd hub pages are worth
+// nothing if the only route to them is sitemap.xml. Discovery has to work by
+// following links, so the three indexes sit in the site footer — present on
+// every page — and are called out on the portfolio itself, where someone
+// already browsing the catalog is most likely to want them.
+func TestBuild_HubIndexesAreReachableFromEveryPage(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// The footer carries all three, so every page on the site is one click
+	// from any dimension.
+	for _, page := range []string{"index.html", "about/index.html", "contact/index.html"} {
+		body := readFile(t, filepath.Join(dist, filepath.FromSlash(page)))
+		for _, href := range []string{`href="/producers/"`, `href="/regions/"`, `href="/varietals/"`} {
+			if !strings.Contains(body, href) {
+				t.Errorf("%s does not link %s from the footer", page, href)
+			}
+		}
+	}
+
+	// And the portfolio names them where a browsing visitor will see them.
+	portfolio := readFile(t, filepath.Join(dist, "portfolio", "index.html"))
+	if !strings.Contains(portfolio, "browse-by") {
+		t.Error("the portfolio must offer the browse-by-dimension links")
+	}
+}
+
 // TestBuild_NoInternalLinkIsDead walks the whole built site and resolves
 // every internal href against what was actually written.
 //
