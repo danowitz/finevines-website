@@ -44,7 +44,11 @@ artifacts, and are complete/self-contained on their own.
   catalog. It is a *formula field*: `IsActive && FV_OnHand_Qty__c > 0` (verified against the live org's
   `Product2` describe, 2026-08-09). There is no human judgement in it and nothing anyone can toggle per wine, so
   it is near-redundant with the `stockQty > 0` clause beside it — it adds only `IsActive`. **Fine Vines has no
-  hold flag.** Anything active and in stock is publishable. See issue #14 before assuming otherwise.
+  hold flag**, and (client decision, 2026-08-09) does not want one: the SKU-starts-with-`9` convention plus
+  ready-to-sell *is* the whole exclusion policy, and anything else active and in stock is meant to be listed. So
+  the rule above is correct as written — but note the only human-controlled lever over what appears on the site is
+  the SKU convention. Holding a wine back for an allocation or an embargo would today mean renumbering its SKU.
+  Issue #14 has the detail if that ever becomes a real need.
 - **Several `Product2` `FV_` fields are formulas, not data** (live describe, 2026-08-09) — treat them as parses,
   not facts:
   - `FV_Vintage_Year__c` = the first 2–4 characters of `Description`, if numeric. Hence two-digit years and the
