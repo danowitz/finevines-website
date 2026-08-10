@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
-const isPhoto = (w) => !/\.svg$/i.test(w.imagePath || '')
+const isPhoto = (w) => !!w.imagePath && !/\.svg$/i.test(w.imagePath)
 const cardKey = (w) => `${(w.producer || '').toLowerCase()}|${(w.name || '').toLowerCase()}`
 
 export function summarise(wines, ledger) {
