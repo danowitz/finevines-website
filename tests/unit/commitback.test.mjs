@@ -7,8 +7,14 @@ import { join } from 'node:path'
 
 const SCRIPT = join(process.cwd(), 'tools', 'pipeline', 'commitback.sh')
 
+// execFileSync's default stdio sends the child's stderr straight to this
+// process' stderr (only stdout is piped/captured by default) — git's routine
+// "To ...", "From ...", "* [new branch] ..." progress chatter on every clone/
+// push/fetch would otherwise leak into the test runner's TAP output. Pipe
+// stderr too so it is captured (and available on the error object) instead
+// of inherited.
 function git(cwd, ...args) {
-  return execFileSync('git', args, { cwd, encoding: 'utf8' })
+  return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
 }
 
 // A bare "origin", a clone that plays the human, and a clone that plays the
@@ -54,6 +60,7 @@ function runCommitback(cwd) {
   return execFileSync('bash', ['commitback.sh'], {
     cwd,
     encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, PIPELINE_BOT_NAME: 'bot', PIPELINE_BOT_EMAIL: 'bot@example.com' },
   })
 }
@@ -61,11 +68,16 @@ function runCommitback(cwd) {
 // execFileSync's thrown Error.message carries only stderr — the script's own
 // diagnostics are plain `echo` (stdout). Run it expecting a non-zero exit and
 // hand back stdout/status so a test can assert on what the script reported.
+// stderr is piped (not inherited) for the same reason as git() above — the
+// underlying git rebase/fetch chatter would otherwise leak into the TAP
+// stream on every run of the abort test — but it is still captured on the
+// error object, so this helper keeps returning it too.
 function runCommitbackExpectingFailure(cwd) {
   try {
     execFileSync('bash', ['commitback.sh'], {
       cwd,
       encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, PIPELINE_BOT_NAME: 'bot', PIPELINE_BOT_EMAIL: 'bot@example.com' },
     })
     throw new Error('expected commitback.sh to exit non-zero, but it succeeded')
