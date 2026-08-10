@@ -1,0 +1,162 @@
+[
+ {
+  "path": "/portfolio/altocedro/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "path": "/portfolio/domaine-bruno-clair/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "path": "/portfolio/domaine-charles-lachaux/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "path": "/portfolio/domaine-marcel-deiss/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "path": "/portfolio/domaine-ramonet/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "path": "/portfolio/domaine-vacheron/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "path": "/portfolio/eyrie-vineyards/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "path": "/portfolio/famille-bourgeois/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "path": "/portfolio/jl-chave-selection/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "path": "/portfolio/kracher/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "path": "/portfolio/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "path": "/portfolio/producer/privacy-policy",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/product/2020-07/Domaine%20Albert%20Mann%20Auxerrois%20Vieilles%20Vignes-2.jpg",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/product/2020-07/Domaine%20Albert%20Mann%20Pinot%20Gris%20Rosenbergy-2.jpg",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/product_555/public/product/2020-07/Domaine%20Albert%20Mann%20Auxerrois%20Vieilles%20Vignes-2.jpg?itok=HkKCczsA",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/product_555/public/product/2020-07/Domaine%20Albert%20Mann%20Pinot%20Gris%20Rosenbergy-2.jpg?itok=ndV_ttZW",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/product/2020-06/This%20big%2C%20spicy%2C%20robust%2C%20somewhat%20jammy%20wine%20represents%20exceptional%20value.%20It%20is%20an%20excellent%20match%20for%20grilled%20ribs%2C%20sausages%2C%20and%20steaks%20as%20well%20as%20roasts%20and%20stews%20of%20lamb%2C%20beef%20and%20game._0.jpg",
+  "error": "ENOENT: no such file or directory, open 'C:\\GRIT\\finevines-website\\data\\oldsite-full\\assets\\sites\\default\\files\\product\\"
+ },
+ {
+  "asset": "/sites/default/files/product/2020-06/This%20big%2C%20spicy%2C%20robust%2C%20somewhat%20jammy%20wine%20represents%20exceptional%20value.%20It%20is%20an%20excellent%20match%20for%20grilled%20ribs%2C%20sausages%2C%20and%20steaks%20as%20well%20as%20roasts%20and%20stews%20of%20lamb%2C%20beef%20and%20game..jpg",
+  "error": "ENOENT: no such file or directory, open 'C:\\GRIT\\finevines-website\\data\\oldsite-full\\assets\\sites\\default\\files\\product\\"
+ },
+ {
+  "asset": "/sites/default/files/styles/product_555/public/product/2020-06/This%20big%2C%20spicy%2C%20robust%2C%20somewhat%20jammy%20wine%20represents%20exceptional%20value.%20It%20is%20an%20excellent%20match%20for%20grilled%20ribs%2C%20sausages%2C%20and%20steaks%20as%20well%20as%20roasts%20and%20stews%20of%20lamb%2C%20beef%20and%20game._0.jpg?itok=Wl6rTuuH",
+  "error": "ENOENT: no such file or directory, open 'C:\\GRIT\\finevines-website\\data\\oldsite-full\\assets\\sites\\default\\files\\styles\\p"
+ },
+ {
+  "asset": "/sites/default/files/styles/product_555/public/product/2020-06/This%20big%2C%20spicy%2C%20robust%2C%20somewhat%20jammy%20wine%20represents%20exceptional%20value.%20It%20is%20an%20excellent%20match%20for%20grilled%20ribs%2C%20sausages%2C%20and%20steaks%20as%20well%20as%20roasts%20and%20stews%20of%20lamb%2C%20beef%20and%20game..jpg?itok=vYjMPdX6",
+  "error": "ENOENT: no such file or directory, open 'C:\\GRIT\\finevines-website\\data\\oldsite-full\\assets\\sites\\default\\files\\styles\\p"
+ },
+ {
+  "asset": "/sites/default/files/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20%2522Carmin%2522.jpg",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4te-du-Rh%C3%B4ne%20Cairanne%20L%27Ancestrale%20du%20Puits-2.jpg",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20%2522Trois%20Cepages%2522-2.jpg",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/product_555/public/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4te-du-Rh%C3%B4ne%20Cairanne%20L%27Ancestrale%20du%20Puits-2.jpg?itok=J1Wd5Ng3",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/product_555/public/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20%2522Carmin%2522.jpg?itok=tj9dH6QJ",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/product_555/public/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20%2522Trois%20Cepages%2522-2.jpg?itok=uE4wbLRL",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20%2522Galets%20Plan%20de%20Dieu%2522-2.jpg",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/product_555/public/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20%2522Galets%20Plan%20de%20Dieu%2522-2.jpg?itok=i1wEALSa",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20Ros%C3%A9-2.jpg",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/product_555/public/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20%2522Le%20Cros%2522%20Syrah-2.jpg?itok=d-nYPa5c",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/product_555/public/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20Ros%C3%A9-2.jpg?itok=V_TqPNvD",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20%2522Le%20Cros%2522%20Syrah-2.jpg",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20Villages%20Rasteau-2.jpg",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/product_555/public/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20Villages%20Rasteau-2.jpg?itok=Y4ydT-8N",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/teaser_square/public/product/2020-06/This%20big%2C%20spicy%2C%20robust%2C%20somewhat%20jammy%20wine%20represents%20exceptional%20value.%20It%20is%20an%20excellent%20match%20for%20grilled%20ribs%2C%20sausages%2C%20and%20steaks%20as%20well%20as%20roasts%20and%20stews%20of%20lamb%2C%20beef%20and%20game._0.jpg?itok=kHxrfRql",
+  "error": "ENOENT: no such file or directory, open 'C:\\GRIT\\finevines-website\\data\\oldsite-full\\assets\\sites\\default\\files\\styles\\t"
+ },
+ {
+  "asset": "/sites/default/files/styles/teaser_square/public/product/2020-06/This%20big%2C%20spicy%2C%20robust%2C%20somewhat%20jammy%20wine%20represents%20exceptional%20value.%20It%20is%20an%20excellent%20match%20for%20grilled%20ribs%2C%20sausages%2C%20and%20steaks%20as%20well%20as%20roasts%20and%20stews%20of%20lamb%2C%20beef%20and%20game..jpg?itok=mohfe33O",
+  "error": "ENOENT: no such file or directory, open 'C:\\GRIT\\finevines-website\\data\\oldsite-full\\assets\\sites\\default\\files\\styles\\t"
+ },
+ {
+  "asset": "/sites/default/files/producer/15731-CH-TEAU-DE-MANISSY1.jpg",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/teaser_square/public/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4te-du-Rh%C3%B4ne%20Cairanne%20L%27Ancestrale%20du%20Puits-2.jpg?itok=pRb3WJ3s",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/teaser_square/public/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20%2522Le%20Cros%2522%20Syrah-2.jpg?itok=uSkYgKWk",
+  "error": "HTTP 404"
+ },
+ {
+  "asset": "/sites/default/files/styles/teaser_square/public/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20Villages%20Rasteau-2.jpg?itok=m0z4rRMf",
+  "error": "HTTP 404"
+ }
+]
