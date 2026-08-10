@@ -612,6 +612,24 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 				"support team.",
 			Path: "/about/",
 		}},
+		// Privacy policy and legal (Terms and Conditions of Use) are both real
+		// published pages, not redirects — see data/legal/privacy-policy.md and
+		// data/legal/legal.md's header notes, and the doc comments atop
+		// templates/privacy-policy.html.tmpl and templates/legal.html.tmpl.
+		// Neither wraps page in a bigger type, same reasoning as about above.
+		{"privacy-policy", "privacy-policy", page{
+			site:  s,
+			Title: "Privacy Policy - FineVines",
+			Description: "How FineVines collects, uses, and protects the personal information visitors " +
+				"share with us.",
+			Path: "/privacy-policy/",
+		}},
+		{"legal", "legal", page{
+			site:        s,
+			Title:       "Legal - FineVines",
+			Description: "The terms and conditions that govern use of the FineVines website.",
+			Path:        "/legal/",
+		}},
 	}
 	// paths collects every rendered page's site-root-relative Path, in
 	// render order, so sitemap.xml can be built from what Run actually

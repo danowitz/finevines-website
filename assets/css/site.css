@@ -930,6 +930,9 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 }
 .footer-bottom p { margin: 0; font-family: var(--sans); font-size: 12.5px; letter-spacing: .03em; color: var(--brass-300); opacity: .82; }
 .footer-legal { text-align: right; }
+.footer-legal-links { display: flex; gap: 16px; font-family: var(--sans); font-size: 12.5px; letter-spacing: .03em; }
+.footer-legal-links a { color: var(--brass-300); opacity: .82; }
+.footer-legal-links a:hover { opacity: 1; }
 
 /* ---- Responsive --------------------------------------------------------
    Standard, desktop-first breakpoint progression (Tailwind scale):

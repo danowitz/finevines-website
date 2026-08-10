@@ -1,0 +1,153 @@
+{{/*
+  privacy-policy.html.tmpl — dist/privacy-policy/index.html.
+
+  Dot is a plain page (build.go), the same pattern as about.html.tmpl: no
+  wrapper type, since head/header/footer only need Title/Description/Path
+  (supplied by page) and this page needs nothing else beyond .Content.Contact
+  and .GAID, both already reachable through the embedded *site.
+
+  Content is transcribed from data/legal/privacy-policy.md, the old-site
+  capture — see that file's header note for the full rationale. Two
+  departures from the original, both required:
+
+    1. The "Contacting Us" block's street address is gone. Public contact on
+       this site is phone and email only (client direction, 2026-07-29) —
+       both come from .Content.Contact, the same source contact.html.tmpl
+       and the footer use, rather than being hand-typed here.
+    2. The original describes Google AdSense, the DoubleClick cookie, a
+       shopping cart, and newsletter registration — none of which this site
+       has. Those sections are rewritten to describe what the site actually
+       does: a contact form, plus GA4 analytics IF a measurement ID is
+       configured. The Google Analytics section below is gated on the same
+       `{{if and .GAID (hasPrefix .GAID "G-")}}` condition base.html.tmpl's
+       head uses to emit the gtag snippet, so this page never claims
+       analytics that isn't actually running on this build.
+
+  "sell, trade, or otherwise transfer" is published as "sell, rent, or
+  otherwise transfer" — same legal meaning, "trade" is banned in
+  client-facing copy (client direction, 2026-07-29). "Fine Vines" is
+  normalized to "FineVines" throughout, matching the rest of the site's
+  branding (about.html.tmpl, contact.html.tmpl, the footer).
+*/}}
+{{define "privacy-policy"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head" .}}
+</head>
+<body>
+{{template "header" .}}
+<main>
+  <section class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">Privacy</span>
+      <h1>Privacy Policy</h1>
+      <p class="lede">How FineVines collects, uses, and protects the personal information visitors share
+        with us.</p>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="news-body">
+      <p>This privacy policy has been compiled to better serve those who are concerned with how their
+        &lsquo;Personally Identifiable Information&rsquo; (PII) is being used online. PII, as described in
+        US privacy law and information security, is information that can be used on its own or with other
+        information to identify, contact, or locate a single person, or to identify an individual in
+        context. Please read our privacy policy carefully to get a clear understanding of how we collect,
+        use, protect, or otherwise handle your Personally Identifiable Information in accordance with our
+        website.</p>
+
+      <h2>What personal information do we collect?</h2>
+      <p>When you fill out our contact form, you may be asked to enter your name, email address, phone
+        number, and message so we can respond to your inquiry.</p>
+
+      <h2>When do we collect information?</h2>
+      <p>We collect information from you when you fill out the contact form on our site.</p>
+
+      <h2>How do we use your information?</h2>
+      <p>We may use the information we collect from you when you contact us in the following ways:</p>
+      <ul>
+        <li>To respond to your inquiry and better serve your request.</li>
+        <li>To follow up with you after correspondence (phone or email).</li>
+        <li>To connect you with the right sales representative for your account or territory.</li>
+      </ul>
+
+      <h2>Do we use &lsquo;cookies&rsquo;?</h2>
+      <p>Yes. Cookies are small files that a site or its service provider transfers to your computer's hard
+        drive through your web browser (if you allow), which enable the site's or service provider's
+        systems to recognize your browser and remember certain information. We use cookies to help us
+        understand how visitors use our site, so we can offer a better experience over time.{{if and .GAID (hasPrefix .GAID "G-")}}
+        We use Google Analytics for this purpose &mdash; see Google Analytics, below.{{end}}</p>
+      <p>You can choose to have your computer warn you each time a cookie is being sent, or you can choose
+        to turn off all cookies. You do this through your browser settings. Since each browser is a little
+        different, look at your browser's Help menu to learn the correct way to modify your cookies.</p>
+      <p>If you turn cookies off, some of the features that make your site experience more efficient may
+        not function properly.</p>
+
+      <h2>Third-party disclosure</h2>
+      <p>We do not sell, rent, or otherwise transfer to outside parties your Personally Identifiable
+        Information.</p>
+
+      <h2>Third-party links</h2>
+      <p>We do not include or offer third-party products or services on our website.</p>
+
+      {{if and .GAID (hasPrefix .GAID "G-")}}<h2>Google Analytics</h2>
+      <p>We use Google Analytics to compile aggregate data about site traffic and site interaction, so we
+        can offer a better site experience. Google Analytics uses cookies to collect this information; it
+        does not identify you individually.</p>
+      <p><strong>Opting out:</strong> you can opt out of Google Analytics by installing the Google
+        Analytics Opt-out Browser Add-on, available from Google.</p>
+      {{end}}
+
+      <h2>California Online Privacy Protection Act</h2>
+      <p>CalOPPA is the first state law in the nation to require commercial websites and online services to
+        post a privacy policy. The law's reach stretches well beyond California, requiring any person or
+        company in the United States that operates websites collecting Personally Identifiable Information
+        from California consumers to post a conspicuous privacy policy on its website, stating exactly the
+        information being collected and those individuals or companies with whom it is being shared.</p>
+      <p>According to CalOPPA, we agree to the following:</p>
+      <ul>
+        <li>Users can visit our site anonymously.</li>
+        <li>We link to this privacy policy from our home page, and from every page's footer.</li>
+        <li>Our Privacy Policy link includes the word &lsquo;Privacy&rsquo; and can easily be found.</li>
+      </ul>
+      <p>You will be notified of any Privacy Policy changes on this page. You can change your personal
+        information by emailing us.</p>
+
+      <h2>Do Not Track</h2>
+      <p>We honor Do Not Track signals: we do not track, plant cookies, or use advertising when a Do Not
+        Track (DNT) browser mechanism is in place. We do not allow third-party behavioral tracking.</p>
+
+      <h2>COPPA (Children's Online Privacy Protection Act)</h2>
+      <p>COPPA puts parents in control of what personal information is collected online from children
+        under the age of 13. We do not specifically market to children under the age of 13.</p>
+
+      <h2>Fair Information Practices</h2>
+      <p>The Fair Information Practices Principles form the backbone of privacy law in the United States,
+        and the concepts they include have played a significant role in the development of data protection
+        laws around the globe. Should a data breach occur, we will notify you via email.</p>
+      <p>We also agree to the Individual Redress Principle, which requires that individuals have the right
+        to legally pursue enforceable rights against data collectors and processors who fail to adhere to
+        the law &mdash; including recourse to courts or government agencies to investigate or prosecute
+        non-compliance.</p>
+
+      <h2>CAN-SPAM Act</h2>
+      <p>The CAN-SPAM Act sets the rules for commercial email, establishes requirements for commercial
+        messages, gives recipients the right to have emails stopped from being sent to them, and spells out
+        penalties for violations.</p>
+      <p>We collect your email address in order to send information and respond to inquiries and other
+        requests. If at any time you would like to unsubscribe from receiving future emails, contact us and
+        we will promptly remove you from all correspondence.</p>
+
+      <h2>Contacting Us</h2>
+      <p>If you have any questions about this privacy policy, contact FineVines:</p>
+      <p class="contact-links">
+        Phone: <a href="tel:{{.Content.Contact.PhoneHref}}">{{.Content.Contact.PhoneDisplay}}</a><br>
+        Email: <a href="mailto:{{.Content.Contact.Email}}">{{.Content.Contact.Email}}</a>
+      </p>
+    </div>
+  </section>
+</main>
+{{template "footer" .}}
+</body>
+</html>
+{{end}}

@@ -87,6 +87,11 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 		`href="tel:&#43;17083436702"`,
 		`href="mailto:info@finevines.com"`,
 		`&copy; 2026 FineVines. All rights reserved.`, // static year, no clock
+		// Privacy Policy + Legal: the old site carried both in its footer, and
+		// CalOPPA requires the privacy link be conspicuous and contain the
+		// word "Privacy" (see templates/privacy-policy.html.tmpl).
+		`href="/privacy-policy/">Privacy Policy</a>`,
+		`href="/legal/">Legal</a>`,
 	} {
 		if !strings.Contains(string(home), want) {
 			t.Errorf("footer missing %q", want)
@@ -603,6 +608,115 @@ func TestAboutPage(t *testing.T) {
 	}
 }
 
+// TestPrivacyPolicyAndLegalPagesBuild guards Task 8: both old-site pages get
+// a real published page on the new site (not a redirect to something else —
+// data/legal/legal.md's capture note found /legal carries a real use
+// license, warranty disclaimer, and Illinois governing-law clause, not
+// boilerplate worth discarding), each with its own heading and canonical.
+func TestPrivacyPolicyAndLegalPagesBuild(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	privacy, err := os.ReadFile(filepath.Join(dist, "privacy-policy", "index.html"))
+	if err != nil {
+		t.Fatal("privacy policy page not built:", err)
+	}
+	for _, want := range []string{
+		"<title>Privacy",
+		`rel="canonical" href="https://finevines.com/privacy-policy/"`,
+		"Privacy Policy",
+	} {
+		if !strings.Contains(string(privacy), want) {
+			t.Errorf("privacy policy page missing %q", want)
+		}
+	}
+
+	legal, err := os.ReadFile(filepath.Join(dist, "legal", "index.html"))
+	if err != nil {
+		t.Fatal("legal page not built:", err)
+	}
+	for _, want := range []string{
+		"<title>Legal",
+		`rel="canonical" href="https://finevines.com/legal/"`,
+		"Terms and Conditions of Use",
+	} {
+		if !strings.Contains(string(legal), want) {
+			t.Errorf("legal page missing %q", want)
+		}
+	}
+}
+
+// TestPrivacyPolicyAndLegalPagesHaveNoBannedContactDetails guards the
+// no-addresses rule (client direction, 2026-07-29) specifically for these
+// two pages: data/legal/privacy-policy.md's captured "Contacting Us" block
+// carried the old street address, and a privacy/legal page is exactly the
+// kind of page a template edit could reintroduce it on without anyone
+// noticing. Asserted on the rendered bytes so this fails the moment the
+// address comes back, regardless of how it gets there.
+func TestPrivacyPolicyAndLegalPagesHaveNoBannedContactDetails(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	banned := []string{"P.O. Box", "PO Box", "Fax", "60160", "Thomas St", "Melrose"}
+	for _, rel := range [][]string{
+		{"privacy-policy", "index.html"},
+		{"legal", "index.html"},
+	} {
+		got, err := os.ReadFile(filepath.Join(append([]string{dist}, rel...)...))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, bad := range banned {
+			if bytes.Contains(got, []byte(bad)) {
+				t.Errorf("%s must not contain banned contact detail %q", filepath.Join(rel...), bad)
+			}
+		}
+	}
+}
+
+// tradeWordRE matches the standalone word "trade" (case-insensitive), never
+// "trademark" — word-boundary matched so "trademark law" (the fixed legal
+// term data/legal/legal.md's capture note explicitly allows, rewritten
+// "trademark law") does not trip it.
+var tradeWordRE = regexp.MustCompile(`(?i)\btrade\b`)
+
+// TestPrivacyPolicyAndLegalPagesAvoidTheWordTrade guards the client's
+// vocabulary rule (directed 2026-07-29 — "trade" isn't George's word): the
+// old privacy policy's "sell, trade, or otherwise transfer" must publish as
+// "sell, rent, or otherwise transfer", and the old legal page's "trade mark
+// law" must publish as "trademark law".
+func TestPrivacyPolicyAndLegalPagesAvoidTheWordTrade(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, rel := range [][]string{
+		{"privacy-policy", "index.html"},
+		{"legal", "index.html"},
+	} {
+		got, err := os.ReadFile(filepath.Join(append([]string{dist}, rel...)...))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if loc := tradeWordRE.FindIndex(got); loc != nil {
+			start := loc[0] - 20
+			if start < 0 {
+				start = 0
+			}
+			end := loc[1] + 20
+			if end > len(got) {
+				end = len(got)
+			}
+			t.Errorf("%s contains the standalone word %q near %q", filepath.Join(rel...), got[loc[0]:loc[1]], got[start:end])
+		}
+	}
+}
+
 func TestLedgerStats(t *testing.T) {
 	// Thin catalogs omit the band entirely rather than shrink it.
 	if got := ledgerStats(make([]model.Wine, minLedgerWines-1), 504); got != nil {
@@ -793,6 +907,8 @@ func TestSitemapListsEveryPage(t *testing.T) {
 		"<loc>https://finevines.com/portfolio/</loc>",
 		"<loc>https://finevines.com/wines/hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021/</loc>",
 		"<loc>https://finevines.com/news/spring-portfolio-tasting/</loc>",
+		"<loc>https://finevines.com/privacy-policy/</loc>",
+		"<loc>https://finevines.com/legal/</loc>",
 	} {
 		if !strings.Contains(string(sm), want) {
 			t.Errorf("sitemap missing %q", want)

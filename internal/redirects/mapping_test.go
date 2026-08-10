@@ -344,3 +344,57 @@ func TestLoadOverrides_ReadsExistingFile(t *testing.T) {
 		t.Errorf("LoadOverrides() = %#v, want %#v", got, want)
 	}
 }
+
+// TestMapURLs_PrivacyAndLegalAreUnmatchedWithoutOverride documents WHY
+// Task 8 needed manual redirect-overrides.json entries for the old site's
+// /privacy-policy and /legal: none of the three automatic tiers catch them.
+// matchWellKnownRoot only knows "/", "/about", "/contact", "/news" — not
+// these two — and neither slugified last segment ("privacy-policy", "legal")
+// substring-matches a wine or news slug, nor starts with /portfolio,
+// /products, or /wines. Without an override, both would land in unmatched
+// and 404 through the site's custom 404 page instead of reaching their new
+// pages.
+func TestMapURLs_PrivacyAndLegalAreUnmatchedWithoutOverride(t *testing.T) {
+	mapped, unmatched := MapURLs(
+		[]string{"/privacy-policy", "/legal"},
+		fixtureWines(), fixtureNews(), nil,
+	)
+
+	if len(mapped) != 0 {
+		t.Errorf("mapped = %#v, want empty — /privacy-policy and /legal should need the manual override tier", mapped)
+	}
+	want := []string{"/privacy-policy", "/legal"}
+	if !reflect.DeepEqual(unmatched, want) {
+		t.Errorf("unmatched = %#v, want %#v", unmatched, want)
+	}
+}
+
+// TestRedirectOverridesJSON_CoversPrivacyAndLegal loads the actual
+// repo-root redirect-overrides.json (the manual tier that always wins) and
+// proves it routes both old bare-path URLs — /privacy-policy and /legal, no
+// trailing slash, as the old site served them — to their new pages. This
+// guards the committed file itself, not just MapURLs' logic: a future edit
+// that removes or typos an entry fails this test, not just a manual curl
+// after deploy.
+func TestRedirectOverridesJSON_CoversPrivacyAndLegal(t *testing.T) {
+	overrides, err := LoadOverrides(filepath.Join("..", "..", "redirect-overrides.json"))
+	if err != nil {
+		t.Fatalf("LoadOverrides(repo-root redirect-overrides.json): %v", err)
+	}
+
+	mapped, unmatched := MapURLs(
+		[]string{"/privacy-policy", "/legal"},
+		fixtureWines(), fixtureNews(), overrides,
+	)
+
+	want := map[string]string{
+		"/privacy-policy": "/privacy-policy/",
+		"/legal":           "/legal/",
+	}
+	if !reflect.DeepEqual(mapped, want) {
+		t.Errorf("mapped = %#v, want %#v", mapped, want)
+	}
+	if len(unmatched) != 0 {
+		t.Errorf("unmatched = %#v, want empty", unmatched)
+	}
+}
