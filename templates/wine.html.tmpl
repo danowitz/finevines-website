@@ -81,6 +81,19 @@
           <ul>{{range .Wine.FoodPairings}}<li>{{.}}</li>{{end}}</ul>
         </div>
         {{end}}
+        {{/* Other vintages of this same wine, newest first. The portfolio
+             collapses vintages into one card that links only the current
+             release, so these links are the ONLY internal path to an older
+             vintage's page — without them 649 pages are reachable from
+             sitemap.xml alone, which search engines read as pages the site
+             itself does not think are worth linking. Rendered only when the
+             wine actually has other years (see winePage.OtherVintages). */}}
+        {{if .OtherVintages}}
+        <nav class="wine-vintages" aria-label="Other vintages of this wine">
+          <h2>Other vintages</h2>
+          <ul>{{range .OtherVintages}}<li><a href="/wines/{{.Slug}}/">{{.Label}}</a></li>{{end}}</ul>
+        </nav>
+        {{end}}
       </div>
     </div>
   </section>

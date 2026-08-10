@@ -249,6 +249,29 @@ type winePage struct {
 	// stock-out) but with the JSON-LD offer flipped to OutOfStock and a
 	// visible unavailable notice in place of the normal availability markup.
 	Unavailable bool
+	// OtherVintages are this wine's other years, newest first, excluding this
+	// page's own. The portfolio collapses vintages to a single card that links
+	// only the newest release, so without these links every older vintage is
+	// an orphan reachable from sitemap.xml alone. Empty for a wine with one
+	// vintage, and the template renders nothing at all in that case.
+	OtherVintages []vintageLink
+}
+
+// vintageLink is one year of a wine and the detail page that year lives on.
+type vintageLink struct {
+	Year string
+	Slug string
+}
+
+// Label is the link's anchor text. Champagne, sherry and most sparkling wine
+// ship non-vintage, which catalog.Build carries as an empty Year — rendering
+// that verbatim would emit an empty <a></a>: unclickable, silent to a screen
+// reader, and useless as the anchor text these links exist to provide.
+func (v vintageLink) Label() string {
+	if strings.TrimSpace(v.Year) == "" {
+		return "NV"
+	}
+	return v.Year
 }
 
 // ldProp is one schema.org PropertyValue (name/value) for the wine's Product
@@ -577,6 +600,9 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	// active pages join the sitemap — an unavailable wine's page still
 	// exists and is reachable/indexable on its own terms, it just isn't
 	// advertised as part of the current catalog.
+	// Computed once over the active catalog: a delisted wine is not offered as
+	// another vintage of anything, and an active wine must not advertise one.
+	otherVintages := otherVintagesBySlug(s.Wines)
 	renderWine := func(w model.Wine, unavailable bool) error {
 		data := winePage{
 			page: page{
@@ -585,8 +611,9 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 				Description: firstNonEmpty(w.Description, w.Producer+" "+w.Name),
 				Path:        "/wines/" + w.Slug + "/",
 			},
-			Wine:        w,
-			Unavailable: unavailable,
+			Wine:          w,
+			Unavailable:   unavailable,
+			OtherVintages: otherVintages[w.Slug],
 		}
 		// Prefer the wine's own photo as its share image, but only when it's a
 		// raster the social scrapers actually render — an .svg (or .webp)
@@ -808,6 +835,53 @@ type cardWine struct {
 // VintLabel is the card's vintage span: the group's vintages joined with a
 // middot ("2019 · 2018"); a single-vintage card reads exactly as before.
 func (c cardWine) VintLabel() string { return strings.Join(c.Vints, " · ") }
+
+// otherVintagesBySlug maps every wine detail page's slug to the OTHER
+// vintages of the same wine, newest first.
+//
+// It reuses catalog.Build's grouping, so "the same wine" means exactly what
+// the portfolio means by it (producer + cuvée, with vintage and pack/size
+// noise stripped) and the two surfaces can never disagree about which pages
+// belong together. Within a vintage the best-enriched row supplies the link
+// target, matching how the card picks its representative — and a vintage CAN
+// hold more than one slug, because a 375ml and a 750ml of one year differ in
+// the name that Slugify sees but not in the cuvée that grouping sees.
+func otherVintagesBySlug(wines []model.Wine) map[string][]vintageLink {
+	out := map[string][]vintageLink{}
+	for _, g := range catalog.Build(wines) {
+		if len(g.Vintages) < 2 {
+			continue // nothing to link; the template renders no section
+		}
+		// One link per vintage, in catalog.Build's newest-first order.
+		links := make([]vintageLink, 0, len(g.Vintages))
+		for _, v := range g.Vintages {
+			rep := v.Wines[0]
+			for _, w := range v.Wines {
+				if w.MetadataScore > rep.MetadataScore {
+					rep = w
+				}
+			}
+			links = append(links, vintageLink{Year: v.Year, Slug: rep.Slug})
+		}
+		// Every row in the group gets the list minus its own page, so the
+		// links run in both directions and no page ever links itself.
+		for _, v := range g.Vintages {
+			for _, w := range v.Wines {
+				others := make([]vintageLink, 0, len(links)-1)
+				for _, l := range links {
+					if l.Slug == w.Slug {
+						continue
+					}
+					others = append(others, l)
+				}
+				if len(others) > 0 {
+					out[w.Slug] = others
+				}
+			}
+		}
+	}
+	return out
+}
 
 // portfolioCards collapses catalog rows into one card per wine. The
 // representative row — supplying the card's link, image, and copy — is the

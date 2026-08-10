@@ -1502,6 +1502,115 @@ func TestBuild_CollidingSlugActivePageWins(t *testing.T) {
 	}
 }
 
+// TestBuild_WinePagesLinkTheirOtherVintages is the orphan fix. The portfolio
+// collapses vintages to one card that links only the newest release, so on
+// the live catalog 649 detail pages — every older vintage of the 417
+// collapsed wines — had zero internal inbound links and were reachable only
+// through sitemap.xml. Google crawls orphans and then mostly parks them in
+// "Crawled – currently not indexed", because a page nothing links to reads
+// as a page the site does not care about.
+//
+// Every vintage of a wine must link every other vintage, in both directions,
+// newest first.
+func TestBuild_WinePagesLinkTheirOtherVintages(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		{ID: "SF-1", SKU: "ACR118", Producer: "Acre", Name: "Napa Valley Cabernet Sauvignon", Vintage: "2018",
+			Slug: "acre-napa-valley-cabernet-sauvignon-2018", Description: "d", ImagePath: "assets/img/wines/a.svg"},
+		{ID: "SF-2", SKU: "ACR119", Producer: "Acre", Name: "Napa Valley Cabernet Sauvignon", Vintage: "2019",
+			Slug: "acre-napa-valley-cabernet-sauvignon-2019", Description: "d", ImagePath: "assets/img/wines/b.svg"},
+		{ID: "SF-3", SKU: "ACR120", Producer: "Acre", Name: "Napa Valley Cabernet Sauvignon", Vintage: "2020",
+			Slug: "acre-napa-valley-cabernet-sauvignon-2020", Description: "d", ImagePath: "assets/img/wines/c.svg"},
+		// A different wine entirely — must never appear as a "vintage" of the above.
+		{ID: "SF-4", SKU: "ZZ999", Producer: "Acre", Name: "Napa Valley Chardonnay", Vintage: "2019",
+			Slug: "acre-napa-valley-chardonnay-2019", Description: "d", ImagePath: "assets/img/wines/d.svg"},
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. The orphaned 2018 page links up to both newer vintages, newest first.
+	old := readFile(t, filepath.Join(dist, "wines", "acre-napa-valley-cabernet-sauvignon-2018", "index.html"))
+	i2020 := strings.Index(old, `href="/wines/acre-napa-valley-cabernet-sauvignon-2020/"`)
+	i2019 := strings.Index(old, `href="/wines/acre-napa-valley-cabernet-sauvignon-2019/"`)
+	if i2020 < 0 || i2019 < 0 {
+		t.Fatal("the 2018 page must link its other two vintages")
+	}
+	if i2020 > i2019 {
+		t.Error("other vintages must be listed newest first")
+	}
+
+	// 2. The link is labelled by year, so the anchor text is the thing a
+	// crawler and a reader both need.
+	if !strings.Contains(old, `>2019</a>`) {
+		t.Error("an other-vintage link must be labelled with its year")
+	}
+
+	// 3. It goes both ways: the newest page links back down.
+	newest := readFile(t, filepath.Join(dist, "wines", "acre-napa-valley-cabernet-sauvignon-2020", "index.html"))
+	if !strings.Contains(newest, `href="/wines/acre-napa-valley-cabernet-sauvignon-2018/"`) {
+		t.Error("the newest vintage must link back to older ones")
+	}
+
+	// 4. A page never links itself, and never links a different wine that
+	// merely shares a producer.
+	if strings.Contains(newest, `href="/wines/acre-napa-valley-cabernet-sauvignon-2020/"`) {
+		t.Error("a wine page must not list itself as an other vintage")
+	}
+	if strings.Contains(newest, "acre-napa-valley-chardonnay-2019") {
+		t.Error("a different cuvée must not be listed as an other vintage")
+	}
+
+	// 5. A wine with only one vintage shows no such section at all.
+	only := readFile(t, filepath.Join(dist, "wines", "acre-napa-valley-chardonnay-2019", "index.html"))
+	if strings.Contains(only, "wine-vintages") {
+		t.Error("a single-vintage wine must not render an empty other-vintages block")
+	}
+}
+
+// TestBuild_NonVintageOtherVintageLinkIsLabelledNV covers the year a wine
+// does not have. Champagne, sherry and most sparkling wine ship non-vintage,
+// and catalog.Build keeps that as a vintage whose Year is "" (sorted last).
+// Labelling such a link with the raw year yields <a href="…"></a> — an empty
+// anchor, which is unclickable, unreadable by a screen reader, and worthless
+// anchor text for the crawler this whole section exists to serve.
+func TestBuild_NonVintageOtherVintageLinkIsLabelledNV(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		{ID: "SF-1", SKU: "CH1", Producer: "Dhondt", Name: "Blanc de Blancs Brut", Vintage: "2019",
+			Slug: "dhondt-blanc-de-blancs-brut-2019", Description: "d", ImagePath: "assets/img/wines/a.svg"},
+		{ID: "SF-2", SKU: "CH2", Producer: "Dhondt", Name: "Blanc de Blancs Brut", Vintage: "",
+			Slug: "dhondt-blanc-de-blancs-brut", Description: "d", ImagePath: "assets/img/wines/b.svg"},
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	page := readFile(t, filepath.Join(dist, "wines", "dhondt-blanc-de-blancs-brut-2019", "index.html"))
+	if strings.Contains(page, `/"></a>`) {
+		t.Error("a non-vintage link must not render as an empty anchor")
+	}
+	if !strings.Contains(page, `<a href="/wines/dhondt-blanc-de-blancs-brut/">NV</a>`) {
+		t.Error("a vintage-less wine must be linked as NV")
+	}
+}
+
 // TestBuild_CollidingActiveSlugsRenderOnePageAndOneSitemapEntry is the
 // bottle-size regression. 79 producer|name|vintage keys in the live catalog
 // carry more than one active row — almost always the same wine in two
