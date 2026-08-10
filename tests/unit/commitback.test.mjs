@@ -1,7 +1,15 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync, cpSync, existsSync } from 'node:fs'
+import {
+  mkdtempSync,
+  writeFileSync,
+  mkdirSync,
+  rmSync,
+  cpSync,
+  existsSync,
+  chmodSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -36,10 +44,17 @@ function scaffold() {
   // survives the clone the same way, otherwise `git add assets/img/wines`
   // fails with "pathspec did not match any files" in every clone.
   writeFileSync(join(seed, 'assets', 'img', 'wines', '.placeholder'), 'seed\n')
+  // A committed bottle photograph, so a test can play out the case that breaks
+  // the real pipeline: enrich withdraws a photo (writeImageFile deletes the
+  // sibling .jpg whenever it writes an .svg) while a human edits it.
+  writeFileSync(join(seed, 'assets', 'img', 'wines', 'photo.jpg'), 'seed photo\n')
   writeFileSync(join(seed, 'data', 'wines.json'), JSON.stringify([{ sku: '1', imagePath: 'a.svg' }]))
   writeFileSync(join(seed, 'data', 'hot-sellers.json'), JSON.stringify({ skus: ['1'] }))
   writeFileSync(join(seed, '.bunny-manifest.json'), JSON.stringify({}))
   writeFileSync(join(seed, 'README.md'), 'seed version\n')
+  // The real repo tracks a path with spaces in it. Kept here so the conflict
+  // loop is exercised against one.
+  writeFileSync(join(seed, 'Fine Vines Website (standalone).html'), 'seed standalone\n')
   git(seed, 'add', '.')
   git(seed, 'commit', '-m', 'seed')
   git(seed, 'push', 'origin', 'master')
@@ -180,6 +195,117 @@ test('a conflict outside bot-owned paths aborts instead of overwriting', (t) => 
   assert.match(stdout, /CONFLICT IN A PATH THE PIPELINE DOES NOT OWN: README\.md/)
   assert.equal(existsSync(join(runner, '.git', 'rebase-merge')), false)
   assert.equal(existsSync(join(runner, '.git', 'rebase-apply')), false)
+})
+
+test('the bot withdrawing a photo a human edited resolves as a deletion', (t) => {
+  const { root, runner, human, origin } = scaffold()
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+
+  // The human touches up a bottle photograph and pushes.
+  writeFileSync(join(human, 'assets', 'img', 'wines', 'photo.jpg'), 'human retouch\n')
+  git(human, 'add', 'assets/img/wines/photo.jpg')
+  git(human, 'commit', '-m', 'human retouches a photo')
+  git(human, 'push', 'origin', 'master')
+
+  // The run withdrew that photo — internal/enrich.writeImageFile deletes the
+  // sibling .jpg whenever it falls back to an SVG label. 551 photos went that
+  // way in a single pass on 2026-08-06, so this is not hypothetical.
+  rmSync(join(runner, 'assets', 'img', 'wines', 'photo.jpg'))
+  writeFileSync(join(runner, 'data', 'wines.json'), JSON.stringify([{ sku: '1', imagePath: 'a.svg' }]))
+
+  const out = runCommitback(runner)
+
+  // Modify/delete has no stage 3, so `git checkout --theirs` cannot be what
+  // resolves it. The bot still wins, and the bot's version is "gone".
+  assert.match(out, /photo\.jpg/)
+  assert.equal(existsSync(join(runner, '.git', 'rebase-merge')), false)
+  assert.equal(existsSync(join(runner, '.git', 'rebase-apply')), false)
+  const tracked = git(origin, 'ls-tree', '-r', '--name-only', 'master')
+  assert.equal(tracked.includes('assets/img/wines/photo.jpg'), false)
+})
+
+test('the human deleting a photo the bot rewrote still resolves in the bot’s favour', (t) => {
+  const { root, runner, human, origin } = scaffold()
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+
+  // The mirror image of the case above. This direction DOES have a stage 3
+  // (the replayed bot commit), so plain --theirs handles it — asserted here so
+  // the fix for the other direction cannot quietly regress it.
+  git(human, 'rm', '--quiet', 'assets/img/wines/photo.jpg')
+  git(human, 'commit', '-m', 'human drops a photo')
+  git(human, 'push', 'origin', 'master')
+
+  writeFileSync(join(runner, 'assets', 'img', 'wines', 'photo.jpg'), 'bot photo\n')
+  writeFileSync(join(runner, 'data', 'wines.json'), JSON.stringify([{ sku: '1', imagePath: 'photo.jpg' }]))
+
+  runCommitback(runner)
+
+  assert.equal(git(origin, 'show', 'master:assets/img/wines/photo.jpg'), 'bot photo\n')
+})
+
+test('a rebase that failed for a reason other than a conflict says so', (t) => {
+  const { root, runner, human } = scaffold()
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+
+  writeFileSync(join(human, 'data', 'wines.json'), JSON.stringify([{ sku: '1', imagePath: 'human.jpg' }]))
+  git(human, 'add', 'data')
+  git(human, 'commit', '-m', 'human edit')
+  git(human, 'push', 'origin', 'master')
+
+  writeFileSync(join(runner, 'data', 'wines.json'), JSON.stringify([{ sku: '1', imagePath: 'bot.jpg' }]))
+  // A tracked file outside the bot's pathspec is dirty, so `git rebase`
+  // refuses before it starts. Nothing is conflicted and no rebase is in
+  // progress — reporting this as "conflicts" sends the 2am operator hunting
+  // for a merge that never happened.
+  writeFileSync(join(runner, 'README.md'), 'locally scribbled\n')
+
+  const { status, stdout } = runCommitbackExpectingFailure(runner)
+
+  assert.notEqual(status, 0)
+  assert.doesNotMatch(stdout, /rebase hit conflicts/)
+  assert.match(stdout, /nothing is conflicted/)
+})
+
+test('a conflicting path with spaces is reported whole, not word-split', (t) => {
+  const { root, runner, human } = scaffold()
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+
+  const spaced = 'Fine Vines Website (standalone).html'
+  writeFileSync(join(human, spaced), 'human standalone\n')
+  git(human, 'add', spaced)
+  git(human, 'commit', '-m', 'human standalone')
+  git(human, 'push', 'origin', 'master')
+
+  writeFileSync(join(runner, spaced), 'bot standalone\n')
+  git(runner, 'add', spaced)
+  git(runner, 'commit', '-m', 'runner standalone')
+  writeFileSync(join(runner, 'data', 'wines.json'), JSON.stringify([{ sku: '1', imagePath: 'bot.jpg' }]))
+
+  const { status, stdout } = runCommitbackExpectingFailure(runner)
+
+  assert.notEqual(status, 0)
+  assert.match(stdout, /CONFLICT IN A PATH THE PIPELINE DOES NOT OWN: Fine Vines Website \(standalone\)\.html/)
+  assert.equal(existsSync(join(runner, '.git', 'rebase-merge')), false)
+})
+
+test('a rejected push is retried once', (t) => {
+  const { root, runner, origin } = scaffold()
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+
+  // Reject exactly one push, then accept. Stands in for the small-but-real
+  // window between our fetch and our push, which the inline block this script
+  // replaced used to survive by retrying.
+  const hook = join(origin, 'hooks', 'pre-receive')
+  writeFileSync(
+    hook,
+    '#!/bin/sh\nif [ -f ./rejected-once ]; then exit 0; fi\ntouch ./rejected-once\nexit 1\n',
+  )
+  chmodSync(hook, 0o755)
+
+  writeFileSync(join(runner, 'data', 'wines.json'), JSON.stringify([{ sku: '1', imagePath: 'retry.jpg' }]))
+  runCommitback(runner)
+
+  assert.match(git(origin, 'show', 'master:data/wines.json'), /retry\.jpg/)
 })
 
 test('nothing to commit is a success, not a failure', (t) => {
