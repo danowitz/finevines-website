@@ -182,9 +182,9 @@ out-*.json
 # missing (internal/build.ensureLabels), so these are a build artifact, not
 # source. The matched bottle PHOTOGRAPHS (.jpg, ~478) are NOT reproducible —
 # they came from the old site and external URLs — and stay tracked.
-# NOTE: 33 demo-seed-era .svg files are already tracked and stay tracked;
-# gitignore does not untrack. None is referenced by a current wine — they are
-# orphans due a separate cleanup.
+# (The 33 demo-seed-era .svg files once tracked here, plus ~1,836 more sitting
+# untracked in the working tree, were the retired invented-label artwork;
+# both groups were deleted 2026-08-09 — none was referenced by a current wine.)
 assets/img/wines/*.svg
 
 # bottlecomp scratch output (tools/bottlecomp -outdir)
