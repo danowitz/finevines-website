@@ -39,11 +39,32 @@ artifacts, and are complete/self-contained on their own.
   in principle, but it already syncs to Salesforce, and Salesforce is far easier to integrate with from Go (plain
   HTTPS/OAuth) than QuickBooks Desktop's COM/qbXML integration. No new QuickBooks integration is in scope.
 - **Web-eligibility rule**: a wine is shown when `stockQty > 0 AND SKU does not start with "9" AND
-  FV_Ready_To_Sell__c = true`. The ready-to-sell gate was added 2026-07-27 (client-confirmed) so
-  allocated/embargoed/not-yet-launched inventory never leaks onto the public catalog. Real Salesforce field
-  mapping (from the Enterprise WSDL): the catalog is `Product2`; producer→`FV_Brand__c` (OPEN — see issue #2),
-  vintage→`FV_Vintage_Year__c`, varietal→`FV_Varietal__c`, region→`FV_Region__c`, stock→`FV_OnHand_Qty__c`,
-  SKU→`StockKeepingUnit`; appellation & style have no SF field and are search-scraped.
+  FV_Ready_To_Sell__c = true`. **The ready-to-sell gate does NOT do what this file claimed until 2026-08-09.** It
+  was described as a client-confirmed switch keeping allocated/embargoed/not-yet-launched inventory off the public
+  catalog. It is a *formula field*: `IsActive && FV_OnHand_Qty__c > 0` (verified against the live org's
+  `Product2` describe, 2026-08-09). There is no human judgement in it and nothing anyone can toggle per wine, so
+  it is near-redundant with the `stockQty > 0` clause beside it — it adds only `IsActive`. **Fine Vines has no
+  hold flag.** Anything active and in stock is publishable. See issue #14 before assuming otherwise.
+- **Several `Product2` `FV_` fields are formulas, not data** (live describe, 2026-08-09) — treat them as parses,
+  not facts:
+  - `FV_Vintage_Year__c` = the first 2–4 characters of `Description`, if numeric. Hence two-digit years and the
+    known vintage drift; enrichment expands and corrects it.
+  - `FV_OnHand_Qty__c` = `AVSFQB__OnHand__c` (a pass-through of the QuickBooks-synced quantity).
+  - `FV_Bottles_Per_Case__c` / `FV_Bottle_Size__c` = `FIND`/`MID`/`SUBSTITUTE` surgery over
+    `FV_Description_Text_For_Processing__c`, itself six nested `SUBSTITUTE`s on `Description`. This is where the
+    inconsistent pack notation in issue #3 comes from — the descriptions, not the parser.
+- **Real Salesforce field mapping** (verified against live org data, not just the WSDL): the catalog is
+  `Product2`; SKU→`Name` (the item number, e.g. `710908` — **`StockKeepingUnit` is empty in this org**),
+  raw name→`Description`, producer→`FV_Brand__c` (confirmed 2026-08-09: Brand is the winery, `FV_Supplier__c` is
+  the importer), vintage→`FV_Vintage_Year__c`, varietal→`FV_Varietal__c`, region→`FV_Region__c`,
+  stock→`FV_OnHand_Qty__c`; appellation & style have no SF field and are search-scraped.
+- **`FV_Brand__c` and `FV_Supplier__c` are hand-typed in Salesforce and are not synced from QuickBooks.** Traced
+  through `C:\dev\Salesforce.Sync` (2026-08-09): neither field is written by `ProductProvider.Save` (the
+  QuickBooks→Salesforce path) nor by `UpdateCustomFields` (the DataExt refresh), and the only mention of either in
+  the whole solution is a `SELECT` list in the Salesforce→QuickBooks direction that reads them and discards them.
+  Consequences: the ~1,600 wines with no producer are genuinely blank at source — no re-sync will ever fill them,
+  so enrichment is the only path (issue #8) — and the values that do exist carry human formatting
+  (`LAMY, HUBERT` last-first, `serafin` lowercase), so enrichment must normalize rather than trust.
 - **Wine data AND images are search-scraped (REVERSED 2026-07-26).** The original decision was "generate, never
   scrape" (copyright risk); the client (GRIT, for Fine Vines) has since **explicitly accepted the copyright risk**
   and directed that both descriptive wine metadata and real bottle/label images be sourced via web search. The
