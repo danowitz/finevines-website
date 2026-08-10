@@ -1665,6 +1665,84 @@ func TestBuild_CollidingActiveSlugsRenderOnePageAndOneSitemapEntry(t *testing.T)
 	}
 }
 
+// TestBuild_VintagesSharingProseCanonicaliseToTheNewest handles the 147
+// wines whose vintages carry byte-identical prose — description, sommelier
+// note, aroma, palate and finish all copied across, a deliberate earlier
+// choice that bought 100% prose coverage. Measured on the built site, two
+// such pages are 87% identical by 5-gram overlap and the older one contains
+// no word the newer one lacks: near-duplicates in the plainest sense.
+//
+// Publishing 377 of those as independent pages does not yield 377 ranking
+// pages. It yields one winner per cluster, a pile of ignored duplicates, and
+// a quality signal working against the whole catalog. So a vintage whose
+// prose is merely a copy points its canonical at the vintage it was copied
+// from, consolidating the signals onto one page.
+//
+// The rule is self-limiting by design: it keys off prose being IDENTICAL, so
+// the moment enrichment writes genuine per-vintage copy the canonical goes
+// back to the page's own URL with no code change.
+func TestBuild_VintagesSharingProseCanonicaliseToTheNewest(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	const shared = "A pale straw Moscato d'Asti, gently sparkling."
+	wines := []model.Wine{
+		{ID: "SF-1", SKU: "M23", Producer: "Bauda", Name: "Centive Moscato", Vintage: "2023",
+			Slug: "bauda-centive-2023", Description: shared, Aroma: "citrus blossom",
+			ImagePath: "assets/img/wines/a.svg"},
+		{ID: "SF-2", SKU: "M24", Producer: "Bauda", Name: "Centive Moscato", Vintage: "2024",
+			Slug: "bauda-centive-2024", Description: shared, Aroma: "citrus blossom",
+			ImagePath: "assets/img/wines/b.svg"},
+		// A wine whose vintages were genuinely written separately keeps both
+		// pages canonical to themselves — this rule must not flatten real copy.
+		{ID: "SF-3", SKU: "B19", Producer: "Beychevelle", Name: "Amiral Saint Julien", Vintage: "2019",
+			Slug: "amiral-2019", Description: "A cloak of deep, dark ruby.",
+			ImagePath: "assets/img/wines/c.svg"},
+		{ID: "SF-4", SKU: "B20", Producer: "Beychevelle", Name: "Amiral Saint Julien", Vintage: "2020",
+			Slug: "amiral-2020", Description: "A radiant expression of Saint-Julien.",
+			ImagePath: "assets/img/wines/d.svg"},
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. The older copy points at the newest vintage.
+	old := readFile(t, filepath.Join(dist, "wines", "bauda-centive-2023", "index.html"))
+	if !strings.Contains(old, `<link rel="canonical" href="https://finevines.com/wines/bauda-centive-2024/">`) {
+		t.Error("a vintage whose prose is a copy must canonicalise to the vintage it copied")
+	}
+	// 2. The newest keeps its own.
+	newest := readFile(t, filepath.Join(dist, "wines", "bauda-centive-2024", "index.html"))
+	if !strings.Contains(newest, `<link rel="canonical" href="https://finevines.com/wines/bauda-centive-2024/">`) {
+		t.Error("the vintage the prose belongs to must stay canonical to itself")
+	}
+	// 3. Genuinely distinct prose is left alone — both pages stand on their own.
+	for _, slug := range []string{"amiral-2019", "amiral-2020"} {
+		page := readFile(t, filepath.Join(dist, "wines", slug, "index.html"))
+		if !strings.Contains(page, `<link rel="canonical" href="https://finevines.com/wines/`+slug+`/">`) {
+			t.Errorf("%s has its own prose and must remain canonical to itself", slug)
+		}
+	}
+	// 4. A sitemap should list canonical URLs only, so the duplicate drops out
+	// — while the page itself stays published, crawlable and linked.
+	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
+	if strings.Contains(sitemap, "/wines/bauda-centive-2023/") {
+		t.Error("a canonicalised-away page must not be advertised in the sitemap")
+	}
+	if !strings.Contains(sitemap, "/wines/bauda-centive-2024/") {
+		t.Error("the canonical page must still be in the sitemap")
+	}
+	if !strings.Contains(newest, `href="/wines/bauda-centive-2023/"`) {
+		t.Error("the duplicate must still be reachable — canonical is not removal")
+	}
+}
+
 // TestBuild_HubIndexesAreReachableFromEveryPage: 500-odd hub pages are worth
 // nothing if the only route to them is sitemap.xml. Discovery has to work by
 // following links, so the three indexes sit in the site footer — present on
