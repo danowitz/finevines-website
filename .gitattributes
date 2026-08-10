@@ -13,6 +13,14 @@ data/news/*.json text eol=lf
 assets/css/** text eol=lf
 assets/js/** text eol=lf
 
+# Shell scripts run on ubuntu-latest, where bash reads a CRLF file literally:
+# `set -euo pipefail\r` is not a command it knows, and the run dies on line one
+# with a message that names no file. A contributor with core.autocrlf=false on
+# Windows would commit CRLF without noticing, so pin it here rather than trust
+# every checkout. Covers tools/pipeline/commitback.sh and
+# tools/labelfetch/cistage.sh.
+*.sh text eol=lf
+
 # Golden fixtures are compared byte-for-byte by tests — never translate their
 # line endings. MUST stay last so it overrides the *.svg rule above.
 *.golden.svg -text
