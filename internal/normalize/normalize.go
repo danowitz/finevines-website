@@ -106,11 +106,32 @@ func truncateAtPack(s string) string {
 	return s[:loc[0]+1] // glued token: keep the word's final letter or ')'
 }
 
+// lotCode matches the internal warehouse reference Salesforce appends to some
+// brands — "LEROUX, BENJAMIN - BCL11", "MOREY, PIERRE BLC 13" — along with the
+// dash and spacing that introduce it. It is a stock reference, not part of an
+// estate's name.
+//
+// Deliberately narrow: only the BCL/BLC prefixes actually seen in the roster,
+// and only when followed by one to three digits. Real brands carry digits too
+// (GEN5, ATOMIQUE3, 1+1=3) and none of them may be touched.
+var lotCode = regexp.MustCompile(`(?i)\s*-?\s*\b(?:BCL|BLC)\s?\d{1,3}\b`)
+
+// stripLotCode removes the reference wherever it sits and closes the gap it
+// leaves. It has to handle two positions: at the END of a raw Salesforce brand
+// ("AMBROISE - BCL11"), and in the MIDDLE of an already-normalized value
+// ("Benjamin - BCL11 Leroux") — because the "LAST, FIRST" reversal below
+// splits the raw string across the code, and stored catalog text needs
+// repairing without a fresh Salesforce pull.
+func stripLotCode(s string) string {
+	return strings.Join(strings.Fields(lotCode.ReplaceAllString(s, " ")), " ")
+}
+
 // Producer normalizes a brand: "LAST, FIRST" → "First Last", ALL-CAPS or
 // all-lower → Title Case. Already-mixed-case brands without a comma are left
-// as-is.
+// as-is. An internal lot code is stripped first, so it can never be carried
+// into the reversal and scattered mid-name.
 func Producer(brand string) string {
-	brand = strings.TrimSpace(brand)
+	brand = stripLotCode(strings.TrimSpace(brand))
 	if brand == "" {
 		return ""
 	}

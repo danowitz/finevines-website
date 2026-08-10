@@ -20,6 +20,47 @@ func TestProducer(t *testing.T) {
 	}
 }
 
+// TestProducerStripsInternalLotCode: Salesforce appends a lot code to the
+// brand on the 2011 Burgundies — "LEROUX, BENJAMIN - BCL11". It is an
+// internal warehouse reference, not part of the estate's name, and the
+// "LAST, FIRST" reversal scatters it into the MIDDLE of the result:
+// "Benjamin - BCL11 Leroux".
+//
+// Left in, it reaches the public site three ways: it prints on every card and
+// detail page, it splits one estate across two producer collection pages
+// (Benjamin Leroux's 24 wines in one, these 2 in another), and it seeds the
+// slug. Eight producers are affected.
+//
+// The code is stripped wherever it sits: on the raw brand before reversal,
+// and on an already-mangled value so stored catalog text can be repaired
+// without a fresh Salesforce pull.
+func TestProducerStripsInternalLotCode(t *testing.T) {
+	cases := map[string]string{
+		// Raw Salesforce forms.
+		"LEROUX, BENJAMIN - BCL11": "Benjamin Leroux",
+		"AMBROISE - BCL11":         "Ambroise",
+		"CLAIR, BRUNO - BCL11":     "Bruno Clair",
+		"MOREY, PIERRE BLC 13":     "Pierre Morey",
+		// Already-normalized values carrying the scattered code.
+		"Benjamin - BCL11 Leroux":   "Benjamin Leroux",
+		"Charlopin-Parizot - BCL11": "Charlopin-Parizot",
+		"Pierre Blc 13 Morey":       "Pierre Morey",
+		"Camille Giroud - BCL11":    "Camille Giroud",
+		// Real brands that merely contain digits must survive untouched —
+		// including their casing, which titleWord preserves for all-caps
+		// tokens so appellation initialisms like DOCG and XIV survive too.
+		"GEN5":      "GEN5",
+		"ATOMIQUE3": "ATOMIQUE3",
+		"1+1=3":     "1+1=3",
+		"Ambroise":  "Ambroise",
+	}
+	for in, want := range cases {
+		if got := Producer(in); got != want {
+			t.Errorf("Producer(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
 func TestVintage(t *testing.T) {
 	cases := map[string]string{"14": "2014", "18": "2018", "98": "1998", "2021": "2021", "NV": "NV", "": ""}
 	for in, want := range cases {

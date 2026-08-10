@@ -1,6 +1,21 @@
 {
+  "/wines/ambroise-bcl11-nuits-saint-georges-1er-cru-les-vaucrains-2011/": "/wines/ambroise-nuits-saint-georges-1er-cru-les-vaucrains-2011/",
+  "/wines/bachelet-bcl11-bourgogne-rouge-2011/": "/wines/bachelet-bourgogne-rouge-2011/",
+  "/wines/bachelet-bcl11-cotes-de-nuits-villages-2011/": "/wines/bachelet-cotes-de-nuits-villages-2011/",
+  "/wines/bachelet-bcl11-gevrey-chambertin-vieilles-vignes-2011/": "/wines/bachelet-gevrey-chambertin-vieilles-vignes-2011/",
+  "/wines/benjamin-bcl11-leroux-clos-vougeot-grand-cru-2011/": "/wines/benjamin-leroux-clos-vougeot-grand-cru-2011/",
+  "/wines/benjamin-bcl11-leroux-mazoyeres-chambertin-grand-cru-2011/": "/wines/benjamin-leroux-mazoyeres-chambertin-grand-cru-2011/",
   "/wines/brezza-giacomo-brezza-nebbiolo-d-alba-doc-2022/": "/wines/brezza-giacomo-brezza-nebbiolo-d-alba-vigna-rosalia-doc-2022/",
+  "/wines/bruno-bcl11-clair-morey-saint-denis-blanc-en-la-rue-de-vergy-2011/": "/wines/bruno-clair-morey-saint-denis-blanc-en-la-rue-de-vergy-2011/",
+  "/wines/camille-giroud-bcl11-le-chambertin-grand-cru-2011/": "/wines/camille-giroud-le-chambertin-grand-cru-2011/",
   "/wines/castagnier-domaine-jerome-castagnier-clos-saint-denis-grand-cru-2018/": "/portfolio/",
+  "/wines/charlopin-parizot-bcl11-domaine-philippe-charlopin-parizot-bourgogne-blanc-2011/": "/wines/charlopin-parizot-domaine-philippe-charlopin-parizot-bourgogne-blanc-2011/",
+  "/wines/charlopin-parizot-bcl11-domaine-philippe-charlopin-parizot-bourgogne-rouge-2011/": "/wines/charlopin-parizot-domaine-philippe-charlopin-parizot-bourgogne-rouge-2011/",
+  "/wines/charlopin-parizot-bcl11-domaine-philippe-charlopin-parizot-gevrey-chambertin-la-justice-2011/": "/wines/charlopin-parizot-domaine-philippe-charlopin-parizot-gevrey-chambertin-la-justice-2011/",
+  "/wines/charlopin-parizot-bcl11-domaine-philippe-charlopin-parizot-gevrey-chambertin-vieilles-vignes-morceaux-2011/": "/wines/charlopin-parizot-domaine-philippe-charlopin-parizot-gevrey-chambertin-vieilles-vignes-morceaux-2011/",
+  "/wines/charlopin-parizot-bcl11-domaine-philippe-charlopin-parizot-marsannay-montchenevoy-2011/": "/wines/charlopin-parizot-domaine-philippe-charlopin-parizot-marsannay-montchenevoy-2011/",
+  "/wines/charlopin-parizot-bcl11-domaine-philippe-charlopin-parizot-morey-saint-denis-clos-solon-2011/": "/wines/charlopin-parizot-domaine-philippe-charlopin-parizot-morey-saint-denis-clos-solon-2011/",
+  "/wines/charlopin-parizot-bcl11-domaine-philippe-charlopin-parizot-vosne-romanee-2011/": "/wines/charlopin-parizot-domaine-philippe-charlopin-parizot-vosne-romanee-2011/",
   "/wines/domaine-des-comte-lafon-meursault-clos-de-la-barre-2022/": "/portfolio/",
   "/wines/domaine-des-comte-lafon-meursault-desiree-2022/": "/portfolio/",
   "/wines/domaine-des-comte-lafon-puligny-montrachet-2022/": "/portfolio/",
@@ -16,5 +31,8 @@
   "/wines/domaine-sylvain-pataille-marsannay-rouge-en-clemengots-2020/": "/portfolio/",
   "/wines/edmond-et-anne-vatan-sancerre-clos-la-neore-2021/": "/portfolio/",
   "/wines/eyrie-vineyards-muscat-ottonel-2015/": "/portfolio/",
-  "/wines/lecheneaut-domaine-lecheneaut-bourgogne-hautes-cotes-de-nuits-rouge-2021/": "/portfolio/"
+  "/wines/lecheneaut-domaine-lecheneaut-bourgogne-hautes-cotes-de-nuits-rouge-2021/": "/portfolio/",
+  "/wines/lignier-michelot-bcl11-domaine-lignier-michelot-morey-saint-denis-1er-cru-chenevery-2011/": "/wines/lignier-michelot-domaine-lignier-michelot-morey-saint-denis-1er-cru-chenevery-2011/",
+  "/wines/pierre-blc-13-morey-domaine-pierre-morey-meursault-les-terres-blanches-2020/": "/wines/pierre-morey-domaine-pierre-morey-meursault-les-terres-blanches-2020/",
+  "/wines/serafin-bcl11-pere-et-fils-gevrey-chambertin-lex-corbeaux-2011/": "/wines/serafin-pere-et-fils-gevrey-chambertin-lex-corbeaux-2011/"
 }
