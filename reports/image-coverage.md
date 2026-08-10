@@ -8,11 +8,11 @@ shows, from the newest vintage's best-enriched row.
 
 | Metric | Value |
 |---|---|
-| Wines | 2642 |
-| Wines with a photograph | 1282 (48.5%) |
-| Portfolio cards | 1902 |
-| Cards with a photograph | 861 (45.3%) |
-| Cards on the neutral placeholder | 1041 |
+| Wines | 2637 |
+| Wines with a photograph | 1340 (50.8%) |
+| Portfolio cards | 1894 |
+| Cards with a photograph | 884 (46.7%) |
+| Cards on the neutral placeholder | 1010 |
 
 ## Why the rest are missing
 
@@ -20,12 +20,12 @@ Counted per wine, not per card, because the search runs per wine.
 
 | Ledger outcome | Wines |
 |---|---|
-| searched, nothing usable found | 1033 |
-| verified but never evaluated | 84 |
-| imported then withdrawn on audit | 172 |
-| not yet searched | 71 |
+| searched, nothing usable found | 1096 |
+| verified but never evaluated | 6 |
+| imported then withdrawn on audit | 149 |
+| not yet searched | 46 |
 | unrecognised ledger outcome | 0 |
-| **total without a photograph** | **1360** |
+| **total without a photograph** | **1297** |
 
 "Searched, nothing usable found" is the ceiling the nightly run cannot move on
 its own: the public web has already been asked and had nothing usable to give.
