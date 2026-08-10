@@ -19,6 +19,8 @@ import {
   extractFacts,
   extractProducerCopy,
   extractTastingNote,
+  splitConcatenatedLabels,
+  stripFactSpans,
   buildExtracted,
 } from '../../tools/oldsiteharvest/prose-extract.mjs';
 
@@ -153,6 +155,21 @@ describe('extractFacts — a fact key is emitted only when literally present in 
     assert.match(facts.aging, /18 months' aging on lees in oak barrels \(50% new oak\)/);
   });
 
+  test('a vinification paragraph\'s own redundant "Vinification:" label is stripped from the fact value', () => {
+    // The dl already supplies the "Vinification" label (oldSiteFactLabels on
+    // the Go side); keeping the source's own leading "Vinification:" baked
+    // into the value would print the label twice inside one <dd>.
+    const paras = [{ kind: 'vinification', text: 'Vinification: Directly pressed, indigenous yeast fermentation.' }];
+    const facts = extractFacts(paras);
+    assert.equal(facts.vinification, 'Directly pressed, indigenous yeast fermentation.');
+  });
+
+  test('a "Vinification & Ageing:" variant label is also stripped', () => {
+    const paras = [{ kind: 'vinification', text: 'Vinification & Ageing: 12 months in stainless steel.' }];
+    const facts = extractFacts(paras);
+    assert.equal(facts.vinification, '12 months in stainless steel.');
+  });
+
   test('parses a Total Production label into productionVolume', () => {
     const paras = [{ kind: 'description', text: 'Hand picked and hand sorted. Total Production: 750 cases' }];
     const facts = extractFacts(paras);
@@ -163,6 +180,116 @@ describe('extractFacts — a fact key is emitted only when literally present in 
     const paras = [{ kind: 'description', text: 'A pleasant, easy-drinking red for weeknight dinners.' }];
     const facts = extractFacts(paras);
     assert.deepEqual(facts, {});
+  });
+});
+
+describe('splitConcatenatedLabels — repairing glued-together fields', () => {
+  test('inserts a break before a Title-Case label glued directly onto the previous word', () => {
+    const text = 'Vineyards: La Consulta, Valle de Uco, MendozaSoil: Alluvial, sandy loam, rocky bottom';
+    assert.equal(splitConcatenatedLabels(text), 'Vineyards: La Consulta, Valle de Uco, Mendoza\nSoil: Alluvial, sandy loam, rocky bottom');
+  });
+
+  test('inserts a break before a label glued onto the end of a sentence, punctuation and all', () => {
+    const text = 'a cedar tree which towers over the winery.Total Production: 750 cases';
+    assert.equal(splitConcatenatedLabels(text), 'a cedar tree which towers over the winery.\nTotal Production: 750 cases');
+  });
+
+  test('leaves an already-separated label alone (no double break)', () => {
+    const text = 'Hand picked and hand sorted. Total Production: 750 cases';
+    assert.equal(splitConcatenatedLabels(text), text);
+  });
+
+  test('leaves a label at the very start of the text alone', () => {
+    const text = 'Soil: Alluvial, sandy loam, rocky bottom';
+    assert.equal(splitConcatenatedLabels(text), text);
+  });
+});
+
+describe('stripFactSpans — a fact lifted out of a paragraph must not also print raw in prose', () => {
+  test('a paragraph that is ONLY concatenated labels vanishes once both facts are captured', () => {
+    // The exact reported bug: this paragraph is nothing but "Vineyards: ...
+    // Soil: ..." glued together — once both are parsed into facts, nothing
+    // of substance is left, so the paragraph itself must not survive into
+    // tastingNote at all (no empty <p>, no raw "MendozaSoil:" mangling).
+    const paras = [{
+      kind: 'description',
+      text: splitConcatenatedLabels('Vineyards: La Consulta, Valle de Uco, MendozaSoil: Alluvial, sandy loam, rocky bottom'),
+    }];
+    const facts = extractFacts(paras);
+    assert.equal(facts.vineyard, 'La Consulta, Valle de Uco, Mendoza');
+    assert.equal(facts.soil, 'Alluvial, sandy loam, rocky bottom');
+    assert.deepEqual(stripFactSpans(paras, facts), []);
+  });
+
+  test('a paragraph carrying real prose plus a glued-on fact keeps the prose, loses only the fact', () => {
+    const raw = 'We strive for a Cabernet Sauvignon that is fresh and fruit-forward.' +
+      ' Altocedro means "tall cedar."' +
+      'Total Production: 750 cases';
+    const paras = [{ kind: 'description', text: splitConcatenatedLabels(raw) }];
+    const facts = extractFacts(paras);
+    assert.equal(facts.productionVolume, '750 cases');
+    const cleaned = stripFactSpans(paras, facts);
+    assert.equal(cleaned.length, 1);
+    assert.ok(!cleaned[0].text.includes('Total Production'), 'the fact span must be gone');
+    assert.ok(!cleaned[0].text.includes('\n'), 'no stray line break left behind');
+    assert.match(cleaned[0].text, /We strive for a Cabernet Sauvignon/);
+  });
+
+  test('an inline, unlabelled fact (yieldInline, hand-harvested phrase) is never cut out of its sentence', () => {
+    // "36hL/ha" and "hand-harvested" here are NOT "Label: value" tokens —
+    // they are words inside an ordinary sentence. Removing them would leave
+    // grammatically broken prose behind, so stripFactSpans must leave the
+    // whole sentence intact even though both facts were captured.
+    const text = 'A stunning value from Bandol - hand-harvested at low yields of 36hL/ha.';
+    const paras = [{ kind: 'description', text }];
+    const facts = extractFacts(paras);
+    assert.equal(facts.yield, '36hL/ha');
+    assert.equal(facts.harvestMethod, 'hand-harvested');
+    const cleaned = stripFactSpans(paras, facts);
+    assert.equal(cleaned.length, 1);
+    assert.equal(cleaned[0].text, text);
+  });
+
+  test('a vinification-kind paragraph is fully consumed by facts.vinification and drops out of prose', () => {
+    const text = "Vinification: 100% de-stemmed, cold maceration, 18 days' fermentation in open wood tank.";
+    const paras = [{ kind: 'vinification', text }];
+    const facts = extractFacts(paras);
+    assert.ok(facts.vinification);
+    assert.deepEqual(stripFactSpans(paras, facts), []);
+  });
+
+  test('the vinification sentence also repeated verbatim inside an unrelated mixed-topic paragraph is cut out, not the whole paragraph', () => {
+    // Real shape from the Domaine Méo-Camuzet Corton les Perrières page: a
+    // "Maturing:" paragraph runs several unrelated topics together with no
+    // further labels, and happens to repeat the SAME sentence a separate,
+    // properly kind==='vinification' paragraph also carries. The kind==
+    // 'vinification' paragraph is dropped whole (previous test); this
+    // second, unrelated paragraph must keep its own content and lose only
+    // the repeated sentence.
+    const vinificationText = 'Little intervention... Perhaps a slightly higher temperature at the end of the fermentation to extract a little fatness, while avoiding reinforcing the tannins too much.';
+    const maturing = `Long. New casks suit it well. ${vinificationText} Pinots with fairly large berries, planted in 1953-54.`;
+    const paras = [
+      { kind: 'description', text: maturing },
+      { kind: 'vinification', text: `Vinification: ${vinificationText}` },
+    ];
+    const facts = extractFacts(paras);
+    assert.equal(facts.vinification, vinificationText);
+    const cleaned = stripFactSpans(paras, facts);
+    assert.equal(cleaned.length, 1, 'the vinification-kind paragraph drops out; the mixed paragraph survives');
+    assert.ok(!cleaned[0].text.includes('Little intervention'), 'the repeated sentence must be gone');
+    assert.match(cleaned[0].text, /New casks suit it well/);
+    assert.match(cleaned[0].text, /Pinots with fairly large berries/);
+  });
+
+  test('a labelled field with no matching fact (never captured) is left in the prose untouched', () => {
+    // "Harvest: mid-September" does not match the hand/manual acceptance
+    // test, so extractFacts never records it — stripFactSpans must not
+    // delete information that lives nowhere else in the output.
+    const text = 'Harvest: mid-September, by machine.';
+    const paras = [{ kind: 'description', text }];
+    const facts = extractFacts(paras);
+    assert.equal('harvestMethod' in facts, false);
+    assert.deepEqual(stripFactSpans(paras, facts), paras);
   });
 });
 
@@ -252,6 +379,9 @@ describe('buildExtracted — end-to-end wiring, matching + bucketing together', 
     assert.equal(e.sourceUrl, 'https://www.finevines.com/portfolio/altocedro/altocedro-malbec-la-consulta-mendoza');
     assert.equal(e.facts.productionVolume, '750 cases');
     assert.equal(e.producerCopy.length, 1);
+    // The fact is captured in e.facts.productionVolume — it must not also
+    // print raw inside the producerCopy paragraph it was lifted out of.
+    assert.ok(!e.producerCopy[0].includes('Total Production'));
     assert.equal(e.quotes.length, 1);
     assert.equal(e.tastingNote.length, 1);
     assert.match(e.tastingNote[0], /gentle east-facing slope/);
@@ -261,5 +391,52 @@ describe('buildExtracted — end-to-end wiring, matching + bucketing together', 
   test('a page matching no wine contributes nothing and is not an error', () => {
     const { extracted } = buildExtracted(manifest, []);
     assert.deepEqual(extracted, []);
+  });
+});
+
+// Regression test for the exact page that shipped the bug: two paragraphs,
+// one real producer-voice paragraph with "Total Production:" glued onto its
+// last word, and one paragraph that is NOTHING BUT concatenated
+// "Vineyards: ... Soil: ..." labels — every field printed three times (once
+// parsed into facts, once raw in producerCopy, once raw and mangled
+// ("MendozaSoil:") in tastingNote) before this fix.
+describe('buildExtracted — the Altocedro Cabernet Sauvignon regression (facts no longer print 3x)', () => {
+  const wines = [
+    { sku: '603733', slug: 'altocedro-ano-cero-cabernet-sauvignon-la-consulta-mendoza-2020', producer: 'Altocedro', name: 'Altocedro Ano Cero Cabernet Sauvignon la Consulta Mendoza', vintage: '2020' },
+  ];
+  const manifest = [
+    {
+      oldPath: '/portfolio/altocedro/altocedro-ano-cero-cabernet-sauvignon-la-consulta-mendoza',
+      title: 'Altocedro Ano Cero Cabernet Sauvignon La Consulta Mendoza',
+      paras: [
+        {
+          kind: 'description',
+          text: "We strive for a La Consulta-terroir driven Cabernet Sauvignon that is fresh, fruit-forward, and easy-to-drink. Altocedro means “tall cedar,” and represents both winemaker and owner Karim Mussi Saffie's Lebanese-Argentine heritage, and a cedar tree which towers over the winery.Total Production: 750 cases",
+        },
+        { kind: 'description', text: 'Vineyards: La Consulta, Valle de Uco, MendozaSoil: Alluvial, sandy loam, rocky bottom' },
+      ],
+      chars: 400,
+    },
+  ];
+
+  test('vineyard/soil/production each appear exactly once, in facts only', () => {
+    const { extracted } = buildExtracted(manifest, wines);
+    assert.equal(extracted.length, 1);
+    const e = extracted[0];
+
+    assert.equal(e.facts.vineyard, 'La Consulta, Valle de Uco, Mendoza');
+    assert.equal(e.facts.soil, 'Alluvial, sandy loam, rocky bottom');
+    assert.equal(e.facts.productionVolume, '750 cases');
+
+    // The second paragraph was ONLY concatenated labels — nothing survives
+    // it, so tastingNote must be empty, not a mangled "MendozaSoil:" string.
+    assert.deepEqual(e.tastingNote, []);
+
+    // The first paragraph's real prose survives with the glued-on fact cut
+    // out, and cleanly (no leftover "Total Production", no stray newline).
+    assert.equal(e.producerCopy.length, 1);
+    assert.match(e.producerCopy[0], /We strive for a La Consulta-terroir driven Cabernet Sauvignon/);
+    assert.ok(!e.producerCopy[0].includes('Total Production'));
+    assert.ok(!e.producerCopy[0].includes('\n'));
   });
 });

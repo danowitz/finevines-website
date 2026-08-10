@@ -3016,12 +3016,14 @@ func TestBuild_MalformedOldSiteProseLeavesBuildClean(t *testing.T) {
 }
 
 // TestBuild_OldSiteProseSectionHasNoBannedContentOrTradeWord is the hard
-// guard: even though oldSiteProseTestdata's CD5678 fixture plants a
-// standalone "trade" and a P.O. Box in the source prose (as the real
-// extracted.json does for six SKUs — the Paul Jaboulet Aîné Hermitage la
-// Chapelle entries — see the session report), neither may ever reach
-// rendered HTML. The offending paragraph is dropped whole; its clean
-// siblings still render.
+// guard: oldSiteProseTestdata's CD5678 fixture plants a standalone "trade"
+// (the bare industry usage — "built its trade reputation") and a P.O. Box in
+// the source prose, and neither may ever reach rendered HTML. The offending
+// paragraph is dropped whole; its clean siblings still render. This is
+// deliberately NOT the same shape as the real "trade marked name" paragraph
+// on six live SKUs (the Paul Jaboulet Aîné Hermitage la Chapelle entries) —
+// see TestCleanOldSiteProseAllowsCompoundTrademarkTerms below, which pins
+// that the compound term passes while this bare usage does not.
 func TestBuild_OldSiteProseSectionHasNoBannedContentOrTradeWord(t *testing.T) {
 	data := t.TempDir()
 	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
@@ -3071,5 +3073,81 @@ func TestBuild_OldSiteProseSectionHasNoBannedContentOrTradeWord(t *testing.T) {
 	}
 	if strings.Contains(page, "From the Producer") {
 		t.Error("producerCopy fully filtered to empty must not render its heading")
+	}
+}
+
+// TestCleanOldSiteProseAllowsCompoundTrademarkTerms pins both sides of the
+// tradeWordRE/tradeWordAllowlistRE fix directly, per the coordinator's
+// explicit request: "trade marked name" (a compound legal term, spelled with
+// a space — "trademarked" — exactly as the real Paul Jaboulet Aîné Hermitage
+// la Chapelle copy uses it) must pass cleanOldSiteProse unchanged, while a
+// bare "the trade" (the wholesale-industry usage the guard exists to catch —
+// client direction 2026-07-29, "trade" isn't George's vocabulary) must still
+// be dropped. This was the earlier over-application: the guard was written
+// for the industry usage and wrongly caught a compound term it was never
+// meant to reach, the same shape of mistake tradeWordAllowlistRE's "Federal
+// Trade Commission" exemption already fixed once.
+func TestCleanOldSiteProseAllowsCompoundTrademarkTerms(t *testing.T) {
+	// The real sentence from the six live Jaboulet SKUs (541089*, 541090*,
+	// 541091*, 541047*, 541056*, 541069*) — see prose-render-report.md.
+	trademarked := "If you did not know, La Chapelle is not a vineyard. It's a trade marked name. " +
+		"It takes its name from the small chapel of St. Christophe."
+	if got := cleanOldSiteProse(trademarked); got != trademarked {
+		t.Errorf("cleanOldSiteProse must pass \"trade marked\" (a compound term) through unchanged, got %q", got)
+	}
+
+	for _, variant := range []string{
+		"This is a trademarked name.",
+		"This is a trade-marked name.",
+		"The label carries several trademarks.",
+	} {
+		if got := cleanOldSiteProse(variant); got != variant {
+			t.Errorf("cleanOldSiteProse must pass %q through unchanged, got %q", variant, got)
+		}
+	}
+
+	// The bare industry usage must still be caught — this is what the guard
+	// exists for.
+	bareTrade := "We built our reputation in the trade over forty years."
+	if got := cleanOldSiteProse(bareTrade); got != "" {
+		t.Errorf("cleanOldSiteProse must still drop a bare standalone \"trade\", got %q", got)
+	}
+}
+
+// TestBuild_JabouletTradeMarkedParagraphRenders is the end-to-end regression
+// for the reported bug: the real "trade marked name" paragraph, joined
+// against a wine exactly the way data/oldsite-prose/extracted.json joins it
+// against the six live Jaboulet SKUs, must render on the page — not be
+// dropped as a false positive of the brand-voice guard.
+func TestBuild_JabouletTradeMarkedParagraphRenders(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Join(data, "oldsite-prose")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeJSON(t, filepath.Join(dir, "extracted.json"), []model.OldSiteProse{
+		{
+			SKU:      "AB1234",
+			Slug:     "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021",
+			WineName: "Hubert Lamy Saint-Aubin 1er Cru",
+			TastingNote: []string{
+				"If you did not know, La Chapelle is not a vineyard. It's a trade marked name. " +
+					"It takes its name from the small chapel of St. Christophe. The fruit is sourced from " +
+					"Bessards, Le Meal, Greffieux and Rocoules.",
+			},
+		},
+	})
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	page := readFile(t, filepath.Join(dist, "wines", "hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021", "index.html"))
+	if !strings.Contains(page, "It&#39;s a trade marked name") {
+		t.Error("the real Jaboulet \"trade marked name\" paragraph must render, not be dropped as a false-positive brand-voice hit")
 	}
 }

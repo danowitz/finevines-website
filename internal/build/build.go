@@ -420,12 +420,13 @@ func buildWineProse(m model.OldSiteProse) wineProse {
 // tradeWordRE matches the standalone word "trade" (case-insensitive). It is a
 // brand-voice guard, not a word-censor: it exists because "the trade" is not
 // George's vocabulary for the wholesale business (client direction,
-// 2026-07-29), and it must never reach a proper noun or fixed legal term
-// that happens to contain "trade" — those are always legitimate and must
-// stay in the copy. Two exemptions are load-bearing:
-//   - "trademark" never matches: \b requires a word boundary right after
-//     "trade", and "trademark" has none (the "m" is a word character) — this
-//     is why "trademark law" in the legal page needs no special-casing.
+// 2026-07-29), and it must never reach a proper noun or fixed legal/compound
+// term that happens to contain "trade" — those are always legitimate and
+// must stay in the copy. Three exemptions are load-bearing:
+//   - "trademark" (one word) never matches at all: \b requires a word
+//     boundary right after "trade", and "trademark" has none (the "m" is a
+//     word character) — this is why "trademark law" in the legal page needs
+//     no special-casing.
 //   - "Federal Trade Commission" WOULD match "Trade" as a standalone word
 //     (it has boundaries on both sides), so it is stripped out by
 //     tradeWordAllowlistRE, applied to a copy of the bytes, before this
@@ -435,20 +436,32 @@ func buildWineProse(m model.OldSiteProse) wineProse {
 //     satisfy this exact test. Do not repeat that: if a new legal term or
 //     proper noun containing "trade" shows up, add it to the allowlist
 //     rather than rewriting the copy around it.
+//   - "trade mark"/"trade marked" (two words, or hyphenated) ALSO WOULD
+//     match "trade" as a standalone word, and is exempted the same way. This
+//     is "trademarked" spelled with a space — the old finevines.com's own
+//     Paul Jaboulet Aîné Hermitage la Chapelle copy ("It's a trade marked
+//     name") uses it in exactly this sense, not as "the trade" (the
+//     industry). The rule exists to keep the wholesale-industry usage out of
+//     the copy, and was never meant to reach a compound legal term just
+//     because the source happened to space it as two words — see
+//     TestCleanOldSiteProseAllowsCompoundTrademarkTerms, which pins both
+//     sides: "trade marked name" passes, a bare "the trade" does not.
 //
 // buildWineProse also runs old-site prose through this same regex (via
 // cleanOldSiteProse) — the old finevines.com's own importer copy is not
 // exempt from the brand-voice rule just because FineVines didn't write it
-// for THIS rebuild; the client's direction was "never" (see
-// TestBuild_OldSiteProseSectionHasNoBannedContentOrTradeWord, which is
-// exactly this: a real paragraph from the six Paul Jaboulet Aîné Hermitage la
-// Chapelle SKUs uses "trade marked name" and must never reach rendered HTML).
+// for THIS rebuild; the client's direction was "never" for the standalone
+// industry usage, not for a compound term that happens to contain the word.
 var tradeWordRE = regexp.MustCompile(`(?i)\btrade\b`)
 
-// tradeWordAllowlistRE matches known proper nouns/fixed legal terms that
-// legitimately contain the standalone word "trade" and must be exempted
-// from the tradeWordRE brand-voice guard above — see its comment.
-var tradeWordAllowlistRE = regexp.MustCompile(`Federal Trade Commission`)
+// tradeWordAllowlistRE matches known proper nouns and fixed compound terms
+// that legitimately contain the standalone word "trade" and must be exempted
+// from the tradeWordRE brand-voice guard above — see its comment. Covers
+// "trademark"/"trademarks"/"trademarked" and the two-word/hyphenated spelling
+// "trade mark(s|ed)"/"trade-mark(s|ed)" alike, case-insensitively (the
+// compound term is legitimate regardless of how the source spaced or cased
+// it), alongside "Federal Trade Commission".
+var tradeWordAllowlistRE = regexp.MustCompile(`(?i)Federal Trade Commission|trade[\s-]?mark(?:s|ed)?`)
 
 // oldSiteBannedContactRE matches the address/fax fragments the client's
 // no-addresses direction (2026-07-29) forbids anywhere on the site — the

@@ -157,6 +157,37 @@ function labelValue(corpus, labels, stopLabels) {
 
 const ALL_LABELS = ['vineyards?', 'soil', 'nature of the soil', 'varietal', 'varieties', 'sustainably farmed', 'yield', 'age of vines', 'harvest', 'vinification', 'aging', 'duration and aging method'];
 
+// ---------------------------------------------------------------------------
+// Concatenation repair — the old site's markup sometimes ran two labelled
+// fields together with no separator at all: "...MendozaSoil: Alluvial..."
+// (a "Vineyards:" value glued directly onto a following "Soil:" label) or
+// "...winery.Total Production: 750 cases" (ordinary prose glued onto a
+// following "Total Production:" label). labelValue's own regex has no
+// leading word-boundary requirement, so it already parses the label OUT
+// correctly either way — but a field's *stop* boundary (used to know where
+// its OWN value ends) only recognizes the labels listed in ALL_LABELS, and
+// "total production" isn't among them. Inserting a paragraph break wherever
+// a recognized, Title-Case "Label:" starts flush against the previous
+// character (no whitespace) turns every such case into an ordinary
+// newline-terminated field, which every label regex below already treats as
+// a hard stop (`\n` is in the stop lookahead) regardless of which specific
+// labels are cross-listed against which — fixing the display glitch AND any
+// stop-boundary gap in one place, rather than enumerating every label pair.
+const TITLE_CASE_LABELS = [
+  'Vineyards?', 'Soil', 'Nature of the Soil', 'Varietal', 'Varieties',
+  'Sustainably Farmed', 'Yield', 'Age of Vines', 'Harvest', 'Vinification',
+  'Aging', 'Ageing', 'Duration and Aging Method', 'Total Production', 'Production',
+];
+// Zero-width: fires only when the label is NOT already at the start of the
+// string and NOT already preceded by whitespace — i.e. exactly the
+// glued-together case, never a normal "sentence. Label:" paragraph (which
+// already has a space before the label and is left untouched).
+const CONCATENATED_LABEL_RE = new RegExp(`(?<!^)(?<!\\s)(?=(?:${TITLE_CASE_LABELS.join('|')})\\s*:)`, 'g');
+
+export function splitConcatenatedLabels(text) {
+  return text.replace(CONCATENATED_LABEL_RE, '\n');
+}
+
 export function extractFacts(paragraphs) {
   const corpus = paragraphs.map((p) => p.text).join('\n');
   const facts = {};
@@ -201,10 +232,124 @@ export function extractFacts(paragraphs) {
   // Vinification: a general catch-all for any paragraph the harvest already
   // labelled as a vinification section, kept verbatim rather than re-parsed
   // further once the specific fields above have had first pick at it.
-  const vinificationParas = paragraphs.filter((p) => p.kind === 'vinification').map((p) => p.text.trim());
+  // The harvested paragraph almost always opens with its own redundant
+  // "Vinification:" (or "Vinification & Ageing:") label — the dl already
+  // supplies that label via oldSiteFactLabels on the Go side, so keeping it
+  // baked into the value would print it twice in the SAME <dd>. Strip only
+  // that leading label; the rest of the paragraph is kept verbatim.
+  const vinificationParas = paragraphs
+    .filter((p) => p.kind === 'vinification')
+    .map((p) => p.text.trim().replace(/^vinification(?:\s*(?:&|and)\s*ag(?:e)?ing)?\s*:\s*/i, ''));
   if (vinificationParas.length) facts.vinification = vinificationParas.join(' ');
 
   return facts;
+}
+
+// ---------------------------------------------------------------------------
+// Stripping fact spans out of paragraph text. extractFacts above LIFTS a
+// fact out of a paragraph; left alone, the paragraph itself still carries
+// the same text into producerCopy/tastingNote, so the reader sees it twice —
+// once cleanly parsed and labelled, once raw (and, before
+// splitConcatenatedLabels, mangled: "MendozaSoil:"). Only STRUCTURALLY
+// SELF-CONTAINED spans are ever removed here — a labelled "Label: value"
+// token, a whole vinification paragraph (consumed wholesale by
+// facts.vinification), or a whole sentence (the aging sentence-fallback,
+// bounded by real sentence punctuation) — never a bare number or short
+// phrase sitting inside an otherwise ordinary sentence (yieldInline's
+// "36hL/ha", the hand-harvested phrase, the inline production phrase),
+// because cutting one of those out would leave a grammatically broken
+// sentence behind. Each guard below only fires when the paragraph's OWN
+// labelled span is the kind of value that would actually have produced the
+// fact (e.g. a "Yield:" label whose value looks like hL/ha, not "Yield: low")
+// so nothing is ever deleted without having been preserved in `facts` first.
+// ---------------------------------------------------------------------------
+
+const STOP_LABELS = [...ALL_LABELS, 'total production'];
+
+function labelSpanSource(labels, stopLabels) {
+  const stop = stopLabels.join('|');
+  return `(?:${labels.join('|')})\\s*:\\s*[^\\n]+?(?=\\s*(?:${stop})\\s*:|\\n|$)`;
+}
+
+// Removes every occurrence of a labelled "Label: value" field from text.
+// Mirrors labelValue's own regex exactly (same label alternation, same
+// stop-boundary lookahead) so whatever this strips is EXACTLY what
+// labelValue would have captured as the fact's value — never more, never
+// less — just with the label word included, since the whole token is
+// redundant once its value lives in `facts`.
+function stripLabelSpans(text, labels) {
+  return text.replace(new RegExp(labelSpanSource(labels, STOP_LABELS), 'gi'), '');
+}
+
+function labelSpanValue(text, labels) {
+  const m = text.match(new RegExp(labelSpanSource(labels, STOP_LABELS), 'i'));
+  if (!m) return null;
+  return m[0].replace(new RegExp(`^(?:${labels.join('|')})\\s*:\\s*`, 'i'), '').trim();
+}
+
+// Punctuation/whitespace only — what's left of a paragraph after every fact
+// span has been cut out of it, when there was nothing else there to begin
+// with (the concatenated-label case: a paragraph that was ONLY "Vineyards:
+// ... Soil: ...", nothing more).
+const BLANK_RE = /^[\s.,;:!?'’"“”()\-–—]*$/;
+
+// stripFactSpans returns paragraphs with every fact span already captured
+// into `facts` removed, and drops a paragraph entirely once nothing but
+// punctuation/whitespace is left of it — that paragraph's entire substance
+// now lives in `facts`, so keeping an empty <p> around would be a stray,
+// pointless element on the page. Expects paragraphs whose text has already
+// been through splitConcatenatedLabels (see buildExtracted).
+export function stripFactSpans(paragraphs, facts) {
+  const out = [];
+  for (const p of paragraphs) {
+    // A vinification-kind paragraph is consumed WHOLE by facts.vinification
+    // (extractFacts joins every such paragraph verbatim) — none of it
+    // belongs in tastingNote/producerCopy once captured.
+    if (p.kind === 'vinification' && facts.vinification) continue;
+
+    let text = p.text;
+    if (facts.vineyard) text = stripLabelSpans(text, ['vineyards?']);
+    if (facts.soil) text = stripLabelSpans(text, ['soil', 'nature of the soil']);
+    if (facts.yield) {
+      const v = labelSpanValue(text, ['yield']);
+      if (v && /hl\s*\/\s*ha/i.test(v)) text = stripLabelSpans(text, ['yield']);
+    }
+    if (facts.harvestMethod) {
+      const v = labelSpanValue(text, ['harvest']);
+      if (v && /^(hand|manual)/i.test(v)) text = stripLabelSpans(text, ['harvest']);
+    }
+    if (facts.aging) {
+      text = stripLabelSpans(text, ['aging', 'duration and aging method']);
+      // The sentence-fallback form is a whole sentence, not a "Label:"
+      // token — remove it by exact match rather than by label pattern.
+      if (text.includes(facts.aging)) text = text.split(facts.aging).join('');
+    }
+    if (facts.productionVolume) text = stripLabelSpans(text, ['total production']);
+    // The old site occasionally repeats its OWN vinification sentence
+    // verbatim inside a second, unrelated paragraph that mixes several
+    // topics together with no labels at all beyond its own opening word
+    // (e.g. a "Maturing:" paragraph that runs Maturing + vinification detail
+    // + vine age + vineyard situation together as one blob — a genuinely
+    // different source-side duplication, not the concatenated-label bug
+    // above). That paragraph is NOT kind==='vinification', so the whole-
+    // paragraph guard above never sees it; an exact-substring removal here
+    // catches it the same safe way the aging sentence-fallback does — the
+    // sentence is bounded by real sentence punctuation on both sides, so
+    // cutting it out leaves the surrounding prose grammatically intact.
+    if (facts.vinification && p.kind !== 'vinification' && text.includes(facts.vinification)) {
+      text = text.split(facts.vinification).join('');
+    }
+
+    // Collapse any newline splitConcatenatedLabels inserted but that didn't
+    // end up consumed above (e.g. a labelled field that was NOT captured as
+    // a fact, and so is deliberately left in place) back into ordinary
+    // running text, rather than leaving a raw line break in rendered prose.
+    text = text.replace(/\s*\n+\s*/g, ' ').trim();
+
+    if (!text || BLANK_RE.test(text)) continue;
+    out.push(text === p.text ? p : { ...p, text });
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -281,12 +426,23 @@ export function buildExtracted(manifest, wines) {
     const hits = matchWines(page.title, wines);
     if (!hits.length) continue;
 
-    const facts = extractFacts(page.paras);
-    const producerCopy = extractProducerCopy(page.paras);
-    const tastingNote = extractTastingNote(page.paras);
+    // Repair glued-together labels ("...MendozaSoil:", "winery.Total
+    // Production:") once, up front, so every bucket below sees the same
+    // cleanly-separated paragraphs — extraction, span-stripping, and
+    // bucketing can never disagree about where one field ends and the next
+    // begins.
+    const paras = page.paras.map((p) => ({ ...p, text: splitConcatenatedLabels(p.text) }));
+
+    const facts = extractFacts(paras);
+    // Once a fact has been lifted out of a paragraph, the paragraph itself
+    // must not ALSO carry it into producerCopy/tastingNote/quotes — see
+    // stripFactSpans's doc comment.
+    const cleaned = stripFactSpans(paras, facts);
+    const producerCopy = extractProducerCopy(cleaned);
+    const tastingNote = extractTastingNote(cleaned);
     const quotes = [];
 
-    for (const p of page.paras) {
+    for (const p of cleaned) {
       const t = p.text.trim();
       if (isBareScore(t)) {
         dropped.push({ oldPath: page.oldPath, reason: 'bare-numeric-score', text: t });
