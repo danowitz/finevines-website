@@ -18,6 +18,7 @@ import {
   isBareScore,
   extractFacts,
   extractProducerCopy,
+  extractTastingNote,
   buildExtracted,
 } from '../../tools/oldsiteharvest/prose-extract.mjs';
 
@@ -184,6 +185,48 @@ describe('extractProducerCopy — the producer/importer\'s own marketing voice',
   });
 });
 
+describe('extractTastingNote — bucket 4: third-person editorial prose, neither producer voice nor a critic quote', () => {
+  // The mis-scoped original spec called this "leftover" content; it isn't —
+  // it's the site's best writing, and it fell through all three buckets
+  // because it is neither first-person nor quotation-marked. Real example
+  // from the coordinator's own re-read of the unbucketed 224:
+  const VINEYARD_NOTE =
+    'This vineyard sits next to Musigny. The quality of the site is evidenced by the first sniff of the glass, ' +
+    'with a seductive perfume of violets, redcurrants and a dash of white pepper. Classically Chambolle, with a ' +
+    'touch of extra roundness and flesh courtesy of the site.';
+
+  test('a third-person editorial paragraph about the wine/site lands in tastingNote', () => {
+    const paras = [{ kind: 'description', text: VINEYARD_NOTE }];
+    assert.deepEqual(extractTastingNote(paras), [VINEYARD_NOTE]);
+  });
+
+  test('a first-person paragraph stays exclusively in producerCopy, not tastingNote', () => {
+    const text = 'We strive for a La Consulta-terroir driven Malbec that is fresh, fruit-forward, and easy-to-drink.';
+    const paras = [{ kind: 'description', text }];
+    assert.deepEqual(extractProducerCopy(paras), [text]);
+    assert.deepEqual(extractTastingNote(paras), []);
+  });
+
+  test('a "Label Notes:" paragraph stays exclusively in producerCopy, not tastingNote', () => {
+    const text = 'Label Notes: Altocedro means “tall cedar,” and represents the owner’s heritage.';
+    const paras = [{ kind: 'description', text }];
+    assert.equal(extractProducerCopy(paras).length, 1);
+    assert.deepEqual(extractTastingNote(paras), []);
+  });
+
+  test('a whole-paragraph quotation still goes to quotes, not swept up as narrative', () => {
+    const text = '“Big and rich-tasting, with concentrated flavors of dark plum, dried blackberry and dark currant.”';
+    const paras = [{ kind: 'description', text }];
+    assert.ok(extractQuote(text), 'sanity: this text is a quote');
+    assert.deepEqual(extractTastingNote(paras), []);
+  });
+
+  test('a bare, unsourced score is not swept into tastingNote either', () => {
+    const paras = [{ kind: 'description', text: '92 points' }];
+    assert.deepEqual(extractTastingNote(paras), []);
+  });
+});
+
 describe('buildExtracted — end-to-end wiring, matching + bucketing together', () => {
   const wines = [
     { sku: 'S1', slug: 'altocedro-malbec', producer: 'Altocedro', name: 'Altocedro Malbec La Consulta Mendoza', vintage: '2019' },
@@ -195,12 +238,13 @@ describe('buildExtracted — end-to-end wiring, matching + bucketing together', 
       paras: [
         { kind: 'description', text: 'We strive for a La Consulta-terroir driven Malbec that is fresh, fruit-forward, and easy-to-drink. Total Production: 750 cases' },
         { kind: 'description', text: '“Fermented with indigenous yeasts in concrete vats… delicious.”' },
+        { kind: 'description', text: 'This vineyard sits on a gentle east-facing slope above the village, giving the fruit an extra week of hang time most years.' },
       ],
-      chars: 200,
+      chars: 260,
     },
   ];
 
-  test('produces one entry per matched wine with sourceUrl reconstructed and all three buckets present', () => {
+  test('produces one entry per matched wine with sourceUrl reconstructed and all four buckets present', () => {
     const { extracted, dropped } = buildExtracted(manifest, wines);
     assert.equal(extracted.length, 1);
     const e = extracted[0];
@@ -209,6 +253,8 @@ describe('buildExtracted — end-to-end wiring, matching + bucketing together', 
     assert.equal(e.facts.productionVolume, '750 cases');
     assert.equal(e.producerCopy.length, 1);
     assert.equal(e.quotes.length, 1);
+    assert.equal(e.tastingNote.length, 1);
+    assert.match(e.tastingNote[0], /gentle east-facing slope/);
     assert.deepEqual(dropped, []);
   });
 

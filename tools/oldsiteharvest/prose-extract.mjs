@@ -4,7 +4,7 @@
 // The catalog's current description/sommelierNotes/aroma/palate fields are
 // AI-generated from web search. The old finevines.com pages carry the
 // importer's own authoritative copy instead, but it is NOT uniform: it mixes
-// three things that carry different authority and must be rendered
+// four things that carry different authority and must be rendered
 // differently —
 //
 //   1. facts        — measurable detail (soil, yield, aging, production...)
@@ -13,6 +13,15 @@
 //                      voice ("We strive for...", "Label Notes: ...").
 //   3. quotes        — third-party tasting notes, wrapped in quotation marks
 //                      in the source, sometimes attributed to a named critic.
+//   4. tastingNote   — third-person editorial prose about the wine or its
+//                      site that is neither producer voice nor a quotation.
+//                      Originally left unbucketed on the theory it was
+//                      leftover filler; it turned out to be the best writing
+//                      on the page ("This vineyard sits next to Musigny...").
+//                      The distinction from producerCopy is voice, not
+//                      content — first person stays producerCopy even when
+//                      it reads like tasting prose; everything else
+//                      substantive that isn't a quote lands here.
 //
 // This module proposes the split; it does not write into data/wines.json.
 // Adoption is a separate decision.
@@ -203,18 +212,54 @@ export function extractFacts(paragraphs) {
 // labelled "Label Notes:".
 // ---------------------------------------------------------------------------
 
+const LABEL_NOTES_PREFIX = /^label notes\s*:\s*/i;
+const FIRST_PERSON_OPEN = /^(we|our)\b/i;
+
+// The voice test shared with extractTastingNote: is this paragraph the
+// producer/importer speaking about their own wine? Voice, not content — a
+// paragraph that reads like tasting prose still counts as producerCopy if it
+// opens in the first person plural. Kept as one predicate so the two buckets
+// can never disagree about where a given paragraph belongs.
+function isProducerVoice(text) {
+  return LABEL_NOTES_PREFIX.test(text) || FIRST_PERSON_OPEN.test(text);
+}
+
 export function extractProducerCopy(paragraphs) {
   const out = [];
   for (const p of paragraphs) {
     const t = p.text.trim();
-    const labelMatch = t.match(/^label notes\s*:\s*/i);
+    const labelMatch = t.match(LABEL_NOTES_PREFIX);
     if (labelMatch) {
       out.push(t.slice(labelMatch[0].length).trim());
       continue;
     }
-    if (/^(we|our)\b/i.test(t)) {
+    if (FIRST_PERSON_OPEN.test(t)) {
       out.push(t);
     }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Tasting note — bucket 4. Third-person editorial prose about the wine or
+// its site: substantive, specific, evocative, but neither the producer's own
+// voice (bucket 2) nor a quoted third party (bucket 3). Everything that
+// clears the harvest's own length floor and isn't claimed by one of the
+// other three buckets belongs here — this is deliberately the catch-all for
+// "real prose with nowhere else to go" rather than a narrowly-patterned
+// bucket, because the disqualifying tests (voice, quotation, bare score) are
+// what carry the actual judgment.
+// ---------------------------------------------------------------------------
+
+export function extractTastingNote(paragraphs) {
+  const out = [];
+  for (const p of paragraphs) {
+    const t = p.text.trim();
+    if (!t) continue;
+    if (isProducerVoice(t)) continue; // bucket 2 already has this — voice wins on a mix
+    if (extractQuote(t)) continue; // bucket 3 already has this
+    if (isBareScore(t)) continue; // dropped, not narrative
+    out.push(t);
   }
   return out;
 }
@@ -238,6 +283,7 @@ export function buildExtracted(manifest, wines) {
 
     const facts = extractFacts(page.paras);
     const producerCopy = extractProducerCopy(page.paras);
+    const tastingNote = extractTastingNote(page.paras);
     const quotes = [];
 
     for (const p of page.paras) {
@@ -259,6 +305,7 @@ export function buildExtracted(manifest, wines) {
         facts,
         producerCopy,
         quotes,
+        tastingNote,
       };
       // A wine could in principle be reachable from more than one page under
       // this rule; keep the first (pages are processed in manifest order).
@@ -279,12 +326,15 @@ if (process.argv[1] && /prose-extract\.mjs$/.test(process.argv[1])) {
   const { extracted, dropped } = buildExtracted(manifest, wines);
 
   const factKeyCounts = {};
-  let withFacts = 0, withProducerCopy = 0, withQuotes = 0;
+  let withFacts = 0, withProducerCopy = 0, withQuotes = 0, withTastingNote = 0, withAnyBucket = 0;
   for (const e of extracted) {
-    if (Object.keys(e.facts).length) withFacts++;
+    const hasFacts = Object.keys(e.facts).length > 0;
+    if (hasFacts) withFacts++;
     for (const k of Object.keys(e.facts)) factKeyCounts[k] = (factKeyCounts[k] || 0) + 1;
     if (e.producerCopy.length) withProducerCopy++;
     if (e.quotes.length) withQuotes++;
+    if (e.tastingNote.length) withTastingNote++;
+    if (hasFacts || e.producerCopy.length || e.quotes.length || e.tastingNote.length) withAnyBucket++;
   }
 
   console.log('pages in manifest       :', manifest.length);
@@ -292,6 +342,8 @@ if (process.argv[1] && /prose-extract\.mjs$/.test(process.argv[1])) {
   console.log('wines with facts        :', withFacts, JSON.stringify(factKeyCounts));
   console.log('wines with producerCopy :', withProducerCopy);
   console.log('wines with quotes       :', withQuotes);
+  console.log('wines with tastingNote  :', withTastingNote);
+  console.log('wines with >=1 bucket   :', withAnyBucket, 'of', extracted.length, 'matched');
   console.log('dropped (bare scores)   :', dropped.length);
   dropped.forEach((d) => console.log('  dropped:', d.oldPath, '|', d.text));
 
