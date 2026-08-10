@@ -211,3 +211,10 @@ data/fetched-images/
 # Verifier/normaliser binaries (built from tools/)
 imgcheck.exe
 imgnorm.exe
+
+# Scratch from the pre-cutover audit: raw HTML pulled off the old site while
+# capturing its privacy/legal copy (the text that mattered is committed under
+# data/legal/), and an old gpt-image-1 dry-run output directory. Neither is
+# load-bearing; both otherwise show up as hundreds of untracked files.
+data/oldsite-fetched/
+out-imagedryrun-high/
