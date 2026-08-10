@@ -21,6 +21,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs'
 import { join, basename } from 'node:path'
 import { createHash } from 'node:crypto'
+import { tokens as tok, tokensEqual as eq, decode } from './tokenmatch.mjs'
 
 const FULL = join('data', 'oldsite-full')
 const PAGES = join(FULL, 'pages')
@@ -28,12 +29,6 @@ const ASSETS = join(FULL, 'assets')
 
 const wines = JSON.parse(readFileSync('data/wines.json', 'utf8'))
 const isPhoto = (w) => !!w.imagePath && !/\.svg$/i.test(w.imagePath)
-
-const STOP = new Set(['the','and','of','de','du','des','la','le','les','domaine','dom','chateau','ch','maison','weingut','winery','estate','wine','wines','cru','grand','premier','1er','vieilles','vignes','vv','ml','nv','vin','vins'])
-const decode = (s) => s.replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&#0?39;|&rsquo;/g,"'").replace(/&eacute;/g,'e').replace(/&egrave;/g,'e').replace(/&[a-z]+;/gi,' ')
-const norm = (s) => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,' ').trim()
-const tok = (s) => new Set(norm(s).split(' ').filter((t) => t.length > 2 && !STOP.has(t) && !/^\d+$/.test(t)))
-const eq = (a, b) => a.size === b.size && [...a].every((t) => b.has(t))
 
 // Colour/style families — an image whose name declares one the wine contradicts
 // is wrong no matter how well the page title matched.
