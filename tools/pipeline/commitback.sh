@@ -54,8 +54,11 @@ bot_owned() {
 # the whole of a function invoked that way, and the git commands inside would
 # stop being fatal.
 resolve_conflicts() {
-  local conflicts f
-  conflicts=$(git diff --name-only --diff-filter=U)
+  local conflicts f stages
+  # core.quotepath=false: without it git C-quotes any path with a non-ASCII
+  # byte, and bot_owned would then be handed a path wrapped in literal quotes
+  # and abort a run it should have resolved.
+  conflicts=$(git -c core.quotepath=false diff --name-only --diff-filter=U)
 
   # Not every rebase failure is a conflict. A tracked file dirty in the working
   # tree — anything outside BOT_PATHS, which `git add` above never staged —
@@ -87,7 +90,12 @@ resolve_conflicts() {
     echo "  $f — taking the pipeline's version (it is what was deployed)"
     git diff -- "$f" | head -40 || true
 
-    if git ls-files --stage -- "$f" | grep -q '^[0-7]* [0-9a-f]* 3'; then
+    # Read the index entries into a variable and match with a here-string
+    # rather than piping into `grep -q`: grep -q closes the pipe on its first
+    # match, and under `set -o pipefail` a SIGPIPE'd git would make a MATCH
+    # look like a miss — i.e. silently delete a file we meant to keep.
+    stages=$(git ls-files --stage -- "$f")
+    if grep -q '^[0-7]* [0-9a-f]* 3' <<< "$stages"; then
       git checkout --theirs -- "$f"
       git add -- "$f"
     else
