@@ -48,7 +48,9 @@ artifacts, and are complete/self-contained on their own.
   ready-to-sell *is* the whole exclusion policy, and anything else active and in stock is meant to be listed. So
   the rule above is correct as written — but note the only human-controlled lever over what appears on the site is
   the SKU convention. Holding a wine back for an allocation or an embargo would today mean renumbering its SKU.
-  Issue #14 has the detail if that ever becomes a real need.
+  Issue #14 has the detail if that ever becomes a real need. **Do not delete the `FV_Ready_To_Sell__c` clause as
+  "redundant"** — `rosterSOQL` never selects `IsActive`, so that formula is the *only* path by which a
+  deactivated `Product2` is kept off the site. Pruning it would list discontinued items that still have stock.
 - **Several `Product2` `FV_` fields are formulas, not data** (live describe, 2026-08-09) — treat them as parses,
   not facts:
   - `FV_Vintage_Year__c` = the first 2–4 characters of `Description`, if numeric. Hence two-digit years and the
