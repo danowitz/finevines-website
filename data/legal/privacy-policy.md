@@ -6,10 +6,10 @@ makes it unreachable). Footer on the original reads "© 2021 Fine Vines, Inc."
 **This file is the historical record, not the published page.** Two deliberate departures, both
 noted inline below:
 
-1. The original's "Contacting Us" block carried the Melrose Park street address. It is removed
-   here and must never reach the built site — no street address, city, ZIP, P.O. Box or fax
-   appears anywhere on the new site (client direction, 2026-07-29). The phone number is kept:
-   public contact is phone and email.
+1. The original's "Contacting Us" block carried a street address. It is removed here and must
+   never reach the built site — no street address, city, ZIP, P.O. Box or fax appears anywhere on
+   the new site (client direction, 2026-07-29). The phone number is kept: public contact is phone
+   and email.
 2. The original describes practices the new site does not have — Google AdSense advertising, the
    DoubleClick cookie, a shopping cart, newsletter registration, purchases. Republishing those
    claims would make the policy inaccurate, which matters more in a privacy policy than in any
