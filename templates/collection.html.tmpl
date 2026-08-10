@@ -21,6 +21,26 @@
 <html lang="en">
 <head>
 {{template "head" .}}
+{{/* What this page IS: schema.org's exact type for a page whose subject is a
+     set of other pages, with the wines shown on it as an ItemList in display
+     order. That is the difference between a search engine reading this as a
+     listing of N wines and reading it as one document that happens to
+     mention them. The list describes THIS page's slice, not the whole cut —
+     page 2 lists page 2's wines. */}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": {{.Name}},
+  "url": {{printf "%s%s" .BaseURL .Path}},
+  "description": {{.Lede}},
+  "mainEntity": {
+    "@type": "ItemList",
+    "numberOfItems": {{len .Cards}},
+    "itemListElement": [{{range $i, $c := .Cards}}{{if $i}}, {{end}}{"@type": "ListItem", "position": {{inc $i}}, "url": {{printf "%s/wines/%s/" $.BaseURL $c.Slug}}, "name": {{spaceJoin $c.Producer $c.Name}}}{{end}}]
+  }
+}
+</script>
 {{/* BreadcrumbList tells search engines where this page sits — Portfolio →
      Producers → Benjamin Leroux — which is what earns the breadcrumb trail
      shown under a result instead of a bare URL. */}}

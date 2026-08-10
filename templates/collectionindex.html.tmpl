@@ -18,6 +18,20 @@
 <html lang="en">
 <head>
 {{template "head" .}}
+{{/* An index is a collection of collections: same type, and its ItemList
+     entries are the value pages rather than wines. */}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": {{.Kind.Plural}},
+  "url": {{printf "%s%s" .BaseURL .Path}},
+  "mainEntity": {
+    "@type": "ItemList",
+    "numberOfItems": {{.Total}}
+  }
+}
+</script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

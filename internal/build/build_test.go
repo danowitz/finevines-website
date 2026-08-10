@@ -1887,6 +1887,103 @@ func TestBuild_VintagesSharingProseCanonicaliseToTheNewest(t *testing.T) {
 	}
 }
 
+// TestBuild_EveryStructuredDataBlockIsValidJSON parses every
+// application/ld+json block in the built site.
+//
+// Structured data is written as raw JSON inside a template, with the values
+// interpolated by html/template's contextual escaper. That is a place where a
+// single stray quote, a trailing comma from an empty range, or an unescaped
+// apostrophe in a producer's name yields a block that silently fails to
+// parse. Search engines drop invalid JSON-LD without complaint, so the site
+// would keep looking correct while its rich results quietly stopped working.
+// The live build carries over 6,000 of these blocks; none can be eyeballed.
+func TestBuild_EveryStructuredDataBlockIsValidJSON(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	block := regexp.MustCompile(`(?s)<script type="application/ld\+json">(.*?)</script>`)
+	blocks := 0
+	err := filepath.WalkDir(dist, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || d.Name() != "index.html" {
+			return err
+		}
+		body, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		rel, _ := filepath.Rel(dist, path)
+		for _, m := range block.FindAllStringSubmatch(string(body), -1) {
+			blocks++
+			var parsed map[string]any
+			if err := json.Unmarshal([]byte(m[1]), &parsed); err != nil {
+				t.Errorf("invalid JSON-LD on %s: %v", filepath.ToSlash(rel), err)
+				continue
+			}
+			if parsed["@type"] == nil {
+				t.Errorf("JSON-LD on %s has no @type", filepath.ToSlash(rel))
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if blocks == 0 {
+		t.Fatal("no structured data found — the walk is not finding rendered output")
+	}
+}
+
+// TestBuild_CollectionPagesDeclareThemselvesAsCollections: a collection page
+// carried only BreadcrumbList, which says where it sits but not what it is.
+// schema.org has an exact type for a page whose subject is a set of other
+// pages — CollectionPage — and the wines on it are an ItemList. Declaring
+// both is what lets a search engine treat the page as a listing of 24 wines
+// rather than one long document that happens to mention them.
+func TestBuild_CollectionPagesDeclareThemselvesAsCollections(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		collectionWine("alpha-cab-2021", "Alpha Estate", "Cabernet", "Napa Valley", "Cabernet Sauvignon", "2021"),
+		collectionWine("alpha-chard-2021", "Alpha Estate", "Chardonnay", "Napa Valley", "Chardonnay", "2021"),
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	page := readFile(t, filepath.Join(dist, "producers", "alpha-estate", "index.html"))
+	if !strings.Contains(page, `"@type": "CollectionPage"`) {
+		t.Error("a collection page must declare itself as a CollectionPage")
+	}
+	// The wines on THIS page, in the order shown, each pointing at its own URL.
+	if !strings.Contains(page, `"@type": "ItemList"`) {
+		t.Error("the wines on the page must be described as an ItemList")
+	}
+	if !strings.Contains(page, `"position": 1`) || !strings.Contains(page, `"position": 2`) {
+		t.Error("each wine needs its 1-based position in the list")
+	}
+	if !strings.Contains(page, "https://finevines.com/wines/alpha-cab-2021/") {
+		t.Error("list items must point at the wines' own pages")
+	}
+	// The index pages are collections of collections, and say so too.
+	index := readFile(t, filepath.Join(dist, "producers", "index.html"))
+	if !strings.Contains(index, `"@type": "CollectionPage"`) {
+		t.Error("a collection index must declare itself as a CollectionPage")
+	}
+}
+
 // TestBuild_SpellingVariantsCollapseToOneValue is a filter-correctness bug,
 // not a cosmetic one. Salesforce spells some values more than one way —
 // "Burgundy - C d Nuits", "Burgundy, C d Nuits" and "Burgundy C d Nuits" are
