@@ -1,0 +1,266 @@
+[
+ {
+  "sku": "712792",
+  "choice": "old",
+  "file": "camille-giroud-chambertin-grand-cru.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Camille%20Giroud%20Chambertin%20Grand%20Cru.jpg"
+ },
+ {
+  "sku": "712793",
+  "choice": "old",
+  "file": "chassagne-montrachet-les-vergers-1er-cru.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Chassagne-Montrachet%20Les%20Vergers%201er%20Cru.jpg"
+ },
+ {
+  "sku": "520577",
+  "choice": "old",
+  "file": "chateau-la-mouliniere-bordeaux-blanc.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Chateau%20La%20Mouliniere%20Bordeaux%20Blanc.jpg"
+ },
+ {
+  "sku": "711134",
+  "choice": "old",
+  "file": "domaine-digioia-royer-chambolle-musigny-vieilles-vignes-les-fremi-res.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Digioia-Royer%20Chambolle-Musigny%20Vieilles%20Vignes%20Les%20Fremi%C3%A8res.jpg"
+ },
+ {
+  "sku": "480159",
+  "choice": "old",
+  "file": "mann-riesling-schlossberg-grand-cru.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Mann%20Riesling%20Schlossberg%20Grand%20Cru.jpg"
+ },
+ {
+  "sku": "210430",
+  "choice": "old",
+  "file": "domaine-anne-parent-pommard-premier-cru-les-epenots.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Anne%20Parent%20Pommard%20Premier%20Cru%20Les%20Epenots.jpg"
+ },
+ {
+  "sku": "514039*",
+  "choice": "old",
+  "file": "morgeot-2018-2.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-07/MORGEOT%202018-2.jpg"
+ },
+ {
+  "sku": "514033",
+  "choice": "old",
+  "file": "clos-rousseau-2018-2.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-07/CLOS%20ROUSSEAU%202018-2.jpg"
+ },
+ {
+  "sku": "714104",
+  "choice": "old",
+  "file": "domaine-bruno-clair-morey-saint-denis-blanc-en-la-rue-de-vergy-label-0.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Domaine%20Bruno%20Clair%20Morey%20Saint%20Denis%20Blanc%20En%20La%20Rue%20De%20Vergy%20Label_0.jpg"
+ },
+ {
+  "sku": "660160",
+  "choice": "old",
+  "file": "domaine-chauvenet-chopin-nuits-saint-georges-premier-cru-aux-thorey.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Chauvenet-Chopin%20Nuits-Saint-Georges%20Premier%20Cru%20Aux%20Thorey.jpg"
+ },
+ {
+  "sku": "317249",
+  "choice": "old",
+  "file": "domaine-chofflet-givry-heritage-front-2.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Chofflet%20Givry%20Heritage%20front-2.jpg"
+ },
+ {
+  "sku": "419100",
+  "choice": "old",
+  "file": "domaine-daniel-bouland-cote-de-brouilly-cuv-e-melanie.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Domaine%20Daniel%20Bouland%20Cote%20De%20Brouilly%20Cuv%C3%A9e%20Melanie.jpg"
+ },
+ {
+  "sku": "310708",
+  "choice": "old",
+  "file": "montagny-1er-cru-4-clochers.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Montagny%201er%20cru%204%20Clochers.jpg"
+ },
+ {
+  "sku": "433115",
+  "choice": "old",
+  "file": "domaine-edmond-vatan-sancerre-clos-la-n-ore-2.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Edmond%20Vatan%20Sancerre%20Clos%20La%20N%C3%A9ore-2.jpg"
+ },
+ {
+  "sku": "540543*",
+  "choice": "old",
+  "file": "domaine-jean-royer-chateauneuf-du-pape-sables-de-la-crau.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Jean%20Royer%20Chateauneuf%20du%20Pape%20Sables%20de%20la%20Crau.jpg"
+ },
+ {
+  "sku": "446275*",
+  "choice": "old",
+  "file": "domaine-les-aphillanthes-c-tes-du-rh-ne-vieilles-vignes-3.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Les%20Aphillanthes%20C%C3%B4tes-du-Rh%C3%B4ne%20Vieilles%20Vignes-3.jpg"
+ },
+ {
+  "sku": "214964",
+  "choice": "old",
+  "file": "michel-bouzereau-meursault-genevrieres-front-2.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-06/michel%20bouzereau%20Meursault%20Genevrieres%20front-2.jpg"
+ },
+ {
+  "sku": "711767",
+  "choice": "old",
+  "file": "domaine-michel-lafarge-volnay.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Michel%20Lafarge%20Volnay.jpg"
+ },
+ {
+  "sku": "510576",
+  "choice": "old",
+  "file": "niellon-chassagne-montrachet-les-chaumees-front.png",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2018-12/Niellon%20Chassagne%20Montrachet%20Les%20Chaumees%20Front.png"
+ },
+ {
+  "sku": "712183",
+  "choice": "old",
+  "file": "rossignol-v1cailleret-1.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2017-08/Rossignol-V1Cailleret_1.jpg"
+ },
+ {
+  "sku": "212185",
+  "choice": "old",
+  "file": "pernot-pucelles.png",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-01/Pernot%20-%20Pucelles.png"
+ },
+ {
+  "sku": "544216*",
+  "choice": "old",
+  "file": "domaine-pierre-usseglio-ch-teauneuf-du-pape-cuv-e-mon-aieul.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Pierre%20Usseglio%20Ch%C3%A2teauneuf%20du%20Pape%20Cuv%C3%A9e%20Mon%20Aieul.jpg"
+ },
+ {
+  "sku": "410349",
+  "choice": "old",
+  "file": "domaine-rapet-savigny-les-beaune.png",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Domaine%20Rapet%20Savigny-Les-Beaune.png"
+ },
+ {
+  "sku": "580115",
+  "choice": "old",
+  "file": "label-pgris-brand.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-07/label-pGris-brand.jpg"
+ },
+ {
+  "sku": "740025",
+  "choice": "old",
+  "file": "domaine-serol-turbullent-ros-p-tillant.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Domaine%20Serol%20Turbullent%20Ros%C3%A9%20P%C3%A9tillant.jpg"
+ },
+ {
+  "sku": "412639",
+  "choice": "old",
+  "file": "domaine-servin-chablis-premier-cru-vaucoupin.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Servin%20Chablis%20Premier%20Cru%20Vaucoupin.jpg"
+ },
+ {
+  "sku": "412656",
+  "choice": "old",
+  "file": "domaine-servin-chablis-premier-cru-mont-e-de-tonnerre.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-06/Domaine%20Servin%20Chablis%20Premier%20Cru%20Mont%C3%A9e%20de%20Tonnerre.jpg"
+ },
+ {
+  "sku": "215089",
+  "choice": "old",
+  "file": "langoureau-puligny-montrachet-1er-cru-la-garenne.png",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-01/langoureau%20puligny-montrachet-1er-cru-la-garenne.png"
+ },
+ {
+  "sku": "501157",
+  "choice": "old",
+  "file": "eyrie-vineyards-the-eyrie-pinot-noir.png",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-12/Eyrie%20Vineyards%20The%20Eyrie%20Pinot%20Noir.png"
+ },
+ {
+  "sku": "501161",
+  "choice": "old",
+  "file": "eyrie-daphne-pinot-noir.png",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2018-09/Eyrie%20Daphne%20Pinot%20Noir.png"
+ },
+ {
+  "sku": "714070",
+  "choice": "old",
+  "file": "fran-ois-mikulski-meursault-meix-chavaux.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Fran%C3%A7ois%20Mikulski%20Meursault%20Meix%20Chavaux.jpg"
+ },
+ {
+  "sku": "714329",
+  "choice": "old",
+  "file": "g-rard-mugneret-nuits-saint-georges-aux-cras-premier-cru.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-06/G%C3%A9rard%20Mugneret%20Nuits-Saint-Georges%20Aux%20Cras%20Premier%20Cru.jpg"
+ },
+ {
+  "sku": "714331",
+  "choice": "old",
+  "file": "g-rard-mugneret-vosne-roman-e-les-suchots-premier-cru.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-07/G%C3%A9rard%20Mugneret%20Vosne-Roman%C3%A9e%20Les%20Suchots%20Premier%20Cru.jpg"
+ },
+ {
+  "sku": "260194",
+  "choice": "old",
+  "file": "1.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-08/1.jpg"
+ },
+ {
+  "sku": "260216*",
+  "choice": "old",
+  "file": "159025.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-08/159025.jpg"
+ },
+ {
+  "sku": "260214",
+  "choice": "old",
+  "file": "166402.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-08/166402.jpg"
+ },
+ {
+  "sku": "260217*",
+  "choice": "old",
+  "file": "364439.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-08/364439.jpg"
+ },
+ {
+  "sku": "260213",
+  "choice": "old",
+  "file": "272800.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-08/272800.jpg"
+ },
+ {
+  "sku": "500280*",
+  "choice": "old",
+  "file": "mcnab-ridge-fred-s-red.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-12/McNab%20Ridge%20Fred%27s%20Red.jpg"
+ },
+ {
+  "sku": "502616*",
+  "choice": "old",
+  "file": "photo-label.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-08/photo_label.jpg"
+ },
+ {
+  "sku": "540434*",
+  "choice": "old",
+  "file": "pierre-amadieu-gigondas-le-pas-de-l-aigle.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-01/Pierre%20Amadieu%20Gigondas%20Le%20Pas%20De%20L%27Aigle.jpg"
+ },
+ {
+  "sku": "711851",
+  "choice": "old",
+  "file": "pierre-morey-bourgogne-chardonnay.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2020-07/Pierre%20Morey%20Bourgogne%20Chardonnay.jpg"
+ },
+ {
+  "sku": "398270*",
+  "choice": "old",
+  "file": "la-villa.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/product/2019-08/la-villa.jpg"
+ },
+ {
+  "sku": "500692*",
+  "choice": "old",
+  "file": "2013-oakville-winery-oakville-cabernet-sauvignon-napa-valley.jpg",
+  "sourceUrl": "https://www.finevines.com/sites/default/files/images/product/2013%20oakville%20winery%20oakville%20cabernet%20sauvignon%20napa%20valley.jpg"
+ }
+]
