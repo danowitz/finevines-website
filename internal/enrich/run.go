@@ -326,7 +326,7 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 			}
 		}
 		if imagePath == "" {
-			p, s, rerr := ResolveImage(ctx, imgs, raw, res.ImagePrompt, imgDir, prev, log)
+			p, s, rerr := ResolveImage(ctx, imgs, raw, slug, res.ImagePrompt, imgDir, prev, log)
 			if rerr != nil {
 				return model.Wine{}, &resolveImageError{err: rerr}
 			}

@@ -138,17 +138,20 @@ func imageCandidate(sku, foundURL string, oldImages map[string]string) (url, sou
 // ResolveImage returns a non-nil error only for filesystem failures.
 //
 // Files are named by the wine's SEO slug (producer-wine-vintage), matching its
-// page URL. Whichever branch writes a file also deletes the sibling extension
-// for that slug (<slug>.svg when a .jpg is written, and vice versa), so a wine
-// that flips photo<->label between runs never leaves a stale file behind next
-// to the new one.
+// page URL — slug is the caller's already-computed page slug (from run.go,
+// derived from NORMALIZED producer/name/vintage), not re-derived here from
+// raw Salesforce fields, so the fallback filename can never drift from the
+// page it's meant to illustrate. Whichever branch writes a file also deletes
+// the sibling extension for that slug (<slug>.svg when a .jpg is written, and
+// vice versa), so a wine that flips photo<->label between runs never leaves a
+// stale file behind next to the new one.
 //
 // The returned imagePath is always forward-slash form with no leading slash
 // (e.g. "assets/img/wines/hubert-lamy-puligny-montrachet-2019.jpg"), regardless of host OS path
 // separators — the site-relative form templates/wine.html.tmpl and
 // portfolio.html.tmpl prepend "/" to, and build.go's search-index "img"
 // field builds the same way.
-func ResolveImage(ctx context.Context, provider ImageProvider, w salesforce.WineRaw, prompt, imgDir string, prev *model.Wine, log func(string, ...any)) (imagePath, imageSource string, err error) {
+func ResolveImage(ctx context.Context, provider ImageProvider, w salesforce.WineRaw, slug, prompt, imgDir string, prev *model.Wine, log func(string, ...any)) (imagePath, imageSource string, err error) {
 	_ = ctx
 	_ = provider
 	_ = prompt
@@ -171,9 +174,7 @@ func ResolveImage(ctx context.Context, provider ImageProvider, w salesforce.Wine
 	// the same string as its page URL /wines/<slug>/ — descriptive, keyword-
 	// rich filenames are what image search ranks on, far better than an opaque
 	// SKU. The slug is deterministic, so re-running enrich reuses the same name.
-	base := model.Slugify(w.Producer, w.Name, w.Vintage)
-
-	p, err := writeImageFile(imgDir, base, "svg", "jpg", label.Generate(w))
+	p, err := writeImageFile(imgDir, slug, "svg", "jpg", label.Generate(w))
 	if err != nil {
 		return "", "", err
 	}
