@@ -1,0 +1,95 @@
+[
+ {
+  "path": "/about-us",
+  "heroes": [
+   {
+    "imageUrl": "https://www.finevines.com/sites/default/files/hero/2017-06/ubgypmbmyp8-karsten-wurth.jpg",
+    "file": "about-us.jpg",
+    "bytes": 3807336
+   }
+  ],
+  "paras": [
+   "Fine Vines is a licensed wholesale distributor of fine wine. By law, we can only sell to licensed retailers and restaurants within the State of Illinois.",
+   "The Fine Vines team is made up of our sales force, our drivers, and our warehouse and support personnel. Everyone is focused on delivering the best possible service to our customers and our suppliers. In order to do that, we ensure that all our products are handled under the proper temperature and humidity. We carefully pick each order and load our delivery vehicles in a temperature-controlled warehouse.",
+   "Our sales team has a combined experience of over 200 years in the wholesale wine, retail and restaurant industries. Training your staff is part of the service. If you need information, technical specs, or an in-person training session, just ask."
+  ]
+ },
+ {
+  "path": "/contact-us",
+  "heroes": [
+   {
+    "imageUrl": "https://www.finevines.com/sites/default/files/hero/2017-06/apoybda6_3y-thomas-schaefer.jpg",
+    "file": "contact-us.jpg",
+    "bytes": 5327690
+   }
+  ],
+  "paras": [
+   "Have a question, or want to start doing business with us? Please contact us."
+  ]
+ },
+ {
+  "path": "/news",
+  "heroes": [
+   {
+    "imageUrl": "https://www.finevines.com/sites/default/files/hero/2017-06/xwadl0q_a64-karsten-wurth_0.jpg",
+    "file": "news.jpg",
+    "bytes": 4882450
+   }
+  ],
+  "paras": [
+   "Join Fine Vines as we represent some of the world's top wine producers/importers who share the same values."
+  ]
+ },
+ {
+  "path": "/portfolio",
+  "heroes": [
+   {
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-08/Domaine%20Vacheron%20Les%20Romains.jpg",
+    "file": "portfolio.jpg",
+    "bytes": 2365788
+   },
+   {
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-08/Domaine%20Vacheron%20Sancerre%20Rouge.jpg",
+    "file": "portfolio.jpg",
+    "bytes": 2219385
+   },
+   {
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-08/Domaine%20Vacheron%20Guigne%20Chevres.jpg",
+    "file": "portfolio.jpg",
+    "bytes": 2396612
+   },
+   {
+    "imageUrl": "https://www.finevines.com/sites/default/files/product/2020-08/Domaine%20Vacheron%20Chambrates.jpg",
+    "file": "portfolio.jpg",
+    "bytes": 2405050
+   }
+  ],
+  "paras": [
+   "Domaine Marcel Deiss Alsace Blanc Altenberg de Bergheim Grand Cru"
+  ]
+ },
+ {
+  "path": "/",
+  "heroes": [
+   {
+    "imageUrl": "https://www.finevines.com/sites/default/files/hero/2018-03/fine-vines-vineyard_1.jpg",
+    "file": "home.jpg",
+    "bytes": 130469
+   },
+   {
+    "imageUrl": "https://www.finevines.com/sites/default/files/hero/2018-02/0aegnbtql-i-karsten-wurth_1.jpg",
+    "file": "home.jpg",
+    "bytes": 136515
+   }
+  ],
+  "paras": [
+   "At Fine Vines, we search for the best expressions of fruit and terroir in every wine we represent. We have the privilege to represent some of the world's top wine producers and importers who share these same values.",
+   "We believe that fine wine is more than a commodity-it’s an expression of an artisan’s craft. We continue to look for exciting wine regions and producers to deliver the best quality-to-price ratio in the market.",
+   "Handling fine wine should be like handling fresh produce: all of our wines are kept under temperature and humidity control from winery to your door. At day’s end, we’re a service company. Our goal is to give you the best possible service with the best products.",
+   "Please enjoy browsing our catalog of producers and products, and feel free to give us feedback on how we can improve our site or our service. Thank you!",
+   "We are proud to represent the family who started the Oregon wine industry.",
+   "If you would like to become a Fine Vines customer, please contact us!",
+   "Simply download our credit application, fill it out, and fax or email a copy of it along with your Illinois Liquor License and we'll get back to you promptly."
+  ]
+ }
+]
