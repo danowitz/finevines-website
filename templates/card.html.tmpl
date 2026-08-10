@@ -1,0 +1,32 @@
+{{/*
+  card.html.tmpl — the one definition of a wine card.
+
+  Dot is a cardWine (build.go): a wine group's representative row plus the
+  group-wide Vints/Avail the card presents.
+
+  Three surfaces render this exact markup and MUST stay identical, or the
+  catalog visibly changes shape as a visitor moves between them:
+    - portfolio.html.tmpl        the paginated catalog
+    - hub.html.tmpl              producer / region / varietal landing pages
+    - assets/js/portfolio.js     createCard(), which rebuilds it in the DOM
+                                 once the client engine takes over
+
+  The JS is the one copy the compiler cannot keep honest, so any change here
+  has to be mirrored in createCard(). Everything else about a card — which
+  wines, what order, how many — belongs to the page rendering it, not here.
+
+  The <li> (not the inner <a>) is the paginated unit.
+*/}}
+{{define "winecard"}}<li data-slug="{{.Slug}}">
+            <a class="wine-card" href="/wines/{{.Slug}}/">
+              <div class="thumb">
+                <img src="/{{.ImagePath}}" alt="Bottle of {{spaceJoin .Producer .Name .Vintage}}" loading="lazy">
+              </div>
+              <div class="body">
+                {{if .Producer}}<span class="producer">{{.Producer}}</span>{{end}}
+                <h3>{{.Name}}{{if .VintLabel}} <span class="vintage">{{.VintLabel}}</span>{{end}}</h3>
+                {{if or .Region .Varietal}}<span class="meta">{{.Region}}{{if and .Region .Varietal}} &middot; {{end}}{{.Varietal}}</span>{{end}}
+                {{with .Avail}}<span class="avail">{{.}}</span>{{end}}
+              </div>
+            </a>
+          </li>{{end}}

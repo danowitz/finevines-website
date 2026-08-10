@@ -1,0 +1,68 @@
+{{/*
+  hubindex.html.tmpl — dist/producers/, dist/regions/, dist/varietals/:
+  every value of one dimension, with the wine count each holds.
+
+  Dot is a hubIndexPage (hubs.go): .Kind names the dimension, .Groups are the
+  A–Z blocks, .Total is how many values there are.
+
+  This page is what makes the whole hub family reachable. Linked from the
+  portfolio and from every hub, it puts all 519 landing pages two clicks from
+  anywhere on the site — for a crawler as much as for a reader, since neither
+  can follow a ?producer=… filter that only exists in JavaScript.
+
+  Grouped A–Z because 307 producers in one undivided column is a wall, not a
+  list; values that don't start with a Latin letter collect under "#" so
+  nothing is quietly missing.
+*/}}
+{{define "hubindex"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head" .}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Portfolio", "item": {{printf "%s/portfolio/" .BaseURL}}},
+    {"@type": "ListItem", "position": 2, "name": {{.Kind.Plural}}, "item": {{printf "%s%s" .BaseURL .Path}}}
+  ]
+}
+</script>
+</head>
+<body>
+{{template "header" .}}
+<main>
+  <section class="page-hero page-hero-plain">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <a href="/portfolio/">Portfolio</a>
+      </nav>
+      <span class="eyebrow">Browse by {{.Kind.Singular | lower}}</span>
+      <h1>{{.Kind.Plural}}</h1>
+      <p class="lede">{{comma .Total}} {{.Kind.Plural | lower}} in the portfolio, each with the wines currently in stock.</p>
+    </div>
+  </section>
+
+  <section class="wrap">
+    {{/* Jump links. With 307 entries the letter blocks are the navigation,
+         so they need to be reachable from the top of the page. */}}
+    <nav class="hub-alphabet" aria-label="Jump to letter">
+      {{range .Groups}}<a href="#letter-{{.Letter}}">{{.Letter}}</a>{{end}}
+    </nav>
+
+    {{range .Groups}}
+    <section class="hub-letter" id="letter-{{.Letter}}">
+      <h2>{{.Letter}}</h2>
+      <ul>
+        {{range .Entries}}
+        <li><a href="{{.URL}}">{{.Name}}</a> <span class="hub-entry-count">{{.Count}}</span></li>
+        {{end}}
+      </ul>
+    </section>
+    {{end}}
+  </section>
+</main>
+{{template "footer" .}}
+</body>
+</html>
+{{end}}

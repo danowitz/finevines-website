@@ -187,24 +187,13 @@
         <ul class="wine-grid view-cards" style="list-style:none;margin:0;padding:0;"
             data-index-url="{{.IndexURL}}" data-page-size="{{.PageSize}}"
             data-page="{{.PageNum}}" data-page-count="{{.PageCount}}">
-          {{/* One real <li><a> card per wine on THIS page. portfolio.js rebuilds
-               this exact structure client-side, so server- and JS-rendered
-               cards are byte-for-byte equivalent to the eye. The <li> (not the
-               inner <a>) is the paginated unit. */}}
+          {{/* One real <li><a> card per wine on THIS page, from the shared
+               "winecard" definition in card.html.tmpl — the same one the hub
+               pages use and the one portfolio.js's createCard() mirrors, so
+               server- and JS-rendered cards are byte-for-byte equivalent to
+               the eye. */}}
           {{range .Wines}}
-          <li data-slug="{{.Slug}}">
-            <a class="wine-card" href="/wines/{{.Slug}}/">
-              <div class="thumb">
-                <img src="/{{.ImagePath}}" alt="Bottle of {{spaceJoin .Producer .Name .Vintage}}" loading="lazy">
-              </div>
-              <div class="body">
-                {{if .Producer}}<span class="producer">{{.Producer}}</span>{{end}}
-                <h3>{{.Name}}{{if .VintLabel}} <span class="vintage">{{.VintLabel}}</span>{{end}}</h3>
-                {{if or .Region .Varietal}}<span class="meta">{{.Region}}{{if and .Region .Varietal}} &middot; {{end}}{{.Varietal}}</span>{{end}}
-                {{with .Avail}}<span class="avail">{{.}}</span>{{end}}
-              </div>
-            </a>
-          </li>
+          {{template "winecard" .}}
           {{end}}
         </ul>
 

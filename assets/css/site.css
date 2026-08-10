@@ -236,6 +236,16 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .page-hero .btn-ghost { border-color: var(--brass-300); color: var(--brass-100); }
 .page-hero .btn-ghost:hover { background: rgba(241, 230, 201, .12); color: #fff; }
 
+/* Plain variant: the hub pages' hero. No photograph — there are 519 of these
+   and no honest image for "Chardonnay" — so the band is shorter and the
+   breadcrumb does the work the figure does elsewhere. */
+.page-hero-plain .wrap { padding-top: 40px; padding-bottom: 44px; }
+.page-hero-plain h1 { max-width: 24ch; }
+.crumbs { font-family: var(--sans); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 18px; color: var(--brass-300); }
+.crumbs a { color: var(--brass-300); text-decoration: none; border-bottom: 1px solid rgba(212, 175, 108, .35); }
+.crumbs a:hover { color: #fff; border-bottom-color: currentColor; }
+.crumbs span { margin: 0 8px; opacity: .6; }
+
 /* Split variant: a page hero carrying an editorial portrait beside the copy.
    The figure mirrors the home hero's framed treatment at the shorter band
    height; on phones the band drops back to copy-only so the page's actual
@@ -1180,3 +1190,35 @@ img, svg { max-width: 100%; }
 .hero-actions .btn + .btn { margin-left: 0; }
 /* long words in display headings/eyebrows break rather than push width */
 h1, h2, .eyebrow, .lede { overflow-wrap: break-word; }
+
+/* ---- Facet hubs (/producers/, /regions/, /varietals/) ------------------ */
+/* The value pages reuse .wine-grid and .pagination wholesale; only the
+   chrome around them is new. */
+.hub-toolbar { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; padding: 26px 0 18px; border-bottom: 1px solid var(--line); margin-bottom: 26px; }
+.hub-count { margin: 0; font-family: var(--sans); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+.hub-filter-link { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--bordeaux-700); text-decoration: none; border-bottom: 1px solid var(--gold); }
+.hub-filter-link:hover { color: var(--ink-strong); }
+
+/* Cross-links into the neighbouring dimensions. Rendered as pills so a
+   producer page listing forty regions still reads as one calm block. */
+.hub-related { margin-top: 44px; padding-top: 26px; border-top: 1px solid var(--line); }
+.hub-related h2 { font-family: var(--sans); text-transform: uppercase; letter-spacing: .14em; font-size: 12.5px; color: var(--gold-dark); margin: 0 0 14px; }
+.hub-related ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.hub-related a { display: block; border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; font-size: 13.5px; color: var(--ink-strong); background: var(--parchment-100); text-decoration: none; transition: border-color .15s ease, color .15s ease; }
+.hub-related a:hover { border-color: var(--gold); color: var(--bordeaux-700); }
+.hub-index-link { margin: 34px 0 0; font-family: var(--sans); font-size: 13px; }
+.hub-index-link a { color: var(--bordeaux-700); text-decoration: none; border-bottom: 1px solid var(--gold); }
+
+/* The A–Z index pages. */
+.hub-alphabet { display: flex; flex-wrap: wrap; gap: 6px; padding: 28px 0 8px; }
+.hub-alphabet a { display: inline-block; min-width: 30px; text-align: center; padding: 5px 6px; border: 1px solid var(--line); border-radius: 6px; font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--ink-strong); text-decoration: none; }
+.hub-alphabet a:hover { border-color: var(--gold); color: var(--bordeaux-700); background: var(--parchment-100); }
+.hub-letter { padding-top: 30px; scroll-margin-top: 90px; }
+.hub-letter h2 { font-family: var(--serif-display); font-size: 30px; color: var(--gold-dark); border-bottom: 1px solid var(--line); padding-bottom: 8px; margin: 0 0 16px; }
+.hub-letter ul { list-style: none; margin: 0; padding: 0; columns: 3; column-gap: 40px; }
+.hub-letter li { break-inside: avoid; padding: 5px 0; font-size: 15.5px; }
+.hub-letter a { color: var(--ink-strong); text-decoration: none; border-bottom: 1px solid transparent; }
+.hub-letter a:hover { color: var(--bordeaux-700); border-bottom-color: var(--gold); }
+.hub-entry-count { font-family: var(--sans); font-size: 11.5px; color: var(--ink-soft); margin-left: 6px; }
+@media (max-width: 900px) { .hub-letter ul { columns: 2; } }
+@media (max-width: 600px) { .hub-letter ul { columns: 1; } }

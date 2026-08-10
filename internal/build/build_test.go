@@ -1664,6 +1664,187 @@ func TestBuild_CollidingActiveSlugsRenderOnePageAndOneSitemapEntry(t *testing.T)
 	}
 }
 
+// hubWine is a compact constructor for the facet-hub tests: the fields a hub
+// groups on, plus the minimum a wine needs to render.
+func hubWine(slug, producer, name, region, varietal, vintage string) model.Wine {
+	return model.Wine{
+		ID: "SF-" + slug, SKU: strings.ToUpper(slug), Producer: producer, Name: name,
+		Region: region, Varietal: varietal, Country: "France", Vintage: vintage,
+		Slug: slug, Description: "d", ImagePath: "assets/img/wines/" + slug + ".svg",
+	}
+}
+
+// TestBuild_FacetHubPages covers the landing pages the catalog never had.
+// Producer, region and varietal were reachable only as ?producer=… query
+// strings on /portfolio/ — a shape Google will not index as a landing page,
+// so 307 producers, 106 regions and 106 varietals were URLs the site knew
+// about and never published. Each becomes a real static page that lists its
+// wines and links its neighbouring facets.
+func TestBuild_FacetHubPages(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		hubWine("alpha-cab-2021", "Alpha Estate", "Cabernet", "Napa Valley", "Cabernet Sauvignon", "2021"),
+		hubWine("alpha-chard-2021", "Alpha Estate", "Chardonnay", "Sonoma Coast", "Chardonnay", "2021"),
+		hubWine("beta-cab-2020", "Beta Cellars", "Cabernet", "Napa Valley", "Cabernet Sauvignon", "2020"),
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. A producer hub holds that producer's wines and nobody else's.
+	alpha := readFile(t, filepath.Join(dist, "producers", "alpha-estate", "index.html"))
+	if !strings.Contains(alpha, "<h1>Alpha Estate</h1>") {
+		t.Error("producer hub must be titled with the producer's name")
+	}
+	for _, slug := range []string{"alpha-cab-2021", "alpha-chard-2021"} {
+		if !strings.Contains(alpha, `href="/wines/`+slug+`/"`) {
+			t.Errorf("producer hub is missing its own wine %s", slug)
+		}
+	}
+	if strings.Contains(alpha, "beta-cab-2020") {
+		t.Error("producer hub must not list another producer's wine")
+	}
+
+	// 2. Region and varietal hubs cut the catalog the other way — across
+	// producers, which is the whole point of having them.
+	napa := readFile(t, filepath.Join(dist, "regions", "napa-valley", "index.html"))
+	if !strings.Contains(napa, "alpha-cab-2021") || !strings.Contains(napa, "beta-cab-2020") {
+		t.Error("region hub must gather both producers' Napa wines")
+	}
+	if strings.Contains(napa, "alpha-chard-2021") {
+		t.Error("region hub must not list a wine from another region")
+	}
+	cab := readFile(t, filepath.Join(dist, "varietals", "cabernet-sauvignon", "index.html"))
+	if !strings.Contains(cab, "alpha-cab-2021") || !strings.Contains(cab, "beta-cab-2020") {
+		t.Error("varietal hub must gather both Cabernets")
+	}
+
+	// 3. Hubs cross-link: a producer's page names the regions and varietals
+	// it covers, and those link to their own hubs. This is the internal link
+	// graph the flat catalog never had.
+	if !strings.Contains(alpha, `href="/regions/napa-valley/"`) {
+		t.Error("producer hub must link the regions it covers")
+	}
+	if !strings.Contains(alpha, `href="/varietals/chardonnay/"`) {
+		t.Error("producer hub must link the varietals it covers")
+	}
+	if !strings.Contains(napa, `href="/producers/beta-cellars/"`) {
+		t.Error("region hub must link the producers it covers")
+	}
+
+	// 4. Each kind has an index page listing every value with its wine count,
+	// so all 519 hubs are reachable in two clicks from anywhere on the site.
+	index := readFile(t, filepath.Join(dist, "producers", "index.html"))
+	if !strings.Contains(index, `href="/producers/alpha-estate/"`) ||
+		!strings.Contains(index, `href="/producers/beta-cellars/"`) {
+		t.Error("producer index must link every producer hub")
+	}
+	if !strings.Contains(index, ">2<") {
+		t.Error("producer index must show each producer's wine count")
+	}
+
+	// 5. Hubs and their indexes are in the sitemap.
+	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
+	for _, path := range []string{
+		"https://finevines.com/producers/", "https://finevines.com/producers/alpha-estate/",
+		"https://finevines.com/regions/", "https://finevines.com/regions/napa-valley/",
+		"https://finevines.com/varietals/", "https://finevines.com/varietals/cabernet-sauvignon/",
+	} {
+		if !strings.Contains(sitemap, "<loc>"+path+"</loc>") {
+			t.Errorf("sitemap is missing %s", path)
+		}
+	}
+
+	// 6. Every hub offers the live, filterable view of the same cut, so the
+	// static page hands off to the client engine rather than dead-ending.
+	if !strings.Contains(alpha, `/portfolio/?producer=Alpha&#43;Estate`) {
+		t.Error("hub must link the pre-filtered portfolio for the same cut")
+	}
+}
+
+// TestBuild_HubsMergePunctuationVariantsOfOneValue: the catalog spells some
+// values more than one way — "Lignier Michelot" and "Lignier-Michelot",
+// "Burgundy - C d Nuits" / "Burgundy, C d Nuits" / "Burgundy C d Nuits".
+// Every collision in the live data is a punctuation variant of the SAME
+// thing, so they must land on one hub holding all of the wines rather than
+// racing to overwrite each other's index.html.
+func TestBuild_HubsMergePunctuationVariantsOfOneValue(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		hubWine("lm-clos-2018", "Lignier Michelot", "Clos de la Roche", "Burgundy", "Pinot Noir", "2018"),
+		hubWine("lm-morey-2019", "Lignier-Michelot", "Morey Saint Denis", "Burgundy", "Pinot Noir", "2019"),
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	hub := readFile(t, filepath.Join(dist, "producers", "lignier-michelot", "index.html"))
+	if !strings.Contains(hub, "lm-clos-2018") || !strings.Contains(hub, "lm-morey-2019") {
+		t.Error("both spellings' wines must land on the one merged hub")
+	}
+	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
+	if got := strings.Count(sitemap, "<loc>https://finevines.com/producers/lignier-michelot/</loc>"); got != 1 {
+		t.Errorf("merged hub is in the sitemap %d times, want 1", got)
+	}
+}
+
+// TestBuild_LargeHubPaginates: Pinot Noir is 181 cards and Burgundy 82, so a
+// hub cannot assume it fits on one page. Hubs paginate on the same
+// /page/N/ convention as the portfolio, with real prev/next links, so a
+// crawler can walk a large cut without executing JS.
+func TestBuild_LargeHubPaginates(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	var wines []model.Wine
+	for i := 0; i < portfolioPageSize+3; i++ {
+		slug := fmt.Sprintf("big-%02d", i)
+		wines = append(wines, hubWine(slug, fmt.Sprintf("Estate %02d", i), "Red", "Burgundy", "Pinot Noir", "2020"))
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	first := readFile(t, filepath.Join(dist, "varietals", "pinot-noir", "index.html"))
+	if !strings.Contains(first, `rel="next" href="/varietals/pinot-noir/page/2/"`) {
+		t.Error("an oversized hub's first page must link the next page")
+	}
+	second := readFile(t, filepath.Join(dist, "varietals", "pinot-noir", "page", "2", "index.html"))
+	if !strings.Contains(second, `rel="prev" href="/varietals/pinot-noir/"`) {
+		t.Error("hub page 2 must link back to the bare hub URL, not /page/1/")
+	}
+	// Page 2 holds the remainder — three cards, not a second full page.
+	if got := strings.Count(second, `class="wine-card"`); got != 3 {
+		t.Errorf("hub page 2 has %d cards, want 3", got)
+	}
+	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
+	if !strings.Contains(sitemap, "<loc>https://finevines.com/varietals/pinot-noir/page/2/</loc>") {
+		t.Error("hub pagination must be in the sitemap")
+	}
+}
+
 // readFile reads path and fails the test on error, returning the contents as
 // a string for strings.Contains checks against rendered dist/ output.
 func readFile(t *testing.T, path string) string {

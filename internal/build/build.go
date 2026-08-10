@@ -458,6 +458,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		"avail":      availability,
 		"initials":   initials,
 		"spellnum":   spellNum,
+		"lower":      strings.ToLower,
 	}).ParseGlob(filepath.Join(templatesDir, "*.tmpl"))
 	if err != nil {
 		return err
@@ -594,6 +595,16 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		return err
 	}
 	paths = append(paths, portfolioPaths...)
+
+	// Producer / region / varietal landing pages, from the same collapsed
+	// cards the portfolio shows. They render after the portfolio because they
+	// are the same catalog cut a different way — and before the detail pages,
+	// which link up into them.
+	hubPaths, err := renderHubs(tmpl, distDir, s, cards)
+	if err != nil {
+		return err
+	}
+	paths = append(paths, hubPaths...)
 
 	// renderWine renders one wine's detail page. Both active and delisted
 	// wines get a page (see winePage.Unavailable's doc comment), but only

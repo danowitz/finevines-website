@@ -1,0 +1,99 @@
+{{/*
+  hub.html.tmpl — one facet value's landing page:
+  dist/producers/<slug>/, dist/regions/<slug>/, dist/varietals/<slug>/
+  (and /page/N/ under each when the cut runs past one page).
+
+  Dot is a hubPage (hubs.go): the embedded `page` supplies Title/Description/
+  Path/BaseURL for head/header/footer; .Kind names the dimension; .Name is
+  this value's canonical spelling; .Cards is only THIS page's slice; and
+  .Related carries the cross-links into the neighbouring dimensions.
+
+  This page is deliberately server-only — no catalog-index fetch, no client
+  engine. It exists to BE indexed and to pass link equity onward, and it
+  hands off to /portfolio/?<facet>=<value> (.FilterURL) the moment a visitor
+  wants to refine rather than browse. Keeping it static is also what makes
+  520-odd of these cheap: no JS, no data file, just cards.
+
+  Cards come from the shared "winecard" definition (card.html.tmpl), the
+  same one the portfolio uses, so a wine looks identical wherever it is met.
+*/}}
+{{define "hub"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head" .}}
+{{/* BreadcrumbList tells search engines where this page sits — Portfolio →
+     Producers → Benjamin Leroux — which is what earns the breadcrumb trail
+     shown under a result instead of a bare URL. */}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Portfolio", "item": {{printf "%s/portfolio/" .BaseURL}}},
+    {"@type": "ListItem", "position": 2, "name": {{.Kind.Plural}}, "item": {{printf "%s%s" .BaseURL .IndexURL}}},
+    {"@type": "ListItem", "position": 3, "name": {{.Name}}, "item": {{printf "%s%s" .BaseURL .Path}}}
+  ]
+}
+</script>
+</head>
+<body>
+{{template "header" .}}
+<main>
+  <section class="page-hero page-hero-plain">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <a href="/portfolio/">Portfolio</a>
+        <span aria-hidden="true">/</span>
+        <a href="{{.IndexURL}}">{{.Kind.Plural}}</a>
+      </nav>
+      <span class="eyebrow">{{.Kind.Singular}}</span>
+      <h1>{{.Name}}</h1>
+      <p class="lede">{{.Lede}}</p>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="hub-toolbar">
+      <p class="hub-count">{{comma .Total}} {{if eq .Total 1}}wine{{else}}wines{{end}}{{if gt .PageCount 1}} &middot; page {{.PageNum}} of {{.PageCount}}{{end}}</p>
+      {{/* The static page ranks; the portfolio filters. Anyone who wants to
+           narrow this cut further gets handed to the client engine with the
+           selection already applied. */}}
+      <a class="hub-filter-link" href="{{.FilterURL}}">Refine in the portfolio</a>
+    </div>
+
+    <ul class="wine-grid view-cards" style="list-style:none;margin:0;padding:0;">
+      {{range .Cards}}
+      {{template "winecard" .}}
+      {{end}}
+    </ul>
+
+    {{/* Real prev/next links, same convention as the portfolio: page 1 is the
+         bare hub URL so a paginated cut never publishes /page/1/ as a second
+         address for identical content. A missing neighbour renders as a
+         disabled <span> rather than a dead link. */}}
+    {{if gt .PageCount 1}}
+    <nav class="pagination" aria-label="{{.Name}} pages">
+      {{if .PrevURL}}<a class="pagination-btn pagination-prev" rel="prev" href="{{.PrevURL}}">Previous</a>{{else}}<span class="pagination-btn pagination-prev is-disabled" aria-disabled="true">Previous</span>{{end}}
+      <span class="pagination-status">Page {{.PageNum}} of {{.PageCount}}</span>
+      {{if .NextURL}}<a class="pagination-btn pagination-next" rel="next" href="{{.NextURL}}">Next</a>{{else}}<span class="pagination-btn pagination-next is-disabled" aria-disabled="true">Next</span>{{end}}
+    </nav>
+    {{end}}
+
+    {{/* Cross-links into the neighbouring dimensions. This is the whole
+         reason the hubs are worth building: a producer's page opens onto its
+         regions and varietals, and each of those opens onto every other
+         producer working the same ground. */}}
+    {{range .Related}}
+    <section class="hub-related">
+      <h2>{{.Label}}</h2>
+      <ul>{{range .Links}}<li><a href="{{.URL}}">{{.Name}}</a></li>{{end}}</ul>
+    </section>
+    {{end}}
+
+    <p class="hub-index-link"><a href="{{.IndexURL}}">All {{.Kind.Plural | lower}}</a></p>
+  </section>
+</main>
+{{template "footer" .}}
+</body>
+</html>
+{{end}}
