@@ -293,19 +293,68 @@ func indexGroups(kind hubKind, values []hubValue) []hubIndexGroup {
 	return groups
 }
 
+// hubValuesByKind computes every kind's published values in one pass.
+//
+// It is computed once and shared, because the hub graph is mutually
+// recursive at the data level even though the pages are independent: a
+// producer page cross-links regions, a region page cross-links producers, and
+// the wine pages link up into all three.
+func hubValuesByKind(cards []cardWine) map[string][]hubValue {
+	out := map[string][]hubValue{}
+	for _, kind := range hubKinds {
+		out[kind.Key] = buildHubValues(kind, cards)
+	}
+	return out
+}
+
+// publishedHubs is the set of hub slugs that were actually written, per kind.
+//
+// It exists because hubs and detail pages count different things. A hub is
+// built from CARDS — one per wine, whose region and varietal come from the
+// group's best-enriched row — while a detail page is per ROW. So a row can
+// carry a region that no card carries, which means no hub was published for
+// it. Linking a wine's own field verbatim would put a 404 on the most
+// numerous page type on the site; every wine→hub link is resolved through
+// this set instead, and simply isn't rendered when the hub does not exist.
+type publishedHubs map[string]map[string]bool
+
+func newPublishedHubs(valuesByKind map[string][]hubValue) publishedHubs {
+	p := publishedHubs{}
+	for key, values := range valuesByKind {
+		slugs := make(map[string]bool, len(values))
+		for _, v := range values {
+			slugs[v.Slug] = true
+		}
+		p[key] = slugs
+	}
+	return p
+}
+
+// urlFor returns the hub URL for a raw catalog value, or "" when no hub was
+// published for it — which the templates read as "show the value as text".
+func (p publishedHubs) urlFor(kind hubKind, name string) string {
+	slug := model.Slugify(strings.TrimSpace(name))
+	if slug == "" || !p[kind.Key][slug] {
+		return ""
+	}
+	return hubURL(kind, slug, 1)
+}
+
+// hubKindByKey looks up a kind by its facet key, so callers outside this file
+// can ask for "the producer kind" without importing the slice's order.
+func hubKindByKey(key string) hubKind {
+	for _, k := range hubKinds {
+		if k.Key == key {
+			return k
+		}
+	}
+	return hubKind{}
+}
+
 // renderHubs renders every hub page and index, returning their site-root
 // paths for the sitemap — the same contract renderPortfolio has, so the
 // sitemap is always a record of what was actually written.
-func renderHubs(tmpl *template.Template, distDir string, s *site, cards []cardWine) ([]string, error) {
-	// Every kind's values are needed before any page renders, because a
-	// producer page cross-links regions and a region page cross-links
-	// producers — the graph is mutually recursive at the data level even
-	// though the pages are independent.
-	valuesByKind := map[string][]hubValue{}
-	for _, kind := range hubKinds {
-		valuesByKind[kind.Key] = buildHubValues(kind, cards)
-	}
-
+func renderHubs(tmpl *template.Template, distDir string, s *site, valuesByKind map[string][]hubValue) ([]string, error) {
 	var paths []string
 	for _, kind := range hubKinds {
 		values := valuesByKind[kind.Key]

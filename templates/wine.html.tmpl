@@ -35,26 +35,50 @@
   }
 }
 </script>
+{{/* The same trail the visible breadcrumb shows, from the same .Crumbs
+     slice — so the structured data can never describe a path the page
+     doesn't. This is what earns "finevines.com › Producers › Benjamin
+     Leroux" under a search result instead of a bare URL. */}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [{{range $i, $c := .Crumbs}}{{if $i}}, {{end}}{"@type": "ListItem", "position": {{inc $i}}, "name": {{$c.Name}}, "item": {{printf "%s%s" $.BaseURL $c.URL}}}{{end}}]
+}
+</script>
 </head>
 <body>
 {{template "header" .}}
 <main>
   <section class="wrap">
+    {{/* Visible breadcrumb, from the same .Crumbs the JSON-LD above uses.
+         The last crumb is this page, so it is rendered as text rather than a
+         self-link. */}}
+    <nav class="crumbs crumbs-inline" aria-label="Breadcrumb">
+      {{range $i, $c := .Crumbs}}{{if $i}}<span aria-hidden="true">/</span>{{end}}{{if last $i $.Crumbs}}<span aria-current="page">{{$c.Name}}</span>{{else}}<a href="{{$c.URL}}">{{$c.Name}}</a>{{end}}{{end}}
+    </nav>
     <div class="wine-detail">
       <div class="photo">
         <img src="/{{.Wine.ImagePath}}" alt="Bottle of {{.Wine.Producer}} {{.Wine.Name}} {{.Wine.Vintage}}">
       </div>
       <div>
-        <span class="producer">{{.Wine.Producer}}</span>
+        {{/* The producer name doubles as the route to everything else that
+             estate makes — the single most useful link on the page. */}}
+        <span class="producer">{{if .ProducerURL}}<a href="{{.ProducerURL}}">{{.Wine.Producer}}</a>{{else}}{{.Wine.Producer}}{{end}}</span>
         <h1>{{.Wine.Name}} {{.Wine.Vintage}}</h1>
         {{if .Unavailable}}
         <p class="wine-unavailable">This wine is currently unavailable. Contact your FineVines representative about upcoming vintages and allocations.</p>
         {{end}}
         <div class="facts">
-          {{if .Wine.Region}}<span>Region<b>{{.Wine.Region}}</b></span>{{end}}
+          {{/* Region and varietal link to their hubs when one was published.
+               They are not always: hubs are built from cards (one per wine,
+               taking the best-enriched row's fields) while this page is one
+               row, so a row can carry a region no card does. A missing hub
+               falls back to plain text rather than a link to a 404. */}}
+          {{if .Wine.Region}}<span>Region<b>{{if .RegionURL}}<a href="{{.RegionURL}}">{{.Wine.Region}}</a>{{else}}{{.Wine.Region}}{{end}}</b></span>{{end}}
           {{if .Wine.Appellation}}<span>Appellation<b>{{.Wine.Appellation}}</b></span>{{end}}
           {{if .Wine.Country}}<span>Country<b>{{.Wine.Country}}</b></span>{{end}}
-          {{if .Wine.Varietal}}<span>Varietal<b>{{.Wine.Varietal}}</b></span>{{end}}
+          {{if .Wine.Varietal}}<span>Varietal<b>{{if .VarietalURL}}<a href="{{.VarietalURL}}">{{.Wine.Varietal}}</a>{{else}}{{.Wine.Varietal}}{{end}}</b></span>{{end}}
           {{if .Wine.Color}}<span>Colour<b>{{.Wine.Color}}</b></span>{{end}}
           {{if .Wine.Style}}<span>Style<b>{{.Wine.Style}}</b></span>{{end}}
           {{if .Wine.ABV}}<span>Alcohol<b>{{.Wine.ABV}}</b></span>{{end}}

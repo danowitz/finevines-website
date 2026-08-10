@@ -255,6 +255,26 @@ type winePage struct {
 	// an orphan reachable from sitemap.xml alone. Empty for a wine with one
 	// vintage, and the template renders nothing at all in that case.
 	OtherVintages []vintageLink
+	// ProducerURL / RegionURL / VarietalURL are this wine's links UP into the
+	// hub pages, or "" when no hub was published for that value (see
+	// publishedHubs — hubs are built from cards, detail pages from rows, and
+	// the two do not always carry the same region). Empty means the template
+	// shows the value as plain text rather than a link to a 404.
+	ProducerURL string
+	RegionURL   string
+	VarietalURL string
+	// Crumbs is the breadcrumb trail, ending with this wine itself. It drives
+	// both the visible nav and the BreadcrumbList JSON-LD, so the two can
+	// never describe different paths.
+	Crumbs []crumb
+}
+
+// crumb is one step of a breadcrumb trail: a label and the page it points at.
+// The final crumb points at the current page, which is what schema.org's
+// BreadcrumbList expects.
+type crumb struct {
+	Name string
+	URL  string
 }
 
 // vintageLink is one year of a wine and the detail page that year lives on.
@@ -459,6 +479,11 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		"initials":   initials,
 		"spellnum":   spellNum,
 		"lower":      strings.ToLower,
+		// inc/last exist for breadcrumb rendering: schema.org positions are
+		// 1-based while range indices are 0-based, and the final crumb is the
+		// current page, which must render as text rather than a self-link.
+		"inc":  func(i int) int { return i + 1 },
+		"last": func(i int, c []crumb) bool { return i == len(c)-1 },
 	}).ParseGlob(filepath.Join(templatesDir, "*.tmpl"))
 	if err != nil {
 		return err
@@ -600,11 +625,14 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	// cards the portfolio shows. They render after the portfolio because they
 	// are the same catalog cut a different way — and before the detail pages,
 	// which link up into them.
-	hubPaths, err := renderHubs(tmpl, distDir, s, cards)
+	hubValues := hubValuesByKind(cards)
+	hubPaths, err := renderHubs(tmpl, distDir, s, hubValues)
 	if err != nil {
 		return err
 	}
 	paths = append(paths, hubPaths...)
+	// Which hubs actually exist, so a wine page never links one that doesn't.
+	published := newPublishedHubs(hubValues)
 
 	// renderWine renders one wine's detail page. Both active and delisted
 	// wines get a page (see winePage.Unavailable's doc comment), but only
@@ -615,16 +643,27 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	// another vintage of anything, and an active wine must not advertise one.
 	otherVintages := otherVintagesBySlug(s.Wines)
 	renderWine := func(w model.Wine, unavailable bool) error {
+		path := "/wines/" + w.Slug + "/"
+		producerURL := published.urlFor(hubKindByKey("producer"), w.Producer)
 		data := winePage{
 			page: page{
 				site:        s,
 				Title:       fmt.Sprintf("%s %s %s - FineVines", w.Producer, w.Name, w.Vintage),
 				Description: firstNonEmpty(w.Description, w.Producer+" "+w.Name),
-				Path:        "/wines/" + w.Slug + "/",
+				Path:        path,
 			},
 			Wine:          w,
 			Unavailable:   unavailable,
 			OtherVintages: otherVintages[w.Slug],
+			ProducerURL:   producerURL,
+			RegionURL:     published.urlFor(hubKindByKey("region"), w.Region),
+			VarietalURL:   published.urlFor(hubKindByKey("varietal"), w.Varietal),
+			Crumbs: wineCrumbs(crumbSpec{
+				ProducerName: w.Producer,
+				ProducerURL:  producerURL,
+				WineName:     spaceJoin(w.Name, w.Vintage),
+				WineURL:      path,
+			}),
 		}
 		// Prefer the wine's own photo as its share image, but only when it's a
 		// raster the social scrapers actually render — an .svg (or .webp)
@@ -1317,6 +1356,30 @@ func usableWines(wines []model.Wine) []model.Wine {
 		out = append(out, w)
 	}
 	return out
+}
+
+// crumbSpec is what a wine's breadcrumb trail is assembled from.
+type crumbSpec struct {
+	ProducerName string
+	ProducerURL  string // "" when the producer has no published hub
+	WineName     string
+	WineURL      string
+}
+
+// wineCrumbs builds the trail Portfolio › Producers › <Producer> › <Wine>,
+// skipping the producer steps when that producer has no hub — a trail must
+// never contain a step that 404s, and a two-step trail is better than a
+// broken four-step one.
+func wineCrumbs(spec crumbSpec) []crumb {
+	crumbs := []crumb{{Name: "Portfolio", URL: "/portfolio/"}}
+	if spec.ProducerURL != "" {
+		producers := hubKindByKey("producer")
+		crumbs = append(crumbs,
+			crumb{Name: producers.Plural, URL: hubIndexURL(producers)},
+			crumb{Name: spec.ProducerName, URL: spec.ProducerURL},
+		)
+	}
+	return append(crumbs, crumb{Name: spec.WineName, URL: spec.WineURL})
 }
 
 // dedupeBySlug collapses rows that share a slug to one row each, keeping

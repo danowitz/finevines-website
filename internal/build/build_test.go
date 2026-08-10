@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -82,7 +83,7 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 		`href="https://www.instagram.com/finevineswine/"`, // real Instagram
 		`href="https://twitter.com/finevineswine"`,        // real X/Twitter
 		`href="https://www.linkedin.com/company/1291059"`, // real LinkedIn
-		`Become a Customer`, // trade CTA
+		`Become a Customer`,                               // trade CTA
 		`href="tel:&#43;17083436702"`,
 		`href="mailto:info@finevines.com"`,
 		`&copy; 2026 FineVines. All rights reserved.`, // static year, no clock
@@ -427,7 +428,7 @@ func TestPortfolioPage(t *testing.T) {
 		`id="portfolio-count"`,
 		`id="portfolio-search"`,
 		`src="/assets/js/portfolio.`,
-		`class="page-hero page-hero-split"`,                            // signature bordeaux hero band, split with the editorial portrait
+		`class="page-hero page-hero-split"`,                             // signature bordeaux hero band, split with the editorial portrait
 		`src="/assets/opt/finevines-portfolio-chosen-by-hand-hero.jpg"`, // the "chosen by hand" hero image
 		// Cards | List view toggle control + the grid's default view class
 		// that portfolio.js swaps between (facet filtering works in both).
@@ -1661,6 +1662,158 @@ func TestBuild_CollidingActiveSlugsRenderOnePageAndOneSitemapEntry(t *testing.T)
 	page := readFile(t, filepath.Join(dist, "wines", "jose-dhondt-champagne-brut-blanc-de-blancs-2019", "index.html"))
 	if !strings.Contains(page, "the standard bottle row") {
 		t.Error("the best-enriched row must supply the page for a colliding slug")
+	}
+}
+
+// TestBuild_NoInternalLinkIsDead walks the whole built site and resolves
+// every internal href against what was actually written.
+//
+// The catalog gained a lot of cross-linking — vintage siblings, hub
+// cross-links, wine-to-hub breadcrumbs — and every one of those links is
+// composed from a slug rather than typed by hand. That is exactly the shape
+// of change that ships a 404 at scale without anyone noticing: the page
+// renders fine, the link just goes nowhere. Checking reachability is
+// cheaper than trusting each construction site to be right forever.
+func TestBuild_NoInternalLinkIsDead(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	href := regexp.MustCompile(`href="(/[^"#?]*)"`)
+	pages := 0
+	dead := map[string]string{} // link -> first page that carried it
+	err := filepath.WalkDir(dist, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || d.Name() != "index.html" {
+			return err
+		}
+		pages++
+		body, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		from, _ := filepath.Rel(dist, path)
+		for _, m := range href.FindAllStringSubmatch(string(body), -1) {
+			link := m[1]
+			// Assets are copied wholesale, not rendered; a page directory is
+			// addressed by its index.html.
+			target := filepath.Join(dist, filepath.FromSlash(link))
+			if strings.HasSuffix(link, "/") {
+				target = filepath.Join(target, "index.html")
+			}
+			if _, statErr := os.Stat(target); statErr != nil {
+				if _, seen := dead[link]; !seen {
+					dead[link] = filepath.ToSlash(from)
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pages == 0 {
+		t.Fatal("no pages were scanned — the walk is not finding rendered output")
+	}
+	for link, from := range dead {
+		t.Errorf("dead internal link %s (first seen on %s)", link, from)
+	}
+}
+
+// TestBuild_WinePagesLinkUpToTheirHubs closes the loop: hubs link down to
+// wines, so wines must link back up. Without it a detail page is still a
+// dead end — the deepest, most numerous page type on the site passing its
+// link equity nowhere — and a visitor who arrives from search has no route
+// to "more like this" short of the header.
+func TestBuild_WinePagesLinkUpToTheirHubs(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	wines := []model.Wine{
+		hubWine("alpha-cab-2021", "Alpha Estate", "Cabernet", "Napa Valley", "Cabernet Sauvignon", "2021"),
+		// No region and no varietal: the page must simply omit those links
+		// rather than emit /regions// .
+		{ID: "SF-2", SKU: "BARE", Producer: "Alpha Estate", Name: "Mystery Red", Vintage: "2021",
+			Slug: "alpha-mystery-2021", Description: "d", ImagePath: "assets/img/wines/m.svg"},
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	page := readFile(t, filepath.Join(dist, "wines", "alpha-cab-2021", "index.html"))
+	for _, href := range []string{
+		`href="/producers/alpha-estate/"`,
+		`href="/regions/napa-valley/"`,
+		`href="/varietals/cabernet-sauvignon/"`,
+	} {
+		if !strings.Contains(page, href) {
+			t.Errorf("wine page must link up to its hub: %s", href)
+		}
+	}
+
+	// Breadcrumb structured data, so a result shows Portfolio › Producers ›
+	// Alpha Estate rather than a bare URL.
+	if !strings.Contains(page, `"@type": "BreadcrumbList"`) {
+		t.Error("wine page must carry BreadcrumbList JSON-LD")
+	}
+
+	bare := readFile(t, filepath.Join(dist, "wines", "alpha-mystery-2021", "index.html"))
+	if strings.Contains(bare, `href="/regions//"`) || strings.Contains(bare, `href="/varietals//"`) {
+		t.Error("a wine with no region or varietal must not emit an empty hub link")
+	}
+}
+
+// TestBuild_WinePageOnlyLinksHubsThatWereActuallyPublished is the subtle
+// half of the same feature. Hubs are built from CARDS — one per wine, whose
+// region and varietal come from the group's best-enriched row — while detail
+// pages are per row. So a row can carry a region that no card carries, and
+// therefore no hub exists for. Linking a wine's own field verbatim would
+// publish a 404 on the most numerous page type on the site.
+func TestBuild_WinePageOnlyLinksHubsThatWereActuallyPublished(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	// Two vintages of ONE wine. The 2019 row is better enriched, so it is the
+	// group's representative and its "Beta Ridge" is what the card — and thus
+	// the hub — carries. The 2018 row's "Alpha Ridge" is published nowhere.
+	wines := []model.Wine{
+		{ID: "SF-1", SKU: "AA1", Producer: "Estate", Name: "Old Block Red", Vintage: "2018",
+			Region: "Alpha Ridge", Slug: "estate-old-block-red-2018", Description: "d",
+			ImagePath: "assets/img/wines/a.svg", MetadataScore: 1},
+		{ID: "SF-2", SKU: "AA2", Producer: "Estate", Name: "Old Block Red", Vintage: "2019",
+			Region: "Beta Ridge", Slug: "estate-old-block-red-2019", Description: "d",
+			ImagePath: "assets/img/wines/b.svg", MetadataScore: 9},
+	}
+	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
+		t.Fatal(err)
+	}
+
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := os.Stat(filepath.Join(dist, "regions", "alpha-ridge", "index.html")); err == nil {
+		t.Fatal("test premise broken: alpha-ridge should not have a hub")
+	}
+	page := readFile(t, filepath.Join(dist, "wines", "estate-old-block-red-2018", "index.html"))
+	if strings.Contains(page, `href="/regions/alpha-ridge/"`) {
+		t.Error("a wine must not link a hub that was never published")
+	}
+	// The region is still shown as a fact — just as plain text, not a link.
+	if !strings.Contains(page, "Alpha Ridge") {
+		t.Error("the wine's own region must still be displayed")
 	}
 }
 

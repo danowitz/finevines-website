@@ -245,6 +245,12 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .crumbs a { color: var(--brass-300); text-decoration: none; border-bottom: 1px solid rgba(212, 175, 108, .35); }
 .crumbs a:hover { color: #fff; border-bottom-color: currentColor; }
 .crumbs span { margin: 0 8px; opacity: .6; }
+/* Inline variant: the same trail on a light page (the wine detail), where it
+   sits above the content rather than inside a dark hero band. */
+.crumbs-inline { padding-top: 26px; margin-bottom: 26px; color: var(--ink-soft); }
+.crumbs-inline a { color: var(--ink-soft); border-bottom-color: var(--line); }
+.crumbs-inline a:hover { color: var(--bordeaux-700); }
+.crumbs-inline [aria-current="page"] { color: var(--ink-strong); margin: 0; }
 
 /* Split variant: a page hero carrying an editorial portrait beside the copy.
    The figure mirrors the home hero's framed treatment at the shorter band
