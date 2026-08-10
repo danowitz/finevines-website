@@ -1,9 +1,9 @@
 {{/*
-  hub.html.tmpl — one facet value's landing page:
+  collection.html.tmpl — one facet value's landing page:
   dist/producers/<slug>/, dist/regions/<slug>/, dist/varietals/<slug>/
   (and /page/N/ under each when the cut runs past one page).
 
-  Dot is a hubPage (hubs.go): the embedded `page` supplies Title/Description/
+  Dot is a collectionPage (collections.go): the embedded `page` supplies Title/Description/
   Path/BaseURL for head/header/footer; .Kind names the dimension; .Name is
   this value's canonical spelling; .Cards is only THIS page's slice; and
   .Related carries the cross-links into the neighbouring dimensions.
@@ -17,7 +17,7 @@
   Cards come from the shared "winecard" definition (card.html.tmpl), the
   same one the portfolio uses, so a wine looks identical wherever it is met.
 */}}
-{{define "hub"}}<!doctype html>
+{{define "collection"}}<!doctype html>
 <html lang="en">
 <head>
 {{template "head" .}}
@@ -53,12 +53,12 @@
   </section>
 
   <section class="wrap">
-    <div class="hub-toolbar">
-      <p class="hub-count">{{comma .Total}} {{if eq .Total 1}}wine{{else}}wines{{end}}{{if gt .PageCount 1}} &middot; page {{.PageNum}} of {{.PageCount}}{{end}}</p>
+    <div class="collection-toolbar">
+      <p class="collection-count">{{comma .Total}} {{if eq .Total 1}}wine{{else}}wines{{end}}{{if gt .PageCount 1}} &middot; page {{.PageNum}} of {{.PageCount}}{{end}}</p>
       {{/* The static page ranks; the portfolio filters. Anyone who wants to
            narrow this cut further gets handed to the client engine with the
            selection already applied. */}}
-      <a class="hub-filter-link" href="{{.FilterURL}}">Refine in the portfolio</a>
+      <a class="collection-filter-link" href="{{.FilterURL}}">Refine in the portfolio</a>
     </div>
 
     <ul class="wine-grid view-cards" style="list-style:none;margin:0;padding:0;">
@@ -68,7 +68,7 @@
     </ul>
 
     {{/* Real prev/next links, same convention as the portfolio: page 1 is the
-         bare hub URL so a paginated cut never publishes /page/1/ as a second
+         bare collection URL so a paginated cut never publishes /page/1/ as a second
          address for identical content. A missing neighbour renders as a
          disabled <span> rather than a dead link. */}}
     {{if gt .PageCount 1}}
@@ -80,17 +80,17 @@
     {{end}}
 
     {{/* Cross-links into the neighbouring dimensions. This is the whole
-         reason the hubs are worth building: a producer's page opens onto its
+         reason the collections are worth building: a producer's page opens onto its
          regions and varietals, and each of those opens onto every other
          producer working the same ground. */}}
     {{range .Related}}
-    <section class="hub-related">
+    <section class="collection-related">
       <h2>{{.Label}}</h2>
       <ul>{{range .Links}}<li><a href="{{.URL}}">{{.Name}}</a></li>{{end}}</ul>
     </section>
     {{end}}
 
-    <p class="hub-index-link"><a href="{{.IndexURL}}">All {{.Kind.Plural | lower}}</a></p>
+    <p class="collection-index-link"><a href="{{.IndexURL}}">All {{.Kind.Plural | lower}}</a></p>
   </section>
 </main>
 {{template "footer" .}}

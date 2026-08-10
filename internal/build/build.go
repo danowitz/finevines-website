@@ -277,9 +277,10 @@ type winePage struct {
 	// vintage, and the template renders nothing at all in that case.
 	OtherVintages []vintageLink
 	// ProducerURL / RegionURL / VarietalURL are this wine's links UP into the
-	// hub pages, or "" when no hub was published for that value (see
-	// publishedHubs — hubs are built from cards, detail pages from rows, and
-	// the two do not always carry the same region). Empty means the template
+	// collection pages, or "" when no collection was published for that value (see
+	// publishedCollections — collections are built from cards, detail pages
+	// from rows, and the two do not always carry the same region). Empty means
+	// the template
 	// shows the value as plain text rather than a link to a 404.
 	ProducerURL string
 	RegionURL   string
@@ -646,14 +647,14 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	// cards the portfolio shows. They render after the portfolio because they
 	// are the same catalog cut a different way — and before the detail pages,
 	// which link up into them.
-	hubValues := hubValuesByKind(cards)
-	hubPaths, err := renderHubs(tmpl, distDir, s, hubValues)
+	collections := collectionsByKind(cards)
+	collectionPaths, err := renderCollections(tmpl, distDir, s, collections)
 	if err != nil {
 		return err
 	}
-	paths = append(paths, hubPaths...)
-	// Which hubs actually exist, so a wine page never links one that doesn't.
-	published := newPublishedHubs(hubValues)
+	paths = append(paths, collectionPaths...)
+	// Which collections actually exist, so a wine page never links one that doesn't.
+	published := newPublishedCollections(collections)
 
 	// renderWine renders one wine's detail page. Both active and delisted
 	// wines get a page (see winePage.Unavailable's doc comment), but only
@@ -667,7 +668,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	canonicalOf := canonicalVintage(s.Wines)
 	renderWine := func(w model.Wine, unavailable bool) error {
 		path := "/wines/" + w.Slug + "/"
-		producerURL := published.urlFor(hubKindByKey("producer"), w.Producer)
+		producerURL := published.urlFor(collectionKindByKey("producer"), w.Producer)
 		data := winePage{
 			page: page{
 				site:          s,
@@ -680,8 +681,8 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 			Unavailable:   unavailable,
 			OtherVintages: otherVintages[w.Slug],
 			ProducerURL:   producerURL,
-			RegionURL:     published.urlFor(hubKindByKey("region"), w.Region),
-			VarietalURL:   published.urlFor(hubKindByKey("varietal"), w.Varietal),
+			RegionURL:     published.urlFor(collectionKindByKey("region"), w.Region),
+			VarietalURL:   published.urlFor(collectionKindByKey("varietal"), w.Varietal),
 			Crumbs: wineCrumbs(crumbSpec{
 				ProducerName: w.Producer,
 				ProducerURL:  producerURL,
@@ -1447,21 +1448,21 @@ func canonicalVintage(wines []model.Wine) map[string]string {
 // crumbSpec is what a wine's breadcrumb trail is assembled from.
 type crumbSpec struct {
 	ProducerName string
-	ProducerURL  string // "" when the producer has no published hub
+	ProducerURL  string // "" when the producer has no published collection
 	WineName     string
 	WineURL      string
 }
 
 // wineCrumbs builds the trail Portfolio › Producers › <Producer> › <Wine>,
-// skipping the producer steps when that producer has no hub — a trail must
+// skipping the producer steps when that producer has no collection — a trail must
 // never contain a step that 404s, and a two-step trail is better than a
 // broken four-step one.
 func wineCrumbs(spec crumbSpec) []crumb {
 	crumbs := []crumb{{Name: "Portfolio", URL: "/portfolio/"}}
 	if spec.ProducerURL != "" {
-		producers := hubKindByKey("producer")
+		producers := collectionKindByKey("producer")
 		crumbs = append(crumbs,
-			crumb{Name: producers.Plural, URL: hubIndexURL(producers)},
+			crumb{Name: producers.Plural, URL: collectionIndexURL(producers)},
 			crumb{Name: spec.ProducerName, URL: spec.ProducerURL},
 		)
 	}

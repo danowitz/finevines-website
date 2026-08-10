@@ -1743,12 +1743,12 @@ func TestBuild_VintagesSharingProseCanonicaliseToTheNewest(t *testing.T) {
 	}
 }
 
-// TestBuild_HubIndexesAreReachableFromEveryPage: 500-odd hub pages are worth
+// TestBuild_CollectionIndexesAreReachableFromEveryPage: 500-odd collection pages are worth
 // nothing if the only route to them is sitemap.xml. Discovery has to work by
 // following links, so the three indexes sit in the site footer — present on
 // every page — and are called out on the portfolio itself, where someone
 // already browsing the catalog is most likely to want them.
-func TestBuild_HubIndexesAreReachableFromEveryPage(t *testing.T) {
+func TestBuild_CollectionIndexesAreReachableFromEveryPage(t *testing.T) {
 	data := t.TempDir()
 	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
 		t.Fatal(err)
@@ -1779,8 +1779,8 @@ func TestBuild_HubIndexesAreReachableFromEveryPage(t *testing.T) {
 // TestBuild_NoInternalLinkIsDead walks the whole built site and resolves
 // every internal href against what was actually written.
 //
-// The catalog gained a lot of cross-linking — vintage siblings, hub
-// cross-links, wine-to-hub breadcrumbs — and every one of those links is
+// The catalog gained a lot of cross-linking — vintage siblings, collection
+// cross-links, wine-to-collection breadcrumbs — and every one of those links is
 // composed from a slug rather than typed by hand. That is exactly the shape
 // of change that ships a 404 at scale without anyone noticing: the page
 // renders fine, the link just goes nowhere. Checking reachability is
@@ -1835,18 +1835,18 @@ func TestBuild_NoInternalLinkIsDead(t *testing.T) {
 	}
 }
 
-// TestBuild_WinePagesLinkUpToTheirHubs closes the loop: hubs link down to
+// TestBuild_WinePagesLinkUpToTheirCollections closes the loop: collections link down to
 // wines, so wines must link back up. Without it a detail page is still a
 // dead end — the deepest, most numerous page type on the site passing its
 // link equity nowhere — and a visitor who arrives from search has no route
 // to "more like this" short of the header.
-func TestBuild_WinePagesLinkUpToTheirHubs(t *testing.T) {
+func TestBuild_WinePagesLinkUpToTheirCollections(t *testing.T) {
 	data := t.TempDir()
 	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
 		t.Fatal(err)
 	}
 	wines := []model.Wine{
-		hubWine("alpha-cab-2021", "Alpha Estate", "Cabernet", "Napa Valley", "Cabernet Sauvignon", "2021"),
+		collectionWine("alpha-cab-2021", "Alpha Estate", "Cabernet", "Napa Valley", "Cabernet Sauvignon", "2021"),
 		// No region and no varietal: the page must simply omit those links
 		// rather than emit /regions// .
 		{ID: "SF-2", SKU: "BARE", Producer: "Alpha Estate", Name: "Mystery Red", Vintage: "2021",
@@ -1868,7 +1868,7 @@ func TestBuild_WinePagesLinkUpToTheirHubs(t *testing.T) {
 		`href="/varietals/cabernet-sauvignon/"`,
 	} {
 		if !strings.Contains(page, href) {
-			t.Errorf("wine page must link up to its hub: %s", href)
+			t.Errorf("wine page must link up to its collection: %s", href)
 		}
 	}
 
@@ -1880,24 +1880,24 @@ func TestBuild_WinePagesLinkUpToTheirHubs(t *testing.T) {
 
 	bare := readFile(t, filepath.Join(dist, "wines", "alpha-mystery-2021", "index.html"))
 	if strings.Contains(bare, `href="/regions//"`) || strings.Contains(bare, `href="/varietals//"`) {
-		t.Error("a wine with no region or varietal must not emit an empty hub link")
+		t.Error("a wine with no region or varietal must not emit an empty collection link")
 	}
 }
 
-// TestBuild_WinePageOnlyLinksHubsThatWereActuallyPublished is the subtle
-// half of the same feature. Hubs are built from CARDS — one per wine, whose
+// TestBuild_WinePageOnlyLinksCollectionsThatWereActuallyPublished is the subtle
+// half of the same feature. Collections are built from CARDS — one per wine, whose
 // region and varietal come from the group's best-enriched row — while detail
 // pages are per row. So a row can carry a region that no card carries, and
-// therefore no hub exists for. Linking a wine's own field verbatim would
+// therefore no collection exists for. Linking a wine's own field verbatim would
 // publish a 404 on the most numerous page type on the site.
-func TestBuild_WinePageOnlyLinksHubsThatWereActuallyPublished(t *testing.T) {
+func TestBuild_WinePageOnlyLinksCollectionsThatWereActuallyPublished(t *testing.T) {
 	data := t.TempDir()
 	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
 		t.Fatal(err)
 	}
 	// Two vintages of ONE wine. The 2019 row is better enriched, so it is the
 	// group's representative and its "Beta Ridge" is what the card — and thus
-	// the hub — carries. The 2018 row's "Alpha Ridge" is published nowhere.
+	// the collection — carries. The 2018 row's "Alpha Ridge" is published nowhere.
 	wines := []model.Wine{
 		{ID: "SF-1", SKU: "AA1", Producer: "Estate", Name: "Old Block Red", Vintage: "2018",
 			Region: "Alpha Ridge", Slug: "estate-old-block-red-2018", Description: "d",
@@ -1916,11 +1916,11 @@ func TestBuild_WinePageOnlyLinksHubsThatWereActuallyPublished(t *testing.T) {
 	}
 
 	if _, err := os.Stat(filepath.Join(dist, "regions", "alpha-ridge", "index.html")); err == nil {
-		t.Fatal("test premise broken: alpha-ridge should not have a hub")
+		t.Fatal("test premise broken: alpha-ridge should not have a collection")
 	}
 	page := readFile(t, filepath.Join(dist, "wines", "estate-old-block-red-2018", "index.html"))
 	if strings.Contains(page, `href="/regions/alpha-ridge/"`) {
-		t.Error("a wine must not link a hub that was never published")
+		t.Error("a wine must not link a collection that was never published")
 	}
 	// The region is still shown as a fact — just as plain text, not a link.
 	if !strings.Contains(page, "Alpha Ridge") {
@@ -1928,9 +1928,9 @@ func TestBuild_WinePageOnlyLinksHubsThatWereActuallyPublished(t *testing.T) {
 	}
 }
 
-// hubWine is a compact constructor for the facet-hub tests: the fields a hub
+// collectionWine is a compact constructor for the facet-collection tests: the fields a collection
 // groups on, plus the minimum a wine needs to render.
-func hubWine(slug, producer, name, region, varietal, vintage string) model.Wine {
+func collectionWine(slug, producer, name, region, varietal, vintage string) model.Wine {
 	return model.Wine{
 		ID: "SF-" + slug, SKU: strings.ToUpper(slug), Producer: producer, Name: name,
 		Region: region, Varietal: varietal, Country: "France", Vintage: vintage,
@@ -1938,21 +1938,21 @@ func hubWine(slug, producer, name, region, varietal, vintage string) model.Wine 
 	}
 }
 
-// TestBuild_FacetHubPages covers the landing pages the catalog never had.
+// TestBuild_CollectionPages covers the landing pages the catalog never had.
 // Producer, region and varietal were reachable only as ?producer=… query
 // strings on /portfolio/ — a shape Google will not index as a landing page,
 // so 307 producers, 106 regions and 106 varietals were URLs the site knew
 // about and never published. Each becomes a real static page that lists its
 // wines and links its neighbouring facets.
-func TestBuild_FacetHubPages(t *testing.T) {
+func TestBuild_CollectionPages(t *testing.T) {
 	data := t.TempDir()
 	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
 		t.Fatal(err)
 	}
 	wines := []model.Wine{
-		hubWine("alpha-cab-2021", "Alpha Estate", "Cabernet", "Napa Valley", "Cabernet Sauvignon", "2021"),
-		hubWine("alpha-chard-2021", "Alpha Estate", "Chardonnay", "Sonoma Coast", "Chardonnay", "2021"),
-		hubWine("beta-cab-2020", "Beta Cellars", "Cabernet", "Napa Valley", "Cabernet Sauvignon", "2020"),
+		collectionWine("alpha-cab-2021", "Alpha Estate", "Cabernet", "Napa Valley", "Cabernet Sauvignon", "2021"),
+		collectionWine("alpha-chard-2021", "Alpha Estate", "Chardonnay", "Sonoma Coast", "Chardonnay", "2021"),
+		collectionWine("beta-cab-2020", "Beta Cellars", "Cabernet", "Napa Valley", "Cabernet Sauvignon", "2020"),
 	}
 	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
 		t.Fatal(err)
@@ -1963,59 +1963,59 @@ func TestBuild_FacetHubPages(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// 1. A producer hub holds that producer's wines and nobody else's.
+	// 1. A producer collection holds that producer's wines and nobody else's.
 	alpha := readFile(t, filepath.Join(dist, "producers", "alpha-estate", "index.html"))
 	if !strings.Contains(alpha, "<h1>Alpha Estate</h1>") {
-		t.Error("producer hub must be titled with the producer's name")
+		t.Error("producer collection must be titled with the producer's name")
 	}
 	for _, slug := range []string{"alpha-cab-2021", "alpha-chard-2021"} {
 		if !strings.Contains(alpha, `href="/wines/`+slug+`/"`) {
-			t.Errorf("producer hub is missing its own wine %s", slug)
+			t.Errorf("producer collection is missing its own wine %s", slug)
 		}
 	}
 	if strings.Contains(alpha, "beta-cab-2020") {
-		t.Error("producer hub must not list another producer's wine")
+		t.Error("producer collection must not list another producer's wine")
 	}
 
-	// 2. Region and varietal hubs cut the catalog the other way — across
+	// 2. Region and varietal collections cut the catalog the other way — across
 	// producers, which is the whole point of having them.
 	napa := readFile(t, filepath.Join(dist, "regions", "napa-valley", "index.html"))
 	if !strings.Contains(napa, "alpha-cab-2021") || !strings.Contains(napa, "beta-cab-2020") {
-		t.Error("region hub must gather both producers' Napa wines")
+		t.Error("region collection must gather both producers' Napa wines")
 	}
 	if strings.Contains(napa, "alpha-chard-2021") {
-		t.Error("region hub must not list a wine from another region")
+		t.Error("region collection must not list a wine from another region")
 	}
 	cab := readFile(t, filepath.Join(dist, "varietals", "cabernet-sauvignon", "index.html"))
 	if !strings.Contains(cab, "alpha-cab-2021") || !strings.Contains(cab, "beta-cab-2020") {
-		t.Error("varietal hub must gather both Cabernets")
+		t.Error("varietal collection must gather both Cabernets")
 	}
 
-	// 3. Hubs cross-link: a producer's page names the regions and varietals
-	// it covers, and those link to their own hubs. This is the internal link
+	// 3. Collections cross-link: a producer's page names the regions and varietals
+	// it covers, and those link to their own collections. This is the internal link
 	// graph the flat catalog never had.
 	if !strings.Contains(alpha, `href="/regions/napa-valley/"`) {
-		t.Error("producer hub must link the regions it covers")
+		t.Error("producer collection must link the regions it covers")
 	}
 	if !strings.Contains(alpha, `href="/varietals/chardonnay/"`) {
-		t.Error("producer hub must link the varietals it covers")
+		t.Error("producer collection must link the varietals it covers")
 	}
 	if !strings.Contains(napa, `href="/producers/beta-cellars/"`) {
-		t.Error("region hub must link the producers it covers")
+		t.Error("region collection must link the producers it covers")
 	}
 
 	// 4. Each kind has an index page listing every value with its wine count,
-	// so all 519 hubs are reachable in two clicks from anywhere on the site.
+	// so all 519 collections are reachable in two clicks from anywhere on the site.
 	index := readFile(t, filepath.Join(dist, "producers", "index.html"))
 	if !strings.Contains(index, `href="/producers/alpha-estate/"`) ||
 		!strings.Contains(index, `href="/producers/beta-cellars/"`) {
-		t.Error("producer index must link every producer hub")
+		t.Error("producer index must link every producer collection")
 	}
 	if !strings.Contains(index, ">2<") {
 		t.Error("producer index must show each producer's wine count")
 	}
 
-	// 5. Hubs and their indexes are in the sitemap.
+	// 5. Collections and their indexes are in the sitemap.
 	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
 	for _, path := range []string{
 		"https://finevines.com/producers/", "https://finevines.com/producers/alpha-estate/",
@@ -2027,27 +2027,27 @@ func TestBuild_FacetHubPages(t *testing.T) {
 		}
 	}
 
-	// 6. Every hub offers the live, filterable view of the same cut, so the
+	// 6. Every collection offers the live, filterable view of the same cut, so the
 	// static page hands off to the client engine rather than dead-ending.
 	if !strings.Contains(alpha, `/portfolio/?producer=Alpha&#43;Estate`) {
-		t.Error("hub must link the pre-filtered portfolio for the same cut")
+		t.Error("collection must link the pre-filtered portfolio for the same cut")
 	}
 }
 
-// TestBuild_HubsMergePunctuationVariantsOfOneValue: the catalog spells some
+// TestBuild_CollectionsMergePunctuationVariantsOfOneValue: the catalog spells some
 // values more than one way — "Lignier Michelot" and "Lignier-Michelot",
 // "Burgundy - C d Nuits" / "Burgundy, C d Nuits" / "Burgundy C d Nuits".
 // Every collision in the live data is a punctuation variant of the SAME
-// thing, so they must land on one hub holding all of the wines rather than
+// thing, so they must land on one collection holding all of the wines rather than
 // racing to overwrite each other's index.html.
-func TestBuild_HubsMergePunctuationVariantsOfOneValue(t *testing.T) {
+func TestBuild_CollectionsMergePunctuationVariantsOfOneValue(t *testing.T) {
 	data := t.TempDir()
 	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
 		t.Fatal(err)
 	}
 	wines := []model.Wine{
-		hubWine("lm-clos-2018", "Lignier Michelot", "Clos de la Roche", "Burgundy", "Pinot Noir", "2018"),
-		hubWine("lm-morey-2019", "Lignier-Michelot", "Morey Saint Denis", "Burgundy", "Pinot Noir", "2019"),
+		collectionWine("lm-clos-2018", "Lignier Michelot", "Clos de la Roche", "Burgundy", "Pinot Noir", "2018"),
+		collectionWine("lm-morey-2019", "Lignier-Michelot", "Morey Saint Denis", "Burgundy", "Pinot Noir", "2019"),
 	}
 	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
 		t.Fatal(err)
@@ -2058,21 +2058,21 @@ func TestBuild_HubsMergePunctuationVariantsOfOneValue(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	hub := readFile(t, filepath.Join(dist, "producers", "lignier-michelot", "index.html"))
-	if !strings.Contains(hub, "lm-clos-2018") || !strings.Contains(hub, "lm-morey-2019") {
-		t.Error("both spellings' wines must land on the one merged hub")
+	collection := readFile(t, filepath.Join(dist, "producers", "lignier-michelot", "index.html"))
+	if !strings.Contains(collection, "lm-clos-2018") || !strings.Contains(collection, "lm-morey-2019") {
+		t.Error("both spellings' wines must land on the one merged collection")
 	}
 	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
 	if got := strings.Count(sitemap, "<loc>https://finevines.com/producers/lignier-michelot/</loc>"); got != 1 {
-		t.Errorf("merged hub is in the sitemap %d times, want 1", got)
+		t.Errorf("merged collection is in the sitemap %d times, want 1", got)
 	}
 }
 
-// TestBuild_LargeHubPaginates: Pinot Noir is 181 cards and Burgundy 82, so a
-// hub cannot assume it fits on one page. Hubs paginate on the same
+// TestBuild_LargeCollectionPaginates: Pinot Noir is 181 cards and Burgundy 82, so a
+// collection cannot assume it fits on one page. Collections paginate on the same
 // /page/N/ convention as the portfolio, with real prev/next links, so a
 // crawler can walk a large cut without executing JS.
-func TestBuild_LargeHubPaginates(t *testing.T) {
+func TestBuild_LargeCollectionPaginates(t *testing.T) {
 	data := t.TempDir()
 	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
 		t.Fatal(err)
@@ -2080,7 +2080,7 @@ func TestBuild_LargeHubPaginates(t *testing.T) {
 	var wines []model.Wine
 	for i := 0; i < portfolioPageSize+3; i++ {
 		slug := fmt.Sprintf("big-%02d", i)
-		wines = append(wines, hubWine(slug, fmt.Sprintf("Estate %02d", i), "Red", "Burgundy", "Pinot Noir", "2020"))
+		wines = append(wines, collectionWine(slug, fmt.Sprintf("Estate %02d", i), "Red", "Burgundy", "Pinot Noir", "2020"))
 	}
 	if err := model.SaveWines(filepath.Join(data, "wines.json"), wines); err != nil {
 		t.Fatal(err)
@@ -2093,19 +2093,19 @@ func TestBuild_LargeHubPaginates(t *testing.T) {
 
 	first := readFile(t, filepath.Join(dist, "varietals", "pinot-noir", "index.html"))
 	if !strings.Contains(first, `rel="next" href="/varietals/pinot-noir/page/2/"`) {
-		t.Error("an oversized hub's first page must link the next page")
+		t.Error("an oversized collection's first page must link the next page")
 	}
 	second := readFile(t, filepath.Join(dist, "varietals", "pinot-noir", "page", "2", "index.html"))
 	if !strings.Contains(second, `rel="prev" href="/varietals/pinot-noir/"`) {
-		t.Error("hub page 2 must link back to the bare hub URL, not /page/1/")
+		t.Error("collection page 2 must link back to the bare collection URL, not /page/1/")
 	}
 	// Page 2 holds the remainder — three cards, not a second full page.
 	if got := strings.Count(second, `class="wine-card"`); got != 3 {
-		t.Errorf("hub page 2 has %d cards, want 3", got)
+		t.Errorf("collection page 2 has %d cards, want 3", got)
 	}
 	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
 	if !strings.Contains(sitemap, "<loc>https://finevines.com/varietals/pinot-noir/page/2/</loc>") {
-		t.Error("hub pagination must be in the sitemap")
+		t.Error("collection pagination must be in the sitemap")
 	}
 }
 
