@@ -438,6 +438,13 @@ func runDeploy(cfg config.Config) error {
 	if err := validateClientContentForDeploy(cfg.SiteBaseURL, content); err != nil {
 		return err
 	}
+	// The site's address is compiled into dist/ at build time, so a config
+	// change alone does not move it. Refuse to publish a tree built for a
+	// different host rather than quietly telling search engines the catalog
+	// lives on the staging CDN. See deploy.CheckBuiltBaseURL.
+	if err := deploy.CheckBuiltBaseURL("dist", cfg.SiteBaseURL); err != nil {
+		return err
+	}
 
 	requiredEnv := []struct{ name, value string }{
 		{"FINEVINES_BUNNY_STORAGE_ZONE", cfg.BunnyStorageZone},
