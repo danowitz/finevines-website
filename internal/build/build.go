@@ -81,6 +81,7 @@ type site struct {
 	NavJSURL       string
 	PortfolioJSURL string
 	FiltersJSURL   string
+	NotFoundJSURL  string
 	// HotSellerSlugs is data/hot-sellers.json's ranking (best first), loaded
 	// by loadSite; Run resolves it against the catalog into the homepage's
 	// HotSellers section. Empty (file absent/thin) ⇒ no section.
@@ -452,6 +453,12 @@ type newsPostPage struct {
 type notFoundPage struct {
 	page
 	NoIndex bool
+	// IndexURL is the content-hashed catalog-index, so assets/js/notfound.js
+	// can look up whatever URL the visitor actually asked for. Everything
+	// reaching this page is a URL the redirect map did not know about, and
+	// the visitor came for one specific bottle — a static signpost cannot
+	// help with that, but the catalog can.
+	IndexURL string
 }
 
 // portfolioPage carries ONE paginated slice of the catalog — this page's 48
@@ -563,6 +570,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		{"js/nav.js", &s.NavJSURL},
 		{"js/portfolio.js", &s.PortfolioJSURL},
 		{"js/filters.js", &s.FiltersJSURL},
+		{"js/notfound.js", &s.NotFoundJSURL},
 	} {
 		url, err := fingerprintAsset(distDir, fp.rel)
 		if err != nil {
@@ -815,7 +823,8 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 			Description: "The page you're looking for isn't here. Explore the FineVines portfolio or get in touch.",
 			Path:        "/404.html",
 		},
-		NoIndex: true,
+		NoIndex:  true,
+		IndexURL: indexURL,
 	}
 	if err := renderNotFound(tmpl, distDir, notFound); err != nil {
 		return err

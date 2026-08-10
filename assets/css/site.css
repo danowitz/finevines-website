@@ -1236,3 +1236,30 @@ h1, h2, .eyebrow, .lede { overflow-wrap: break-word; }
 .browse-by { margin-top: 14px; font-family: var(--sans); font-size: 14px; color: var(--brass-100); }
 .browse-by a { color: #fff; text-decoration: none; border-bottom: 1px solid var(--brass-300); }
 .browse-by a:hover { border-bottom-color: #fff; }
+
+/* ---- 404 suggestions --------------------------------------------------- */
+/* The failed address, echoed back inside the hero band. */
+.notfound-asked { font-family: var(--sans); font-size: 14px; color: var(--brass-100); margin-top: 18px; }
+.notfound-asked code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px;
+  background: rgba(0, 0, 0, .28); border: 1px solid rgba(212, 175, 108, .3);
+  border-radius: 5px; padding: 3px 8px; color: #fff; word-break: break-all; }
+
+/* What the catalog lookup found. Reuses .wine-grid/.wine-card wholesale so a
+   suggestion looks like the catalog it came from. */
+.notfound-suggest { padding: 44px 0 8px; }
+.notfound-suggest h2 {
+  font-family: var(--sans); text-transform: uppercase; letter-spacing: .14em;
+  font-size: 12.5px; color: var(--gold-dark); margin: 0 0 18px; }
+/* The vintage line — "The 2019 is no longer listed" — is the one piece of
+   real news on the page, so it gets the callout treatment. */
+.notfound-note {
+  font-family: var(--serif-text); font-size: 18px; color: var(--ink-strong);
+  border-left: 4px solid var(--gold); background: var(--parchment-100);
+  border-radius: 0 10px 10px 0; padding: 14px 20px; margin: 0 0 22px; }
+.notfound-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.notfound-links a {
+  display: block; border: 1px solid var(--line); border-radius: 999px; padding: 6px 16px;
+  font-size: 14px; color: var(--ink-strong); background: #fff; text-decoration: none;
+  transition: border-color .15s ease, color .15s ease; }
+.notfound-links a:hover { border-color: var(--gold); color: var(--bordeaux-700); }

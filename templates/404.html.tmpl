@@ -27,14 +27,31 @@
       <p class="lede">The page you're looking for isn't here &mdash; it may have moved, or the address
         wasn't quite right. From here, the full portfolio is the surest way onward, and the team is
         always glad to help you find what you're after.</p>
+      {{/* The address that failed. Seeing it is often the whole answer: a
+           truncated paste or a stray character is obvious on sight.
+           Revealed by notfound.js, so it stays hidden with JS off rather
+           than showing an empty frame. */}}
+      <p class="notfound-asked" hidden>You asked for <code id="notfound-path"></code></p>
       <p class="hero-actions">
         <a class="btn btn-primary" href="/portfolio/">Browse the Portfolio</a>
         <a class="btn btn-ghost" href="/contact/">Contact Us</a>
       </p>
     </div>
   </section>
+
+  {{/* Where assets/js/notfound.js writes what it found. It reads the path
+       the visitor asked for and searches the same catalog-index the
+       portfolio filters against, so a delisted wine or a moved slug still
+       leads somewhere useful instead of dead-ending on a signpost.
+
+       Empty and hidden server-side: with JS off, or if the index fetch
+       fails, the page is exactly the signpost it was before. */}}
+  <section class="wrap">
+    <div id="notfound-suggest" class="notfound-suggest" data-index-url="{{.IndexURL}}" hidden></div>
+  </section>
 </main>
 {{template "footer" .}}
+<script src="{{.NotFoundJSURL}}" defer></script>
 </body>
 </html>
 {{end}}

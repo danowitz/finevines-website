@@ -2288,6 +2288,69 @@ func TestBuild_CollectionIndexesAreReachableFromEveryPage(t *testing.T) {
 	}
 }
 
+// TestBuild_NotFoundPage covers the page a visitor lands on when a URL no
+// longer exists.
+//
+// The catalog churns: wines sell out and are delisted, slugs move when a
+// producer name is corrected, and 51,645 old-site URLs are being funnelled
+// through a redirect map that cannot possibly be complete. Every one of those
+// misses currently hits Bunny's stock error page — off-brand, and a dead end
+// for someone who was looking for a specific bottle.
+//
+// It is written as a bare dist/404.html rather than 404/index.html because a
+// CDN error page is configured as a FILE path, and it is kept out of the
+// sitemap and marked noindex: a 404 that advertises itself for indexing is a
+// soft-404 in search engines' eyes.
+func TestBuild_NotFoundPage(t *testing.T) {
+	data := t.TempDir()
+	if err := os.CopyFS(data, os.DirFS("testdata")); err != nil {
+		t.Fatal(err)
+	}
+	dist := t.TempDir()
+	if err := Run(data, "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. A bare file, not a directory — the pull zone points at a path.
+	page := readFile(t, filepath.Join(dist, "404.html"))
+	if _, err := os.Stat(filepath.Join(dist, "404", "index.html")); err == nil {
+		t.Error("the 404 page must be dist/404.html, not a 404/ directory")
+	}
+
+	// 2. It wears the site's own chrome, so a miss still looks like FineVines.
+	for _, want := range []string{`class="site-header"`, `class="site-footer"`, `href="/portfolio/"`} {
+		if !strings.Contains(page, want) {
+			t.Errorf("the 404 page must carry the site chrome: %s", want)
+		}
+	}
+
+	// 3. Never indexed, and never advertised in the sitemap.
+	if !strings.Contains(page, `name="robots" content="noindex"`) {
+		t.Error("the 404 page must be noindex — an indexable 404 is a soft-404")
+	}
+	sitemap := readFile(t, filepath.Join(dist, "sitemap.xml"))
+	if strings.Contains(sitemap, "404") {
+		t.Error("the 404 page must not be in the sitemap")
+	}
+
+	// 4. It carries what the client-side matcher needs: the hashed
+	// catalog-index to search, and the script that reads location.pathname.
+	idx := globOne(t, filepath.Join(dist, "assets", "catalog-index*.json"))
+	idxName := filepath.Base(idx)
+	if !strings.Contains(page, idxName) {
+		t.Errorf("the 404 page must reference the catalog-index (%s) so it can suggest matches", idxName)
+	}
+	if !strings.Contains(page, "notfound.") || !strings.Contains(page, ".js") {
+		t.Error("the 404 page must load the fingerprinted notfound script")
+	}
+
+	// 5. The script is fingerprinted like every other asset, and the
+	// unhashed original must not also ship.
+	if _, err := os.Stat(filepath.Join(dist, "assets", "js", "notfound.js")); err == nil {
+		t.Error("the unhashed notfound.js must not be deployed alongside the hashed copy")
+	}
+}
+
 // TestBuild_NoInternalLinkIsDead walks the whole built site and resolves
 // every internal href against what was actually written.
 //
