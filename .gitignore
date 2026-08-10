@@ -20,6 +20,11 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+# ...but tools/coverage/ is SOURCE — the image-coverage reporter. The rule
+# above is unanchored, so it swallows any directory called "coverage" at any
+# depth, and `git add tools/coverage/...` refuses without -f. Un-ignore it so a
+# second file added there does not silently go untracked.
+!tools/coverage/
 *.lcov
 
 # nyc test coverage
@@ -169,7 +174,14 @@ finevines.exe
 docs/salesforce/*.wsdl
 
 # Enrichment coverage report (generated, internal — never published to the CDN)
-reports/
+# (reports/* rather than reports/ — git cannot re-include a file whose parent
+# DIRECTORY is excluded, so the negation below would be dead.)
+reports/*
+# image-coverage.md is the one exception: generated, but COMMITTED, because it
+# is the figure the cutover checklist and the supplier ask are quoted from, and
+# a number nobody can diff is a number nobody trusts. Without this, `git add
+# reports/image-coverage.md` exits 1 even though the file is already tracked.
+!reports/image-coverage.md
 
 # Generated ChatGPT enrichment prompt batches (regenerable from the roster)
 data/enrichment-prompts/
