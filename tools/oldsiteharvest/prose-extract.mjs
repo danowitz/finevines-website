@@ -410,6 +410,158 @@ export function extractTastingNote(paragraphs) {
 }
 
 // ---------------------------------------------------------------------------
+// Quotes vs. retained prose — bucket 3 (quotes) and buckets 2/4 (producerCopy/
+// tastingNote) sometimes carry the SAME passage twice: the old site
+// occasionally republished a sentence both as ordinary prose AND, in a
+// separate paragraph elsewhere on the page, wrapped in quote marks on its
+// own. Rendered as-is that reads as a stutter — the same sentence twice on
+// one page. This is a DIFFERENT shape from the facts-vs-prose duplication
+// above: both copies are real, independent SOURCE paragraphs (not one
+// paragraph a fact was lifted out of), so resolving it is a choice about
+// which of the two duplicate copies to keep, not a span to cut out of a
+// single paragraph.
+// ---------------------------------------------------------------------------
+
+// wordTokens returns every word in text as { word, start, end }, lowercased
+// with all punctuation and quote-mark characters stripped, but keeping each
+// token's ORIGINAL character offsets so a matched run can be spliced back
+// out of the source string with everything around it left untouched.
+function wordTokens(text) {
+  const out = [];
+  const re = /[\p{L}\p{N}]+/gu;
+  let m;
+  while ((m = re.exec(text))) {
+    out.push({ word: m[0].toLowerCase(), start: m.index, end: m.index + m[0].length });
+  }
+  return out;
+}
+
+function wordsOf(text) {
+  return wordTokens(text).map((t) => t.word);
+}
+
+// wordEditDistance is ordinary Levenshtein distance computed over WORD
+// tokens rather than characters — one substitution/insertion/deletion per
+// DIFFERING WORD. This is what lets a duplicate be recognized even when the
+// two copies aren't byte-identical: the source itself sometimes re-typed a
+// republished passage with a small slip (e.g. Altocedro Malbec Gran
+// Reserva's own quote paragraph has "fig ad boysenberry" where its prose
+// paragraph has "fig and boysenberry" — a dropped letter, not a different
+// wine). A handful of word-level differences in an otherwise-long passage is
+// still the SAME passage; a genuinely different sentence is not.
+function wordEditDistance(a, b) {
+  const dp = [];
+  for (let i = 0; i <= a.length; i++) dp.push(new Array(b.length + 1).fill(0));
+  for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+// findOverlap looks for quoteText inside proseText — an exact substring
+// first (the common case: the source republished the passage byte-for-byte,
+// modulo whichever quote-mark characters wrapped it), or otherwise the best
+// word-window whose word-level edit distance from the quote is within ~5%
+// of the quote's own length (rounded up, minimum 1) — "near-identical,
+// allowing for punctuation and a stray copy-paste slip," not a fuzzy content
+// match. Returns the matching span's character offsets in proseText, or
+// null when no close-enough run exists.
+function findOverlap(quoteText, proseText) {
+  const qWords = wordsOf(quoteText);
+  if (!qWords.length) return null;
+
+  const exactIdx = proseText.indexOf(quoteText);
+  if (exactIdx >= 0) return { start: exactIdx, end: exactIdx + quoteText.length };
+
+  const tokens = wordTokens(proseText);
+  if (tokens.length < qWords.length) return null;
+
+  const maxDistance = Math.max(1, Math.round(qWords.length * 0.05));
+  let best = null;
+  for (let start = 0; start <= tokens.length - qWords.length; start++) {
+    const window = tokens.slice(start, start + qWords.length);
+    const dist = wordEditDistance(qWords, window.map((t) => t.word));
+    if (dist <= maxDistance && (!best || dist < best.dist)) {
+      best = { dist, start: window[0].start, end: window[window.length - 1].end };
+    }
+  }
+  return best ? { start: best.start, end: best.end } : null;
+}
+
+function overlaps(quoteText, proseText) {
+  return findOverlap(quoteText, proseText) !== null;
+}
+
+// stripOverlap removes the span of proseText that duplicates quoteText,
+// leaving everything else in proseText untouched.
+function stripOverlap(proseText, quoteText) {
+  const span = findOverlap(quoteText, proseText);
+  if (!span) return proseText;
+  return proseText.slice(0, span.start) + proseText.slice(span.end);
+}
+
+// dedupeQuotesAgainstProse resolves a quote that duplicates prose already
+// retained in producerCopy/tastingNote:
+//
+//   - An UNATTRIBUTED quote is DROPPED and the prose paragraph survives
+//     untouched. The prose carries the surrounding context — "We strive for
+//     a La Consulta-terroir driven Malbec that is complex and concentrated"
+//     is the part that says something — while the quote is a bare fragment
+//     of the same sentence with nothing of its own to add.
+//   - An ATTRIBUTED quote SURVIVES instead: the attribution (who said it) is
+//     the value, and dropping it would lose that. The overlapping span is
+//     cut out of the prose paragraph in its place, dropping the paragraph
+//     entirely if nothing but punctuation is left of it (same rule
+//     stripFactSpans uses).
+//
+// Only the FIRST paragraph a quote overlaps is touched — one duplicate
+// resolved per quote, matching how the source actually repeats a passage
+// (once as prose, once as a quote; never three times in this corpus).
+export function dedupeQuotesAgainstProse(quotes, producerCopy, tastingNote) {
+  const keptQuotes = [];
+  const copy = [...producerCopy];
+  const notes = [...tastingNote];
+
+  for (const q of quotes) {
+    let hitList = null;
+    let hitIndex = -1;
+    for (const list of [copy, notes]) {
+      const idx = list.findIndex((p) => overlaps(q.quote, p));
+      if (idx !== -1) {
+        hitList = list;
+        hitIndex = idx;
+        break;
+      }
+    }
+
+    if (hitIndex === -1) {
+      keptQuotes.push(q);
+      continue;
+    }
+
+    if (!q.attribution) {
+      continue; // the prose already carries this passage; drop the bare quote
+    }
+
+    keptQuotes.push(q);
+    const stripped = stripOverlap(hitList[hitIndex], q.quote).trim();
+    if (!stripped || BLANK_RE.test(stripped)) {
+      hitList.splice(hitIndex, 1);
+    } else {
+      hitList[hitIndex] = stripped;
+    }
+  }
+
+  return { quotes: keptQuotes, producerCopy: copy, tastingNote: notes };
+}
+
+// ---------------------------------------------------------------------------
 // End-to-end wiring.
 // ---------------------------------------------------------------------------
 
@@ -438,9 +590,9 @@ export function buildExtracted(manifest, wines) {
     // must not ALSO carry it into producerCopy/tastingNote/quotes — see
     // stripFactSpans's doc comment.
     const cleaned = stripFactSpans(paras, facts);
-    const producerCopy = extractProducerCopy(cleaned);
-    const tastingNote = extractTastingNote(cleaned);
-    const quotes = [];
+    const producerCopyRaw = extractProducerCopy(cleaned);
+    const tastingNoteRaw = extractTastingNote(cleaned);
+    const quotesRaw = [];
 
     for (const p of cleaned) {
       const t = p.text.trim();
@@ -449,8 +601,13 @@ export function buildExtracted(manifest, wines) {
         continue;
       }
       const q = extractQuote(t);
-      if (q) quotes.push(q);
+      if (q) quotesRaw.push(q);
     }
+
+    // The old site sometimes republished the same passage as both prose and
+    // a standalone quote — see dedupeQuotesAgainstProse's doc comment.
+    const { quotes, producerCopy, tastingNote } =
+      dedupeQuotesAgainstProse(quotesRaw, producerCopyRaw, tastingNoteRaw);
 
     for (const wine of hits) {
       const entry = {

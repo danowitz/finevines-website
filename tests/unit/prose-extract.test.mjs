@@ -21,6 +21,7 @@ import {
   extractTastingNote,
   splitConcatenatedLabels,
   stripFactSpans,
+  dedupeQuotesAgainstProse,
   buildExtracted,
 } from '../../tools/oldsiteharvest/prose-extract.mjs';
 
@@ -438,5 +439,111 @@ describe('buildExtracted — the Altocedro Cabernet Sauvignon regression (facts 
     assert.match(e.producerCopy[0], /We strive for a La Consulta-terroir driven Cabernet Sauvignon/);
     assert.ok(!e.producerCopy[0].includes('Total Production'));
     assert.ok(!e.producerCopy[0].includes('\n'));
+  });
+});
+
+describe('dedupeQuotesAgainstProse — a passage republished as both prose and a standalone quote', () => {
+  test('an unattributed quote that duplicates retained prose is dropped; the prose survives untouched', () => {
+    // The real Altocedro Malbec Reserva shape: the same sentence, once as
+    // the tail of a producerCopy paragraph, once as its own quoted paragraph.
+    const prose = 'We strive for a La Consulta-terroir driven Malbec that is complex and concentrated. ' +
+      'Big and rich-tasting, with concentrated flavors of dark plum, dried blackberry and dark currant, ' +
+      'flanked by luscious Asian spice notes. Very creamy as well, offering a plush, open-textured finish ' +
+      'of dark chocolate and mocha.';
+    const quote = {
+      quote: 'Big and rich-tasting, with concentrated flavors of dark plum, dried blackberry and dark currant, ' +
+        'flanked by luscious Asian spice notes. Very creamy as well, offering a plush, open-textured finish ' +
+        'of dark chocolate and mocha.',
+    };
+    const result = dedupeQuotesAgainstProse([quote], [prose], []);
+    assert.deepEqual(result.quotes, []);
+    assert.deepEqual(result.producerCopy, [prose]);
+    assert.deepEqual(result.tastingNote, []);
+  });
+
+  test('the source\'s own copy-paste slip still counts as the same passage (near-identical, not byte-identical)', () => {
+    // Real shape from Altocedro Malbec Gran Reserva: the quote paragraph has
+    // "fig ad boysenberry" where the prose paragraph correctly has "fig and
+    // boysenberry" — a dropped letter in the SOURCE's own second copy, not a
+    // different sentence.
+    const prose = 'We strive for a La Consulta-terroir driven Malbec that is elegant with great depth. Very dark, ' +
+      'but juicy and driven, with a mouthwatering streak of briar and anise that pushes the muscular core of ' +
+      'raspberry, fig and boysenberry fruit. Graphite and black tea notes flash in the background. The finish ' +
+      'is long and structured.';
+    const quote = {
+      quote: 'Very dark, but juicy and driven, with a mouthwatering streak of briar and anise that pushes the ' +
+        'muscular core of raspberry, fig ad boysenberry fruit. Graphite and black tea notes flash in the ' +
+        'background. The finish is long and structured.',
+    };
+    const result = dedupeQuotesAgainstProse([quote], [prose], []);
+    assert.deepEqual(result.quotes, []);
+    assert.deepEqual(result.producerCopy, [prose]);
+  });
+
+  test('an attributed quote survives, and the overlapping span is trimmed from the prose instead', () => {
+    const prose = 'This is a serious, ambitious wine from a young estate. Bright, chiseled, and built for the ' +
+      'cellar, with real precision in the fruit.';
+    const quote = { quote: 'Bright, chiseled, and built for the cellar, with real precision in the fruit.', attribution: 'Vigneron\'s Journal' };
+    const result = dedupeQuotesAgainstProse([quote], [prose], []);
+    assert.deepEqual(result.quotes, [quote]);
+    assert.equal(result.producerCopy.length, 1);
+    assert.match(result.producerCopy[0], /This is a serious, ambitious wine from a young estate/);
+    assert.ok(!result.producerCopy[0].includes('built for the'));
+  });
+
+  test('an attributed quote that IS the whole prose paragraph drops the paragraph entirely, not an empty one', () => {
+    const prose = 'Big and rich-tasting, with concentrated flavors of dark plum.';
+    const quote = { quote: prose, attribution: 'James Suckling' };
+    const result = dedupeQuotesAgainstProse([quote], [], [prose]);
+    assert.deepEqual(result.quotes, [quote]);
+    assert.deepEqual(result.tastingNote, []);
+  });
+
+  test('a quote with no overlap anywhere is left alone, attributed or not', () => {
+    const prose = 'This vineyard sits next to Musigny, on a gentle east-facing slope.';
+    const quote = { quote: 'A completely unrelated tasting note about a totally different wine entirely.' };
+    const result = dedupeQuotesAgainstProse([quote], [prose], []);
+    assert.deepEqual(result.quotes, [quote]);
+    assert.deepEqual(result.producerCopy, [prose]);
+  });
+});
+
+// End-to-end regression for the reported bug: the real Altocedro Malbec
+// Reserva page — one producer-voice paragraph and one paragraph that is
+// JUST that paragraph's last two sentences re-published in quote marks.
+describe('buildExtracted — the Altocedro Malbec Reserva regression (quote no longer stutters against prose)', () => {
+  const wines = [
+    { sku: '603736*', slug: 'altocedro-malbec-reserva-2018', producer: 'Altocedro', name: 'Altocedro Malbec Reserva', vintage: '2018' },
+  ];
+  const manifest = [
+    {
+      oldPath: '/portfolio/altocedro/altocedro-malbec-reserva',
+      title: 'Altocedro Malbec Reserva',
+      paras: [
+        {
+          kind: 'description',
+          text: 'We strive for a La Consulta-terroir driven Malbec that is complex and concentrated. Big and ' +
+            'rich-tasting, with concentrated flavors of dark plum, dried blackberry and dark currant, flanked by ' +
+            'luscious Asian spice notes. Very creamy as well, offering a plush, open-textured finish of dark ' +
+            'chocolate and mocha.',
+        },
+        {
+          kind: 'description',
+          text: '“Big and rich-tasting, with concentrated flavors of dark plum, dried blackberry and dark ' +
+            'currant, flanked by luscious Asian spice notes. Very creamy as well, offering a plush, ' +
+            'open-textured finish of dark chocolate and mocha.”',
+        },
+      ],
+      chars: 400,
+    },
+  ];
+
+  test('the passage appears exactly once — as prose, with no duplicate quote', () => {
+    const { extracted } = buildExtracted(manifest, wines);
+    assert.equal(extracted.length, 1);
+    const e = extracted[0];
+    assert.equal(e.producerCopy.length, 1);
+    assert.match(e.producerCopy[0], /We strive for a La Consulta-terroir driven Malbec/);
+    assert.deepEqual(e.quotes, []);
   });
 });
