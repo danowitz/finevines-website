@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -1485,9 +1486,28 @@ func collapseSpellingVariants(wines []model.Wine) []model.Wine {
 	return wines
 }
 
+// strippedYear matches a year that normalize.StripForeignVintage REMOVED from
+// a sibling's copy — the space in front goes with it, exactly as the repair
+// took it — so proseKey can put it back for comparison.
+var strippedYear = regexp.MustCompile(`\s*\b(19|20)\d\d\b`)
+
 // proseKey is the descriptive copy a wine detail page is built around. Two
 // rows with the same key render pages that differ only in a year — the fields
 // listed here ARE the page's prose, and everything else on it is a fact grid.
+//
+// Comparison is byte-exact APART from years, and that boundary is deliberate
+// (client decision, 2026-08-09). It has to ignore years at all because the
+// catalog repairs shared prose by stripping the donor's year out of the
+// sibling's copy (normalize.StripForeignVintage): the two texts stop being
+// byte-equal even though one is plainly a copy, and 62 near-duplicates would
+// quietly start competing again.
+//
+// But it must not go further. Vintages separately enriched with the same
+// sentence and their own correct years ("This 2021 Atomique³ … is poised",
+// "This 2022 …") also collapse under a year-blind comparison, and merging
+// those would take another 429 pages out of the index — pages the catalog
+// wants ranking on their own. So the key only tolerates a year that is
+// ABSENT on one side, never two different years.
 func proseKey(w model.Wine) string {
 	return strings.Join([]string{
 		strings.TrimSpace(w.Description),
@@ -1496,6 +1516,26 @@ func proseKey(w model.Wine) string {
 		strings.TrimSpace(w.Palate),
 		strings.TrimSpace(w.Finish),
 	}, "\x00")
+}
+
+// sameProse reports whether two rows carry the same descriptive copy, ignoring
+// a year that the vintage repair removed from one of them.
+//
+// The asymmetry is the whole point: "…Centive 2024 from Tenuta…" and
+// "…Centive from Tenuta…" are one text with the year taken out, while
+// "This 2021 …" and "This 2022 …" are two texts. Stripping years from BOTH
+// sides would conflate them; stripping from only the side that still has one,
+// and only when that makes it equal to the other, does not.
+func sameProse(a, b string) bool {
+	if a == b {
+		return true
+	}
+	// Whichever side still carries years, remove them and compare again. A
+	// genuine copy-with-year-removed matches; two different years do not,
+	// because removing 2021 from one and 2022 from the other is only equal
+	// when both are stripped — which this never does.
+	return strippedYear.ReplaceAllString(a, "") == b ||
+		strippedYear.ReplaceAllString(b, "") == a
 }
 
 // canonicalVintage maps a wine slug to the slug it should canonicalise to,
@@ -1523,20 +1563,30 @@ func canonicalVintage(wines []model.Wine) map[string]string {
 	for _, g := range catalog.Build(wines) {
 		// catalog.Build orders Vintages newest first, so the first row seen
 		// for a prose key is the newest one carrying it.
-		owner := map[string]model.Wine{}
+		// Compared pairwise rather than through a map, because sameProse is a
+		// predicate, not a hash — it tolerates a year on one side only, which
+		// no single key can express. Groups hold a handful of vintages, so
+		// the quadratic walk is free.
+		var owners []model.Wine
 		for _, v := range g.Vintages {
 			for _, w := range v.Wines {
-				key := proseKey(w)
 				if strings.TrimSpace(w.Description) == "" {
 					continue // nothing written here to duplicate
 				}
-				first, seen := owner[key]
-				if !seen {
-					owner[key] = w
-					continue
+				key := proseKey(w)
+				matched := false
+				for _, o := range owners {
+					if !sameProse(proseKey(o), key) {
+						continue
+					}
+					if o.Slug != w.Slug {
+						out[w.Slug] = "/wines/" + o.Slug + "/"
+					}
+					matched = true
+					break
 				}
-				if first.Slug != w.Slug {
-					out[w.Slug] = "/wines/" + first.Slug + "/"
+				if !matched {
+					owners = append(owners, w)
 				}
 			}
 		}

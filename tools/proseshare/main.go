@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/gritautomation/finevines-website/internal/model"
+	"github.com/gritautomation/finevines-website/internal/normalize"
 )
 
 const cannedMarker = "temperature typical for its style"
@@ -32,12 +33,28 @@ func identity(w *model.Wine) string {
 
 func main() {
 	apply := flag.Bool("apply", false, "write the shared prose")
+	repair := flag.Bool("repair-vintages", false,
+		"clean stored prose — donor years and leftover source links — then exit (use with -apply)")
 	flag.Parse()
 
 	wines, err := model.LoadWines("data/wines.json")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "proseshare:", err)
 		os.Exit(1)
+	}
+
+	// -repair-vintages cleans up prose ALREADY shared before the year-stripping
+	// above existed. 58 wines name a year that is not their own — 53 of them
+	// exactly one year out, which is the donor being the newest sibling.
+	if *repair {
+		repairForeignVintages(wines, *apply)
+		if *apply {
+			if err := model.SaveWines("data/wines.json", wines); err != nil {
+				fmt.Fprintln(os.Stderr, "proseshare:", err)
+				os.Exit(1)
+			}
+		}
+		return
 	}
 
 	// Donor: a wine with real (non-canned) prose. Newest vintage wins so every
@@ -69,11 +86,20 @@ func main() {
 		if !*apply {
 			continue
 		}
-		w.Description = d.Description
-		w.SommelierNotes = d.SommelierNotes
-		w.Aroma = d.Aroma
-		w.Palate = d.Palate
-		w.Finish = d.Finish
+		// The donor's YEAR must not travel with its prose. Sharing tasting
+		// character across vintages is the client's decision; telling a
+		// customer the 2023 is the 2024 is not, and the copied sentence
+		// otherwise opens "This Moscato d'Asti 'Centive' 2024…" on the 2023's
+		// page. normalize.StripForeignVintage removes a year that is not this
+		// wine's, leaving drink windows and estate history alone.
+		clean := func(s string) string {
+			return normalize.StripCitations(normalize.StripForeignVintage(s, w.Vintage))
+		}
+		w.Description = clean(d.Description)
+		w.SommelierNotes = clean(d.SommelierNotes)
+		w.Aroma = clean(d.Aroma)
+		w.Palate = clean(d.Palate)
+		w.Finish = clean(d.Finish)
 		w.FoodPairings = append([]string(nil), d.FoodPairings...)
 		w.Appellation = d.Appellation
 		w.Country = d.Country
@@ -102,4 +128,58 @@ func main() {
 	}
 	fmt.Printf("proseshare: %d canned siblings %s prose from their wine's enriched vintage\n",
 		shared, map[bool]string{true: "received", false: "would receive"}[*apply])
+}
+
+// repairForeignVintages strips a donor's year out of prose that was already
+// shared, reporting each change. Separate from the sharing pass because it
+// touches wines whose prose is long since written — it corrects stored text
+// rather than copying new text in.
+func repairForeignVintages(wines []model.Wine, apply bool) {
+	fields := []struct {
+		name string
+		get  func(*model.Wine) *string
+	}{
+		{"description", func(w *model.Wine) *string { return &w.Description }},
+		{"sommelierNotes", func(w *model.Wine) *string { return &w.SommelierNotes }},
+		{"aroma", func(w *model.Wine) *string { return &w.Aroma }},
+		{"palate", func(w *model.Wine) *string { return &w.Palate }},
+		{"finish", func(w *model.Wine) *string { return &w.Finish }},
+	}
+	touched := 0
+	for i := range wines {
+		w := &wines[i]
+		changed := false
+		for _, f := range fields {
+			p := f.get(w)
+			fixed := normalize.StripCitations(normalize.StripForeignVintage(*p, w.Vintage))
+			if fixed == *p {
+				continue
+			}
+			if !changed {
+				fmt.Printf("%s (vintage %s)\n", w.Slug, w.Vintage)
+			}
+			fmt.Printf("  %-15s %s\n               -> %s\n", f.name, excerpt(*p), excerpt(fixed))
+			changed = true
+			if apply {
+				*p = fixed
+			}
+		}
+		if changed {
+			touched++
+		}
+	}
+	fmt.Printf("\nproseshare: %d wines %s a year that was not theirs\n",
+		touched, map[bool]string{true: "no longer name", false: "would stop naming"}[apply])
+	if !apply {
+		fmt.Println("dry run — re-run with -apply to write")
+	}
+}
+
+// excerpt trims stored prose to something readable in a terminal report.
+func excerpt(s string) string {
+	s = strings.Join(strings.Fields(s), " ")
+	if len(s) > 78 {
+		return s[:78] + "…"
+	}
+	return s
 }

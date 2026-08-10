@@ -61,6 +61,98 @@ func TestProducerStripsInternalLotCode(t *testing.T) {
 	}
 }
 
+// TestStripForeignVintage covers prose that names the WRONG year.
+//
+// The client's consolidation decision (2026-08-04) is that descriptive prose
+// barely changes across vintages of one cuvée: enrichment runs once per wine
+// and tools/proseshare fans the result out to the siblings. That decision is
+// about tasting character. It is not a decision to tell a customer the 2023
+// is the 2024 — but the donor's year travels inside the copied sentence, so
+// 58 wines currently do exactly that ("This Moscato d'Asti 'Centive' 2024…"
+// on the 2023's page).
+//
+// The year is removed rather than swapped. Shared prose describes the cuvée,
+// so saying nothing about the year is honest; rewriting "the 2012 unfolds"
+// into "the 2018 unfolds" would manufacture a vintage-specific claim about a
+// wine nobody tasted.
+func TestStripForeignVintage(t *testing.T) {
+	cases := []struct{ text, vintage, want string }{
+		// The donor's year, mid-sentence.
+		{"This Moscato d’Asti “Centive” 2024 from Tenuta Olim Bauda offers elegance.", "2023",
+			"This Moscato d’Asti “Centive” from Tenuta Olim Bauda offers elegance."},
+		{"Benjamin Leroux’s 2023 Charmes-Chambertin unfolds with restraint.", "2022",
+			"Benjamin Leroux’s Charmes-Chambertin unfolds with restraint."},
+		{"This 2020 Domaine Jean-Louis Chave Saint-Joseph reveals a bouquet.", "2023",
+			"This Domaine Jean-Louis Chave Saint-Joseph reveals a bouquet."},
+		// The wine's OWN year is correct and must stay.
+		{"The 2019 is drinking beautifully now.", "2019", "The 2019 is drinking beautifully now."},
+		// Drink windows are not vintage claims, including one that opens close
+		// to the vintage — proximity alone cannot tell the two apart.
+		{"Drink through 2036.", "2019", "Drink through 2036."},
+		{"A window of 2025–2032 rewards patience.", "2023", "A window of 2025–2032 rewards patience."},
+		{"Enjoy after 2024 onwards.", "2022", "Enjoy after 2024 onwards."},
+		// "from" is NOT a drink cue here: it precedes a producer far more often
+		// than a date, and treating it as one left contaminated wines uncorrected.
+		{"This Meursault from 2023 reveals refinement.", "2022", "This Meursault reveals refinement."},
+		{"Marsannay Blanc from Domaine Sylvain Pataille 2022 presents lift.", "2021", "Marsannay Blanc from Domaine Sylvain Pataille presents lift."},
+		// Found in the live catalog: a forward-looking cue reads as a year
+		// close to the vintage, and stripping it leaves "decanting after."
+		{"Rewarding gentle decanting after 2028.", "2022", "Rewarding gentle decanting after 2028."},
+		{"Best broached beyond 2026.", "2023", "Best broached beyond 2026."},
+		// Estate history is not vintage contamination, however phrased.
+		{"The domaine was founded in 1932 by the family.", "2019",
+			"The domaine was founded in 1932 by the family."},
+		{"Maxime Cheurlin took over in 2012 and remade the estate.", "2018",
+			"Maxime Cheurlin took over in 2012 and remade the estate."},
+		{"Vines planted in 2014 now yield concentrated fruit.", "2020",
+			"Vines planted in 2014 now yield concentrated fruit."},
+		// A year modifying a noun cannot be edited at token level without
+		// wrecking the sentence, so it is deliberately left for a human.
+		{"La Dominode from the 2022 vintage by Bize.", "2021", "La Dominode from the 2022 vintage by Bize."},
+		// Nothing to do.
+		{"A poised, mineral Chablis.", "2021", "A poised, mineral Chablis."},
+		{"", "2021", ""},
+	}
+	for _, c := range cases {
+		if got := StripForeignVintage(c.text, c.vintage); got != c.want {
+			t.Errorf("StripForeignVintage(%q, %q)\n  = %q\n want %q", c.text, c.vintage, got, c.want)
+		}
+	}
+}
+
+// TestStripCitations: the enrichment model left its sources in the prose as
+// markdown links — "([bourgognewine.dk](https://…?utm_source=openai))" —
+// and eleven fields across six wines render that literally on a customer-
+// facing page. Provenance belongs in the Sources map, which the catalog
+// already keeps; it does not belong in a tasting note.
+func TestStripCitations(t *testing.T) {
+	cases := []struct{ in, want string }{
+		// Parenthesised, mid-sentence, with the sentence's period outside.
+		{"Grown on limestone soils ([vignerons.com](https://www.vignerons.com/x?utm_source=openai)).",
+			"Grown on limestone soils."},
+		// Ends the string with no terminal punctuation of its own.
+		{"Pairs with roasted game ([bourgognewine.dk](https://bourgognewine.dk/p/1?utm_source=openai))",
+			"Pairs with roasted game."},
+		// Glued straight onto the preceding word, no space.
+		{"Aromas found in the 2023 notes([alphonse.lu](https://www.alphonse.lu/fr/shop/a?utm_source=openai))",
+			"Aromas found in the 2023 notes."},
+		// Two citations in one field.
+		{"Bright fruit ([a.com](https://a.com/1)) and firm tannin ([b.com](https://b.com/2)).",
+			"Bright fruit and firm tannin."},
+		// A bare URL with no markdown wrapper.
+		{"See https://www.louislatour.com/pdf/en/x.pdf for the estate's notes.",
+			"See for the estate's notes."},
+		// Prose with no citation is returned untouched, brackets and all.
+		{"A poised Chablis (Grand Cru) with real length.", "A poised Chablis (Grand Cru) with real length."},
+		{"", ""},
+	}
+	for _, c := range cases {
+		if got := StripCitations(c.in); got != c.want {
+			t.Errorf("StripCitations(%q)\n  = %q\n want %q", c.in, got, c.want)
+		}
+	}
+}
+
 func TestVintage(t *testing.T) {
 	cases := map[string]string{"14": "2014", "18": "2018", "98": "1998", "2021": "2021", "NV": "NV", "": ""}
 	for in, want := range cases {

@@ -144,6 +144,178 @@ func Producer(brand string) string {
 	return titleCase(brand)
 }
 
+// historyCue marks a year as ESTATE history rather than a vintage claim —
+// when the estate was founded, when a winemaker took over, when a parcel was
+// planted. Those years are facts about the domaine and belong on every
+// vintage's page.
+var historyCue = regexp.MustCompile(`(?i)\b(founded|established|since|began|start(?:ed)?|planted|replanted|acquired|bought|purchased|inherited|took over|taken over|joined|built|created|converted|certified)\b[^.;]{0,40}$`)
+
+// drinkCue marks a year as DRINKING guidance rather than a vintage claim.
+// A drink window can start close to the vintage ("2025–2036" on a 2022), so
+// proximity alone cannot tell the two apart.
+var drinkCue = regexp.MustCompile(`(?i)\b(drink|drinking|enjoy|cellar|ageing|aging|keep|hold|window|decant|decanting|revisit|broach)\b[^.;]{0,30}$`)
+
+// forwardCue is the second class of drinking guidance: a preposition
+// IMMEDIATELY before the year, as in "decanting after 2028" or "hold until
+// 2030". Adjacency is required because the same words introduce plenty of
+// non-guidance — "from Domaine Jouan 2020" and "from the 2022 vintage" are
+// attributions, and treating them as drink windows left eight contaminated
+// wines uncorrected. "from" and "between" are deliberately absent: in this
+// catalog they precede a producer far more often than a drinking date, and
+// real drinking guidance lives in the DrinkWindow field.
+var forwardCue = regexp.MustCompile(`(?i)\b(after|before|beyond|past|post|through|until|towards|toward)\s+$`)
+
+// yearRange matches a year that is one end of a span — "2025–2036",
+// "2025-2036", "2025 to 2036" — which is always a drink window, never a
+// vintage.
+var yearRange = regexp.MustCompile(`(19|20)\d\d\s*(?:[-–—]|to)\s*(19|20)\d\d`)
+
+// danglingPrep matches a preposition the year is the object of. Removing the
+// year alone would leave "This Meursault from reveals refinement", so the
+// preposition goes with it. No trailing \s here: foreignYear already consumes
+// the space before the year, so the text handed to this pattern ends at the
+// preposition itself.
+var danglingPrep = regexp.MustCompile(`(?i)\s+\b(from|of|in)$`)
+
+// headedNoun matches "the 2022 vintage" — a year sitting between a determiner
+// and a noun it modifies. No token-level edit reads well here: dropping the
+// year gives "from the vintage by Domaine X". These are left ALONE and
+// reported instead, because mangling a sentence is worse than a wrong year a
+// human can still see and fix.
+var headedNounBefore = regexp.MustCompile(`(?i)\b(the|this|that)\s+$`)
+var headedNounAfter = regexp.MustCompile(`(?i)^\s+(vintage|release|bottling|harvest)\b`)
+
+// foreignYear matches a four-digit year with the spacing around it, so
+// removing one does not leave a double space or a space before a comma.
+var foreignYear = regexp.MustCompile(`\s*\b(19|20)\d\d\b`)
+
+// StripForeignVintage removes a vintage year that is NOT this wine's from
+// descriptive prose.
+//
+// It exists because prose is shared across vintages of one cuvée (the
+// client's consolidation decision, 2026-08-04 — see tools/proseshare) and the
+// donor's year travels inside the copied sentence. The result is a page for
+// the 2023 that opens "This Moscato d'Asti 'Centive' 2024…": the tasting
+// character is a deliberate share, but the year is simply wrong.
+//
+// The year is REMOVED, never swapped for the right one. Shared prose
+// describes the cuvée, so omitting the year is honest, while rewriting "the
+// 2012 unfolds" into "the 2018 unfolds" would manufacture a vintage-specific
+// claim about a wine nobody tasted.
+//
+// Three things are deliberately left alone:
+//   - the wine's own vintage, which is correct;
+//   - a year introduced by an estate-history cue (founded, planted, took
+//     over), which is a fact about the domaine and true on every page;
+//   - a year that is drinking guidance — cued by "drink"/"through"/"until",
+//     or written as one end of a span like "2025–2036".
+//
+// Only years within a decade either side of the vintage are considered at
+// all. A tasting note does not reach further than that, so a distant year is
+// describing something else entirely.
+func StripForeignVintage(text, vintage string) string {
+	own, err := strconv.Atoi(strings.TrimSpace(vintage))
+	if err != nil || own < 1900 {
+		return text // NV, or a row with no usable vintage: nothing to compare against
+	}
+	// Spans are drink windows wherever they appear; take them off the table
+	// before looking at individual years.
+	spans := yearRange.FindAllStringIndex(text, -1)
+	inSpan := func(i int) bool {
+		for _, s := range spans {
+			if i >= s[0] && i < s[1] {
+				return true
+			}
+		}
+		return false
+	}
+
+	var b strings.Builder
+	last := 0
+	for _, loc := range foreignYear.FindAllStringIndex(text, -1) {
+		match := text[loc[0]:loc[1]]
+		year, err := strconv.Atoi(strings.TrimSpace(match))
+		yearAt := loc[1] - 4 // where the digits themselves start
+		keep := err != nil ||
+			year == own ||
+			year > own+10 || year < own-10 ||
+			inSpan(yearAt) ||
+			historyCue.MatchString(text[:yearAt]) ||
+			drinkCue.MatchString(text[:yearAt]) ||
+			forwardCue.MatchString(text[:yearAt])
+		// A year modifying a noun ("the 2022 vintage") cannot be removed at
+		// token level without wrecking the sentence — dropping it yields
+		// "from the vintage by Domaine X". Leave it and let the caller report
+		// it: a wrong year a human can see and rewrite beats mangled prose.
+		if !keep && headedNounBefore.MatchString(text[:yearAt]) && headedNounAfter.MatchString(text[loc[1]:]) {
+			keep = true
+		}
+		if keep {
+			continue // leave the text untouched between last and this match
+		}
+		// Take the preposition the year was the object of, so "Meursault from
+		// 2023 reveals" reads "Meursault reveals", not "Meursault from reveals".
+		cut := loc[0]
+		if p := danglingPrep.FindStringIndex(text[last:loc[0]]); p != nil && last+p[1] == loc[0] {
+			cut = last + p[0]
+		}
+		b.WriteString(text[last:cut])
+		last = loc[1]
+	}
+	if last == 0 {
+		return text // nothing removed; return the original untouched
+	}
+	b.WriteString(text[last:])
+	return strings.TrimSpace(b.String())
+}
+
+// citation matches a source the enrichment model left in the prose: a
+// markdown link, optionally wrapped in its own parentheses and optionally
+// glued to the preceding word — "([bourgognewine.dk](https://…))". The
+// leading \s* takes the space with it so nothing is left floating before the
+// sentence's own punctuation.
+var citation = regexp.MustCompile(`\s*\(?\[[^\]]*\]\(\s*https?://[^)\s]*\s*\)\)?`)
+
+// bareURL matches a naked link left in prose without markdown around it.
+var bareURL = regexp.MustCompile(`\s*\bhttps?://\S+`)
+
+// spaceBeforePunct tidies the gap a removal can leave in front of the
+// sentence's own punctuation ("soils ." → "soils.").
+var spaceBeforePunct = regexp.MustCompile(`\s+([.,;:!?])`)
+
+// doubleSpace collapses the gap left when a citation is removed from the
+// middle of a sentence.
+var doubleSpace = regexp.MustCompile(`[ \t]{2,}`)
+
+// StripCitations removes source links the enrichment model wrote into
+// descriptive prose.
+//
+// Eleven fields across six wines shipped with "([bourgognewine.dk](https://
+// bourgognewine.dk/…?utm_source=openai))" rendered literally on the wine's
+// public page. Provenance is real and worth keeping — the catalog already
+// keeps it, per field, in model.Wine.Sources — but a tasting note is not
+// where it belongs.
+//
+// A sentence that ends up without terminal punctuation gets a full stop,
+// since a citation frequently WAS the end of the sentence.
+func StripCitations(text string) string {
+	if strings.TrimSpace(text) == "" {
+		return text
+	}
+	out := citation.ReplaceAllString(text, "")
+	out = bareURL.ReplaceAllString(out, "")
+	if out == text {
+		return text
+	}
+	out = spaceBeforePunct.ReplaceAllString(out, "$1")
+	out = doubleSpace.ReplaceAllString(out, " ")
+	out = strings.TrimSpace(out)
+	if out != "" && !strings.ContainsAny(out[len(out)-1:], ".!?;:,") {
+		out += "."
+	}
+	return out
+}
+
 // Vintage expands a 2-digit year to 4 digits (≤30 → 20xx, else 19xx). Anything
 // else (already 4-digit, "NV", empty) is returned unchanged.
 func Vintage(v string) string {

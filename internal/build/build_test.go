@@ -1856,6 +1856,26 @@ func TestBuild_VintagesSharingProseCanonicaliseToTheNewest(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// 0. Prose that differs ONLY by a vintage year is still shared prose.
+	// The year-stripping repair (normalize.StripForeignVintage) deliberately
+	// removes the donor's year from the sibling's copy, so byte equality
+	// would stop recognising exactly the pages this rule exists for — and 62
+	// near-duplicates would quietly start competing again.
+	withYear := proseKey(model.Wine{Description: "The 2024 Centive is gently sparkling."})
+	stripped := proseKey(model.Wine{Description: "The Centive is gently sparkling."})
+	if !sameProse(withYear, stripped) {
+		t.Error("a copy with its donor's year removed must count as the same prose")
+	}
+	// But two vintages separately enriched with their OWN correct years are
+	// two texts, not one. Merging them would pull another 429 pages out of
+	// the index (client decision, 2026-08-09: byte-exact apart from a
+	// removed year, and no further).
+	a := proseKey(model.Wine{Description: "This 2021 Atomique is poised."})
+	b := proseKey(model.Wine{Description: "This 2022 Atomique is poised."})
+	if sameProse(a, b) {
+		t.Error("prose carrying two DIFFERENT years must stay two distinct pages")
+	}
+
 	// 1. The older copy points at the newest vintage.
 	old := readFile(t, filepath.Join(dist, "wines", "bauda-centive-2023", "index.html"))
 	if !strings.Contains(old, `<link rel="canonical" href="https://finevines.com/wines/bauda-centive-2024/">`) {
