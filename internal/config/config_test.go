@@ -6,7 +6,15 @@ import (
 	"testing"
 )
 
+func clearEnv(t *testing.T, keys ...string) {
+	t.Helper()
+	for _, key := range keys {
+		t.Setenv(key, "")
+	}
+}
+
 func TestLoadReadsEnvFile(t *testing.T) {
+	clearEnv(t, "FINEVINES_SF_BASE_URL", "FINEVINES_IMAGE_MODEL")
 	dir := t.TempDir()
 	envPath := filepath.Join(dir, ".env")
 	os.WriteFile(envPath, []byte("FINEVINES_SF_BASE_URL=https://finevines.my.salesforce.com\n# comment\nFINEVINES_IMAGE_MODEL=imagen-4.0-generate-001\n"), 0o644)
@@ -40,6 +48,7 @@ func TestEnvVarOverridesEnvFile(t *testing.T) {
 // points at the staging host. In production the two are the same domain,
 // which is why the default must track SiteBaseURL, not a constant.
 func TestOldSiteURLDefaultsToSiteBaseURL(t *testing.T) {
+	clearEnv(t, "FINEVINES_SITE_BASE_URL", "FINEVINES_OLD_SITE_URL")
 	dir := t.TempDir()
 	envPath := filepath.Join(dir, ".env")
 	os.WriteFile(envPath, []byte("FINEVINES_SITE_BASE_URL=https://staging.example\n"), 0o644)
@@ -51,6 +60,7 @@ func TestOldSiteURLDefaultsToSiteBaseURL(t *testing.T) {
 }
 
 func TestOldSiteURLOverridesSiteBaseURL(t *testing.T) {
+	clearEnv(t, "FINEVINES_SITE_BASE_URL", "FINEVINES_OLD_SITE_URL")
 	dir := t.TempDir()
 	envPath := filepath.Join(dir, ".env")
 	os.WriteFile(envPath, []byte("FINEVINES_SITE_BASE_URL=https://staging.example\nFINEVINES_OLD_SITE_URL=https://finevines.com\n"), 0o644)
@@ -70,6 +80,7 @@ func TestOldSiteURLOverridesSiteBaseURL(t *testing.T) {
 // the override is how deployments point it at the zone's *.b-cdn.net
 // hostname instead.
 func TestRedirectsMapURLDefaultsToSiteBaseURL(t *testing.T) {
+	clearEnv(t, "FINEVINES_SITE_BASE_URL", "FINEVINES_REDIRECTS_MAP_URL")
 	dir := t.TempDir()
 	envPath := filepath.Join(dir, ".env")
 	os.WriteFile(envPath, []byte("FINEVINES_SITE_BASE_URL=https://staging.example/\n"), 0o644)
@@ -81,6 +92,7 @@ func TestRedirectsMapURLDefaultsToSiteBaseURL(t *testing.T) {
 }
 
 func TestRedirectsMapURLOverride(t *testing.T) {
+	clearEnv(t, "FINEVINES_SITE_BASE_URL", "FINEVINES_REDIRECTS_MAP_URL")
 	dir := t.TempDir()
 	envPath := filepath.Join(dir, ".env")
 	os.WriteFile(envPath, []byte("FINEVINES_SITE_BASE_URL=https://staging.example\nFINEVINES_REDIRECTS_MAP_URL=https://zone.b-cdn.net/redirects.json\n"), 0o644)
@@ -124,6 +136,7 @@ func TestLoad_NotifySettings(t *testing.T) {
 // Config and none of them mail anything, so `build` must not fail because the
 // relay was never configured. `notify` is where the requirement is enforced.
 func TestLoad_UnsetSMTPPortIsZeroNotAnError(t *testing.T) {
+	clearEnv(t, "FINEVINES_SMTP_PORT")
 	cfg, err := Load("nonexistent.env")
 	if err != nil {
 		t.Fatalf("Load returned error: %v", err)
