@@ -61,6 +61,11 @@ function scaffold() {
 
   const runner = join(root, 'runner')
   git(root, 'clone', origin, 'runner')
+  // Some scenarios make a direct setup commit in the runner clone before
+  // commitback.sh supplies the bot identity. GitHub-hosted runners have no
+  // global author configured, so keep this fixture self-contained.
+  git(runner, 'config', 'user.name', 'runner')
+  git(runner, 'config', 'user.email', 'runner@example.com')
   cpSync(SCRIPT, join(runner, 'commitback.sh'))
 
   const human = join(root, 'human')
