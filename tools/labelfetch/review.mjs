@@ -30,7 +30,9 @@ const wines = new Map(
   JSON.parse(await readFile('data/wines.json', 'utf8')).map((w) => [w.slug, w])
 );
 
-const all = Object.values(manifest);
+const slugArg = process.argv.indexOf('--slug');
+const onlySlug = slugArg >= 0 ? process.argv[slugArg + 1] || '' : '';
+const all = Object.values(manifest).filter((record) => !onlySlug || record.slug === onlySlug);
 // The sheet is built while the pipeline may still be writing, and images get
 // removed when a rule tightens. A record whose file is gone must not become a
 // broken picture — that reads as a fetch failure rather than the bookkeeping
@@ -263,6 +265,12 @@ const card = (r, { chosen }) => {
     })
     .slice(0, 5);
   const title = [w.producer, w.name].filter(Boolean).join(' — ') || r.name;
+  const f = r.funnel || {};
+  const funnel = r.funnel
+    ? `${f.searchResults || 0} results → ${f.downloaded || 0} downloaded → ` +
+      `${f.bottleShapePassed || 0} bottles → ${f.strongestGroupImages || 0} matching → ` +
+      `${f.identityAnchors || 0} anchors → ${f.publishableAnchors || 0} publishable`
+    : '';
   // The host is a link to the product page the image was fetched from, so
   // the reviewer can see the picture in its retail context in one click.
   // Anchors are interactive elements, so clicking one navigates without
@@ -286,6 +294,8 @@ const card = (r, { chosen }) => {
       <b>${esc(title)}</b>
       <span class="meta">${esc([w.vintage, w.region || w.country, w.varietal].filter(Boolean).join(' · '))}</span>
       <span class="sku">SKU ${esc(w.sku || '?')}</span>
+      ${r.failureStage ? `<span class="failure-stage">stopped at ${esc(r.failureStage)}</span>` : ''}
+      ${funnel ? `<span class="funnel">${esc(funnel)}</span>` : ''}
       ${r.siblingVintages?.length ? `<span class="vints">decision also covers: ${esc(r.siblingVintages.join(' · '))} (image is shared across vintages on import)</span>` : ''}
       <span class="search">search:
         <a href="${esc(googleURL(w, r))}" target="_blank" rel="noopener">Google Images</a> &middot;
@@ -327,6 +337,8 @@ const html = `<!doctype html>
   b { font-size: 13px; }
   .meta { color: #6e5d4e; font-size: 11.5px; }
   .sku { color: #6b1630; font-size: 11px; font-family: ui-monospace, monospace; }
+  .failure-stage { color: #fff; background: #9a2b2b; border-radius: 3px; padding: 2px 5px; align-self: flex-start; font-size: 10px; font-weight: 700; }
+  .funnel { color: #43352a; background: #f4ece0; border-radius: 3px; padding: 3px 5px; font-size: 10px; }
   .why { color: #8a6a2f; font-size: 11px; background: #f1e6c9; border-radius: 3px; padding: 2px 5px; align-self: flex-start; }
   .corr { color: #2e6b3f; font-size: 11px; background: #e2eadd; border-radius: 3px; padding: 2px 5px; align-self: flex-start; font-weight: 600; }
   .vints { color: #6b1630; font-size: 11px; font-style: italic; }

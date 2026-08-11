@@ -26,10 +26,10 @@ export function hasSelectionIdentityVerdict(rec) {
 // attempt; see import.mjs.
 export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
   if (isWatermarked(rec)) {
-    return { import: false, reason: `watermark (${rec.watermark || '?'}) — never imported` };
+    return { import: false, stage: 'watermark', reason: `watermark (${rec.watermark || '?'}) — never imported` };
   }
   if (!wine) {
-    return { import: false, reason: 'no such wine in the catalog' };
+    return { import: false, stage: 'catalog-missing', reason: 'no such wine in the catalog' };
   }
   // Never overwrite a real photograph the catalog already holds. Only the
   // generated stand-ins are replaced — the SVG label and the gpt-image-1
@@ -43,13 +43,14 @@ export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
     wine.imageSource !== 'generated-photo' &&
     wine.imageSource !== 'label-scan'
   ) {
-    return { import: false, reason: `already has a photograph (${wine.imagePath})` };
+    return { import: false, stage: 'existing-photo', reason: `already has a photograph (${wine.imagePath})` };
   }
   // Check selector identity before the paid watermark gate so incomplete
   // records are reported honestly and never consume a sweep request.
   if (!hasSelectionIdentityVerdict(rec)) {
     return {
       import: false,
+      stage: 'identity-proof',
       unresolved: rec.selectionIdentityVerified === undefined,
       reason: 'production selector did not affirm this exact wine',
     };
@@ -72,12 +73,13 @@ export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
     const why = rec.watermarkSweepError ? ` (${rec.watermarkSweepError})` : '';
     return {
       import: false,
+      stage: 'watermark-unresolved',
       unresolved: true,
       reason: `watermark sweep has not cleared this image${why} — not imported, and the wine stays due`,
     };
   }
   if (cleanOnly && (rec.review || []).length) {
-    return { import: false, reason: `flagged for review (${rec.review.join('; ')})` };
+    return { import: false, stage: 'review', reason: `flagged for review (${rec.review.join('; ')})` };
   }
-  return { import: true };
+  return { import: true, stage: 'ready' };
 }

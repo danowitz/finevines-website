@@ -31,6 +31,11 @@ test('one readable anchor does not transfer identity to an unreadable lookalike'
   assert.equal(result.pick.id, 'readable');
   assert.equal(result.matchingImages, 3);
   assert.equal(result.inspectedImages, 3);
+  assert.equal(result.diagnostics.selectorReceived, 3);
+  assert.equal(result.diagnostics.strongestGroupImages, 3);
+  assert.equal(result.diagnostics.identityAnchors, 1);
+  assert.equal(result.diagnostics.explicitConflicts, 1);
+  assert.equal(result.diagnostics.publishableAnchors, 1);
 });
 
 test('two independent exact result titles let a clean bottle corroborate a matching scene', async () => {
@@ -63,6 +68,8 @@ test('exact titles cannot merge visually dissimilar sibling bottles', async () =
   assert.equal(result.pick, null);
   assert.equal(result.reason, 'no repeated bottle design');
   assert.equal(reads, 0);
+  assert.equal(result.diagnostics.repeatedGroups, 0);
+  assert.equal(result.diagnostics.labelImagesRead, 0);
 });
 
 test('does not call the reader when no two bottles look alike', async () => {
@@ -85,6 +92,12 @@ test('similar siblings without an exact anchor remain a no-pick', async () => {
   }).select({ name: 'Target' }, [candidate('one'), candidate('two')]);
   assert.equal(result.pick, null);
   assert.equal(result.reason, 'repeated designs lacked an exact readable anchor');
+  assert.equal(result.diagnostics.strongestGroupImages, 2);
+  assert.equal(result.diagnostics.identityAnchors, 0);
+  assert.equal(result.diagnostics.explicitConflicts, 1);
+  assert.equal(result.reviewCandidates.length, 2);
+  assert.equal(result.reviewCandidates[0].displayOk, true);
+  assert.match(result.reviewCandidates[1].why, /identity not proven|conflict/i);
 });
 
 test('only the first ten search results enter the selector', async () => {

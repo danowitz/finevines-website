@@ -19,6 +19,7 @@
 import { readFile, writeFile, rename, unlink, access } from 'node:fs/promises';
 import { join, basename } from 'node:path';
 import { binPath } from './env.mjs';
+import { markHumanRejected, markHumanSelected } from './human-decision.mjs';
 
 const VERIFIER = binPath('imgcheck');
 
@@ -149,8 +150,7 @@ for (const slug of slugs) {
         console.log('            scene background — removing it…');
         if (await cutBackground(rec.file)) delete rec.watermarkSwept;
       }
-      rec.verifiedBy = 'human review (confirmed)';
-      rec.review = [];
+      markHumanSelected(rec, 'human review (confirmed)');
     }
     continue;
   }
@@ -160,11 +160,9 @@ for (const slug of slugs) {
     console.log(`  WRONG  ${rec.name}`);
     if (apply) {
       if (rec.file) { try { await unlink(rec.file); } catch {} }
-      rec.ok = false;
-      delete rec.file;
+      markHumanRejected(rec);
       // Recorded, not erased: a later run should know a human refused what was
       // found here rather than treating it as never attempted.
-      rec.humanRejected = true;
       rec.review = ['rejected by review — none of the candidates was this wine'];
     }
     continue;
@@ -203,9 +201,7 @@ for (const slug of slugs) {
       rec.file = dest;
       rec.page = choice;
       rec.label = v.label || '';
-      rec.verifiedBy = 'human (pasted URL)';
-      rec.review = [];
-      delete rec.humanRejected;
+      markHumanSelected(rec, 'human (pasted URL)');
       // New pixels, stale verdict: the sweep must re-check this file.
       delete rec.watermarkSwept;
     }
@@ -240,10 +236,9 @@ for (const slug of slugs) {
     rec.page = alt.page;
     rec.label = alt.label;
     rec.size = alt.size;
-    rec.verifiedBy = 'human review';
+    markHumanSelected(rec, 'human review');
     // A person looked at the bottle and the name together. That is stronger
     // evidence than either verifier produces, so the doubts they overrule go.
-    rec.review = [];
     rec.alternates = (rec.alternates || []).filter((a) => a.file !== choice);
     // New pixels, stale verdict: the sweep must re-check this file.
     delete rec.watermarkSwept;

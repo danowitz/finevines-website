@@ -200,6 +200,17 @@ Each run, in this order:
    label/shape verification and the watermark sweep to be imported; there is no
    override in CI, and an image the sweep could not reach a verdict on is refused
    too.
+
+   Every attempted wine persists a durable summary in
+   `data/image-funnel.json` (with the working record also present in the
+   gitignored `data/fetched-images/manifest.json`): Google results, blocked sources,
+   downloads, decodes, bottle-shape passes, visually repeated groups, label
+   reads, identity anchors, explicit conflicts, publishable anchors, watermark
+   outcome, and import outcome. Its
+   terminal `failureStage` names the rule that stopped it. Run
+   `node tools/labelfetch/funnel-report.mjs` for the aggregate human-readable
+   report, or add `--json` for machine-readable output. A Google credential or
+   permission failure is `google-unavailable`, never an empty-search verdict.
 4. **`finevines build`** renders `dist/`.
 5. **`finevines deploy`** uploads the changed files to Bunny.net and purges both
    pull zones.

@@ -9,10 +9,10 @@ export function createGoogleImageDiscovery({ key, cx, fetchImpl = globalThis.fet
 
   return async function discoverGoogleImages(query) {
     if (!key || !cx) {
-      return { status: 'unavailable', searched: false, items: [], error: 'credentials missing' };
+      return { status: 'unavailable', searched: false, items: [], error: 'credentials missing', returned: 0, blocked: 0 };
     }
     if (down) {
-      return { status: 'unavailable', searched: false, items: [], error: down };
+      return { status: 'unavailable', searched: false, items: [], error: down, returned: 0, blocked: 0 };
     }
 
     try {
@@ -31,18 +31,22 @@ export function createGoogleImageDiscovery({ key, cx, fetchImpl = globalThis.fet
         let detail = '';
         try { detail = String((await res.json())?.error?.message || '').split('\n')[0]; } catch {}
         down = `HTTP ${res.status}${detail ? `: ${detail}` : ''}`;
-        return { status: 'unavailable', searched: false, items: [], error: down };
+        return { status: 'unavailable', searched: false, items: [], error: down, returned: 0, blocked: 0 };
       }
 
       const items = (await res.json()).items || [];
       const candidates = [];
+      let blocked = 0;
       for (const item of items) {
         const image = item.link || '';
         const context = item.image?.contextLink || '';
         // Image and context are one provenance record. If either side points at
         // a blocked competitor, reject the whole record rather than laundering
         // its pixels through an allowed CDN hostname.
-        if (!image || blockedBy(image) || (context && blockedBy(context)) || /_pb_x\d+/.test(image)) continue;
+        if (!image || blockedBy(image) || (context && blockedBy(context)) || /_pb_x\d+/.test(image)) {
+          blocked++;
+          continue;
+        }
         let host = '';
         try { host = new URL(context || image).host.replace(/^www\./, ''); } catch {}
         candidates.push({
@@ -59,11 +63,13 @@ export function createGoogleImageDiscovery({ key, cx, fetchImpl = globalThis.fet
         status: 'ok',
         searched: true,
         items: [...new Map(candidates.map((item) => [item.url, item])).values()],
+        returned: items.length,
+        blocked,
         error: '',
       };
     } catch (error) {
       down = String(error?.message || error).split('\n')[0] || 'request failed';
-      return { status: 'unavailable', searched: false, items: [], error: down };
+      return { status: 'unavailable', searched: false, items: [], error: down, returned: 0, blocked: 0 };
     }
   };
 }

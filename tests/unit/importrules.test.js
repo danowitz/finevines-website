@@ -26,6 +26,7 @@ describe('import selection rules', () => {
   test('a clean staged image for a placeholder wine imports', () => {
     const v = shouldImport(rec(), placeholderWine(), {});
     assert.equal(v.import, true);
+    assert.equal(v.stage, 'ready');
   });
 
   test('a wine no longer in the catalog is skipped', () => {
@@ -72,6 +73,7 @@ describe('import selection rules', () => {
     flagWatermark(r, 'vivino');
     const v = shouldImport(r, placeholderWine(), {});
     assert.equal(v.import, false);
+    assert.equal(v.stage, 'watermark');
     assert.match(v.reason, /watermark/);
   });
 

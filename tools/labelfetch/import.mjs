@@ -28,6 +28,8 @@ import { shouldImport } from './importrules.mjs';
 import { catalogJSON, wineForImageUpgrade, winesForSlug } from './importapply.mjs';
 import { binPath } from './env.mjs';
 import { loadAttempts, recordAttempt, saveAttempts } from './attempts.mjs';
+import { loadFunnelStore, recordFunnel, saveFunnelStore } from './funnel-store.mjs';
+import { markImportOutcome } from './funnel-gates.mjs';
 
 const run = promisify(execFile);
 const MANIFEST = 'data/fetched-images/manifest.json';
@@ -60,6 +62,15 @@ if (!(await exists(MANIFEST))) {
 const manifest = JSON.parse(await readFile(MANIFEST, 'utf8'));
 const wines = JSON.parse(await readFile(WINES, 'utf8'));
 const attempts = await loadAttempts();
+const funnelStore = await loadFunnelStore();
+
+let funnelDirty = false;
+function markImport(rec, stage, { imported = false, unresolved = false } = {}) {
+  if (!apply) return;
+  markImportOutcome(rec, stage, { imported, unresolved });
+  recordFunnel(funnelStore, rec);
+  funnelDirty = true;
+}
 
 const staged = Object.values(manifest).filter((r) => r.ok && r.file && (!onlySlug || r.slug === onlySlug));
 console.log(`${staged.length} verified images staged\n`);
@@ -74,6 +85,7 @@ for (const rec of staged) {
   // importable — without this check the dry-run over-reports what a real
   // import would write.
   if (!(await exists(rec.file))) {
+    markImport(rec, 'staged-file-missing', { unresolved: true });
     console.log(`  skip  ${rec.slug} — staged file missing (purged after fetch)`);
     skipped++;
     continue;
@@ -81,6 +93,7 @@ for (const rec of staged) {
   const wine = wineForImageUpgrade(wines, rec.slug);
   const verdict = shouldImport(rec, wine, { cleanOnly });
   if (!verdict.import) {
+    markImport(rec, verdict.stage || 'refused', { unresolved: verdict.unresolved === true });
     console.log(`  skip  ${rec.slug} — ${verdict.reason}`);
     skipped++;
     // An UNRESOLVED refusal must reopen the wine's ledger entry.
@@ -112,6 +125,7 @@ for (const rec of staged) {
     try {
       await run(NORMALIZER, ['-in', rec.file, '-out', dest]);
     } catch (e) {
+      markImport(rec, 'normalization', { unresolved: true });
       console.log(`  FAIL  ${rec.slug} — normalise: ${String(e.message).split('\n')[0]}`);
       skipped++;
       continue;
@@ -154,6 +168,7 @@ for (const rec of staged) {
   ]);
   if (!importedSkus.size && (rec.sku ?? wine.sku)) importedSkus.add(rec.sku ?? wine.sku);
   for (const sku of importedSkus) recordAttempt(attempts, sku, 'imported');
+  markImport(rec, 'imported', { imported: true });
   console.log(`  ${apply ? 'wrote' : 'would'} ${rec.slug}.jpg  <- ${rec.page ? new URL(rec.page).host : '?'}`);
   changed++;
 }
@@ -170,6 +185,10 @@ if (apply && changed) {
 // the exact outcome the reopening exists to prevent.
 if (apply && (changed || unresolved)) {
   await saveAttempts(attempts);
+}
+if (funnelDirty) {
+  await writeFile(MANIFEST, JSON.stringify(manifest, null, 1));
+  await saveFunnelStore(funnelStore);
 }
 if (unresolved) {
   console.log(

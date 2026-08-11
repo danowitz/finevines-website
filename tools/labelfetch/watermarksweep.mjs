@@ -34,6 +34,8 @@ import { readFile, writeFile, access } from 'node:fs/promises';
 import { parseVerdict, flagWatermark, isWatermarked } from './watermark.mjs';
 import { hasSelectionIdentityVerdict } from './importrules.mjs';
 import { openaiKey } from './env.mjs';
+import { loadFunnelStore, recordFunnel, saveFunnelStore } from './funnel-store.mjs';
+import { markWatermarkClean, markWatermarkRejected, markWatermarkUnresolved } from './funnel-gates.mjs';
 
 const MANIFEST = 'data/fetched-images/manifest.json';
 const MODEL = 'gpt-4.1-nano';
@@ -52,6 +54,7 @@ if (!KEY) {
 }
 
 const manifest = JSON.parse(await readFile(MANIFEST, 'utf8'));
+const funnelStore = await loadFunnelStore();
 const exists = (p) => access(p).then(() => true, () => false);
 
 const staged = [];
@@ -173,6 +176,7 @@ for (const u of unchecked) console.log(`  unchecked ${u}`);
 if (apply) {
   for (const { rec, mark } of hits) {
     flagWatermark(rec, mark);
+    markWatermarkRejected(rec);
     // watermarkSwept means "a verdict exists for this image", not "this image is
     // clean" — a hit is a verdict too. Import reads the two fields in order
     // (confirmed mark first, then swept-at-all), so setting it here keeps the
@@ -184,6 +188,7 @@ if (apply) {
     if (rec.watermarkSweptPending) {
       delete rec.watermarkSweptPending;
       rec.watermarkSwept = true;
+      markWatermarkClean(rec);
     }
     // A verdict supersedes whatever stopped any pass from reaching one — in both
     // directions. Once a record is swept it stays swept, so a --recheck-clean
@@ -196,9 +201,12 @@ if (apply) {
     if (rec.watermarkSweepErrorPending) {
       rec.watermarkSweepError = rec.watermarkSweepErrorPending;
       delete rec.watermarkSweepErrorPending;
+      markWatermarkUnresolved(rec);
     }
   }
+  for (const rec of staged) recordFunnel(funnelStore, rec);
   await writeFile(MANIFEST, JSON.stringify(manifest, null, 1));
+  await saveFunnelStore(funnelStore);
   console.log(
     `\nrecorded ${hits.length} watermark flags, ${cleans} clean verdicts and ${unchecked.length} unchecked reasons in ${MANIFEST}`
   );

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { selectVisualPick } from '../../tools/labelfetch/visual-pick.mjs';
+import { evaluateVisualPick, selectVisualPick } from '../../tools/labelfetch/visual-pick.mjs';
 
 test('two matching images plus one anchor choose the cleanest high-resolution bottle', () => {
   const pick = selectVisualPick([
@@ -59,4 +59,21 @@ test('a tall clean importer cutout is publishable despite a narrow source width'
     { id: 'corroborator', shapeOk: true, cleanBackground: false, width: 800, height: 1200 },
   ]);
   assert.equal(pick.id, 'importer');
+});
+
+test('publishability diagnostics distinguish identity, shape, and resolution failures', () => {
+  const result = evaluateVisualPick([
+    { id: 'conflict', anchor: true, explicitConflict: true, shapeOk: true, cleanBackground: true, width: 800, height: 1200 },
+    { id: 'shape', anchor: true, shapeOk: false, cleanBackground: true, width: 800, height: 1200 },
+    { id: 'small', anchor: true, shapeOk: true, cleanBackground: false, width: 190, height: 600 },
+  ]);
+  assert.equal(result.pick, null);
+  assert.deepEqual(result.diagnostics, {
+    groupedImages: 3,
+    identityAnchors: 2,
+    explicitConflicts: 1,
+    anchorShapeFailures: 1,
+    anchorResolutionFailures: 1,
+    publishableAnchors: 0,
+  });
 });

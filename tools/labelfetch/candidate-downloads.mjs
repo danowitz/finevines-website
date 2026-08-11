@@ -29,26 +29,39 @@ export async function downloadFirstTen({
   concurrency = 3,
 }) {
   await mkdirImpl(directory, { recursive: true });
-  const downloaded = await mapLimit(items.slice(0, 10), concurrency, async (item, index) => {
+  const attempted = items.slice(0, 10);
+  const results = await mapLimit(attempted, concurrency, async (item, index) => {
     try {
       const response = await fetchImpl(item.url, {
         headers: { 'user-agent': 'Mozilla/5.0' },
         signal: AbortSignal.timeout(30_000),
       });
-      if (!response.ok) return null;
+      if (!response.ok) return { candidate: null, failure: 'http' };
       let bytes = Buffer.from(await response.arrayBuffer());
-      if (bytes.length < 2000) return null;
+      if (bytes.length < 2000) return { candidate: null, failure: 'tooSmall' };
       if (!supported(bytes)) {
-        if (!convert) return null;
+        if (!convert) return { candidate: null, failure: 'unsupported' };
         bytes = await convert(bytes);
-        if (!bytes || bytes.length < 2000) return null;
+        if (!bytes || bytes.length < 2000) return { candidate: null, failure: 'conversion' };
       }
       const file = join(directory, `candidate-${String(index + 1).padStart(2, '0')}.png`);
       await writeFileImpl(file, bytes);
-      return { ...item, id: `candidate-${index + 1}`, file };
+      return { candidate: { ...item, id: `candidate-${index + 1}`, file }, failure: '' };
     } catch {
-      return null;
+      return { candidate: null, failure: 'transport' };
     }
   });
-  return downloaded.filter(Boolean);
+  const failures = (kind) => results.filter((result) => result.failure === kind).length;
+  return {
+    candidates: results.map((result) => result.candidate).filter(Boolean),
+    diagnostics: {
+      downloadAttempted: attempted.length,
+      downloaded: results.filter((result) => result.candidate).length,
+      downloadHttpFailures: failures('http'),
+      downloadTooSmall: failures('tooSmall'),
+      downloadUnsupported: failures('unsupported'),
+      downloadConversionFailures: failures('conversion'),
+      downloadTransportFailures: failures('transport'),
+    },
+  };
 }

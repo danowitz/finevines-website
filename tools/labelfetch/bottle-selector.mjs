@@ -1,4 +1,4 @@
-import { selectVisualPick } from './visual-pick.mjs';
+import { evaluateVisualPick } from './visual-pick.mjs';
 import { normalize, tokens } from './match.mjs';
 
 function host(candidate) {
@@ -82,26 +82,93 @@ function representatives(group) {
   return picked;
 }
 
+function conflictText(conflict) {
+  if (!conflict) return '';
+  if (typeof conflict === 'string') return conflict;
+  if (conflict.expected && conflict.visible) {
+    return `visible vintage ${conflict.visible}; catalog vintage ${conflict.expected}`;
+  }
+  return JSON.stringify(conflict);
+}
+
+function reviewCandidates(inspected, strongestGroup = [], evidence = []) {
+  const inStrongest = new Set(strongestGroup.map((candidate) => candidate.id));
+  const byID = new Map(evidence.map((item) => [item.id, item]));
+  return inspected.map((candidate) => {
+    const identity = byID.get(candidate.id);
+    const why = conflictText(identity?.conflict) ||
+      (!candidate.shapeOk ? candidate.inspectError || 'bottle-shape rule failed' : '') ||
+      (strongestGroup.length && !inStrongest.has(candidate.id) ? 'not in strongest repeated bottle group' : '') ||
+      (strongestGroup.length && !identity?.anchor ? 'identity not proven automatically' : '');
+    return {
+      file: candidate.file,
+      page: candidate.context || candidate.url,
+      image: candidate.url,
+      size: `${candidate.width || 0}x${candidate.height || 0}`,
+      why,
+      label: identity?.label || '',
+      subjectOk: candidate.shapeOk === true,
+      // This is a human review surface. A locally valid bottle should be shown,
+      // not sent through another paid model merely to decide whether to hide it.
+      displayOk: candidate.shapeOk === true,
+      strongestGroup: inStrongest.has(candidate.id),
+      anchor: identity?.anchor === true,
+      explicitConflict: identity?.explicitConflict === true,
+    };
+  });
+}
+
 // The interface is intentionally one method. Adapters hide local image
 // inspection, similarity computation, and the bounded label reader.
 export function createBottleSelector({ inspect, compare, read, similarityThreshold = 0.90, inspectConcurrency = 3 }) {
   return {
     async select(wine, firstTenCandidates) {
-      const inspected = (await mapLimit(firstTenCandidates.slice(0, 10), inspectConcurrency, async (candidate) => ({
+      const inspectedAll = await mapLimit(firstTenCandidates.slice(0, 10), inspectConcurrency, async (candidate) => ({
         ...candidate,
         ...await inspect(candidate),
-      }))).filter((candidate) => candidate.visualOk !== false);
-      if (inspected.length < 2) return { pick: null, reason: 'fewer than two decodable images' };
+      }));
+      const inspected = inspectedAll.filter((candidate) => candidate.visualOk !== false);
+      const diagnostics = {
+        selectorReceived: inspectedAll.length,
+        decodedImages: inspected.length,
+        decodeFailures: inspectedAll.length - inspected.length,
+        bottleShapePassed: inspected.filter((candidate) => candidate.shapeOk).length,
+        cleanBackgrounds: inspected.filter((candidate) => candidate.cleanBackground).length,
+        comparedPairs: 0,
+        similarPairs: 0,
+        repeatedGroups: 0,
+        strongestGroupImages: 0,
+        labelImagesRead: 0,
+        identityAnchors: 0,
+        explicitConflicts: 0,
+        publishableAnchors: 0,
+      };
+      if (inspected.length < 2) return {
+        pick: null,
+        reason: 'fewer than two decodable images',
+        diagnostics,
+        reviewCandidates: reviewCandidates(inspected),
+      };
 
       const pairs = corroboratedVisualPairs(wine, inspected, await compare(inspected), similarityThreshold);
+      diagnostics.comparedPairs = pairs.length;
+      diagnostics.similarPairs = pairs.filter((pair) => pair.score >= similarityThreshold).length;
       const groups = groupsFromPairs(inspected, pairs, similarityThreshold);
-      if (!groups.length) return { pick: null, reason: 'no repeated bottle design' };
+      diagnostics.repeatedGroups = groups.length;
+      diagnostics.strongestGroupImages = groups[0]?.length || 0;
+      if (!groups.length) return {
+        pick: null,
+        reason: 'no repeated bottle design',
+        diagnostics,
+        reviewCandidates: reviewCandidates(inspected),
+      };
 
       // Cost boundary: read only the strongest repeated design, once. Searching
       // several weaker clusters turns one wine back into an open-ended image
       // batch and recreates the spend this module exists to remove.
       const group = groups[0];
       const candidates = representatives(group);
+      diagnostics.labelImagesRead = candidates.length;
       const evidence = await read(wine, candidates);
       const byID = new Map(evidence.map((item) => [item.id, item]));
       const judged = candidates.map((candidate) => ({
@@ -109,7 +176,15 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         anchor: byID.get(candidate.id)?.anchor === true,
         explicitConflict: byID.get(candidate.id)?.explicitConflict === true,
       }));
-      const pick = selectVisualPick(judged);
+      const evaluated = evaluateVisualPick(judged);
+      const pick = evaluated.pick;
+      Object.assign(diagnostics, {
+        identityAnchors: evaluated.diagnostics.identityAnchors,
+        explicitConflicts: evaluated.diagnostics.explicitConflicts,
+        anchorShapeFailures: evaluated.diagnostics.anchorShapeFailures,
+        anchorResolutionFailures: evaluated.diagnostics.anchorResolutionFailures,
+        publishableAnchors: evaluated.diagnostics.publishableAnchors,
+      });
       if (pick) {
         return {
           pick,
@@ -118,9 +193,20 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
           inspectedImages: candidates.length,
           anchorLabels: evidence.filter((item) => item.anchor).map((item) => item.label).filter(Boolean),
           evidence,
+          diagnostics,
+          reviewCandidates: reviewCandidates(inspected, group, evidence),
         };
       }
-      return { pick: null, reason: 'repeated designs lacked an exact readable anchor', evidence };
+      const reason = diagnostics.identityAnchors === 0
+        ? 'repeated designs lacked an exact readable anchor'
+        : 'exact anchors failed bottle-shape or resolution publication rules';
+      return {
+        pick: null,
+        reason,
+        evidence,
+        diagnostics,
+        reviewCandidates: reviewCandidates(inspected, group, evidence),
+      };
     },
   };
 }

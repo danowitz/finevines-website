@@ -1,10 +1,19 @@
 // Apply the human selection rule to one already-corroborated bottle group.
 // Identity comes from a readable anchor; the selected member is the cleanest,
 // highest-resolution non-conflicting bottle image in that group.
-export function selectVisualPick(candidates) {
-  if (candidates.length < 2) return null;
+export function evaluateVisualPick(candidates) {
+  const diagnostics = {
+    groupedImages: candidates.length,
+    identityAnchors: 0,
+    explicitConflicts: candidates.filter((candidate) => candidate.explicitConflict).length,
+    anchorShapeFailures: 0,
+    anchorResolutionFailures: 0,
+    publishableAnchors: 0,
+  };
+  if (candidates.length < 2) return { pick: null, diagnostics };
   const anchors = candidates.filter((candidate) => candidate.anchor && !candidate.explicitConflict);
-  if (!anchors.length) return null;
+  diagnostics.identityAnchors = anchors.length;
+  if (!anchors.length) return { pick: null, diagnostics };
 
   // A visually similar sibling can share the bottle, typography, and label
   // architecture (Pichler-Krutzler Loibenberg Riesling vs Klostersatz Gruner
@@ -20,9 +29,12 @@ export function selectVisualPick(candidates) {
     // artwork such as Jean Royer's 188x700 Prestige image.
     const normalResolution = width >= 300 && height >= 500;
     const narrowCleanCutout = candidate.cleanBackground && width >= 180 && height >= 650;
+    if (!candidate.shapeOk) diagnostics.anchorShapeFailures++;
+    else if (!(normalResolution || narrowCleanCutout)) diagnostics.anchorResolutionFailures++;
     return candidate.shapeOk && (normalResolution || narrowCleanCutout);
   });
-  if (!usable.length) return null;
+  diagnostics.publishableAnchors = usable.length;
+  if (!usable.length) return { pick: null, diagnostics };
 
   const pick = [...usable].sort((a, b) =>
     Number(b.cleanBackground) - Number(a.cleanBackground) ||
@@ -30,8 +42,15 @@ export function selectVisualPick(candidates) {
     (b.width || 0) * (b.height || 0) - (a.width || 0) * (a.height || 0))[0];
 
   return {
-    ...pick,
-    matchingImages: candidates.length,
-    anchorIds: anchors.map((candidate) => candidate.id),
+    pick: {
+      ...pick,
+      matchingImages: candidates.length,
+      anchorIds: anchors.map((candidate) => candidate.id),
+    },
+    diagnostics,
   };
+}
+
+export function selectVisualPick(candidates) {
+  return evaluateVisualPick(candidates).pick;
 }

@@ -19,6 +19,7 @@ import { imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
 import { downloadFirstTen } from './candidate-downloads.mjs';
 import { createBottleSelector } from './bottle-selector.mjs';
 import { reusableStagedRecord } from './staged-record.mjs';
+import { loadFunnelStore, recordFunnel, saveFunnelStore } from './funnel-store.mjs';
 import {
   createBoundedLabelReader,
   createLocalBottleAdapters,
@@ -114,6 +115,7 @@ if (!catalog.length) {
   process.exit(2);
 }
 const attempts = await loadAttempts();
+const funnelStore = await loadFunnelStore();
 const wines = selectWines(catalog, attempts);
 if (!wines.length) {
   if (opt('slug')) {
@@ -159,6 +161,12 @@ console.log(`google image discovery: ${googleKey && googleCx ? 'ready' : 'unavai
 console.log(`identity reader: ${visionKey ? `${MODEL}, one request of at most three images per grouped wine` : 'unavailable - grouped wines will stay due'}`);
 console.log(`processing up to ${WINE_CONCURRENCY} wines concurrently`);
 
+function fail(rec, stage, reason) {
+  rec.failureStage = stage;
+  rec.funnel.outcome = 'failed';
+  rec.tried.push({ stage, why: reason });
+}
+
 async function processWine(wine) {
   const previous = manifest[wine.slug];
   const reusable = reusableStagedRecord(
@@ -187,25 +195,56 @@ async function processWine(wine) {
     ok: false,
     tried: [],
     query: imageSearchQuery(identity),
+    funnel: {
+      googleSearched: false,
+      searchResults: 0,
+      sourcePolicyBlocked: 0,
+      permittedCandidates: 0,
+      downloadAttempted: 0,
+      downloaded: 0,
+      decodedImages: 0,
+      bottleShapePassed: 0,
+      cleanBackgrounds: 0,
+      similarPairs: 0,
+      repeatedGroups: 0,
+      strongestGroupImages: 0,
+      labelImagesRead: 0,
+      identityAnchors: 0,
+      explicitConflicts: 0,
+      publishableAnchors: 0,
+      outcome: 'pending',
+    },
   };
   const google = await googleDiscover(rec.query);
+  Object.assign(rec.funnel, {
+    googleSearched: google.searched,
+    searchResults: google.returned || 0,
+    sourcePolicyBlocked: google.blocked || 0,
+    permittedCandidates: google.items.length,
+  });
   if (!google.searched) {
     rec.discoveryError = `google: ${google.error}`;
+    fail(rec, 'google-unavailable', rec.discoveryError);
     return { wine, rec, evaluated: 0, unevaluated: 0, discoveryComplete: false };
   }
   if (!google.items.length) {
-    rec.tried.push({ why: 'Google Images returned no permitted candidates' });
+    const stage = rec.funnel.searchResults && rec.funnel.sourcePolicyBlocked
+      ? 'source-policy'
+      : 'google-empty';
+    fail(rec, stage, 'Google Images returned no permitted candidates');
     return { wine, rec, evaluated: 0, unevaluated: 0, discoveryComplete: true };
   }
 
-  const candidates = await downloadFirstTen({
+  const downloaded = await downloadFirstTen({
     items: google.items,
     directory: join(CANDIDATE_DIR, wine.slug),
     convert: convertToPng,
   });
+  const candidates = downloaded.candidates;
+  Object.assign(rec.funnel, downloaded.diagnostics);
   const downloadFailures = google.items.length - candidates.length;
   if (candidates.length < 2) {
-    rec.tried.push({ why: `only ${candidates.length} of ${google.items.length} candidates downloaded` });
+    fail(rec, 'download', `only ${candidates.length} of ${google.items.length} candidates downloaded`);
     return { wine, rec, evaluated: 0, unevaluated: Math.max(1, downloadFailures), discoveryComplete: true };
   }
 
@@ -214,16 +253,23 @@ async function processWine(wine) {
     result = await selector.select(identity, candidates);
   } catch (error) {
     if (error instanceof ReaderUnavailableError) {
-      rec.tried.push({ why: `identity reader unavailable: ${error.message}` });
+      fail(rec, 'identity-reader-unavailable', `identity reader unavailable: ${error.message}`);
       return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
     }
-    rec.tried.push({ why: `selector failed: ${String(error?.message || error).split('\n')[0]}` });
+    fail(rec, 'selector-error', `selector failed: ${String(error?.message || error).split('\n')[0]}`);
     return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
   }
 
+  Object.assign(rec.funnel, result.diagnostics || {});
+  if (result.reviewCandidates?.length) rec.alternates = result.reviewCandidates;
   if (!result.pick) {
     if (result.evidence?.length) rec.evidence = result.evidence;
-    rec.tried.push({ why: result.reason });
+    const stage = rec.funnel.decodedImages < 2 ? 'decode'
+      : rec.funnel.repeatedGroups === 0 ? 'visual-consensus'
+      : rec.funnel.identityAnchors === 0 ? 'identity-anchor'
+      : rec.funnel.publishableAnchors === 0 ? 'publication-quality'
+      : 'selector';
+    fail(rec, stage, result.reason);
     return { wine, rec, evaluated: candidates.length, unevaluated: downloadFailures, discoveryComplete: true };
   }
 
@@ -231,10 +277,11 @@ async function processWine(wine) {
   try {
     await copyFile(result.pick.file, dest);
   } catch (error) {
-    rec.tried.push({ why: `could not stage selected image: ${String(error?.message || error).split('\n')[0]}` });
+    fail(rec, 'staging', `could not stage selected image: ${String(error?.message || error).split('\n')[0]}`);
     return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
   }
   rec.ok = true;
+  rec.funnel.outcome = 'accepted';
   rec.file = dest;
   rec.page = result.pick.context || result.pick.url;
   rec.image = result.pick.url;
@@ -248,6 +295,7 @@ async function processWine(wine) {
   rec.matchingImages = result.matchingImages;
   rec.anchorImages = result.pick.anchorIds;
   rec.evidence = result.evidence;
+  rec.alternates = (rec.alternates || []).filter((candidate) => candidate.file !== result.pick.file);
   rec.review = [];
   return { wine, rec, evaluated: candidates.length, unevaluated: downloadFailures, discoveryComplete: true };
 }
@@ -269,6 +317,7 @@ for (let offset = 0; offset < wines.length; offset += WINE_CONCURRENCY) {
     const { wine, rec, evaluated, unevaluated, discoveryComplete, reused = false } = result;
     runRows.push(rec);
     manifest[wine.slug] = rec;
+    if (!CANARY) recordFunnel(funnelStore, rec);
     if (!discoveryComplete) fatalDiscoveryError ||= rec.discoveryError || 'Google image discovery unavailable';
     if (rec.ok) accepted++;
     if (!reused && RECORD_ATTEMPTS && rec.skus.length && shouldRecordAttempt({ accepted: rec.ok, evaluated, unevaluated, discoveryComplete })) {
@@ -279,12 +328,25 @@ for (let offset = 0; offset < wines.length; offset += WINE_CONCURRENCY) {
     console.log(`${state} ${rec.name.slice(0, 60).padEnd(60)} ${rec.ok ? `${rec.matchingImages} matching; ${rec.size}` : rec.tried[0]?.why || rec.discoveryError}`);
   }
   await writeFile(MANIFEST, JSON.stringify(manifest, null, 1));
+  if (!CANARY) await saveFunnelStore(funnelStore);
   if (fatalDiscoveryError) break;
 }
 
 if (browserPromise) await (await browserPromise).close();
 if (budgetSpent) console.log(`stopped cleanly at the ${BUDGET_MS / 60_000}-minute budget; unreached wines stay due`);
 console.log(`accepted ${accepted}/${attempted}; ${labelBatches} ${MODEL} label batch(es), at most three images each`);
+const failureSummary = new Map();
+for (const rec of runRows) {
+  if (rec.ok) continue;
+  const stage = rec.failureStage || 'unknown';
+  failureSummary.set(stage, (failureSummary.get(stage) || 0) + 1);
+}
+if (failureSummary.size) {
+  console.log('failure funnel:');
+  for (const [stage, count] of [...failureSummary].sort((left, right) => right[1] - left[1])) {
+    console.log(`  ${stage.padEnd(28)} ${count}`);
+  }
+}
 console.log(`images -> ${OUT_DIR}/; manifest -> ${MANIFEST}`);
 if (CANARY) {
   await mkdir('out-bottle', { recursive: true });

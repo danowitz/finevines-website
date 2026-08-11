@@ -29,6 +29,8 @@ describe('Google image discovery', () => {
     assert.equal(new URL(requested).searchParams.has('imgType'), false);
     assert.equal(result.searched, true);
     assert.equal(result.status, 'ok');
+    assert.equal(result.returned, 1);
+    assert.equal(result.blocked, 0);
     assert.deepEqual(result.items, [{
       url: 'https://producer.example/bottle.png',
       context: 'https://producer.example/wine',
@@ -58,13 +60,16 @@ describe('Google image discovery', () => {
         { link: 'https://producer.example/good.png', image: { contextLink: 'https://wine-searcher.com/find/wine' } },
       ] }),
     });
-    assert.deepEqual((await discover('wine')).items, []);
+    const result = await discover('wine');
+    assert.deepEqual(result.items, []);
+    assert.equal(result.returned, 2);
+    assert.equal(result.blocked, 2);
   });
 
   test('reports missing credentials and API failures as not searched', async () => {
     const missing = createGoogleImageDiscovery({});
     assert.deepEqual(await missing('wine'), {
-      status: 'unavailable', searched: false, items: [], error: 'credentials missing',
+      status: 'unavailable', searched: false, items: [], error: 'credentials missing', returned: 0, blocked: 0,
     });
 
     let calls = 0;
@@ -91,6 +96,8 @@ describe('Google image discovery', () => {
     assert.equal(first.status, 'unavailable');
     assert.equal(first.searched, false);
     assert.deepEqual(first.items, []);
+    assert.equal(first.returned, 0);
+    assert.equal(first.blocked, 0);
     assert.match(first.error, /HTTP 403.*referer.*blocked/i);
     assert.deepEqual(second, first);
     assert.equal(calls, 1);
