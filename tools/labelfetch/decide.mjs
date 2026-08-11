@@ -135,22 +135,21 @@ for (const slug of slugs) {
 
   // The reviewer looked at the shown image beside the catalog row and said it
   // is right. That human confirmation outranks every recorded doubt, so the
-  // flags clear and the next clean-only import promotes it. The pixels are
-  // unchanged, so the watermark verdict stands.
+  // flags clear and the next clean-only import promotes it. The reviewer is
+  // also the visual watermark check, so no second model call is necessary.
   if (choice === '__confirm__') {
     confirmed++;
     console.log(`  YES    ${rec.name}`);
     if (apply) {
       // A confirmed image photographed against a backdrop still gets the
       // backdrop stripped — the reviewer confirmed the WINE, and a clean
-      // white ground is what the catalog grid needs. New pixels mean the
-      // watermark sweep must look again.
+      // white ground is what the catalog grid needs.
       const v = await checkShape(rec.file);
       if (!v.ok && /no clean background/.test(v.reason || '')) {
         console.log('            scene background — removing it…');
         if (await cutBackground(rec.file)) delete rec.watermarkSwept;
       }
-      markHumanSelected(rec, 'human review (confirmed)');
+      markHumanSelected(rec, 'human review (confirmed)', { visualClearance: true });
     }
     continue;
   }
@@ -201,9 +200,7 @@ for (const slug of slugs) {
       rec.file = dest;
       rec.page = choice;
       rec.label = v.label || '';
-      markHumanSelected(rec, 'human (pasted URL)');
-      // New pixels, stale verdict: the sweep must re-check this file.
-      delete rec.watermarkSwept;
+      markHumanSelected(rec, 'human (pasted URL)', { visualClearance: true });
     }
     continue;
   }
@@ -236,12 +233,10 @@ for (const slug of slugs) {
     rec.page = alt.page;
     rec.label = alt.label;
     rec.size = alt.size;
-    markHumanSelected(rec, 'human review');
+    markHumanSelected(rec, 'human review', { visualClearance: true });
     // A person looked at the bottle and the name together. That is stronger
     // evidence than either verifier produces, so the doubts they overrule go.
     rec.alternates = (rec.alternates || []).filter((a) => a.file !== choice);
-    // New pixels, stale verdict: the sweep must re-check this file.
-    delete rec.watermarkSwept;
   }
 }
 

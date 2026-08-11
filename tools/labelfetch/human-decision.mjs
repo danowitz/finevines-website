@@ -1,6 +1,12 @@
-export function markHumanSelected(record, verifiedBy) {
+export function markHumanSelected(record, verifiedBy, { visualClearance = false } = {}) {
   record.verifiedBy = verifiedBy;
   record.selectionIdentityVerified = true;
+  if (visualClearance) {
+    record.watermarkSwept = true;
+    record.watermarkSweptBy = 'human review';
+    delete record.watermark;
+    delete record.watermarkSweepError;
+  }
   if (record.funnel) record.funnel.outcome = 'human-selected';
   delete record.failureStage;
   record.review = [];

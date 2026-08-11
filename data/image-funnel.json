@@ -1,0 +1,4764 @@
+{
+ "domaine-rapet-pernand-vergelesses-blanc-1er-cru-sous-fretille-2022": {
+  "slug": "domaine-rapet-pernand-vergelesses-blanc-1er-cru-sous-fretille-2022",
+  "sku": "410347",
+  "name": "Domaine Rapet Pernand Vergelesses Blanc 1er Cru sous Fretille",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-9",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate producer is Domaine Duport; request is Rapet"
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.605Z"
+ },
+ "dutton-estate-winery-kylie-s-cuvee-sauvignon-blanc-russian-river-valley-2024": {
+  "slug": "dutton-estate-winery-kylie-s-cuvee-sauvignon-blanc-russian-river-valley-2024",
+  "sku": "500758",
+  "name": "Dutton Estate Winery Kylie's Cuvee Sauvignon Blanc Russian River Valley",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2024",
+     "visible": "2020"
+    }
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.606Z"
+ },
+ "kerr-cellars-napa-valley-cabernet-sauvignon-2018": {
+  "slug": "kerr-cellars-napa-valley-cabernet-sauvignon-2018",
+  "sku": "500050",
+  "name": "Kerr Cellars Napa Valley Cabernet Sauvignon",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator sauvignon"
+   },
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.606Z"
+ },
+ "domaine-michel-niellon-chassagne-montrachet-1er-cru-la-maltroie-2023": {
+  "slug": "domaine-michel-niellon-chassagne-montrachet-1er-cru-la-maltroie-2023",
+  "sku": "510575",
+  "name": "Domaine Michel Niellon Chassagne Montrachet 1er Cru la Maltroie",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2023",
+     "visible": "2021"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.606Z"
+ },
+ "laffay-domaine-thierry-laffay-chablis-vieilles-vignes-2022": {
+  "slug": "laffay-domaine-thierry-laffay-chablis-vieilles-vignes-2022",
+  "sku": "660707",
+  "name": "Laffay Domaine Thierry Laffay Chablis Vieilles Vignes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.607Z"
+ },
+ "maxime-cheurlin-noellat-clos-vougeot-grand-cru-2021": {
+  "slug": "maxime-cheurlin-noellat-clos-vougeot-grand-cru-2021",
+  "sku": "713884",
+  "name": "Maxime-Cheurlin Noellat Clos Vougeot Grand Cru",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.607Z"
+ },
+ "recoltant-cabernet-sauvignon-napa-valley-2023": {
+  "slug": "recoltant-cabernet-sauvignon-napa-valley-2023",
+  "sku": "",
+  "name": "Recoltant Cabernet Sauvignon Napa Valley",
+  "ok": true,
+  "failureStage": "import-identity-proof",
+  "reason": "no usable image on page",
+  "funnel": {
+   "imported": 0,
+   "importStage": "identity-proof",
+   "outcome": "pending"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.607Z"
+ },
+ "uivo-folias-de-baco-uivo-renegado-vinhas-velhas-2023": {
+  "slug": "uivo-folias-de-baco-uivo-renegado-vinhas-velhas-2023",
+  "sku": "",
+  "name": "Uivo Folias de Baco Uivo Renegado Vinhas Velhas",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "no usable image on page",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.607Z"
+ },
+ "baron-de-brane-margaux-2022": {
+  "slug": "baron-de-brane-margaux-2022",
+  "sku": "520726",
+  "name": "Baron de Brane Margaux",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.608Z"
+ },
+ "chateau-la-commanderie-saint-emilion-grand-cru-2019": {
+  "slug": "chateau-la-commanderie-saint-emilion-grand-cru-2019",
+  "sku": "",
+  "name": "Château la Commanderie Saint Emilion Grand Cru",
+  "ok": true,
+  "failureStage": "import-identity-proof",
+  "reason": "no usable image on page",
+  "funnel": {
+   "imported": 0,
+   "importStage": "identity-proof",
+   "outcome": "pending"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.608Z"
+ },
+ "domaine-arnoux-pere-fils-savigny-les-beaune-2022": {
+  "slug": "domaine-arnoux-pere-fils-savigny-les-beaune-2022",
+  "sku": "",
+  "name": "Domaine Arnoux Pere & Fils Savigny les Beaune",
+  "ok": true,
+  "failureStage": "import-identity-proof",
+  "reason": "no usable image on page",
+  "funnel": {
+   "imported": 0,
+   "importStage": "identity-proof",
+   "outcome": "pending"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.608Z"
+ },
+ "domaine-jl-chave-saint-joseph-2022": {
+  "slug": "domaine-jl-chave-saint-joseph-2022",
+  "sku": "540250",
+  "name": "Domaine Jl Chave Saint Joseph",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.608Z"
+ },
+ "domaine-pierre-morey-volnay-1er-cru-les-santenots-2022": {
+  "slug": "domaine-pierre-morey-volnay-1er-cru-les-santenots-2022",
+  "sku": "713640",
+  "name": "Domaine Pierre Morey Volnay 1er Cru les Santenots",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2017"
+    }
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2023"
+    }
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.609Z"
+ },
+ "tempo-d-angelus-bourdeaux-rouge-2019": {
+  "slug": "tempo-d-angelus-bourdeaux-rouge-2019",
+  "sku": "",
+  "name": "Tempo D'angelus Bourdeaux Rouge",
+  "ok": true,
+  "failureStage": "import-identity-proof",
+  "reason": "the label does not name this wine",
+  "funnel": {
+   "imported": 0,
+   "importStage": "identity-proof",
+   "outcome": "pending"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.609Z"
+ },
+ "weingut-pichler-krutzler-ried-kellerberg-2020": {
+  "slug": "weingut-pichler-krutzler-ried-kellerberg-2020",
+  "sku": "",
+  "name": "Weingut Pichler-Krutzler Ried Kellerberg",
+  "ok": true,
+  "failureStage": "import-identity-proof",
+  "reason": "no usable image on page",
+  "funnel": {
+   "imported": 0,
+   "importStage": "identity-proof",
+   "outcome": "pending"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.609Z"
+ },
+ "domaine-pierre-morey-saint-romain-sous-le-chateau-2018": {
+  "slug": "domaine-pierre-morey-saint-romain-sous-le-chateau-2018",
+  "sku": "",
+  "name": "Domaine Pierre Morey Saint Romain sous le Chateau",
+  "ok": true,
+  "failureStage": "import-identity-proof",
+  "reason": "no usable image on page",
+  "funnel": {
+   "imported": 0,
+   "importStage": "identity-proof",
+   "outcome": "pending"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.609Z"
+ },
+ "powers-winery-merlot-columbia-valley-2017": {
+  "slug": "powers-winery-merlot-columbia-valley-2017",
+  "sku": "",
+  "name": "Powers Winery Merlot Columbia Valley",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "subject too wide for a single bottle — carton, magnum or pair",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.610Z"
+ },
+ "reynier-chateau-reynier-bordeaux-superieur-2019": {
+  "slug": "reynier-chateau-reynier-bordeaux-superieur-2019",
+  "sku": "",
+  "name": "Reynier Château Reynier Bordeaux Superieur",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "multiple subjects — a gift set, multipack or lineup",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.610Z"
+ },
+ "domaine-jean-royer-chateauneuf-du-pape-cuvee-prestige-2022": {
+  "slug": "domaine-jean-royer-chateauneuf-du-pape-cuvee-prestige-2022",
+  "sku": "540547*",
+  "name": "Domaine Jean Royer Chateauneuf du Pape Cuvee Prestige",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2019"
+    }
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2017"
+    }
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2009"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.610Z"
+ },
+ "domaine-pierre-morey-volnay-1er-cru-les-santenots-2023": {
+  "slug": "domaine-pierre-morey-volnay-1er-cru-les-santenots-2023",
+  "sku": "713651",
+  "name": "Domaine Pierre Morey Volnay 1er Cru les Santenots",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: meursault durots"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.610Z"
+ },
+ "raposo-carlos-raposo-impecavel-red-wine-2022": {
+  "slug": "raposo-carlos-raposo-impecavel-red-wine-2022",
+  "sku": "",
+  "name": "Raposo Carlos Raposo Impecavel Red Wine",
+  "ok": true,
+  "failureStage": "import-identity-proof",
+  "reason": "no usable image on page",
+  "funnel": {
+   "imported": 0,
+   "importStage": "identity-proof",
+   "outcome": "pending"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.610Z"
+ },
+ "romariz-fine-white-port": {
+  "slug": "romariz-fine-white-port",
+  "sku": "296121**",
+  "name": "Romariz Fine White Port",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.611Z"
+ },
+ "zolo-cabernet-sauvignon-2023": {
+  "slug": "zolo-cabernet-sauvignon-2023",
+  "sku": "",
+  "name": "Zolo Cabernet Sauvignon",
+  "ok": true,
+  "failureStage": "import-identity-proof",
+  "reason": "no usable image on page",
+  "funnel": {
+   "imported": 0,
+   "importStage": "identity-proof",
+   "outcome": "pending"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.611Z"
+ },
+ "rapet-domaine-rapet-pernand-vergelesses-blanc-1er-cru-sous-fretille-2023": {
+  "slug": "rapet-domaine-rapet-pernand-vergelesses-blanc-1er-cru-sous-fretille-2023",
+  "sku": "410355",
+  "name": "Rapet Domaine Rapet Pernand Vergelesses Blanc 1er Cru sous Fretille",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator fretille"
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.611Z"
+ },
+ "sarget-de-gruaud-larose-saint-julien-2018": {
+  "slug": "sarget-de-gruaud-larose-saint-julien-2018",
+  "sku": "",
+  "name": "Sarget de Gruaud Larose Saint Julien",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "the label does not name this wine",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [],
+  "updatedAt": "2026-08-11T15:34:40.611Z"
+ },
+ "domaine-darviot-perrin-meursault-1er-cru-les-charmes-2023": {
+  "slug": "domaine-darviot-perrin-meursault-1er-cru-les-charmes-2023",
+  "sku": "660645",
+  "name": "Domaine Darviot-Perrin Meursault 1er Cru les Charmes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.611Z"
+ },
+ "domaine-jean-luc-burguet-gevrey-chambertin-mes-favorites-vieilles-vignes-2022": {
+  "slug": "domaine-jean-luc-burguet-gevrey-chambertin-mes-favorites-vieilles-vignes-2022",
+  "sku": "713913",
+  "name": "Domaine Jean-Luc Burguet Gevrey Chambertin Mes Favorites Vieilles Vignes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate producer is Domaines Alain Burguet; request is Domaine Jean-Luc"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.611Z"
+ },
+ "drouhin-laroze-domaine-drouhin-laroze-chapelle-chambertin-grand-cru-2019": {
+  "slug": "drouhin-laroze-domaine-drouhin-laroze-chapelle-chambertin-grand-cru-2019",
+  "sku": "510932",
+  "name": "Drouhin-Laroze Domaine Drouhin-Laroze Chapelle Chambertin Grand Cru",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2019",
+     "visible": "2009"
+    }
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2019",
+     "visible": "2017"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.612Z"
+ },
+ "cider-farm-oak-aged-cider": {
+  "slug": "cider-farm-oak-aged-cider",
+  "sku": "640001",
+  "name": "Cider Farm Oak Aged Cider",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.612Z"
+ },
+ "domaine-gauby-cotes-du-roussillon-muntada-2019": {
+  "slug": "domaine-gauby-cotes-du-roussillon-muntada-2019",
+  "sku": "470425",
+  "name": "Domaine Gauby Cotes du Roussillon Muntada",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-9",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2019",
+     "visible": "2020"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.612Z"
+ },
+ "mordoree-domaine-de-la-mordoree-cotes-du-rhone-rose-2021": {
+  "slug": "mordoree-domaine-de-la-mordoree-cotes-du-rhone-rose-2021",
+  "sku": "241862*",
+  "name": "Mordoree Domaine de la Mordoree Cotes du Rhone Rose",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "requested rose; candidate pixels show red"
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "requested rose; candidate pixels show red"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.612Z"
+ },
+ "benjamin-leroux-meursault-1er-cru-les-genevrieres-2021": {
+  "slug": "benjamin-leroux-meursault-1er-cru-les-genevrieres-2021",
+  "sku": "713412",
+  "name": "Benjamin Leroux Meursault 1er Cru les Genevrieres",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.612Z"
+ },
+ "bruno-clair-domaine-bruno-clair-marsannay-les-charmes-aux-pretres-2021": {
+  "slug": "bruno-clair-domaine-bruno-clair-marsannay-les-charmes-aux-pretres-2021",
+  "sku": "714124",
+  "name": "Bruno Clair Domaine Bruno Clair Marsannay les Charmes aux Pretres",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate is premier cru; request is not"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.612Z"
+ },
+ "champagne-leclerc-briant-reserve-extra-brut": {
+  "slug": "champagne-leclerc-briant-reserve-extra-brut",
+  "sku": "554051",
+  "name": "Champagne Leclerc Briant Reserve Extra Brut",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": true
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.613Z"
+ },
+ "domaine-castera-jurancon-sec-autre-pentes-2023": {
+  "slug": "domaine-castera-jurancon-sec-autre-pentes-2023",
+  "sku": "740213",
+  "name": "Domaine Castera Jurancon Sec Autre Pentes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.613Z"
+ },
+ "domaine-des-epeneaux-auxey-duresses-1er-cru-rouge-2018": {
+  "slug": "domaine-des-epeneaux-auxey-duresses-1er-cru-rouge-2018",
+  "sku": "712635*",
+  "name": "Domaine des Epeneaux Auxey Duresses 1ER Cru Rouge",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: suhette armand"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.613Z"
+ },
+ "domaine-parent-corton-grand-cru-blanc-2020": {
+  "slug": "domaine-parent-corton-grand-cru-blanc-2020",
+  "sku": "210432",
+  "name": "Domaine Parent Corton Grand Cru Blanc",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate producer is TRIBECA; request is Domaine Parent"
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.613Z"
+ },
+ "francois-mikulski-beaune-1er-cru-blanc-les-greves-2024": {
+  "slug": "francois-mikulski-beaune-1er-cru-blanc-les-greves-2024",
+  "sku": "714063",
+  "name": "Francois Mikulski Beaune 1ER Cru Blanc les Greves",
+  "ok": true,
+  "failureStage": "import-catalog-missing",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "catalog-missing",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: meursault manche"
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: bourgogne cote"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.613Z"
+ },
+ "heritiers-comte-lafon-macon-village-2025": {
+  "slug": "heritiers-comte-lafon-macon-village-2025",
+  "sku": "111263",
+  "name": "Heritiers Comte Lafon Macon Village",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2025",
+     "visible": "2024"
+    }
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2025",
+     "visible": "2024"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.614Z"
+ },
+ "nicot-chateau-nicot-bordeaux-2019": {
+  "slug": "nicot-chateau-nicot-bordeaux-2019",
+  "sku": "520491",
+  "name": "Nicot Château Nicot Bordeaux",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-10",
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.614Z"
+ },
+ "pichon-comtesse-reserve-pauillac-2019": {
+  "slug": "pichon-comtesse-reserve-pauillac-2019",
+  "sku": "520698",
+  "name": "Pichon Comtesse Reserve Pauillac",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.614Z"
+ },
+ "rapet-domaine-rapet-beaune-1er-cru-les-cents-vignes-2023": {
+  "slug": "rapet-domaine-rapet-beaune-1er-cru-les-cents-vignes-2023",
+  "sku": "410350",
+  "name": "Rapet Domaine Rapet Beaune 1er Cru les Cents Vignes",
+  "ok": true,
+  "failureStage": "import-watermark",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator cents"
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.614Z"
+ },
+ "rocca-di-montegrossi-toscana-rosso-geremia-2018": {
+  "slug": "rocca-di-montegrossi-toscana-rosso-geremia-2018",
+  "sku": "398043",
+  "name": "Rocca Di Montegrossi Toscana Rosso Geremia",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-10",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.614Z"
+ },
+ "broadley-vineyards-willamette-valley-pinot-noir-2024": {
+  "slug": "broadley-vineyards-willamette-valley-pinot-noir-2024",
+  "sku": "503120",
+  "name": "Broadley Vineyards Willamette Valley Pinot Noir",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.614Z"
+ },
+ "collotte-domaine-collotte-marsannay-le-clos-de-jeu-2019": {
+  "slug": "collotte-domaine-collotte-marsannay-le-clos-de-jeu-2019",
+  "sku": "411974",
+  "name": "Collotte Domaine Collotte Marsannay le Clos de Jeu",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.615Z"
+ },
+ "domaine-chofflet-valdenaire-givry-1er-cru-en-choue-2022": {
+  "slug": "domaine-chofflet-valdenaire-givry-1er-cru-en-choue-2022",
+  "sku": "317250",
+  "name": "Domaine Chofflet Valdenaire Givry 1er Cru en Choue",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.615Z"
+ },
+ "domaine-de-la-grosse-pierre-morgon-douby-2020": {
+  "slug": "domaine-de-la-grosse-pierre-morgon-douby-2020",
+  "sku": "415561",
+  "name": "Domaine de la Grosse Pierre Morgon Douby",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.615Z"
+ },
+ "domaine-humbert-freres-bourgogne-cote-d-or-2019": {
+  "slug": "domaine-humbert-freres-bourgogne-cote-d-or-2019",
+  "sku": "660324",
+  "name": "Domaine Humbert Freres Bourgogne Cote D'or",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.615Z"
+ },
+ "domaine-la-bastide-blanche-bandol-rouge-2021": {
+  "slug": "domaine-la-bastide-blanche-bandol-rouge-2021",
+  "sku": "473942",
+  "name": "Domaine la Bastide Blanche Bandol Rouge",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.615Z"
+ },
+ "domaine-paul-jaboulet-aine-hermitage-la-chapelle-blanc-2020": {
+  "slug": "domaine-paul-jaboulet-aine-hermitage-la-chapelle-blanc-2020",
+  "sku": "541092",
+  "name": "Domaine Paul Jaboulet Aine Hermitage la Chapelle Blanc",
+  "ok": true,
+  "failureStage": "import-watermark",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.615Z"
+ },
+ "domaine-philippe-jouan-clos-saint-denis-grand-cru-2023": {
+  "slug": "domaine-philippe-jouan-clos-saint-denis-grand-cru-2023",
+  "sku": "410829",
+  "name": "Domaine Philippe Jouan Clos Saint Denis Grand Cru",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-9",
+    "anchor": false,
+    "explicitConflict": true
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.616Z"
+ },
+ "filare-italia-prosecco-doc-extra-dry": {
+  "slug": "filare-italia-prosecco-doc-extra-dry",
+  "sku": "397332",
+  "name": "Filare Italia Prosecco DOC Extra Dry",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.616Z"
+ },
+ "groffier-domaine-robert-groffier-bonnes-mares-grand-2021": {
+  "slug": "groffier-domaine-robert-groffier-bonnes-mares-grand-2021",
+  "sku": "510744",
+  "name": "Groffier Domaine Robert Groffier Bonnes Mares Grand",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.616Z"
+ },
+ "pattini-pinot-grigio-delle-venezia-doc-2025": {
+  "slug": "pattini-pinot-grigio-delle-venezia-doc-2025",
+  "sku": "397516",
+  "name": "Pattini Pinot Grigio Delle Venezia DOC",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.616Z"
+ },
+ "sylvain-langoureau-domaine-sylvain-langoureau-saint-aubin-1er-cru-les-frionnes-2021": {
+  "slug": "sylvain-langoureau-domaine-sylvain-langoureau-saint-aubin-1er-cru-les-frionnes-2021",
+  "sku": "215077",
+  "name": "Sylvain Langoureau Domaine Sylvain Langoureau Saint Aubin 1er Cru les Frionnes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.617Z"
+ },
+ "cider-farm-dabinett-cider": {
+  "slug": "cider-farm-dabinett-cider",
+  "sku": "640004",
+  "name": "Cider Farm Dabinett Cider",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-10",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate producer is Kingston Black S.V.C.; request is Cider Farm"
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.617Z"
+ },
+ "confuron-gindre-domaine-confuron-gindre-gevrey-chambertin-2019": {
+  "slug": "confuron-gindre-domaine-confuron-gindre-gevrey-chambertin-2019",
+  "sku": "513214",
+  "name": "Confuron-Gindre Domaine Confuron-Gindre Gevrey Chambertin",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2019",
+     "visible": "2018"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.617Z"
+ },
+ "domaine-des-epeneaux-auxey-duresses-1er-cru-rouge-2023": {
+  "slug": "domaine-des-epeneaux-auxey-duresses-1er-cru-rouge-2023",
+  "sku": "712658",
+  "name": "Domaine des Epeneaux Auxey Duresses 1ER Cru Rouge",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.617Z"
+ },
+ "domaine-gerard-mugneret-vosne-romanee-vigneux-2022": {
+  "slug": "domaine-gerard-mugneret-vosne-romanee-vigneux-2022",
+  "sku": "714317",
+  "name": "Domaine Gerard Mugneret Vosne Romanee Vigneux",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2023"
+    }
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2023"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.617Z"
+ },
+ "domaine-jf-mugnier-le-musigny-grand-cru-2018": {
+  "slug": "domaine-jf-mugnier-le-musigny-grand-cru-2018",
+  "sku": "711196",
+  "name": "Domaine Jf Mugnier le Musigny Grand Cru",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator musigny"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.617Z"
+ },
+ "jl-chave-selection-crozes-hermitage-rouge-silene-2023": {
+  "slug": "jl-chave-selection-crozes-hermitage-rouge-silene-2023",
+  "sku": "540254",
+  "name": "Jl Chave Selection Crozes Hermitage Rouge Silene",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.618Z"
+ },
+ "maison-camille-giroud-maranges-1er-cru-le-croix-aux-moines-2020": {
+  "slug": "maison-camille-giroud-maranges-1er-cru-le-croix-aux-moines-2020",
+  "sku": "712815",
+  "name": "Maison Camille Giroud Maranges 1er Cru le Croix aux Moines",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2020",
+     "visible": "2015"
+    }
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.618Z"
+ },
+ "moulin-d-issan-bordeaux-superieur-rouge-2022": {
+  "slug": "moulin-d-issan-bordeaux-superieur-rouge-2022",
+  "sku": "520739",
+  "name": "Moulin D'issan Bordeaux Superieur Rouge",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2019"
+    }
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator superieur"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.618Z"
+ },
+ "pichon-comtesse-reserve-pauillac-2018": {
+  "slug": "pichon-comtesse-reserve-pauillac-2018",
+  "sku": "520460",
+  "name": "Pichon Comtesse Reserve Pauillac",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.618Z"
+ },
+ "taonga-sauvignon-blanc-marlborough-2025": {
+  "slug": "taonga-sauvignon-blanc-marlborough-2025",
+  "sku": "605013",
+  "name": "Taonga Sauvignon Blanc Marlborough",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2025",
+     "visible": "2022"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.618Z"
+ },
+ "vocoret-domaine-vocoret-chablis-1er-cru-vaillons-vieilles-vignes-2023": {
+  "slug": "vocoret-domaine-vocoret-chablis-1er-cru-vaillons-vieilles-vignes-2023",
+  "sku": "511260",
+  "name": "Vocoret Domaine Vocoret Chablis 1er Cru Vaillons Vieilles Vignes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.618Z"
+ },
+ "wolfberger-fleur-de-biere": {
+  "slug": "wolfberger-fleur-de-biere",
+  "sku": "650262",
+  "name": "Wolfberger Fleur de Biere",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate producer is Fleur de Bière; request is Wolfberger"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.619Z"
+ },
+ "clos-marie-pic-saint-loup-olivette-2023": {
+  "slug": "clos-marie-pic-saint-loup-olivette-2023",
+  "sku": "471202",
+  "name": "Clos Marie Pic Saint Loup Olivette",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.619Z"
+ },
+ "domaine-jean-luc-et-eric-burguet-gevrey-chambertin-1er-cru-lavaut-saint-jacques-2020": {
+  "slug": "domaine-jean-luc-et-eric-burguet-gevrey-chambertin-1er-cru-lavaut-saint-jacques-2020",
+  "sku": "713906",
+  "name": "Domaine Jean-Luc et Eric Burguet Gevrey Chambertin 1er Cru Lavaut Saint Jacques",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2020",
+     "visible": "2021"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.619Z"
+ },
+ "domaine-perrachon-beaujolais-villages-terres-de-loyse-2025": {
+  "slug": "domaine-perrachon-beaujolais-villages-terres-de-loyse-2025",
+  "sku": "511624",
+  "name": "Domaine Perrachon Beaujolais Villages Terres de Loyse",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator loyse"
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.619Z"
+ },
+ "domaine-rapet-beaune-1er-cru-les-cents-vignes-2022": {
+  "slug": "domaine-rapet-beaune-1er-cru-les-cents-vignes-2022",
+  "sku": "410344",
+  "name": "Domaine Rapet Beaune 1er Cru les Cents Vignes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator cents"
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.619Z"
+ },
+ "domaine-roy-et-fils-willamette-valley-pinot-noir-2021": {
+  "slug": "domaine-roy-et-fils-willamette-valley-pinot-noir-2021",
+  "sku": "501623*",
+  "name": "Domaine Roy et Fils Willamette Valley Pinot Noir",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-10",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2021",
+     "visible": "2024"
+    }
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label says chardonnay; request is pinot noir"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.620Z"
+ },
+ "michel-bouzereau-domaine-michel-bouzereau-meursault-1er-cru-les-charmes-2021": {
+  "slug": "michel-bouzereau-domaine-michel-bouzereau-meursault-1er-cru-les-charmes-2021",
+  "sku": "214963",
+  "name": "Michel Bouzereau Domaine Michel Bouzereau Meursault 1er Cru les Charmes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2021",
+     "visible": "2020"
+    }
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: moulin"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.620Z"
+ },
+ "pato-luis-pato-quinta-de-moinho-beiras-2000": {
+  "slug": "pato-luis-pato-quinta-de-moinho-beiras-2000",
+  "sku": "600005",
+  "name": "Pato Luis Pato Quinta de Moinho Beiras",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-10",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.620Z"
+ },
+ "weingut-franz-hirtzberger-riesling-singerriedel-smaragd-2019": {
+  "slug": "weingut-franz-hirtzberger-riesling-singerriedel-smaragd-2019",
+  "sku": "495426",
+  "name": "Weingut Franz Hirtzberger Riesling Singerriedel Smaragd",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested tier smaragd"
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.620Z"
+ },
+ "wolfberger-litchi-neo": {
+  "slug": "wolfberger-litchi-neo",
+  "sku": "650261",
+  "name": "Wolfberger Litchi Neo",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.620Z"
+ },
+ "chateau-prieure-lichine-margaux-2016": {
+  "slug": "chateau-prieure-lichine-margaux-2016",
+  "sku": "520684",
+  "name": "Château Prieure Lichine Margaux",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2016",
+     "visible": "2017"
+    }
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.620Z"
+ },
+ "confuron-gindre-domaine-confuron-gindre-nuits-saint-georges-2020": {
+  "slug": "confuron-gindre-domaine-confuron-gindre-nuits-saint-georges-2020",
+  "sku": "513225",
+  "name": "Confuron-Gindre Domaine Confuron-Gindre Nuits Saint Georges",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2020",
+     "visible": "2022"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.621Z"
+ },
+ "deiss-domaine-marcel-deiss-alsace-grand-cru-schlossberg-2019": {
+  "slug": "deiss-domaine-marcel-deiss-alsace-grand-cru-schlossberg-2019",
+  "sku": "780151",
+  "name": "Deiss Domaine Marcel Deiss Alsace Grand Cru Schlossberg",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.621Z"
+ },
+ "domaine-des-moirots-givry-rouge-2020": {
+  "slug": "domaine-des-moirots-givry-rouge-2020",
+  "sku": "415558",
+  "name": "Domaine des Moirots Givry Rouge",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2020",
+     "visible": "2013"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.621Z"
+ },
+ "domaine-gerard-tremblay-chablis-1er-cru-fourchaume-2023": {
+  "slug": "domaine-gerard-tremblay-chablis-1er-cru-fourchaume-2023",
+  "sku": "211257",
+  "name": "Domaine Gerard Tremblay Chablis 1er Cru Fourchaume",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2023",
+     "visible": "2021"
+    }
+   },
+   {
+    "id": "candidate-10",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate producer is Domaine des Iles; request is Domaine Gerard"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.621Z"
+ },
+ "domaine-perrachon-macon-villages-2024": {
+  "slug": "domaine-perrachon-macon-villages-2024",
+  "sku": "511623",
+  "name": "Domaine Perrachon Macon Villages",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.621Z"
+ },
+ "domaine-rapet-beaune-1er-cru-les-greves-2022": {
+  "slug": "domaine-rapet-beaune-1er-cru-les-greves-2022",
+  "sku": "410345",
+  "name": "Domaine Rapet Beaune 1er Cru les Greves",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2021"
+    }
+   },
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.621Z"
+ },
+ "gabrielle-ashley-cabernet-sauvignon-alexander-valley-2020": {
+  "slug": "gabrielle-ashley-cabernet-sauvignon-alexander-valley-2020",
+  "sku": "680201*",
+  "name": "Gabrielle Ashley Cabernet Sauvignon Alexander Valley",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2020",
+     "visible": "1993"
+    }
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2020",
+     "visible": "2018"
+    }
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.622Z"
+ },
+ "gen5-sauvignon-blanc-2024": {
+  "slug": "gen5-sauvignon-blanc-2024",
+  "sku": "604269",
+  "name": "GEN5 Sauvignon Blanc",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2024",
+     "visible": "2021"
+    }
+   },
+   {
+    "id": "candidate-10",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate source says merlot; request is sauvignon blanc"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.622Z"
+ },
+ "jc-ramonet-chassagne-montrachet-blanc-2021": {
+  "slug": "jc-ramonet-chassagne-montrachet-blanc-2021",
+  "sku": "512213",
+  "name": "Jc Ramonet Chassagne Montrachet Blanc",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: ensegnieres"
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate is premier cru; request is not"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.622Z"
+ },
+ "jc-ramonet-macon-peronne-2021": {
+  "slug": "jc-ramonet-macon-peronne-2021",
+  "sku": "512208",
+  "name": "Jc Ramonet Macon Peronne",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2021",
+     "visible": "2020"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.622Z"
+ },
+ "maison-camille-giroud-charmes-chambertin-grand-cru-2019": {
+  "slug": "maison-camille-giroud-charmes-chambertin-grand-cru-2019",
+  "sku": "712806*",
+  "name": "Maison Camille Giroud Charmes Chambertin Grand Cru",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2019",
+     "visible": "2016"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.622Z"
+ },
+ "pierre-morey-domaine-pierre-morey-volnay-1er-cru-les-santenots-2021": {
+  "slug": "pierre-morey-domaine-pierre-morey-volnay-1er-cru-les-santenots-2021",
+  "sku": "713622",
+  "name": "Pierre Morey Domaine Pierre Morey Volnay 1er Cru les Santenots",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: tessons"
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.622Z"
+ },
+ "rapet-domaine-rapet-corton-charlemagne-grand-cru-2023": {
+  "slug": "rapet-domaine-rapet-corton-charlemagne-grand-cru-2023",
+  "sku": "410357",
+  "name": "Rapet Domaine Rapet Corton Charlemagne Grand Cru",
+  "ok": true,
+  "failureStage": "import-watermark",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.622Z"
+ },
+ "rocca-di-montegrossi-chianti-classico-gran-selezione-vigneto-san-marcellino-2018": {
+  "slug": "rocca-di-montegrossi-chianti-classico-gran-selezione-vigneto-san-marcellino-2018",
+  "sku": "398039",
+  "name": "Rocca Di Montegrossi Chianti Classico Gran Selezione Vigneto San Marcellino",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-10",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2018",
+     "visible": "2015"
+    }
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.623Z"
+ },
+ "vara-vermut-seco": {
+  "slug": "vara-vermut-seco",
+  "sku": "282107**",
+  "name": "Vara Vermut Seco",
+  "ok": true,
+  "failureStage": "import-watermark",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.623Z"
+ },
+ "zolo-chardonnay-2025": {
+  "slug": "zolo-chardonnay-2025",
+  "sku": "603589",
+  "name": "Zolo Chardonnay",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2025",
+     "visible": "2017"
+    }
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2025",
+     "visible": "2023"
+    }
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.623Z"
+ },
+ "benjamin-leroux-volnay-1er-cru-clos-de-la-cave-ducs-2023": {
+  "slug": "benjamin-leroux-volnay-1er-cru-clos-de-la-cave-ducs-2023",
+  "sku": "713469",
+  "name": "Benjamin Leroux Volnay 1er Cru Clos de la Cave Ducs",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-10",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2023",
+     "visible": "2022"
+    }
+   },
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.623Z"
+ },
+ "champagne-hugues-godme-grand-jardins-le-blanc-de-noirs-grand-cru": {
+  "slug": "champagne-hugues-godme-grand-jardins-le-blanc-de-noirs-grand-cru",
+  "sku": "750918",
+  "name": "Champagne Hugues Godme Grand Jardins-Le Blanc de Noirs Grand Cru",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.623Z"
+ },
+ "charles-lachaux-cote-de-nuits-villages-aux-montagnes-2022": {
+  "slug": "charles-lachaux-cote-de-nuits-villages-aux-montagnes-2022",
+  "sku": "710019",
+  "name": "Charles Lachaux Cote de Nuits Villages aux Montagnes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2019"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.624Z"
+ },
+ "chateau-thieuley-bordeaux-blanc-2019": {
+  "slug": "chateau-thieuley-bordeaux-blanc-2019",
+  "sku": "520242",
+  "name": "Château Thieuley Bordeaux Blanc",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "requested white; candidate pixels show red or rose"
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2019",
+     "visible": "2020"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.624Z"
+ },
+ "cider-farm-the-cider-farm-belgian-saison": {
+  "slug": "cider-farm-the-cider-farm-belgian-saison",
+  "sku": "640015",
+  "name": "Cider Farm The Cider Farm Belgian Saison",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.624Z"
+ },
+ "domaine-des-epeneaux-auxey-duresses-1er-cru-rouge-2019": {
+  "slug": "domaine-des-epeneaux-auxey-duresses-1er-cru-rouge-2019",
+  "sku": "712639*",
+  "name": "Domaine des Epeneaux Auxey Duresses 1ER Cru Rouge",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.624Z"
+ },
+ "domaine-jl-chave-saint-joseph-2020": {
+  "slug": "domaine-jl-chave-saint-joseph-2020",
+  "sku": "540221*",
+  "name": "Domaine Jl Chave Saint Joseph",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.624Z"
+ },
+ "domaine-juillot-mercurey-1er-cru-clos-des-barraults-2020": {
+  "slug": "domaine-juillot-mercurey-1er-cru-clos-des-barraults-2020",
+  "sku": "410618*",
+  "name": "Domaine Juillot Mercurey 1er Cru Clos des Barraults",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2020",
+     "visible": "2023"
+    }
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.624Z"
+ },
+ "domaine-perrachon-pouilly-fuisse-vieilles-vignes-2024": {
+  "slug": "domaine-perrachon-pouilly-fuisse-vieilles-vignes-2024",
+  "sku": "511625",
+  "name": "Domaine Perrachon Pouilly Fuisse Vieilles Vignes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.625Z"
+ },
+ "mitre-mezcal-artesenal-origen": {
+  "slug": "mitre-mezcal-artesenal-origen",
+  "sku": "670101**",
+  "name": "Mitre Mezcal Artesenal Origen",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.625Z"
+ },
+ "rocca-di-montegrossi-chianti-classico-2022": {
+  "slug": "rocca-di-montegrossi-chianti-classico-2022",
+  "sku": "398046",
+  "name": "Rocca Di Montegrossi Chianti Classico",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-10",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.625Z"
+ },
+ "rocca-di-montegrossi-chianti-classico-gran-selezione-vigneto-san-marcellino-2016": {
+  "slug": "rocca-di-montegrossi-chianti-classico-gran-selezione-vigneto-san-marcellino-2016",
+  "sku": "398017",
+  "name": "Rocca Di Montegrossi Chianti Classico Gran Selezione Vigneto San Marcellino",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.625Z"
+ },
+ "tapiz-sparkling-malbec-rose": {
+  "slug": "tapiz-sparkling-malbec-rose",
+  "sku": "604744",
+  "name": "Tapiz Sparkling Malbec Rose",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator malbec"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.625Z"
+ },
+ "the-eyrie-vineyards-pinot-gris-the-eyrie-2023": {
+  "slug": "the-eyrie-vineyards-pinot-gris-the-eyrie-2023",
+  "sku": "501162",
+  "name": "The Eyrie Vineyards Pinot Gris the Eyrie",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.625Z"
+ },
+ "vara-silverhead-brut": {
+  "slug": "vara-silverhead-brut",
+  "sku": "282104",
+  "name": "Vara Silverhead Brut",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.625Z"
+ },
+ "weingut-fx-pichler-riesling-ried-kellerberg-2024": {
+  "slug": "weingut-fx-pichler-riesling-ried-kellerberg-2024",
+  "sku": "495185",
+  "name": "Weingut Fx Pichler Riesling Ried Kellerberg",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: steinertal"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.626Z"
+ },
+ "arrocal-bodegas-arrocal-arrocal-tintoi-fino-do-ribera-del-duero-2022": {
+  "slug": "arrocal-bodegas-arrocal-arrocal-tintoi-fino-do-ribera-del-duero-2022",
+  "sku": "620601",
+  "name": "Arrocal Bodegas Arrocal Arrocal Tintoi Fino Do Ribera Del Duero",
+  "ok": true,
+  "failureStage": "",
+  "reason": "repeated designs lacked an exact readable anchor",
+  "funnel": {
+   "googleSearched": true,
+   "searchResults": 10,
+   "sourcePolicyBlocked": 0,
+   "permittedCandidates": 10,
+   "downloadAttempted": 10,
+   "downloaded": 9,
+   "decodedImages": 9,
+   "bottleShapePassed": 4,
+   "cleanBackgrounds": 5,
+   "similarPairs": 2,
+   "repeatedGroups": 2,
+   "strongestGroupImages": 2,
+   "labelImagesRead": 2,
+   "identityAnchors": 0,
+   "explicitConflicts": 2,
+   "publishableAnchors": 0,
+   "outcome": "imported",
+   "downloadHttpFailures": 1,
+   "downloadTooSmall": 0,
+   "downloadUnsupported": 0,
+   "downloadConversionFailures": 0,
+   "downloadTransportFailures": 0,
+   "selectorReceived": 9,
+   "decodeFailures": 0,
+   "comparedPairs": 36,
+   "anchorShapeFailures": 0,
+   "anchorResolutionFailures": 0,
+   "imported": 1,
+   "importStage": "imported"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2021"
+    }
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2011"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.819Z"
+ },
+ "benjamin-leroux-savigny-les-beaune-1er-cru-les-haut-jarrons-2013": {
+  "slug": "benjamin-leroux-savigny-les-beaune-1er-cru-les-haut-jarrons-2013",
+  "sku": "713236",
+  "name": "Benjamin Leroux Savigny les Beaune 1er Cru les Haut Jarrons",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2013",
+     "visible": "2014"
+    }
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.819Z"
+ },
+ "castagnier-domaine-jerome-castagnier-bourgogne-passetoutgrain-2020": {
+  "slug": "castagnier-domaine-jerome-castagnier-bourgogne-passetoutgrain-2020",
+  "sku": "510292",
+  "name": "Castagnier Domaine Jerome Castagnier Bourgogne Passetoutgrain",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator passetoutgrain"
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.820Z"
+ },
+ "collotte-domaine-collotte-fixin-les-crais-de-chene-2020": {
+  "slug": "collotte-domaine-collotte-fixin-les-crais-de-chene-2020",
+  "sku": "411981",
+  "name": "Collotte Domaine Collotte Fixin les Crais de Chene",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.820Z"
+ },
+ "confuron-gindre-domaine-confuron-gindre-vosne-romanee-1er-cru-les-suchots-2022": {
+  "slug": "confuron-gindre-domaine-confuron-gindre-vosne-romanee-1er-cru-les-suchots-2022",
+  "sku": "513245",
+  "name": "Confuron-Gindre Domaine Confuron-Gindre Vosne Romanee 1ER Cru les Suchots",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.820Z"
+ },
+ "domaine-bruno-colin-chassagne-montrachet-1er-cru-les-maltroie-blanc-2024": {
+  "slug": "domaine-bruno-colin-chassagne-montrachet-1er-cru-les-maltroie-blanc-2024",
+  "sku": "660929",
+  "name": "Domaine Bruno Colin Chassagne Montrachet 1er Cru les Maltroie Blanc",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: morgeot"
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.820Z"
+ },
+ "domaine-jean-luc-burguet-vosne-romanee-1er-cru-rouge-du-dessus-2022": {
+  "slug": "domaine-jean-luc-burguet-vosne-romanee-1er-cru-rouge-du-dessus-2022",
+  "sku": "713916",
+  "name": "Domaine Jean-Luc Burguet Vosne Romanee 1er Cru Rouge du Dessus",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2020"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.820Z"
+ },
+ "domaine-joseph-pascal-puligny-montrachet-1er-cru-les-folatieres-2023": {
+  "slug": "domaine-joseph-pascal-puligny-montrachet-1er-cru-les-folatieres-2023",
+  "sku": "217132",
+  "name": "Domaine Joseph Pascal Puligny Montrachet 1er Cru les Folatieres",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator folatieres"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.820Z"
+ },
+ "eyrie-the-eyrie-vineyards-pinot-roland-green-2021": {
+  "slug": "eyrie-the-eyrie-vineyards-pinot-roland-green-2021",
+  "sku": "501144",
+  "name": "Eyrie The Eyrie Vineyards Pinot Roland Green",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.821Z"
+ },
+ "far-north-spirits-roknar-minnesota-rye-whiskey": {
+  "slug": "far-north-spirits-roknar-minnesota-rye-whiskey",
+  "sku": "880608**",
+  "name": "Far North Spirits Roknar Minnesota Rye Whiskey",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator whiskey"
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator whiskey"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.821Z"
+ },
+ "galil-mountain-winery-rose-2021": {
+  "slug": "galil-mountain-winery-rose-2021",
+  "sku": "260540",
+  "name": "Galil Mountain Winery Rose",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-10",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: alon"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.821Z"
+ },
+ "hamel-family-wines-stratum-red-wine-sonoma-valley-2020": {
+  "slug": "hamel-family-wines-stratum-red-wine-sonoma-valley-2020",
+  "sku": "500440*",
+  "name": "Hamel Family Wines Stratum Red Wine Sonoma Valley",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-10",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.821Z"
+ },
+ "maison-camille-giroud-corton-grand-cru-les-renardes-2020": {
+  "slug": "maison-camille-giroud-corton-grand-cru-les-renardes-2020",
+  "sku": "712820",
+  "name": "Maison Camille Giroud Corton Grand Cru les Renardes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.821Z"
+ },
+ "marcel-deiss-domaine-marcel-deiss-alsace-grand-cru-schlossberg-2018": {
+  "slug": "marcel-deiss-domaine-marcel-deiss-alsace-grand-cru-schlossberg-2018",
+  "sku": "780139",
+  "name": "Marcel Deiss Domaine Marcel Deiss Alsace Grand Cru Schlossberg",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.821Z"
+ },
+ "paul-aegerter-beaune-1er-cru-les-greves-2019": {
+  "slug": "paul-aegerter-beaune-1er-cru-les-greves-2019",
+  "sku": "310005",
+  "name": "Paul Aegerter Beaune 1er Cru les Greves",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.822Z"
+ },
+ "rocca-di-montegrossi-vinsanto-del-chianti-classico-doc-2014": {
+  "slug": "rocca-di-montegrossi-vinsanto-del-chianti-classico-doc-2014",
+  "sku": "398049",
+  "name": "Rocca Di Montegrossi Vinsanto Del Chianti Classico DOC",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.822Z"
+ },
+ "the-cider-farm-equinox-cider": {
+  "slug": "the-cider-farm-equinox-cider",
+  "sku": "640017",
+  "name": "The Cider Farm Equinox Cider",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.822Z"
+ },
+ "vara-high-desert-gin": {
+  "slug": "vara-high-desert-gin",
+  "sku": "282106**",
+  "name": "Vara High Desert Gin",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.822Z"
+ },
+ "benjamin-leroux-meursault-1er-cru-les-genevrieres-2022": {
+  "slug": "benjamin-leroux-meursault-1er-cru-les-genevrieres-2022",
+  "sku": "713433",
+  "name": "Benjamin Leroux Meursault 1er Cru les Genevrieres",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.822Z"
+ },
+ "bourgeois-henri-bourgeois-sancerre-le-cotelin-2018": {
+  "slug": "bourgeois-henri-bourgeois-sancerre-le-cotelin-2018",
+  "sku": "530131",
+  "name": "Bourgeois Henri Bourgeois Sancerre le Cotelin",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.822Z"
+ },
+ "chateau-latour-martillac-pessac-leognan-rouge-2016": {
+  "slug": "chateau-latour-martillac-pessac-leognan-rouge-2016",
+  "sku": "520691",
+  "name": "Château Latour Martillac Pessac-Leognan Rouge",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.823Z"
+ },
+ "chateau-thieuley-bordeaux-rouge-2018": {
+  "slug": "chateau-thieuley-bordeaux-rouge-2018",
+  "sku": "520241",
+  "name": "Château Thieuley Bordeaux Rouge",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-9",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2018",
+     "visible": "2023"
+    }
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.823Z"
+ },
+ "confuron-gindre-domaine-confuron-gindre-vosne-romanee-1er-cru-les-chaumes-2021": {
+  "slug": "confuron-gindre-domaine-confuron-gindre-vosne-romanee-1er-cru-les-chaumes-2021",
+  "sku": "513238",
+  "name": "Confuron-Gindre Domaine Confuron-Gindre Vosne Romanee 1ER Cru les Chaumes",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2021",
+     "visible": "2022"
+    }
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.823Z"
+ },
+ "domaine-du-clos-salomon-givry-1er-cru-clos-salomon-2020": {
+  "slug": "domaine-du-clos-salomon-givry-1er-cru-clos-salomon-2020",
+  "sku": "712157",
+  "name": "Domaine du Clos Salomon Givry 1er Cru Clos Salomon",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.823Z"
+ },
+ "domaine-jf-mugnier-chambolle-musigny-1er-cru-les-amoureuses-2022": {
+  "slug": "domaine-jf-mugnier-chambolle-musigny-1er-cru-les-amoureuses-2022",
+  "sku": "711183",
+  "name": "Domaine Jf Mugnier Chambolle Musigny 1er Cru les Amoureuses",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.823Z"
+ },
+ "groffier-domaine-robert-groffier-chambertin-grand-cru-2022": {
+  "slug": "groffier-domaine-robert-groffier-chambertin-grand-cru-2022",
+  "sku": "510755",
+  "name": "Groffier Domaine Robert Groffier Chambertin Grand Cru",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2022",
+     "visible": "2021"
+    }
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: chaubertin"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.823Z"
+ },
+ "maison-camille-giroud-bourgogne-aligote-2020": {
+  "slug": "maison-camille-giroud-bourgogne-aligote-2020",
+  "sku": "712823",
+  "name": "Maison Camille Giroud Bourgogne Aligote",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2020",
+     "visible": "1985"
+    }
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2020",
+     "visible": "1985"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.824Z"
+ },
+ "maison-camille-giroud-maranges-1er-cru-le-croix-aux-moines-2019": {
+  "slug": "maison-camille-giroud-maranges-1er-cru-le-croix-aux-moines-2019",
+  "sku": "712799*",
+  "name": "Maison Camille Giroud Maranges 1er Cru le Croix aux Moines",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2019",
+     "visible": "2015"
+    }
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.824Z"
+ },
+ "petit-paveil-bordeaux-rouge-2018": {
+  "slug": "petit-paveil-bordeaux-rouge-2018",
+  "sku": "520653",
+  "name": "Petit Paveil Bordeaux Rouge",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2018",
+     "visible": "2022"
+    }
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.824Z"
+ },
+ "portal-vintage-porto-2003": {
+  "slug": "portal-vintage-porto-2003",
+  "sku": "650135",
+  "name": "Portal Vintage Porto",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2003",
+     "visible": "2009"
+    }
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2003",
+     "visible": "2011"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.824Z"
+ },
+ "rapet-domaine-rapet-beaune-1er-cru-les-greves-2023": {
+  "slug": "rapet-domaine-rapet-beaune-1er-cru-les-greves-2023",
+  "sku": "410351",
+  "name": "Rapet Domaine Rapet Beaune 1er Cru les Greves",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2023",
+     "visible": "2021"
+    }
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: perrand vergelesses"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.824Z"
+ },
+ "tremblay-domaine-cecile-tremblay-bourgogne-cote-d-or-2019": {
+  "slug": "tremblay-domaine-cecile-tremblay-bourgogne-cote-d-or-2019",
+  "sku": "411483",
+  "name": "Tremblay Domaine Cecile Tremblay Bourgogne Cote D'or",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.824Z"
+ },
+ "far-north-spirits-solveig-gin": {
+  "slug": "far-north-spirits-solveig-gin",
+  "sku": "880603**",
+  "name": "Far North Spirits Solveig Gin",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.825Z"
+ },
+ "maison-camille-giroud-bourgogne-aligote-2019": {
+  "slug": "maison-camille-giroud-bourgogne-aligote-2019",
+  "sku": "712809",
+  "name": "Maison Camille Giroud Bourgogne Aligote",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.825Z"
+ },
+ "pomerol-by-clinet-2020": {
+  "slug": "pomerol-by-clinet-2020",
+  "sku": "520689*",
+  "name": "Pomerol By Clinet",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-10",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.825Z"
+ },
+ "vara-fine-spanish-brandy": {
+  "slug": "vara-fine-spanish-brandy",
+  "sku": "282114**",
+  "name": "Vara Fine Spanish Brandy",
+  "ok": true,
+  "failureStage": "import-existing-photo",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "existing-photo",
+   "outcome": "failed"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.825Z"
+ },
+ "boigey-freres-nuits-saint-georges-1er-cru-les-boudots-2023": {
+  "slug": "boigey-freres-nuits-saint-georges-1er-cru-les-boudots-2023",
+  "sku": "410701",
+  "name": "Boigey Freres Nuits Saint Georges 1er Cru les Boudots",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator boudots"
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2023",
+     "visible": "2022"
+    }
+   },
+   {
+    "id": "candidate-4",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.825Z"
+ },
+ "chateau-tertre-roteboeuf-saint-emilion-2017": {
+  "slug": "chateau-tertre-roteboeuf-saint-emilion-2017",
+  "sku": "520463*",
+  "name": "Château Tertre Roteboeuf Saint Emilion",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label names a different cuvee: famille mjzive"
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2017",
+     "visible": "2009"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.825Z"
+ },
+ "confuron-gindre-domaine-confuron-gindre-vosne-romanee-2021": {
+  "slug": "confuron-gindre-domaine-confuron-gindre-vosne-romanee-2021",
+  "sku": "513237",
+  "name": "Confuron-Gindre Domaine Confuron-Gindre Vosne Romanee",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate is premier cru; request is not"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.826Z"
+ },
+ "domaine-nicolas-rossignol-pommard-1er-cru-les-epenots-2018": {
+  "slug": "domaine-nicolas-rossignol-pommard-1er-cru-les-epenots-2018",
+  "sku": "712175*",
+  "name": "Domaine Nicolas Rossignol Pommard 1er Cru les Epenots",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2018",
+     "visible": "2020"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.826Z"
+ },
+ "domaine-paul-jaboulet-aine-hermitage-la-chapelle-2020": {
+  "slug": "domaine-paul-jaboulet-aine-hermitage-la-chapelle-2020",
+  "sku": "541089*",
+  "name": "Domaine Paul Jaboulet Aine Hermitage la Chapelle",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-9",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-10",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2020",
+     "visible": "2021"
+    }
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.826Z"
+ },
+ "heritiers-comte-lafon-macon-chardonnay-clos-de-la-crochette-2023": {
+  "slug": "heritiers-comte-lafon-macon-chardonnay-clos-de-la-crochette-2023",
+  "sku": "111249",
+  "name": "Heritiers Comte Lafon Macon Chardonnay Clos de la Crochette",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2023",
+     "visible": "2020"
+    }
+   },
+   {
+    "id": "candidate-2",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.826Z"
+ },
+ "lismore-estate-chardonnay-2018": {
+  "slug": "lismore-estate-chardonnay-2018",
+  "sku": "246006",
+  "name": "Lismore Estate Chardonnay",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-10",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate source says viognier; request is chardonnay"
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.826Z"
+ },
+ "pierre-morey-domaine-pierre-morey-batard-montrachet-grand-cru-2021": {
+  "slug": "pierre-morey-domaine-pierre-morey-batard-montrachet-grand-cru-2021",
+  "sku": "713618",
+  "name": "Pierre Morey Domaine Pierre Morey Batard Montrachet Grand Cru",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2021",
+     "visible": "2019"
+    }
+   },
+   {
+    "id": "candidate-5",
+    "anchor": true,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.826Z"
+ },
+ "tapiz-black-tears-malbec-2020": {
+  "slug": "tapiz-black-tears-malbec-2020",
+  "sku": "604747",
+  "name": "Tapiz Black Tears Malbec",
+  "ok": true,
+  "failureStage": "import-watermark-unresolved",
+  "reason": "",
+  "funnel": {
+   "imported": 0,
+   "importStage": "watermark-unresolved",
+   "outcome": "pending"
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-11T15:34:40.827Z"
+ }
+}

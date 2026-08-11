@@ -18,6 +18,18 @@ test('a clicked candidate becomes valid human identity evidence', () => {
   assert.equal(record.funnel.outcome, 'human-selected');
 });
 
+test('a human-approved candidate records visual clearance without another model call', () => {
+  const record = {
+    watermark: 'stale verdict',
+    watermarkSweepError: 'stale error',
+  };
+  markHumanSelected(record, 'human review', { visualClearance: true });
+  assert.equal(record.watermarkSwept, true);
+  assert.equal(record.watermarkSweptBy, 'human review');
+  assert.equal(record.watermark, undefined);
+  assert.equal(record.watermarkSweepError, undefined);
+});
+
 test('none-of-these is persisted as a terminal human rejection', () => {
   const record = { ok: true, file: 'candidate.png', funnel: { outcome: 'selected' } };
   markHumanRejected(record);
