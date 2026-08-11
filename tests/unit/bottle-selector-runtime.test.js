@@ -125,6 +125,38 @@ test('local pixel OCR vetoes a model-biased wrong vintage', async () => {
   assert.equal(evidence.localVisibleVintage, '2018');
 });
 
+test('an exact vintage-neutral bottle anchors a vintage listing', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test',
+    readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+        single_bottle: true,
+        producer_brand: 'Domaine Jean Royer',
+        product_cuvee: 'Cuvee Prestige',
+        appellation: 'Chateauneuf-du-Pape',
+        vintage: '',
+      }]) } }] }),
+    }),
+    verifyIdentity: async () => ({
+      accept: true,
+      localLabel: 'DOMAINE JEAN ROYER CUVEE PRESTIGE CHATEAUNEUF DU PAPE',
+    }),
+  });
+  const [evidence] = await reader(
+    {
+      name: 'Domaine Jean Royer Chateauneuf du Pape Cuvee Prestige',
+      producer: 'Domaine Jean Royer',
+      vintage: '2022',
+    },
+    candidates.slice(0, 1),
+  );
+  assert.equal(evidence.anchor, true);
+  assert.equal(evidence.explicitConflict, false);
+  assert.equal(evidence.visibleVintage, '');
+});
+
 test('a blind pixel-style contradiction vetoes a model confirmation', async () => {
   const reader = createBoundedLabelReader({
     apiKey: 'test',

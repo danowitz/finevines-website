@@ -11,8 +11,17 @@ export function selectVisualPick(candidates) {
   // Veltliner measured above 0.93). Therefore only a positively read member
   // may be published; similarity corroborates identity but cannot transfer it
   // to an unreadable higher-resolution sibling.
-  const usable = anchors.filter((candidate) =>
-    candidate.shapeOk && (candidate.width || 0) >= 300 && (candidate.height || 0) >= 500);
+  const usable = anchors.filter((candidate) => {
+    const width = candidate.width || 0;
+    const height = candidate.height || 0;
+    // A tall, clean importer cutout can be narrow in pixels and still render
+    // well in the normalized catalog card. Keep the ordinary 300x500 floor,
+    // but admit a 180x650 clean bottle rather than discarding exact official
+    // artwork such as Jean Royer's 188x700 Prestige image.
+    const normalResolution = width >= 300 && height >= 500;
+    const narrowCleanCutout = candidate.cleanBackground && width >= 180 && height >= 650;
+    return candidate.shapeOk && (normalResolution || narrowCleanCutout);
+  });
   if (!usable.length) return null;
 
   const pick = [...usable].sort((a, b) =>

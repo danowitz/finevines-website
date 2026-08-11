@@ -52,3 +52,11 @@ test('a tiny bottle image is not publishable', () => {
     { id: 'corroborator', shapeOk: true, cleanBackground: true, width: 800, height: 1200 },
   ]), null);
 });
+
+test('a tall clean importer cutout is publishable despite a narrow source width', () => {
+  const pick = selectVisualPick([
+    { id: 'importer', anchor: true, shapeOk: true, cleanBackground: true, width: 188, height: 700 },
+    { id: 'corroborator', shapeOk: true, cleanBackground: false, width: 800, height: 1200 },
+  ]);
+  assert.equal(pick.id, 'importer');
+});

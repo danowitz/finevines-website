@@ -18,6 +18,7 @@ import { createGoogleImageDiscovery } from './google-images.mjs';
 import { imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
 import { downloadFirstTen } from './candidate-downloads.mjs';
 import { createBottleSelector } from './bottle-selector.mjs';
+import { reusableStagedRecord } from './staged-record.mjs';
 import {
   createBoundedLabelReader,
   createLocalBottleAdapters,
@@ -159,6 +160,22 @@ console.log(`identity reader: ${visionKey ? `${MODEL}, one request of at most th
 console.log(`processing up to ${WINE_CONCURRENCY} wines concurrently`);
 
 async function processWine(wine) {
+  const previous = manifest[wine.slug];
+  const reusable = reusableStagedRecord(
+    previous,
+    Boolean(previous?.file) && await exists(previous.file),
+  );
+  if (reusable) {
+    return {
+      wine,
+      rec: reusable,
+      evaluated: 0,
+      unevaluated: 0,
+      discoveryComplete: true,
+      reused: true,
+    };
+  }
+
   const name = catalogName(wine);
   const producer = expectedProducer(wine, producerLookup) || deriveProducer(name, catalogNames);
   const identity = { ...wine, name, producer };
@@ -249,16 +266,16 @@ for (let offset = 0; offset < wines.length; offset += WINE_CONCURRENCY) {
   const results = await Promise.all(batch.map(processWine));
   for (const result of results) {
     attempted++;
-    const { wine, rec, evaluated, unevaluated, discoveryComplete } = result;
+    const { wine, rec, evaluated, unevaluated, discoveryComplete, reused = false } = result;
     runRows.push(rec);
     manifest[wine.slug] = rec;
     if (!discoveryComplete) fatalDiscoveryError ||= rec.discoveryError || 'Google image discovery unavailable';
     if (rec.ok) accepted++;
-    if (RECORD_ATTEMPTS && rec.skus.length && shouldRecordAttempt({ accepted: rec.ok, evaluated, unevaluated, discoveryComplete })) {
+    if (!reused && RECORD_ATTEMPTS && rec.skus.length && shouldRecordAttempt({ accepted: rec.ok, evaluated, unevaluated, discoveryComplete })) {
       for (const sku of rec.skus) recordAttempt(attempts, sku, 'miss');
       await saveAttempts(attempts);
     }
-    const state = rec.ok ? 'OK  ' : discoveryComplete && (evaluated || !unevaluated) ? 'MISS' : 'WAIT';
+    const state = reused ? 'KEEP' : rec.ok ? 'OK  ' : discoveryComplete && (evaluated || !unevaluated) ? 'MISS' : 'WAIT';
     console.log(`${state} ${rec.name.slice(0, 60).padEnd(60)} ${rec.ok ? `${rec.matchingImages} matching; ${rec.size}` : rec.tried[0]?.why || rec.discoveryError}`);
   }
   await writeFile(MANIFEST, JSON.stringify(manifest, null, 1));
