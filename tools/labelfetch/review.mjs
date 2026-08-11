@@ -280,7 +280,7 @@ const card = (r, { chosen }) => {
         <input type="radio" name="${esc(r.slug)}" value="${esc(file || '')}" ${i === 0 && chosen ? 'checked' : ''}>
         ${i === 0 && chosen ? '<span class="confirm-badge">open picture to inspect and confirm &#10003;</span>' : ''}
         <img src="${esc(src(file))}" loading="lazy" alt="${esc(title)}" title="Click to enlarge">
-        <span class="zoom-hint">&#128269; enlarge</span>
+        <span class="zoom-hint">&#128269; Enlarge image</span>
         <span class="opt-src">${page ? `<a href="${esc(page)}" target="_blank" rel="noopener">${esc(hostOf(page))} &#8599;</a>` : esc(hostOf(page))}</span>
         ${twinOf.has(file) ? `<span class="opt-twin">&#10003; same bottle also on ${esc(twinOf.get(file).host)}</span>` : ''}
         ${why ? `<span class="opt-why">${esc(why)}</span>` : ''}
@@ -355,7 +355,11 @@ const html = `<!doctype html>
   .opt:hover { background: #f4ece0; }
   .opt:has(input:checked) { border-color: #6b1630; background: #fff8f0; }
   .opt img { width: 100%; height: 150px; object-fit: contain; background: #fff; }
-  .zoom-hint { color: #6b1630; font-size: 10px; text-align: center; }
+  .zoom-hint { display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+               width: 100%; min-height: 42px; padding: 10px 8px; border-radius: 4px;
+               background: #6b1630; color: #fff; font-size: 14px;
+               font-weight: 750; line-height: 1.2; text-align: center; letter-spacing: .01em; }
+  .opt:hover .zoom-hint { background: #8a2342; }
   .opt input { accent-color: #6b1630; }
   .opt-src { color: #9c8c7c; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .opt-src a { color: #6b1630; text-decoration: none; }
@@ -384,7 +388,7 @@ const html = `<!doctype html>
   body.modal-open { overflow: hidden; }
   #image-modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; }
   .modal-backdrop { position: absolute; inset: 0; background: rgba(20, 12, 9, .88); }
-  .modal-panel { position: relative; width: min(1100px, calc(100vw - 40px)); max-height: calc(100vh - 40px);
+  .modal-panel { position: relative; width: min(1100px, calc(100vw - 40px)); height: calc(100vh - 40px);
                  box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; padding: 16px;
                  border-radius: 8px; background: #fffaf2; box-shadow: 0 18px 60px rgba(0,0,0,.45); }
   .modal-head { display: flex; flex-direction: column; padding-right: 44px; }
@@ -392,11 +396,11 @@ const html = `<!doctype html>
   #modal-source { color: #6b1630; font-size: 12px; }
   .modal-close { position: absolute; top: 8px; right: 10px; border: 0; background: transparent;
                  color: #43352a; font-size: 32px; line-height: 1; cursor: pointer; }
-  .modal-image-row { min-height: 0; display: grid; grid-template-columns: 42px minmax(0, 1fr) 42px;
+  .modal-image-row { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 42px minmax(0, 1fr) 42px;
                      align-items: center; gap: 8px; }
-  .modal-image-wrap { min-height: 0; height: min(72vh, 760px); display: grid; place-items: center;
-                      overflow: hidden; background: #fff; border: 1px solid #ece0cd; border-radius: 5px; }
-  #modal-image { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+  .modal-image-wrap { min-height: 0; height: 100%; overflow: auto; background: #fff;
+                      border: 1px solid #ece0cd; border-radius: 5px; overscroll-behavior: contain; }
+  #modal-image { display: block; width: auto; height: auto; max-width: 100%; max-height: none; margin: 0 auto; }
   .modal-nav { height: 64px; border: 0; border-radius: 5px; background: #f0e5d3; color: #6b1630;
                font-size: 34px; cursor: pointer; }
   .modal-nav:disabled { visibility: hidden; }
@@ -406,9 +410,8 @@ const html = `<!doctype html>
                   background: #6b1630; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
   @media (max-width: 600px) {
     #image-modal { padding: 8px; }
-    .modal-panel { width: calc(100vw - 16px); max-height: calc(100vh - 16px); padding: 10px; }
+    .modal-panel { width: calc(100vw - 16px); height: calc(100vh - 16px); padding: 10px; }
     .modal-image-row { grid-template-columns: 30px minmax(0, 1fr) 30px; gap: 4px; }
-    .modal-image-wrap { height: 68vh; }
     .modal-nav { height: 52px; font-size: 27px; }
     .modal-foot { align-items: stretch; flex-direction: column; }
   }
@@ -479,6 +482,7 @@ const count = () => document.getElementById('n').textContent = Object.keys(chose
 
 const modal = document.getElementById('image-modal');
 const modalImage = document.getElementById('modal-image');
+const modalImageWrap = modalImage.closest('.modal-image-wrap');
 const modalTitle = document.getElementById('modal-title');
 const modalSource = document.getElementById('modal-source');
 const modalDetails = document.getElementById('modal-details');
@@ -498,11 +502,14 @@ function showModalImage(index) {
     .filter(Boolean).map((x) => x.textContent.trim()).join(' | ');
   modalImage.src = img.src;
   modalImage.alt = img.alt;
+  modalImageWrap.scrollTop = 0;
+  modalImageWrap.scrollLeft = 0;
   modalTitle.textContent = figure.querySelector('figcaption b').textContent;
   modalSource.textContent = source ? source.textContent : '';
   modalSource.href = source ? source.href : '#';
   modalSource.hidden = !source;
-  modalDetails.textContent = 'Image ' + (modalIndex + 1) + ' of ' + modalImages.length + (details ? ' | ' + details : '');
+  modalDetails.textContent = 'Image ' + (modalIndex + 1) + ' of ' + modalImages.length +
+    ' | Scroll to inspect the full-height image' + (details ? ' | ' + details : '');
   modalPrev.disabled = modalImages.length < 2;
   modalNext.disabled = modalImages.length < 2;
   document.getElementById('modal-select').textContent = opt.classList.contains('proposed')
@@ -567,10 +574,11 @@ document.addEventListener('keydown', (e) => {
 // decision, preventing an attempt to zoom from accidentally selecting a wine.
 document.addEventListener('click', e => {
   if (e.target.closest('a')) return;
-  const image = e.target.closest('.opt img');
-  if (image) {
+  const zoomTarget = e.target.closest('.opt img, .zoom-hint');
+  if (zoomTarget) {
     e.preventDefault();
     e.stopPropagation();
+    const image = zoomTarget.matches('img') ? zoomTarget : zoomTarget.closest('.opt').querySelector('img');
     openModal(image);
     return;
   }
