@@ -211,6 +211,12 @@ Each run, in this order:
    `node tools/labelfetch/funnel-report.mjs` for the aggregate human-readable
    report, or add `--json` for machine-readable output. A Google credential or
    permission failure is `google-unavailable`, never an empty-search verdict.
+   Attempt records also carry the matcher version that produced them. When the
+   discovery or identity algorithm materially improves, incrementing that
+   version replays old misses once under the new rules; a current-version miss
+   resumes the normal 30-day backoff. An `imported` ledger record never hides a
+   catalog row whose photograph was later withdrawn—the missing catalog image
+   makes that row due again.
 4. **`finevines build`** renders `dist/`.
 5. **`finevines deploy`** uploads the changed files to Bunny.net and purges both
    pull zones.

@@ -56,6 +56,13 @@ function catalogName(wine) {
     : name;
 }
 
+function needsImage(wine) {
+  return !wine.imagePath ||
+    wine.imagePath.endsWith('.svg') ||
+    wine.imageSource === 'generated-photo' ||
+    wine.imageSource === 'label-scan';
+}
+
 function selectWines(catalog, attempts) {
   const only = opt('slug');
   let wines = [...catalog];
@@ -63,13 +70,10 @@ function selectWines(catalog, attempts) {
     wines = wines.filter((wine) => wine.slug === only);
   } else {
     if (has('missing')) {
-      wines = wines.filter((wine) =>
-        !wine.imagePath ||
-        wine.imagePath.endsWith('.svg') ||
-        wine.imageSource === 'generated-photo' ||
-        wine.imageSource === 'label-scan');
+      wines = wines.filter(needsImage);
     }
-    if (DUE_ONLY) wines = wines.filter((wine) => isDue(attempts, wine.sku));
+    if (DUE_ONLY) wines = wines.filter((wine) =>
+      isDue(attempts, wine.sku, new Date(), undefined, { imageMissing: needsImage(wine) }));
   }
   wines.sort((left, right) => left.slug.localeCompare(right.slug));
   wines = uniqueImageTargets(wines);
@@ -114,6 +118,7 @@ if (!catalog.length) {
   console.error('data/wines.json holds no usable wines');
   process.exit(2);
 }
+const catalogBySku = new Map(catalog.map((wine) => [wine.sku, wine]));
 const attempts = await loadAttempts();
 const funnelStore = await loadFunnelStore();
 const wines = selectWines(catalog, attempts);
@@ -321,7 +326,10 @@ for (let offset = 0; offset < wines.length; offset += WINE_CONCURRENCY) {
     if (!discoveryComplete) fatalDiscoveryError ||= rec.discoveryError || 'Google image discovery unavailable';
     if (rec.ok) accepted++;
     if (!reused && RECORD_ATTEMPTS && rec.skus.length && shouldRecordAttempt({ accepted: rec.ok, evaluated, unevaluated, discoveryComplete })) {
-      for (const sku of rec.skus) recordAttempt(attempts, sku, 'miss');
+      for (const sku of rec.skus) {
+        const wineForSku = catalogBySku.get(sku);
+        recordAttempt(attempts, sku, 'miss', new Date(), { imageMissing: needsImage(wineForSku || wine) });
+      }
       await saveAttempts(attempts);
     }
     const state = reused ? 'KEEP' : rec.ok ? 'OK  ' : discoveryComplete && (evaluated || !unevaluated) ? 'MISS' : 'WAIT';

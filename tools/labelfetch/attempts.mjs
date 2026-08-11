@@ -23,6 +23,11 @@ export const LEDGER_PATH = 'data/image-attempts.json';
 // within the month.
 export const RETRY_DAYS = 30;
 
+// A miss is meaningful only for the matcher that produced it. Increment this
+// whenever discovery or identity selection changes enough that old misses need
+// one controlled replay. Newly recorded misses then back off normally again.
+export const MATCHER_VERSION = 'google-image-consensus-v1';
+
 // The only outcomes a record may carry.
 //
 // 'imported' is terminal — the wine has its photograph. 'miss' is everything the
@@ -92,11 +97,21 @@ export async function saveAttempts(attempts, path = LEDGER_PATH) {
 // once the backoff has elapsed. A record whose timestamp cannot be read: yes —
 // biasing to retry, because a corrupt record reading as "not due" would silently
 // exclude a wine from image sourcing forever and nobody would ever notice.
-export function isDue(attempts, sku, now = new Date(), retryDays = RETRY_DAYS) {
+export function isDue(
+  attempts,
+  sku,
+  now = new Date(),
+  retryDays = RETRY_DAYS,
+  { imageMissing = false, matcherVersion = MATCHER_VERSION } = {},
+) {
   const rec = attempts?.[sku];
   if (!rec) return true;
-  if (rec.outcome === 'imported') return false;
+  // The catalog is authoritative. An imported ledger record with no current
+  // photograph means an audit or later edit withdrew the pixels; it must not
+  // become a permanent hidden exclusion.
+  if (rec.outcome === 'imported') return imageMissing;
   if (rec.outcome === 'unevaluated') return true;
+  if (rec.outcome === 'miss' && rec.matcherVersion !== matcherVersion) return true;
   const last = Date.parse(rec.lastAttempted ?? '');
   if (Number.isNaN(last)) return true;
   return now.getTime() - last >= retryDays * 86400000;
@@ -140,14 +155,20 @@ export function shouldRecordAttempt({
 // recordAttempt stamps an attempt onto the ledger, incrementing the per-SKU
 // count. Mutates and returns attempts so a caller can record inside a loop and
 // save once at the end.
-export function recordAttempt(attempts, sku, outcome, now = new Date()) {
+export function recordAttempt(
+  attempts,
+  sku,
+  outcome,
+  now = new Date(),
+  { imageMissing = false, matcherVersion = MATCHER_VERSION } = {},
+) {
   if (!OUTCOMES.has(outcome)) {
     throw new Error(`recordAttempt: unknown outcome ${JSON.stringify(outcome)}; expected one of ${[...OUTCOMES].join(', ')}`);
   }
   // Imported is terminal. A manual fetch sample may omit --due-only and revisit
   // a placeholder row sharing a SKU/slug with an already imported card; that
   // search must not downgrade durable catalog state back to a 30-day miss.
-  if (attempts[sku]?.outcome === 'imported' && outcome !== 'imported') {
+  if (attempts[sku]?.outcome === 'imported' && outcome !== 'imported' && !imageMissing) {
     return attempts;
   }
   const prior = attempts[sku]?.attempts ?? 0;
@@ -155,6 +176,7 @@ export function recordAttempt(attempts, sku, outcome, now = new Date()) {
     lastAttempted: now.toISOString(),
     outcome,
     attempts: prior + 1,
+    matcherVersion,
   };
   return attempts;
 }

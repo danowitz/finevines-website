@@ -28,18 +28,29 @@ export function summarizeFunnels(records) {
   const summary = {
     records: records.length,
     instrumented: 0,
-    accepted: 0,
+    imported: 0,
+    ready: 0,
+    pending: 0,
     failed: 0,
+    skipped: 0,
     stages: {},
     totals: Object.fromEntries(COUNTERS.map((counter) => [counter, 0])),
   };
   for (const record of records) {
     if (!record?.funnel) continue;
     summary.instrumented++;
-    if (record.ok) summary.accepted++;
+    const outcome = record.funnel.outcome;
+    const importStage = record.funnel.importStage;
+    if (record.funnel.imported || outcome === 'imported') summary.imported++;
+    else if (importStage === 'existing-photo' || importStage === 'catalog-missing') summary.skipped++;
+    else if (outcome === 'pending') summary.pending++;
+    else if (outcome === 'selected' || outcome === 'watermark-clean' || outcome === 'human-selected') summary.ready++;
     else {
       summary.failed++;
-      const stage = record.failureStage || 'unknown';
+    }
+    if (!record.funnel.imported && outcome !== 'imported' &&
+        importStage !== 'existing-photo' && importStage !== 'catalog-missing') {
+      const stage = record.failureStage || (outcome === 'pending' ? 'pending' : 'unknown');
       summary.stages[stage] = (summary.stages[stage] || 0) + 1;
     }
     for (const counter of COUNTERS) {
@@ -52,7 +63,7 @@ export function summarizeFunnels(records) {
 export function formatFunnelReport(summary) {
   const lines = [
     `instrumented wines: ${summary.instrumented}/${summary.records}`,
-    `accepted: ${summary.accepted}; failed: ${summary.failed}`,
+    `imported: ${summary.imported}; ready: ${summary.ready}; pending: ${summary.pending}; failed: ${summary.failed}; skipped: ${summary.skipped}`,
     '',
     'candidate funnel:',
     ...COUNTERS.map((counter) => `  ${counter.padEnd(28)} ${summary.totals[counter]}`),

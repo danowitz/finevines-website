@@ -9,6 +9,7 @@ import {
   isDue,
   recordAttempt,
   shouldRecordAttempt,
+  MATCHER_VERSION,
   RETRY_DAYS,
 } from '../../tools/labelfetch/attempts.mjs';
 
@@ -32,13 +33,23 @@ describe('which wines the image stage should try', () => {
   });
 
   test('a wine whose photograph was imported is never due again', () => {
-    const attempts = { AB1201: { lastAttempted: daysAgo(400), outcome: 'imported', attempts: 1 } };
+    const attempts = { AB1201: { lastAttempted: daysAgo(400), outcome: 'imported', attempts: 1, matcherVersion: MATCHER_VERSION } };
     assert.equal(isDue(attempts, 'AB1201', NOW), false);
   });
 
+  test('an imported ledger record is reopened when the catalog photograph is missing', () => {
+    const attempts = { AB1201: { lastAttempted: daysAgo(1), outcome: 'imported', attempts: 1, matcherVersion: MATCHER_VERSION } };
+    assert.equal(isDue(attempts, 'AB1201', NOW, RETRY_DAYS, { imageMissing: true }), true);
+  });
+
   test('a recent miss is not due — this is the whole point of the ledger', () => {
-    const attempts = { AB1201: { lastAttempted: daysAgo(3), outcome: 'miss', attempts: 1 } };
+    const attempts = { AB1201: { lastAttempted: daysAgo(3), outcome: 'miss', attempts: 1, matcherVersion: MATCHER_VERSION } };
     assert.equal(isDue(attempts, 'AB1201', NOW), false);
+  });
+
+  test('a miss from an older matcher is immediately due for one controlled replay', () => {
+    const attempts = { AB1201: { lastAttempted: daysAgo(1), outcome: 'miss', attempts: 1 } };
+    assert.equal(isDue(attempts, 'AB1201', NOW), true);
   });
 
   test('a miss older than the backoff is due again', () => {
@@ -72,7 +83,16 @@ describe('recording an attempt', () => {
       lastAttempted: '2026-07-29T08:15:00.000Z',
       outcome: 'miss',
       attempts: 1,
+      matcherVersion: MATCHER_VERSION,
     });
+  });
+
+  test('a missing catalog image allows a stale imported record to be replaced by the replay result', () => {
+    const attempts = { AB1201: { lastAttempted: daysAgo(1), outcome: 'imported', attempts: 2 } };
+    recordAttempt(attempts, 'AB1201', 'miss', NOW, { imageMissing: true });
+    assert.equal(attempts.AB1201.outcome, 'miss');
+    assert.equal(attempts.AB1201.matcherVersion, MATCHER_VERSION);
+    assert.equal(attempts.AB1201.attempts, 3);
   });
 
   test('a repeat attempt increments the count', () => {
@@ -213,7 +233,7 @@ describe('whether a run learned enough about a wine to write the ledger', () => 
   });
 
   test('a fetch attempt cannot downgrade an imported terminal state', () => {
-    const attempts = { AB1201: { lastAttempted: daysAgo(10), outcome: 'imported', attempts: 2 } };
+    const attempts = { AB1201: { lastAttempted: daysAgo(10), outcome: 'imported', attempts: 2, matcherVersion: MATCHER_VERSION } };
     const before = structuredClone(attempts.AB1201);
     recordAttempt(attempts, 'AB1201', 'miss', NOW);
     assert.deepEqual(attempts.AB1201, before);
