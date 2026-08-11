@@ -12,7 +12,6 @@ async function equalSecret(left, right) {
   for (let i = 0; i < aa.length; i++) mismatch |= aa[i] ^ bb[i];
   return mismatch === 0;
 }
-
 export function createReviewConsole({ config, storage, dispatch, now = () => new Date(), uuid = () => crypto.randomUUID() }) {
   const prefix = `_review/${config.environment}`;
   const cookieName = config.cookieName;
@@ -63,4 +62,3 @@ export function createReviewConsole({ config, storage, dispatch, now = () => new
     return response('Not found', { status: 404 });
   };
 }
-

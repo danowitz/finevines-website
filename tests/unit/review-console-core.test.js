@@ -43,4 +43,3 @@ describe('protected review console', () => {
     assert.throws(() => validateAction({ ...base, candidateId: '' }, context), /invalid candidateId/);
   });
 });
-

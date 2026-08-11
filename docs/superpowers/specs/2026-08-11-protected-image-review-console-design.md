@@ -1,7 +1,7 @@
 # Protected Image Review Console
 
-**Date:** 2026-08-11  
-**Status:** Implementation contract  
+**Date:** 2026-08-11
+**Status:** Implementation contract
 **Supersedes:** Sub-project B and the shared `_review/queue.json` contract in
 `2026-07-29-github-ci-pipeline-and-review-console-design.md`.
 
@@ -139,4 +139,3 @@ checks work; cross-environment actions fail; two simultaneous submissions are
 both retained; stale revisions conflict; candidate hash mismatch rejects;
 dispatch failure leaves recoverable work; pipeline failure leaves pending work;
 and a successful deploy produces exactly one receipt.
-

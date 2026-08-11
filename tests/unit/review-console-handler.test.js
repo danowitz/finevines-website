@@ -60,4 +60,3 @@ describe('review console handler', () => {
     assert.equal(res.status, 403); assert.equal(writes.length, 0);
   });
 });
-
