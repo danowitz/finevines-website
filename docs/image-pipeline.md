@@ -36,10 +36,36 @@ node tools/labelfetch/import.mjs --clean-only          # dry run
 node tools/labelfetch/import.mjs --apply --clean-only
 ```
 
-The unattended equivalent is `tools/labelfetch/cistage.sh`. It uses the same
-selector identity, independent watermark, and clean-only publication gates. Flagged
-candidates remain staged for human review; the absence of a verdict fails
-closed.
+The unattended entrypoint is:
+
+```sh
+node tools/labelfetch/autonomous.mjs --apply
+```
+
+It performs a live Google image-endpoint health check before touching a wine,
+then owns the fixed order: fetch/verify â†’ two-source auto-approval â†’ watermark
+gate â†’ clean-only import â†’ exception review. It writes an atomic run receipt
+to `.run/image-workflow.json` before and after every stage. A missing credential,
+disabled API, failed perceptual hash, failed child process, or missing verdict
+stops publication rather than being converted to â€œnothing found.â€
+
+`tools/labelfetch/cistage.sh` remains only as a compatibility entrypoint and
+delegates to that command. For a non-publishing probe, use
+`node tools/labelfetch/autonomous.mjs --canary --n 20`.
+
+Two-source approval is intentionally narrower than visual similarity alone:
+the matching files must come from independent permitted hosts, both source
+pages must identify the requested product, explicit identity conflicts are
+vetoes, and a vintage-specific row selects an exact-vintage or genuinely
+vintage-neutral source. Flagged and ambiguous candidates remain staged for
+human review; the absence of a verdict fails closed.
+
+The scheduled GitHub workflow runs the complete Node unit suite and Go suite
+before taking its before-state snapshot or invoking any catalog-writing stage.
+The image runner is therefore autonomous only after the checked-out revision
+passes the same rule, ledger, import, and deploy regression coverage used by
+ordinary CI. GitHub retains the stage receipt as a 30-day workflow artifact,
+including failed runs; it is not mixed into the catalog commit.
 
 ## Source and cleanup rules
 

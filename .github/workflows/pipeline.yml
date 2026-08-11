@@ -100,14 +100,12 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      # 22, where ci.yml pins 20. That pin exists solely because Node 22 broke
-      # `node --test <dir>` directory recursion, which package.json's test
-      # scripts rely on — this workflow runs no tests, only the labelfetch
-      # scripts, so it takes the supported release instead of one already past
-      # EOL.
+      # Match ci.yml. The unattended publisher runs the unit suite before any
+      # catalog mutation, and Node 20 supports the directory form used by the
+      # repository's node:test scripts.
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
           cache: npm
 
       - uses: actions/setup-python@v5
@@ -126,10 +124,18 @@ jobs:
       # install script — so closing that path costs nothing.
       - run: npm ci --ignore-scripts
 
+      # Prove the checked-out revision before any command writes data/. A
+      # broken matcher, ledger, import rule, or deploy invariant cannot publish.
+      - name: Verify the pipeline revision
+        run: |
+          npm run test:unit
+          go test ./...
+
       - name: Build the binaries
         run: |
           go build -ldflags "-s -w" -o finevines ./cmd/finevines
           go build -o imgcheck ./tools/imgcheck
+          go build -o imghash ./tools/imghash
           go build -o imgnorm ./tools/imgnorm
 
       # The catalog as it stands BEFORE anything runs. `notify` diffs against
@@ -161,10 +167,22 @@ jobs:
       # 3. Source bottle photographs: fetch + verify, watermark sweep, import
       #    survivors. Both verification stages are hard gates. Deliberately
       #    BOUNDED — a slice of the due wines per night, capped by count and by
-      #    wall clock inside cistage.sh — so this step can never run into the job
-      #    timeout above and lose the ledger writes that make it converge.
+      #    wall clock inside the autonomous runner — so this step cannot consume
+      #    the whole job timeout and lose the ledger writes that make it converge.
       - name: Source images
-        run: bash tools/labelfetch/cistage.sh
+        run: node tools/labelfetch/autonomous.mjs --apply
+
+      # The runner is disposable; retain the stage-by-stage receipt even when
+      # the image workflow fails. This is operational evidence, not catalog
+      # state, so it belongs in a workflow artifact rather than a bot commit.
+      - name: Retain the image workflow receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-workflow-${{ github.run_id }}
+          path: .run/image-workflow.json
+          if-no-files-found: ignore
+          retention-days: 30
 
       # 4. Build the static site.
       - name: Build

@@ -13,6 +13,8 @@ const apply = process.argv.includes('--apply');
 const manifestPath = 'data/fetched-images/manifest.json';
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 let approved = 0;
+let hashFailures = 0;
+const approvals = [];
 
 for (const record of Object.values(manifest)) {
   if (record.ok) continue;
@@ -23,16 +25,27 @@ for (const record of Object.values(manifest)) {
   try {
     const { stdout } = await run(binPath('imghash'), candidates.map((candidate) => candidate.file));
     pairs = JSON.parse(stdout).pairs || [];
-  } catch {
+  } catch (error) {
+    hashFailures++;
+    console.error(`  ERROR  ${record.name}\n         perceptual hash failed: ${String(error?.message || error).split('\n')[0]}`);
     continue;
   }
   const approval = chooseTwoSourceApproval(record, candidates, pairs);
   if (!approval) continue;
 
   approved++;
+  approvals.push({ record, approval });
   const pick = approval.pick;
   console.log(`  AGREE  ${record.name}\n         ${approval.hosts.join(' + ')}\n         -> ${pick.file} (${pick.size})`);
-  if (!apply) continue;
+}
+
+if (hashFailures) {
+  console.error(`\nrefusing to apply: perceptual hashing failed for ${hashFailures} record(s)`);
+  process.exit(2);
+}
+
+if (apply) for (const { record, approval } of approvals) {
+  const pick = approval.pick;
 
   const destination = join('data/fetched-images', `${record.slug}.png`);
   await copyFile(pick.file, destination);
