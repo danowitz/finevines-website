@@ -1,30 +1,30 @@
 {
-  "updated": "2026-08-11T13:32:15Z",
+  "updated": "2026-08-11T19:33:57Z",
   "windowDays": 30,
   "wines": [
     {
       "slug": "domaine-vacheron-sancerre-blanc-2024",
-      "cases": 122.50001
+      "cases": 124.50001
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 98.16666
+      "cases": 106.16666
     },
     {
       "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
-      "cases": 85
+      "cases": 86
     },
     {
       "slug": "henri-bourgeois-pure-sauvignon-blanc-vin-de-pays-2025",
       "cases": 58
     },
     {
-      "slug": "le-vignerons-de-florensac-picpoul-de-pinet-2025",
-      "cases": 46
+      "slug": "filare-italia-prosecco-doc-extra-dry",
+      "cases": 48.083330000000004
     },
     {
-      "slug": "domaine-dezat-cellier-des-marnes-sancerre-blanc-2025",
-      "cases": 44.25
+      "slug": "le-vignerons-de-florensac-picpoul-de-pinet-2025",
+      "cases": 46
     }
   ]
 }
