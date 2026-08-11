@@ -278,8 +278,9 @@ const card = (r, { chosen }) => {
   const opt = (file, page, why, label, i) => `
       <label class="opt${i === 0 && chosen ? ' proposed' : ''}">
         <input type="radio" name="${esc(r.slug)}" value="${esc(file || '')}" ${i === 0 && chosen ? 'checked' : ''}>
-        ${i === 0 && chosen ? '<span class="confirm-badge">click picture to confirm &#10003;</span>' : ''}
-        <img src="${esc(src(file))}" loading="lazy" alt="">
+        ${i === 0 && chosen ? '<span class="confirm-badge">open picture to inspect and confirm &#10003;</span>' : ''}
+        <img src="${esc(src(file))}" loading="lazy" alt="${esc(title)}" title="Click to enlarge">
+        <span class="zoom-hint">&#128269; enlarge</span>
         <span class="opt-src">${page ? `<a href="${esc(page)}" target="_blank" rel="noopener">${esc(hostOf(page))} &#8599;</a>` : esc(hostOf(page))}</span>
         ${twinOf.has(file) ? `<span class="opt-twin">&#10003; same bottle also on ${esc(twinOf.get(file).host)}</span>` : ''}
         ${why ? `<span class="opt-why">${esc(why)}</span>` : ''}
@@ -354,6 +355,7 @@ const html = `<!doctype html>
   .opt:hover { background: #f4ece0; }
   .opt:has(input:checked) { border-color: #6b1630; background: #fff8f0; }
   .opt img { width: 100%; height: 150px; object-fit: contain; background: #fff; }
+  .zoom-hint { color: #6b1630; font-size: 10px; text-align: center; }
   .opt input { accent-color: #6b1630; }
   .opt-src { color: #9c8c7c; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .opt-src a { color: #6b1630; text-decoration: none; }
@@ -378,6 +380,38 @@ const html = `<!doctype html>
   #bar button { font: inherit; padding: 7px 16px; border: 0; border-radius: 4px;
                 background: #c2a14e; color: #2a0a13; font-weight: 700; cursor: pointer; }
   #bar b { color: #ddc489; }
+  [hidden] { display: none !important; }
+  body.modal-open { overflow: hidden; }
+  #image-modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; }
+  .modal-backdrop { position: absolute; inset: 0; background: rgba(20, 12, 9, .88); }
+  .modal-panel { position: relative; width: min(1100px, calc(100vw - 40px)); max-height: calc(100vh - 40px);
+                 box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; padding: 16px;
+                 border-radius: 8px; background: #fffaf2; box-shadow: 0 18px 60px rgba(0,0,0,.45); }
+  .modal-head { display: flex; flex-direction: column; padding-right: 44px; }
+  #modal-title { font-size: 16px; }
+  #modal-source { color: #6b1630; font-size: 12px; }
+  .modal-close { position: absolute; top: 8px; right: 10px; border: 0; background: transparent;
+                 color: #43352a; font-size: 32px; line-height: 1; cursor: pointer; }
+  .modal-image-row { min-height: 0; display: grid; grid-template-columns: 42px minmax(0, 1fr) 42px;
+                     align-items: center; gap: 8px; }
+  .modal-image-wrap { min-height: 0; height: min(72vh, 760px); display: grid; place-items: center;
+                      overflow: hidden; background: #fff; border: 1px solid #ece0cd; border-radius: 5px; }
+  #modal-image { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+  .modal-nav { height: 64px; border: 0; border-radius: 5px; background: #f0e5d3; color: #6b1630;
+               font-size: 34px; cursor: pointer; }
+  .modal-nav:disabled { visibility: hidden; }
+  .modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  #modal-details { margin: 0; color: #6e5d4e; font-size: 11px; }
+  #modal-select { flex: 0 0 auto; border: 0; border-radius: 4px; padding: 9px 18px;
+                  background: #6b1630; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  @media (max-width: 600px) {
+    #image-modal { padding: 8px; }
+    .modal-panel { width: calc(100vw - 16px); max-height: calc(100vh - 16px); padding: 10px; }
+    .modal-image-row { grid-template-columns: 30px minmax(0, 1fr) 30px; gap: 4px; }
+    .modal-image-wrap { height: 68vh; }
+    .modal-nav { height: 52px; font-size: 27px; }
+    .modal-foot { align-items: stretch; flex-direction: column; }
+  }
 </style>
 
 <h1>Bottle images</h1>
@@ -386,9 +420,9 @@ const html = `<!doctype html>
   ${clean.length} unflagged &middot; <b>${missedWithOptions.length}</b> found nothing but have candidates &middot;
   ${missedBare.length} found nothing at all
 </p>
-<p class="sum">Four moves per card: <b>click the bottle picture</b> to confirm it (turns green — goes live on the
-next import), <b>&#10007; wrong</b> rejects everything (the wine goes back to the fetch queue), click a
-different candidate to swap it in, or <b>paste an image URL</b> you found yourself. A bottle photographed in a scene is fine to pick —
+<p class="sum">Four moves per card: <b>click any bottle picture to enlarge it</b>, then use <b>Select this image</b>
+in the larger view; <b>&#10007; wrong</b> rejects everything (the wine goes back to the fetch queue), or
+<b>paste an image URL</b> you found yourself. A bottle photographed in a scene is fine to pick —
 the background is removed automatically when decisions are applied (a second subject in frame still
 gets refused). A card you don't touch stays in the queue. Then <b>Download decisions</b> and run
 <code>node tools/labelfetch/decide.mjs --apply</code>.</p>
@@ -409,6 +443,26 @@ ${section('Single candidates, no corroboration — weakest evidence, judge by th
 ${section('No flags raised', clean, { chosen: true })}
 ${missedBare.length ? `<h2>No candidates at all — ${missedBare.length}</h2><p class="sum">${missedBare.map((r) => esc(r.name)).slice(0, 60).join(' &middot; ')}${missedBare.length > 60 ? ' &hellip;' : ''}</p>` : ''}
 
+<div id="image-modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-panel">
+    <button class="modal-close" type="button" aria-label="Close enlarged image" data-close-modal>&times;</button>
+    <div class="modal-head">
+      <b id="modal-title"></b>
+      <a id="modal-source" target="_blank" rel="noopener"></a>
+    </div>
+    <div class="modal-image-row">
+      <button id="modal-prev" class="modal-nav" type="button" aria-label="Previous image">&#8249;</button>
+      <div class="modal-image-wrap"><img id="modal-image" alt=""></div>
+      <button id="modal-next" class="modal-nav" type="button" aria-label="Next image">&#8250;</button>
+    </div>
+    <div class="modal-foot">
+      <p id="modal-details"></p>
+      <button id="modal-select" type="button">Select this image</button>
+    </div>
+  </div>
+</div>
+
 <div id="bar">
   <span><b id="n">0</b> decisions</span>
   <button onclick="save()">Download decisions</button>
@@ -423,12 +477,103 @@ const initial = {};
 document.querySelectorAll('input[type=radio]:checked').forEach(i => initial[i.name] = i.value);
 const count = () => document.getElementById('n').textContent = Object.keys(chosen).length;
 
-// Confirming is a click on the proposed picture itself — the thing being
-// judged — not a separate tile that reads like a competing choice. Clicking
-// toggles; the green state is the receipt. Links inside the tile still
-// navigate without confirming.
+const modal = document.getElementById('image-modal');
+const modalImage = document.getElementById('modal-image');
+const modalTitle = document.getElementById('modal-title');
+const modalSource = document.getElementById('modal-source');
+const modalDetails = document.getElementById('modal-details');
+const modalPrev = document.getElementById('modal-prev');
+const modalNext = document.getElementById('modal-next');
+let modalImages = [];
+let modalIndex = 0;
+
+function showModalImage(index) {
+  if (!modalImages.length) return;
+  modalIndex = (index + modalImages.length) % modalImages.length;
+  const img = modalImages[modalIndex];
+  const opt = img.closest('.opt');
+  const figure = img.closest('figure');
+  const source = opt.querySelector('.opt-src a');
+  const details = [opt.querySelector('.opt-twin'), opt.querySelector('.opt-why'), opt.querySelector('.opt-label')]
+    .filter(Boolean).map((x) => x.textContent.trim()).join(' | ');
+  modalImage.src = img.src;
+  modalImage.alt = img.alt;
+  modalTitle.textContent = figure.querySelector('figcaption b').textContent;
+  modalSource.textContent = source ? source.textContent : '';
+  modalSource.href = source ? source.href : '#';
+  modalSource.hidden = !source;
+  modalDetails.textContent = 'Image ' + (modalIndex + 1) + ' of ' + modalImages.length + (details ? ' | ' + details : '');
+  modalPrev.disabled = modalImages.length < 2;
+  modalNext.disabled = modalImages.length < 2;
+  document.getElementById('modal-select').textContent = opt.classList.contains('proposed')
+    ? 'Confirm this image' : 'Select this image';
+}
+
+function openModal(img) {
+  const figure = img.closest('figure');
+  modalImages = [...figure.querySelectorAll('.opt:not(.wrong) img')];
+  showModalImage(modalImages.indexOf(img));
+  modal.hidden = false;
+  document.body.classList.add('modal-open');
+  document.querySelector('.modal-close').focus();
+}
+
+function closeModal() {
+  modal.hidden = true;
+  document.body.classList.remove('modal-open');
+  modalImage.removeAttribute('src');
+}
+
+function clearProposedConfirmation(figure) {
+  figure.querySelectorAll('.opt.proposed').forEach((opt) => {
+    opt.classList.remove('confirmed');
+    const badge = opt.querySelector('.confirm-badge');
+    if (badge) badge.innerHTML = 'open picture to inspect and confirm &#10003;';
+  });
+}
+
+function selectModalImage() {
+  const img = modalImages[modalIndex];
+  if (!img) return;
+  const opt = img.closest('.opt');
+  const figure = img.closest('figure');
+  const radio = opt.querySelector('input[type=radio]');
+  radio.checked = true;
+  clearProposedConfirmation(figure);
+  if (opt.classList.contains('proposed')) {
+    chosen[radio.name] = '__confirm__';
+    opt.classList.add('confirmed');
+    const badge = opt.querySelector('.confirm-badge');
+    if (badge) badge.innerHTML = '&#10003; confirmed — goes live next import';
+  } else {
+    chosen[radio.name] = radio.value;
+  }
+  count();
+  closeModal();
+}
+
+modalPrev.addEventListener('click', () => showModalImage(modalIndex - 1));
+modalNext.addEventListener('click', () => showModalImage(modalIndex + 1));
+document.getElementById('modal-select').addEventListener('click', selectModalImage);
+modal.querySelectorAll('[data-close-modal]').forEach((x) => x.addEventListener('click', closeModal));
+document.addEventListener('keydown', (e) => {
+  if (modal.hidden) return;
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'ArrowLeft') showModalImage(modalIndex - 1);
+  if (e.key === 'ArrowRight') showModalImage(modalIndex + 1);
+});
+
+// A thumbnail click is inspection only. The explicit modal button records the
+// decision, preventing an attempt to zoom from accidentally selecting a wine.
 document.addEventListener('click', e => {
   if (e.target.closest('a')) return;
+  const image = e.target.closest('.opt img');
+  if (image) {
+    e.preventDefault();
+    e.stopPropagation();
+    openModal(image);
+    return;
+  }
   // Clicking a label dispatches a SECOND, synthetic click targeted at its
   // radio. Handling both toggled the confirmation on and instantly off —
   // "clicking does nothing". Only the person's own click (img, badge, label
@@ -443,7 +588,7 @@ document.addEventListener('click', e => {
   if (chosen[slug] === '__confirm__') {
     delete chosen[slug];
     lab.classList.remove('confirmed');
-    badge.innerHTML = 'click picture to confirm &#10003;';
+    badge.innerHTML = 'open picture to inspect and confirm &#10003;';
   } else {
     chosen[slug] = '__confirm__';
     lab.classList.add('confirmed');
@@ -453,6 +598,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   if (e.target.type === 'radio') {
+    clearProposedConfirmation(e.target.closest('figure'));
     if (e.target.value === initial[e.target.name]) delete chosen[e.target.name];
     else chosen[e.target.name] = e.target.value;
     count();
