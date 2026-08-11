@@ -24,8 +24,12 @@ func TestCopyFileSameSrcDstLeavesContentIntact(t *testing.T) {
 		t.Fatalf("test setup: %v", err)
 	}
 
-	src := filepath.ToSlash(path)         // mirrors ImagePath as stored in wines.json
-	dst := filepath.Join(dir, "wine.jpg") // mirrors filepath.Join(...) in the caller
+	src := filepath.ToSlash(path) // mirrors ImagePath as stored in wines.json
+	// Keep a literal "." component instead of filepath.Join, which would clean
+	// it away. This gives every OS two different strings for the same file:
+	// forward slashes vs native separators on Windows, and /wine.jpg vs
+	// /./wine.jpg on Unix.
+	dst := dir + string(filepath.Separator) + "." + string(filepath.Separator) + "wine.jpg"
 	if src == dst {
 		t.Fatalf("test setup did not produce differing path strings on this OS: %q", src)
 	}
