@@ -1,7 +1,9 @@
 # GitHub-Driven CI Pipeline + Review Console — Design
 
 **Date:** 2026-07-29
-**Status:** Approved (Joel, 2026-07-29)
+**Status:** Sub-project A implemented. Sub-project B superseded on 2026-08-11
+by `2026-08-11-protected-image-review-console-design.md`; in particular, the
+shared `_review/queue.json` write path below is unsafe and must not be built.
 **Depends on:** `2026-07-03-finevines-static-site-design.md` (the site, the Go binary, the Bunny zones)
 
 ## Problem
@@ -119,6 +121,11 @@ ever run on Windows. The implementation plan starts with a Linux smoke test
 `deploy.bat` stays as the documented local/manual fallback.
 
 ## Sub-project B — review console
+
+> **Superseded:** Do not implement this section. The shared queue rewrite can
+> delete a concurrent submission, magic links no longer match the requested
+> password protection, and it has no target-revision or durable-receipt
+> contract. Use `2026-08-11-protected-image-review-console-design.md`.
 
 A small web app for non-technical reviewers, hosted entirely on Bunny.
 
