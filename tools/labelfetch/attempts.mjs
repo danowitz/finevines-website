@@ -106,8 +106,8 @@ export function isDue(attempts, sku, now = new Date(), retryDays = RETRY_DAYS) {
 // the ledger at all.
 //
 // The 30-day backoff is only defensible if a recorded miss means somebody
-// actually looked. On the vision-first path CI runs, "looking" is a network call
-// to OpenAI for the label text — and a 429 or a 502 says nothing whatsoever about
+// actually looked. In the bounded selector, establishing the readable anchor can
+// require one network call — and a 429 or a 502 says nothing whatsoever about
 // the wine. Recording that as a miss benches a never-evaluated wine for a month,
 // and the month after it can be benched the same way again, so a wine whose photo
 // is sitting on its producer's website never gets found.
@@ -116,11 +116,24 @@ export function isDue(attempts, sku, now = new Date(), retryDays = RETRY_DAYS) {
 // pass":
 //   - accepted, or any candidate judged: record. A judged-and-refused candidate is
 //     a real miss and the backoff is exactly right for it.
-//   - no candidates at all: record. Search returning nothing IS the answer.
+//   - no candidates at all, with every source searched: record. An empty
+//     completed search is the answer.
 //   - candidates found but none could be judged: do NOT record. The wine stays due
 //     and the next run tries it again.
-export function shouldRecordAttempt({ accepted = false, evaluated = 0, unevaluated = 0 } = {}) {
-  if (accepted || evaluated > 0) return true;
+//   - any discovery source unavailable: do NOT record a refusal or empty result.
+//     "Could not search" is not evidence that no photograph exists.
+export function shouldRecordAttempt({
+  accepted = false,
+  evaluated = 0,
+  unevaluated = 0,
+  discoveryComplete = true,
+} = {}) {
+  // A staged acceptance is recorded pessimistically until import promotes it,
+  // even if another discovery source was unavailable. A refusal or empty result
+  // earns a backoff only when every discovery source actually searched.
+  if (accepted) return true;
+  if (!discoveryComplete) return false;
+  if (evaluated > 0) return true;
   return unevaluated === 0;
 }
 
@@ -130,6 +143,12 @@ export function shouldRecordAttempt({ accepted = false, evaluated = 0, unevaluat
 export function recordAttempt(attempts, sku, outcome, now = new Date()) {
   if (!OUTCOMES.has(outcome)) {
     throw new Error(`recordAttempt: unknown outcome ${JSON.stringify(outcome)}; expected one of ${[...OUTCOMES].join(', ')}`);
+  }
+  // Imported is terminal. A manual fetch sample may omit --due-only and revisit
+  // a placeholder row sharing a SKU/slug with an already imported card; that
+  // search must not downgrade durable catalog state back to a 30-day miss.
+  if (attempts[sku]?.outcome === 'imported' && outcome !== 'imported') {
+    return attempts;
   }
   const prior = attempts[sku]?.attempts ?? 0;
   attempts[sku] = {

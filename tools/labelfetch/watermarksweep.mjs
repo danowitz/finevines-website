@@ -32,6 +32,7 @@
 //   node tools/labelfetch/watermarksweep.mjs --apply --recheck-clean   # re-vote the cleans
 import { readFile, writeFile, access } from 'node:fs/promises';
 import { parseVerdict, flagWatermark, isWatermarked } from './watermark.mjs';
+import { hasSelectionIdentityVerdict } from './importrules.mjs';
 import { openaiKey } from './env.mjs';
 
 const MANIFEST = 'data/fetched-images/manifest.json';
@@ -56,9 +57,16 @@ const exists = (p) => access(p).then(() => true, () => false);
 const staged = [];
 let purged = 0;
 let alreadySwept = 0;
+let unverified = 0;
 for (const rec of Object.values(manifest)) {
   if (onlySlug && rec.slug !== onlySlug) continue;
   if (!(rec.ok && rec.file)) continue;
+  // Do not spend money examining legacy or incomplete candidates that import
+  // will refuse before it ever reaches the watermark gate.
+  if (!hasSelectionIdentityVerdict(rec)) {
+    unverified++;
+    continue;
+  }
   if (!(await exists(rec.file))) {
     purged++; // stale manifest entry — the file was purged after fetch
     continue;
@@ -79,7 +87,8 @@ for (const rec of Object.values(manifest)) {
   staged.push(rec);
 }
 console.log(
-  `${staged.length} images to sweep (model ${MODEL}); skipping ${alreadySwept} already swept, ${purged} purged manifest entries\n`
+  `${staged.length} images to sweep (model ${MODEL}); skipping ${alreadySwept} already swept, ` +
+    `${unverified} without selector identity proof, ${purged} purged manifest entries\n`
 );
 
 async function check(rec) {

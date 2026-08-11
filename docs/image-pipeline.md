@@ -7,19 +7,18 @@ artwork.
 
 ## Publication path
 
-1. `tools/labelfetch/pipeline.mjs` discovers product pages, downloads candidate
-   images, rejects blocked sources, and checks that the image depicts one bottle
-   matching the requested producer and cuvee.
-2. `tools/labelfetch/consensus.mjs --apply` can corroborate candidates found on
-   different hosts.
-3. `tools/labelfetch/watermarksweep.mjs --apply` is a hard gate. Watermarked or
-   unevaluated files cannot publish.
-4. `tools/labelfetch/prepublish.mjs --clean-only --apply` independently reads
-   the full-resolution staged file. Only a literal affirmative verdict for the
-   exact producer and cuvee passes; a contradictory visible vintage fails.
-5. `tools/labelfetch/import.mjs --apply --clean-only` normalizes and imports
-   only clean candidates that passed both hard gates.
-6. `finevines build` creates the static site and generates the same neutral SVG
+1. `tools/labelfetch/pipeline.mjs` sends the exact catalog identity to Google's
+   image endpoint, downloads only the first ten permitted direct images, and
+   groups bottle/label designs locally. One readable anchor validates a repeated
+   design; the cleanest highest-resolution member wins. At most three images are
+   transcribed in one `gpt-4.1-nano` request, with no escalation.
+2. The selector records an explicit identity-success bit only after its blind
+   transcription and deterministic conflict gates accept the repeated design.
+3. `tools/labelfetch/watermarksweep.mjs --apply` is a separate hard gate.
+   Watermarked or unevaluated files cannot publish.
+4. `tools/labelfetch/import.mjs --apply --clean-only` normalizes and imports
+   only clean candidates that passed both gates.
+5. `finevines build` creates the static site and generates the same neutral SVG
    for any missing fallback asset.
 
 Fetching and verification stage files under `data/fetched-images/`; they do not
@@ -31,16 +30,14 @@ change the public catalog. Import is the deliberate write step.
 go build -o imgcheck.exe ./tools/imgcheck
 go build -o imgnorm.exe ./tools/imgnorm
 
-node tools/labelfetch/pipeline.mjs --n 20 --missing --vision-first
-node tools/labelfetch/consensus.mjs --apply
+node tools/labelfetch/pipeline.mjs --n 20 --missing
 node tools/labelfetch/watermarksweep.mjs --apply
-node tools/labelfetch/prepublish.mjs --clean-only --apply
 node tools/labelfetch/import.mjs --clean-only          # dry run
 node tools/labelfetch/import.mjs --apply --clean-only
 ```
 
 The unattended equivalent is `tools/labelfetch/cistage.sh`. It uses the same
-watermark, independent identity, and clean-only publication gates. Flagged
+selector identity, independent watermark, and clean-only publication gates. Flagged
 candidates remain staged for human review; the absence of a verdict fails
 closed.
 
@@ -55,6 +52,8 @@ closed.
   `imgnorm` is the supported path for a reviewed source file.
 - Visible contradictory producer, cuvee, or vintage information is a rejection.
   A “hit” is not a verified identity.
+- A Google permission, quota, transport, or credential failure is unavailable,
+  never an empty result. The wine stays due and receives no miss/backoff entry.
 - Generated bottle-photo tools are disabled. Earlier generated-photo catalog
   entries were migrated to the neutral fallback.
 

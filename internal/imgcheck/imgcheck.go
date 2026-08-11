@@ -30,6 +30,10 @@ type Report struct {
 	Background color.RGBA
 	// Subjects counts distinct objects across the frame. One is what we want.
 	Subjects int
+	// NeckSubjects counts separate objects in the upper third of the subject.
+	// Overlapping bottles often merge into one body silhouette but retain two
+	// distinct necks, which a whole-frame column scan otherwise misses.
+	NeckSubjects int
 	// Box bounds the largest subject.
 	Box image.Rectangle
 	// Fill is the share of the frame the subject occupies. A studio shot leaves
@@ -64,6 +68,10 @@ type Thresholds struct {
 	GapTolerance float64
 	// MinSlimness / MaxSlimness bound a single bottle's width-to-height.
 	MinSlimness, MaxSlimness float64
+	// MinFill rejects sparse line art and isolated label artwork. Even a pale,
+	// transparent bottle contributes substantially more foreground than printed
+	// lettering floating on an otherwise empty canvas.
+	MinFill float64
 	// MaxFill is the most of the frame a lone bottle may occupy. Generous on
 	// purpose: retail bottle shots are often cropped tight to the glass, and
 	// real fetched examples measured 0.64-0.68 while a loosely framed studio
@@ -84,6 +92,7 @@ func Defaults() Thresholds {
 		GapTolerance:        0.02,
 		MinSlimness:         0.12,
 		MaxSlimness:         0.55,
+		MinFill:             0.08,
 		MaxFill:             0.90,
 	}
 }
@@ -245,11 +254,59 @@ func Analyze(img image.Image, t Thresholds) Report {
 	rep.Box = image.Rect(b.Min.X+big.lo, top, b.Min.X+big.hi+1, bot+1)
 	rep.Slimness = float64(rep.Box.Dx()) / float64(rep.Box.Dy())
 
+	neckBottom := rep.Box.Min.Y + rep.Box.Dy()*25/100
+	neckOccupied := make([]bool, rep.Box.Dx())
+	neckMinInk := (neckBottom - rep.Box.Min.Y) / 40
+	if neckMinInk < 1 {
+		neckMinInk = 1
+	}
+	for x := rep.Box.Min.X; x < rep.Box.Max.X; x++ {
+		ink := 0
+		for y := rep.Box.Min.Y; y < neckBottom; y += 2 {
+			if dist(at(img, x, y), bg) > t.BackgroundTolerance {
+				ink++
+			}
+		}
+		neckOccupied[x-rep.Box.Min.X] = ink >= neckMinInk
+	}
+	neckGapMax := int(float64(rep.Box.Dx()) * t.GapTolerance)
+	// A real second bottle neck is a substantial part of the combined subject.
+	// Thin foil lettering and specular bands can also split the upper silhouette,
+	// but those runs are too narrow to count as another bottle.
+	neckMinWidth := int(float64(rep.Box.Dx()) * 0.12)
+	neckStart, neckLast, neckGap := -1, -1, 0
+	for x, occupied := range neckOccupied {
+		if occupied {
+			if neckStart < 0 {
+				neckStart = x
+			}
+			neckLast = x
+			neckGap = 0
+			continue
+		}
+		if neckStart >= 0 {
+			neckGap++
+			if neckGap > neckGapMax {
+				if neckLast-neckStart+1 >= neckMinWidth {
+					rep.NeckSubjects++
+				}
+				neckStart, neckLast, neckGap = -1, -1, 0
+			}
+		}
+	}
+	if neckStart >= 0 && neckLast-neckStart+1 >= neckMinWidth {
+		rep.NeckSubjects++
+	}
+
 	switch {
 	case !clean:
 		rep.Reason = "no clean background — a photographed scene, not a product shot"
 	case rep.Subjects > 1:
 		rep.Reason = "multiple subjects — a gift set, multipack or lineup"
+	case rep.NeckSubjects > 1:
+		rep.Reason = "multiple bottle necks - overlapping bottles"
+	case rep.Fill < t.MinFill:
+		rep.Reason = "too little bottle-shaped foreground - likely label artwork"
 	case rep.Fill > t.MaxFill:
 		rep.Reason = "subject fills the frame — cropped or not a product shot"
 	case rep.Slimness < t.MinSlimness:

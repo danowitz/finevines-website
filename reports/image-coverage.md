@@ -20,9 +20,9 @@ Counted per wine, not per card, because the search runs per wine.
 
 | Ledger outcome | Wines |
 |---|---|
-| searched, nothing usable found | 949 |
+| searched, nothing usable found | 950 |
 | verified but never evaluated | 5 |
-| imported then withdrawn on audit | 145 |
+| imported then withdrawn on audit | 144 |
 | not yet searched | 46 |
 | unrecognised ledger outcome | 0 |
 | **total without a photograph** | **1145** |

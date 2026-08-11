@@ -12,7 +12,7 @@ const rec = (over = {}) => ({
   file: 'data/fetched-images/x.png',
   slug: 'x',
   watermarkSwept: true,
-  prepublishIdentityVerified: true,
+  selectionIdentityVerified: true,
   ...over,
 });
 const placeholderWine = (over = {}) => ({
@@ -90,16 +90,36 @@ describe('import selection rules', () => {
     assert.match(v.reason, /watermark sweep/);
   });
 
-  test('a candidate without an affirmative independent prepublish verdict is refused', () => {
-    const missing = shouldImport(rec({ prepublishIdentityVerified: undefined }), placeholderWine(), {});
+  test('a candidate without an affirmative production-selector verdict is refused', () => {
+    const missing = shouldImport(rec({ selectionIdentityVerified: undefined }), placeholderWine(), {});
     assert.equal(missing.import, false);
-    assert.match(missing.reason, /prepublish identity/i);
+    assert.match(missing.reason, /production selector/i);
     assert.equal(missing.unresolved, true);
 
-    const refused = shouldImport(rec({ prepublishIdentityVerified: false }), placeholderWine(), {});
+    const refused = shouldImport(rec({ selectionIdentityVerified: false }), placeholderWine(), {});
     assert.equal(refused.import, false);
-    assert.match(refused.reason, /prepublish identity/i);
+    assert.match(refused.reason, /production selector/i);
     assert.ok(!refused.unresolved);
+  });
+
+  test('a pre-boolean production-selector record keeps its complete proof', () => {
+    const legacy = rec({
+      selectionIdentityVerified: undefined,
+      verifiedBy: 'gpt-4.1-nano transcription + local identity rules',
+      matchingImages: 2,
+      evidence: [{ anchor: true }],
+    });
+    assert.equal(shouldImport(legacy, placeholderWine(), {}).import, true);
+  });
+
+  test('a model name alone is not selector identity proof', () => {
+    const incomplete = rec({
+      selectionIdentityVerified: undefined,
+      verifiedBy: 'gpt-4.1-nano transcription + local identity rules',
+      matchingImages: 2,
+      evidence: [{ anchor: false }],
+    });
+    assert.equal(shouldImport(incomplete, placeholderWine(), {}).import, false);
   });
 
   test('the refusal names why the sweep could not check it', () => {

@@ -1,0 +1,54 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { selectVisualPick } from '../../tools/labelfetch/visual-pick.mjs';
+
+test('two matching images plus one anchor choose the cleanest high-resolution bottle', () => {
+  const pick = selectVisualPick([
+    { id: 'readable', anchor: true, shapeOk: true, cleanBackground: false, width: 800, height: 1200 },
+    { id: 'publishable', anchor: true, shapeOk: true, cleanBackground: true, width: 600, height: 1000 },
+    { id: 'small', shapeOk: true, cleanBackground: true, width: 300, height: 600 },
+  ]);
+  assert.equal(pick.id, 'publishable');
+  assert.equal(pick.matchingImages, 3);
+  assert.deepEqual(pick.anchorIds, ['readable', 'publishable']);
+});
+
+test('a repeated design without an identity anchor is not a verdict', () => {
+  assert.equal(selectVisualPick([
+    { id: 'one', shapeOk: true, cleanBackground: true },
+    { id: 'two', shapeOk: true, cleanBackground: true },
+  ]), null);
+});
+
+test('explicit contradictions cannot anchor or be selected', () => {
+  const pick = selectVisualPick([
+    { id: 'wrong-vintage', anchor: true, explicitConflict: true, shapeOk: true, cleanBackground: true, width: 2000, height: 3000 },
+    { id: 'anchor', anchor: true, shapeOk: true, cleanBackground: false, width: 400, height: 800 },
+    { id: 'clean', anchor: true, shapeOk: true, cleanBackground: true, width: 500, height: 900 },
+  ]);
+  assert.equal(pick.id, 'clean');
+  assert.deepEqual(pick.anchorIds, ['anchor', 'clean']);
+});
+
+test('a larger lookalike without readable identity cannot beat an anchor', () => {
+  const pick = selectVisualPick([
+    { id: 'anchor', anchor: true, shapeOk: true, cleanBackground: true, width: 600, height: 1200 },
+    { id: 'sibling', shapeOk: true, cleanBackground: true, width: 2000, height: 5000 },
+  ]);
+  assert.equal(pick.id, 'anchor');
+});
+
+test('a portrait bottle beats a larger square composite', () => {
+  const pick = selectVisualPick([
+    { id: 'composite', anchor: true, shapeOk: true, cleanBackground: true, width: 2000, height: 2000 },
+    { id: 'portrait', anchor: true, shapeOk: true, cleanBackground: true, width: 1100, height: 1422 },
+  ]);
+  assert.equal(pick.id, 'portrait');
+});
+
+test('a tiny bottle image is not publishable', () => {
+  assert.equal(selectVisualPick([
+    { id: 'tiny', anchor: true, shapeOk: true, cleanBackground: true, width: 191, height: 600 },
+    { id: 'corroborator', shapeOk: true, cleanBackground: true, width: 800, height: 1200 },
+  ]), null);
+});

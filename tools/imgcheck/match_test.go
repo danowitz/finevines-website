@@ -137,6 +137,47 @@ func TestIndexIdentifies(t *testing.T) {
 	}
 }
 
+func TestCompleteProducerPhraseWorksWhenNoSingleWordIsUnique(t *testing.T) {
+	ix := Index{
+		"jean":  {"champagne jean", "jean fery", "jean royer", "jean marc"},
+		"royer": {"digioia royer", "jean marie", "jean royer", "royer"},
+	}
+	good := matchWithProducer(
+		"Domaine Jean Royer Chateauneuf du Pape Cuvee Prestige",
+		"Jean Royer",
+		"Domaine Jean Royer Cuvee Prestige Chateauneuf du Pape",
+		ix,
+	)
+	if !good.ok {
+		t.Fatalf("the complete Jean Royer phrase should identify the producer: missing %v conflict %q", good.missing, good.conflict)
+	}
+	bad := matchWithProducer(
+		"Domaine Jean Royer Chateauneuf du Pape Cuvee Prestige",
+		"Jean Royer",
+		"Domaine Jean Marie Cuvee Prestige Chateauneuf du Pape",
+		ix,
+	)
+	if bad.ok {
+		t.Fatal("a different Jean producer must not satisfy Jean Royer")
+	}
+}
+
+func TestKnownProducerConflictIsComparedToProducerNotProductName(t *testing.T) {
+	ix := Index{
+		"benjamin": {"benjamin bcl11", "benjamin leroux"},
+		"leroux":   {"benjamin leroux"},
+	}
+	got := matchWithProducer(
+		"Bourgogne Rouge",
+		"Benjamin Leroux",
+		"Benjamin Leroux Bourgogne Rouge",
+		ix,
+	)
+	if !got.ok {
+		t.Fatalf("correct separately-stored producer was rejected: missing %v conflict %q", got.missing, got.conflict)
+	}
+}
+
 func TestWatermarkDetection(t *testing.T) {
 	if got := watermark("CLOS-VOUGEOT ANNE GROS vivino"); got != "vivino" {
 		t.Errorf("watermark() = %q, want vivino", got)

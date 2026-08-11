@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { wineForImageUpgrade, winesForSlug } from '../../tools/labelfetch/importapply.mjs';
+import { catalogJSON, wineForImageUpgrade, winesForSlug } from '../../tools/labelfetch/importapply.mjs';
 
 test('returns every catalog row sharing the slug', () => {
   const wines = [
@@ -10,6 +10,11 @@ test('returns every catalog row sharing the slug', () => {
   ];
 
   assert.deepEqual(winesForSlug(wines, 'shared').map((wine) => wine.sku), ['first', 'second']);
+});
+
+test('catalog JSON matches Go HTML escaping and stable indentation', () => {
+  const text = catalogJSON([{ name: 'A&B <Reserve>' }]);
+  assert.equal(text, '[\n  {\n    "name": "A\\u0026B \\u003cReserve\\u003e"\n  }\n]\n');
 });
 
 test('prefers a stand-in when duplicate rows disagree about image quality', () => {

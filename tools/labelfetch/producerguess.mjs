@@ -44,6 +44,10 @@ const BOUNDARY = new Set([
 ]);
 
 const looksLikeYear = (t) => /^(19|20)\d{2}$/.test(t);
+const GENERIC_STEM_END = new Set([
+  'de', 'la', 'le', 'du', 'des', 'del', 'della', 'di', 'da', 'do', 'dos', 'of',
+  'domaine', 'chateau', 'maison', 'weingut', 'estate',
+]);
 
 // deriveProducer returns the leading producer words of name, or '' when no
 // safe guess exists. allNames (optional) lets a sibling wine sharing the
@@ -80,6 +84,11 @@ export function deriveProducer(name, allNames = []) {
     const mine = raw.map((t) => t.toLowerCase());
     for (let len = cut - 1; len >= 2; len--) {
       const stem = mine.slice(0, len).join(' ');
+      // "Domaine de la Villaudiere" and "Domaine de la Grosse Pierre"
+      // share a grammar prefix, not a producer. Never shrink a verified name
+      // to a connector or bare trade word that carries no identity.
+      const stemEnd = mine[len - 1].replace(/[^a-zà-ÿ0-9]/g, '');
+      if (GENERIC_STEM_END.has(stemEnd)) continue;
       const sibling = allNames.some((n) => {
         if (n === name) return false;
         const toks = (n || '').trim().split(/\s+/).map((t) => t.toLowerCase());

@@ -1,0 +1,3 @@
+# Runtime dependency for tools/labelfetch/visual-similarity.py.
+# opencv-python-headless brings its compatible NumPy version and avoids GUI/X11.
+opencv-python-headless==4.12.0.88

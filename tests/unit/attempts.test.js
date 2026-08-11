@@ -181,8 +181,8 @@ describe('persistence', () => {
 });
 
 // The 30-day backoff is only fair if a recorded miss means the wine was actually
-// looked at. On the CI-primary vision-first path the label read is a network call
-// to OpenAI, and a 429 or a 502 is not evidence about the wine — recording it as
+// looked at. The bounded anchor transcription is a network call, and a 429 or a
+// 502 is not evidence about the wine — recording it as
 // a miss benches a never-evaluated wine for a month, and next month it can be
 // benched again the same way.
 describe('whether a run learned enough about a wine to write the ledger', () => {
@@ -210,5 +210,24 @@ describe('whether a run learned enough about a wine to write the ledger', () => 
 
   test('an accepted image is recorded even if another candidate failed transport', () => {
     assert.equal(shouldRecordAttempt({ accepted: true, evaluated: 1, unevaluated: 1 }), true);
+  });
+
+  test('a fetch attempt cannot downgrade an imported terminal state', () => {
+    const attempts = { AB1201: { lastAttempted: daysAgo(10), outcome: 'imported', attempts: 2 } };
+    const before = structuredClone(attempts.AB1201);
+    recordAttempt(attempts, 'AB1201', 'miss', NOW);
+    assert.deepEqual(attempts.AB1201, before);
+  });
+
+  test('a discovery outage is not recorded as a miss', () => {
+    assert.equal(shouldRecordAttempt({ discoveryComplete: false }), false);
+  });
+
+  test('a rejected candidate stays due when another discovery source failed', () => {
+    assert.equal(shouldRecordAttempt({ discoveryComplete: false, evaluated: 2 }), false);
+  });
+
+  test('an accepted image is recorded despite a partial discovery outage', () => {
+    assert.equal(shouldRecordAttempt({ accepted: true, discoveryComplete: false }), true);
   });
 });

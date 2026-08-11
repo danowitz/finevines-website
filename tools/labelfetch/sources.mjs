@@ -32,6 +32,9 @@ export const BLOCKED = [
   'shutterstock',
   'istockphoto',
   'dreamstime',
+  // Big Hammer burns a visible BHW monogram into otherwise clean bottle
+  // shots. It is a source watermark, not part of the wine packaging.
+  'bighammerwines',
   // Search engines are for DISCOVERY, never for images. A results page is
   // covered in thumbnails of other wines, and taking one produces a candidate
   // with no product page behind it and no relationship to the query beyond

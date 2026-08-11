@@ -110,6 +110,15 @@ func (s Siblings) discriminators(name, producer string) [][]string {
 	for _, w := range words(producer) {
 		estate[w] = true
 	}
+	// Generic estate/product designators do not distinguish one sibling from
+	// another. In "Cuvee Prestige" versus "Tradition", accepting on "cuvee"
+	// alone admits the Tradition bottle; the evidence must be "prestige".
+	for _, w := range []string{
+		"domaine", "domaines", "chateau", "maison", "weingut", "bodega",
+		"tenuta", "estate", "winery", "cuvee", "wine", "vin",
+	} {
+		estate[w] = true
+	}
 	mine := map[string]bool{}
 	for _, w := range words(name) {
 		if !estate[w] {

@@ -25,7 +25,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { shouldImport } from './importrules.mjs';
-import { wineForImageUpgrade, winesForSlug } from './importapply.mjs';
+import { catalogJSON, wineForImageUpgrade, winesForSlug } from './importapply.mjs';
 import { binPath } from './env.mjs';
 import { loadAttempts, recordAttempt, saveAttempts } from './attempts.mjs';
 
@@ -148,13 +148,18 @@ for (const rec of staged) {
       }
     }
   }
-  if (rec.sku ?? wine.sku) recordAttempt(attempts, rec.sku ?? wine.sku, 'imported');
+  const importedSkus = new Set([
+    ...(Array.isArray(rec.skus) ? rec.skus : []),
+    ...winesForSlug(wines, rec.slug).map((matchingWine) => matchingWine.sku).filter(Boolean),
+  ]);
+  if (!importedSkus.size && (rec.sku ?? wine.sku)) importedSkus.add(rec.sku ?? wine.sku);
+  for (const sku of importedSkus) recordAttempt(attempts, sku, 'imported');
   console.log(`  ${apply ? 'wrote' : 'would'} ${rec.slug}.jpg  <- ${rec.page ? new URL(rec.page).host : '?'}`);
   changed++;
 }
 
 if (apply && changed) {
-  await writeFile(WINES, JSON.stringify(wines, null, 1) + '\n');
+  await writeFile(WINES, catalogJSON(wines));
   console.log(`\nwrote ${changed} images to ${IMG_DIR}/ and updated ${WINES}`);
 } else if (!apply) {
   console.log(`\n${changed} would change, ${skipped} skipped. Re-run with --apply to write.`);
@@ -168,7 +173,7 @@ if (apply && (changed || unresolved)) {
 }
 if (unresolved) {
   console.log(
-    `${unresolved} verified image(s) refused for want of a watermark verdict — ` +
+    `${unresolved} staged image(s) lacked a required publication verdict — ` +
       `those wines were left DUE${apply ? '' : ' (would be)'}, not recorded as misses`
   );
 }

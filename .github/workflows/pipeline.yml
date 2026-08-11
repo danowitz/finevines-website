@@ -65,6 +65,10 @@ jobs:
       FINEVINES_SF_CLIENT_SECRET: ${{ secrets.FINEVINES_SF_CLIENT_SECRET }}
       # OpenAI — web-search enrichment, vision label reading, watermark sweep.
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # Google Custom Search image endpoint. The key must permit server-side
+      # Custom Search JSON API calls; a browser-referer-only key is invalid here.
+      FINEVINES_GOOGLE_CSE_KEY: ${{ secrets.FINEVINES_GOOGLE_CSE_KEY }}
+      FINEVINES_GOOGLE_CSE_CX: ${{ secrets.FINEVINES_GOOGLE_CSE_CX }}
       # Bunny.net — storage zone (deploy upload + the _review/ queue), pull zone
       # purge, and the redirect middleware's script ID.
       FINEVINES_BUNNY_STORAGE_ZONE: ${{ secrets.FINEVINES_BUNNY_STORAGE_ZONE }}
@@ -105,6 +109,15 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-image.txt
+
+      - name: Install local image-comparison runtime
+        run: python -m pip install -r requirements-image.txt
 
       # --ignore-scripts: every secret above is job-level env, so an install
       # script would run with the Salesforce credentials, the OpenAI key, the

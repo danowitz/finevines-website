@@ -32,11 +32,16 @@ set -euo pipefail
 # Fail loudly rather than silently sourcing no images: every stage here needs the
 # vision model, and a missing key would otherwise look like "no images found".
 : "${OPENAI_API_KEY:?the image stage needs OPENAI_API_KEY}"
+: "${FINEVINES_GOOGLE_CSE_KEY:?the image stage needs FINEVINES_GOOGLE_CSE_KEY}"
+: "${FINEVINES_GOOGLE_CSE_CX:?the image stage needs FINEVINES_GOOGLE_CSE_CX}"
+python -c "import cv2, numpy" || {
+  echo "image stage needs: python -m pip install -r requirements-image.txt" >&2
+  exit 2
+}
 
 echo "::group::Build the image helpers"
 go build -o imgcheck ./tools/imgcheck
 go build -o imgnorm ./tools/imgnorm
-go build -o imghash ./tools/imghash
 echo "::endgroup::"
 
 echo "::group::Fetch and verify (imageless + due only, up to WINES_PER_RUN)"
@@ -44,9 +49,9 @@ echo "::group::Fetch and verify (imageless + due only, up to WINES_PER_RUN)"
 # --due-only       : and only those the attempt ledger says are due (30-day backoff)
 # --n              : at most this many wines tonight (see the budget note below)
 # --budget-minutes : and no longer than this, whatever happens
-# --vision-first   : read the label with the vision model, then apply imgcheck's
-#                    identity rules to that text. Required on Linux: imgcheck's
-#                    local OCR is a PowerShell shell-out (tools/imgcheck/ocr.ps1).
+# The fetcher reads only the strongest repeated bottle group and sends at most
+# three representatives to gpt-4.1-nano in one request. There is no model
+# escalation and no per-result vision loop.
 #
 # THIS STAGE IS BOUNDED, and that is the whole design. On night one every one of
 # the ~1,700 imageless wines is due (the seeded ledger holds only 'imported'
@@ -67,7 +72,7 @@ echo "::group::Fetch and verify (imageless + due only, up to WINES_PER_RUN)"
 node tools/labelfetch/pipeline.mjs \
   --n "${WINES_PER_RUN:-150}" \
   --budget-minutes "${IMAGE_BUDGET_MINUTES:-120}" \
-  --missing --due-only --vision-first
+  --missing --due-only
 echo "::endgroup::"
 
 # Nothing staged means nothing to sweep or import, and that is a normal night —
@@ -83,17 +88,6 @@ if [ ! -f data/fetched-images/manifest.json ]; then
   exit 0
 fi
 
-echo "::group::Cross-source consensus"
-# Two candidates fetched from DIFFERENT hosts showing the same bottle artwork
-# is strong evidence the search converged on the right product — independent
-# retailers photograph what they actually sell, and two wrong candidates
-# rarely agree. This corroborates vision-only accepts (flag lifted) and
-# promotes a cross-host twin pair's better half where nothing was accepted.
-# MUST run before the sweep: a promoted file has never been swept, and the
-# sweep below is the hard gate that clears it for import.
-node tools/labelfetch/consensus.mjs --apply
-echo "::endgroup::"
-
 echo "::group::Watermark sweep (hard gate)"
 # --apply records each verdict on the manifest record: hit or clean, the record
 # is marked watermarkSwept so a re-run does not pay for it twice, and a hit also
@@ -103,14 +97,9 @@ echo "::group::Watermark sweep (hard gate)"
 node tools/labelfetch/watermarksweep.mjs --apply
 echo "::endgroup::"
 
-echo "::group::Independent full-resolution identity gate"
-# A second model must affirm the exact producer/cuvee identity from the staged
-# full-resolution file. Missing, unavailable, or negative verdicts fail closed.
-node tools/labelfetch/prepublish.mjs --clean-only --apply
-echo "::endgroup::"
-
 echo "::group::Import survivors"
-# Only unflagged candidates that passed both hard gates publish automatically.
+# Only unflagged candidates that passed the selector identity gate and the
+# independent watermark gate publish automatically.
 # Flagged candidates remain staged for human review.
 node tools/labelfetch/import.mjs --apply --clean-only
 echo "::endgroup::"

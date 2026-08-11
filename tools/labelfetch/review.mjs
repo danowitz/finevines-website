@@ -62,16 +62,12 @@ let clean = ok.filter((r) => !r.review?.length);
 //   - a candidate refused on IDENTITY ("label does not name") or quality is
 //     shown — that is a real bottle whose pairing needs a human;
 //   - candidates where two DIFFERENT hosts show the same artwork (imghash
-//     twin, the cross-source consensus rule) are sorted first and badged.
+//     independent evidence) are sorted first and badged.
 const SUBJECT_REFUSAL = /no clean background|multiple subjects|too wide|too narrow|no subject|fills the frame/;
 
-// The recorded refusal reason cannot be trusted to say "this is a bottle":
-// the nightly fetch runs --vision-first (Linux has no local OCR), which skips
-// the local shape gate — so a retailer logo collage reaches the label check
-// and records an IDENTITY refusal. Caught by the operator seeing exactly that
-// collage lead a card (2026-08-03). The pixels are re-judged here with the
-// same shape gate (label check skipped via the -label stub), and the verdict
-// is cached on the alternate so later regenerations cost nothing.
+// Legacy manifests may contain alternates created before the current selector.
+// Re-judge those pixels with the current shape gate and cache the result; the
+// production selector itself never stages a pick that failed this gate.
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { binPath } from './env.mjs';
@@ -246,16 +242,12 @@ const hostOf = (u) => {
   }
 };
 
-// A one-click search, for the wines where nothing on disk is right. Opens the
-// same query the pipeline used, so the reviewer starts where it left off
-// rather than retyping a Burgundy name from a SKU.
+// One-click searches for the wines where nothing on disk is right.
 const searchTerms = (w, r) =>
   encodeURIComponent(([w.producer, w.name, w.vintage].filter(Boolean).join(' ') || r.name) + ' wine bottle');
 const searchURL = (w, r) => `https://duckduckgo.com/?q=${searchTerms(w, r)}&iax=images&ia=images`;
-// Google's image index is broader — often the difference for small-production
-// wines. Fine as a link the HUMAN clicks; the pipeline's automated discovery
-// stays on DuckDuckGo's HTML endpoint, which tolerates a robot where Google's
-// SERP answers one with consent walls and CAPTCHAs.
+// This is the same exact identity query the pipeline sends to Google's image
+// endpoint; the browser link is only for human follow-up.
 const googleURL = (w, r) => `https://www.google.com/search?udm=2&q=${searchTerms(w, r)}`;
 
 const card = (r, { chosen }) => {
@@ -297,8 +289,7 @@ const card = (r, { chosen }) => {
       ${r.siblingVintages?.length ? `<span class="vints">decision also covers: ${esc(r.siblingVintages.join(' · '))} (image is shared across vintages on import)</span>` : ''}
       <span class="search">search:
         <a href="${esc(googleURL(w, r))}" target="_blank" rel="noopener">Google Images</a> &middot;
-        <a href="${esc(searchURL(w, r))}" target="_blank" rel="noopener"
-           title="the same query the pipeline searched to find these candidates">DuckDuckGo (pipeline's)</a></span>
+        <a href="${esc(searchURL(w, r))}" target="_blank" rel="noopener">DuckDuckGo</a></span>
       ${r.corroboratedBy ? `<span class="corr">&#10003; corroborated: ${esc(r.corroboratedBy)}</span>` : ''}
       ${(r.review || []).map((f) => `<span class="why">${esc(f)}</span>`).join('')}
     </figcaption>

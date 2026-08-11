@@ -392,9 +392,11 @@ func matchWithProducer(name, producer, labelText string, ix Index) matchResult {
 		r.identifying = append(r.identifying, w)
 	}
 	if len(r.identifying) == 0 {
-		// Nothing in the producer name distinguishes it; fall back to demanding
-		// the whole name rather than accepting on no evidence at all.
-		return match(name, labelText, ix)
+		// No producer word is rare by itself. Require the complete producer phrase
+		// instead: "Jean" and "Royer" together identify the estate even though
+		// each token occurs under several hand-entered producer aliases. The
+		// sibling rule still distinguishes Prestige from Tradition afterwards.
+		r.identifying = words(producer)
 	}
 	for _, w := range r.identifying {
 		if i := findIn(w, got, used); i >= 0 {
@@ -409,7 +411,11 @@ func matchWithProducer(name, producer, labelText string, ix Index) matchResult {
 	if len(r.missing) != 0 {
 		return r
 	}
-	if c := ix.conflicts(name, got); c != "" {
+	// The conflict question is "does the label name a different PRODUCER?".
+	// Comparing against the catalog product name here made a correct producer
+	// look foreign whenever Salesforce stored producer separately — e.g. name
+	// "Bourgogne Rouge", producer "Benjamin Leroux", label "Benjamin Leroux".
+	if c := ix.conflicts(producer, got); c != "" {
 		r.conflict = c
 		return r
 	}

@@ -3,15 +3,27 @@
 // refusal cannot be forgotten by a future edit to the import loop.
 import { isWatermarked } from './watermark.mjs';
 
+const PRODUCTION_SELECTOR = 'gpt-4.1-nano transcription + local identity rules';
+
+// Records staged before the explicit boolean was introduced still carry the
+// complete selector proof. Keep that bounded compatibility path so a reviewed
+// batch does not need to be searched and paid for again.
+export function hasSelectionIdentityVerdict(rec) {
+  if (rec.selectionIdentityVerified === true) return true;
+  return rec.verifiedBy === PRODUCTION_SELECTOR &&
+    Number(rec.matchingImages) >= 2 &&
+    Array.isArray(rec.evidence) && rec.evidence.some((item) => item?.anchor === true);
+}
+
 // shouldImport returns {import: boolean, reason?: string, unresolved?: boolean}.
 //
 // Order matters: the watermark refusal outranks everything, including a human
 // having cleared the review queue — a watermarked image is never importable,
 // it can only be replaced by a re-fetch from a clean source.
 //
-// `unresolved` distinguishes "this image is not importable" from "nobody has
-// established whether this image is importable". Only the unswept refusal is the
-// latter, and only it leaves the wine due for another attempt; see below.
+// `unresolved` distinguishes "this image is not importable" from "a required
+// gate never reached a verdict". The latter leaves the wine due for another
+// attempt; see import.mjs.
 export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
   if (isWatermarked(rec)) {
     return { import: false, reason: `watermark (${rec.watermark || '?'}) — never imported` };
@@ -33,6 +45,15 @@ export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
   ) {
     return { import: false, reason: `already has a photograph (${wine.imagePath})` };
   }
+  // Check selector identity before the paid watermark gate so incomplete
+  // records are reported honestly and never consume a sweep request.
+  if (!hasSelectionIdentityVerdict(rec)) {
+    return {
+      import: false,
+      unresolved: rec.selectionIdentityVerified === undefined,
+      reason: 'production selector did not affirm this exact wine',
+    };
+  }
   // The invariant is "no image publishes until the sweep has LOOKED at it", not
   // "no image publishes once the sweep has condemned it" — and only the first of
   // those is safe. watermarksweep.mjs produces no verdict on a transport error,
@@ -43,9 +64,7 @@ export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
   // so a watermark that slips through on a night the sweep was rate-limited can
   // never be swept out again.
   //
-  // Placed last among the refusals on purpose: everything above is a decision
-  // about this image, so `unresolved` marks the ONLY refusal that is not one.
-  // That flag matters to the caller — the staged file is about to be discarded
+  // This unresolved flag matters because the staged file is about to be discarded
   // (data/fetched-images/ is gitignored, so it does not survive the runner) and
   // the wine's ledger entry must therefore be left open rather than backed off
   // for thirty days. import.mjs records 'unevaluated' on the strength of it.
@@ -55,21 +74,6 @@ export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
       import: false,
       unresolved: true,
       reason: `watermark sweep has not cleared this image${why} — not imported, and the wine stays due`,
-    };
-  }
-  // The OCR/identity match that stages a candidate is necessary but not
-  // sufficient: the 2026-08 full-resolution audit found hundreds of
-  // same-producer/wrong-cuvee bottles that had passed the first matcher. A
-  // second, independent full-resolution reading must affirmatively name this
-  // wine before publication. Missing/malformed/network outcomes fail closed
-  // and stay due; a well-formed negative is a settled refusal.
-  if (rec.prepublishIdentityVerified !== true) {
-    return {
-      import: false,
-      unresolved: rec.prepublishIdentityVerified === undefined || rec.prepublishIdentityUnavailable === true,
-      reason: rec.prepublishIdentityUnavailable
-        ? `prepublish identity check unavailable (${rec.prepublishIdentityError || 'no opinion'})`
-        : 'prepublish identity check did not affirm this exact wine',
     };
   }
   if (cleanOnly && (rec.review || []).length) {

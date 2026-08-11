@@ -48,6 +48,7 @@ func main() {
 	// this flag it re-refuses everything the caller was trying to recover, and
 	// the second opinion can never be heard.
 	givenSingle := flag.Bool("single-bottle", false, "caller confirms one bottle; skips the local shape gate")
+	shapeOnly := flag.Bool("shape-only", false, "stop after the local single-bottle/background gate")
 	producer := flag.String("producer", "", "the wine's producer; when given, only its words are required")
 	// The catalog itself, so the verifier can ask whether the label could be a
 	// DIFFERENT wine by the same producer — the blind spot that published 551
@@ -84,7 +85,7 @@ func main() {
 	// --- stage 1 -------------------------------------------------------------
 	rep := imgcheck.Analyze(img, imgcheck.Defaults())
 	out := verdict{
-		Subjects: rep.Subjects, Slimness: rep.Slimness,
+		Subjects: rep.Subjects, NeckSubjects: rep.NeckSubjects, Slimness: rep.Slimness,
 		Fill: rep.Fill, CleanBackground: rep.CleanBackground,
 	}
 	if !*asJSON {
@@ -95,6 +96,12 @@ func main() {
 		out.Stage, out.Reason = "shape", rep.Reason
 		emit(out, *asJSON)
 		os.Exit(1)
+	}
+	if *shapeOnly {
+		out.Accept = true
+		out.Stage = "shape"
+		emit(out, *asJSON)
+		return
 	}
 
 	// --- stage 2 -------------------------------------------------------------
@@ -136,14 +143,15 @@ func main() {
 				crop.Set(x, y, img.At(band.Min.X+x/scale, band.Min.Y+y/scale))
 			}
 		}
-		tmp := filepath.Join(os.TempDir(), fmt.Sprintf("imgcheck-band-%d.png", scale))
-		f, err := os.Create(tmp)
+		f, err := os.CreateTemp("", fmt.Sprintf("imgcheck-band-%d-*.png", scale))
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+		tmp := f.Name()
 		if err := png.Encode(f, crop); err != nil {
 			f.Close()
+			os.Remove(tmp)
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -179,6 +187,7 @@ func main() {
 
 	m := matchWithSiblings(*name, *producer, text, LoadIndex(*indexPath), LoadSiblings(*winesPath))
 	out.Want, out.Found, out.Missing = m.identifying, m.found, m.missing
+	out.Conflict = m.conflict
 	out.Stage = "label"
 	if !*asJSON {
 		fmt.Printf("match     %d/%d identifying words found: %v", len(m.found), len(m.identifying), m.found)
@@ -192,7 +201,11 @@ func main() {
 		emit(out, *asJSON)
 		return
 	}
-	out.Reason = "the label does not name this wine"
+	if m.conflict != "" {
+		out.Reason = m.conflict
+	} else {
+		out.Reason = "the label does not name this wine"
+	}
 	emit(out, *asJSON)
 	os.Exit(1)
 }
@@ -204,6 +217,7 @@ type verdict struct {
 	Stage           string   `json:"stage"` // where it stopped: shape | label
 	Reason          string   `json:"reason,omitempty"`
 	Subjects        int      `json:"subjects"`
+	NeckSubjects    int      `json:"neckSubjects"`
 	Slimness        float64  `json:"slimness"`
 	Fill            float64  `json:"fill"`
 	CleanBackground bool     `json:"cleanBackground"`
@@ -211,6 +225,7 @@ type verdict struct {
 	Want            []string `json:"want,omitempty"`
 	Found           []string `json:"found,omitempty"`
 	Missing         []string `json:"missing,omitempty"`
+	Conflict        string   `json:"conflict,omitempty"`
 	Watermark       string   `json:"watermark,omitempty"`
 }
 
@@ -267,17 +282,17 @@ func watermarkOf(img image.Image) string {
 			c.Set(x, y, img.At(strip.Min.X+x, strip.Min.Y+y))
 		}
 	}
-	p := filepath.Join(os.TempDir(), "imgcheck-wm.png")
-	f, err := os.Create(p)
+	f, err := os.CreateTemp("", "imgcheck-wm-*.png")
 	if err != nil {
 		return ""
 	}
+	p := f.Name()
+	defer os.Remove(p)
 	if err := png.Encode(f, c); err != nil {
 		f.Close()
 		return ""
 	}
 	f.Close()
-	defer os.Remove(p)
 	txt, err := ocr(p)
 	if err != nil {
 		return ""

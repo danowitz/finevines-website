@@ -30,6 +30,10 @@ describe('blocked image sources', () => {
     }
   });
 
+  test('Big Hammer is blocked because its bottle shots carry a BHW monogram', () => {
+    assert.equal(blockedBy('https://www.bighammerwines.com/cdn/shop/wine.jpg'), 'bighammerwines');
+  });
+
   test('a producer or retailer host is allowed', () => {
     assert.equal(blockedBy('https://www.domaine-anne-gros.com/img/bottle.jpg'), '');
     assert.equal(blockedBy('https://www.klwines.com/images/skus/1740122.jpg'), '');

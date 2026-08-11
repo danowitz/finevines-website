@@ -2,6 +2,56 @@
 
 Written 2026-08-10. For an engineer or agent picking up the image pipeline.
 
+> ## CORRECTION — 2026-08-10, after Codex reviewed this document
+>
+> **The central diagnosis below is wrong. Read this first.**
+>
+> This document claimed Google discovery had never worked and that image-mode
+> search "was never used". Both are false, and the error was mine:
+>
+> - `searchType=image` **already existed** in `pipeline.mjs` (line 182 at commit
+>   5a1919d), and the code sent a spoofed `Referer: https://finevines.grithub.app`
+>   header to satisfy the key's referer restriction. My probes omitted that
+>   header, got 403, and I diagnosed my own probe's bug as the system's.
+> - The historical staging manifest (`data/fetched-images-preGoogle/`) proves
+>   discovery worked: **19,830 candidates across 2,116 distinct hosts**,
+>   including direct CDN image URLs. A starved pipeline does not produce that.
+>
+> **What actually limits the hit rate** is the identity gate, not discovery:
+>
+> ```
+>  8,880  the label does not name this wine
+>  4,906  no usable image on page
+>  2,606  page failed to load
+>  1,642  nothing legible on the label
+>  1,248  wines successfully matched
+> ```
+>
+> The ~1,248 findable wines were found. What remains fails verification, which
+> is the gate doing its job — 551 wrong photographs reached the live site in
+> August and had to be pulled.
+>
+> **The "97%" figure below is also misleading.** It measured "a bottle-shaped
+> image exists on a permitted host", which is exactly the population the
+> identity gate rejects roughly half the time. It is not 97% recoverable.
+>
+> **What in this document still holds:**
+>
+> - The 403-handling bug is real and worth fixing: a 403 was logged as "quota"
+>   and returned `[]`, making an outage indistinguishable from "no images found",
+>   which the ledger could then convert into a 30-day miss. Codex has fixed this.
+> - The spirits/cider exclusion is genuinely obsolete. Removing it is right.
+> - The Windows-OCR versus paid-vision observation stands and is unverified on
+>   GitHub's Windows runner image.
+> - Every constraint in "Hard constraints" stands unchanged.
+>
+> **What I did on the wrong premise, so it can be judged:** I cleared 956
+> `miss` verdicts from `data/image-attempts.json` (backup at
+> `data/image-attempts.preGoogle.json`) and moved the staging manifest aside.
+> Neither destroys anything, but both cause re-work on wines that were correctly
+> assessed the first time. If the identity gate is the real constraint, re-running
+> them will mostly reproduce the same verdicts.
+
 ## The situation in one paragraph
 
 FineVines publishes a static wine catalog of ~2,640 rows (1,894 cards once
@@ -100,7 +150,7 @@ Specifically:
 1. Query `searchType=image` for each wine alongside the current web search.
 2. Filter by the existing host allowlist (`tools/labelfetch/sources.mjs`).
 3. Feed surviving candidates into the same chain: `imgcheck` identity
-   verification → `watermarksweep.mjs` → `prepublish.mjs --clean-only` →
+   selector identity verification → `watermarksweep.mjs` →
    `import.mjs --apply --clean-only`.
 4. Keep the attempt ledger honest — see the lesson in §2.
 
@@ -138,13 +188,11 @@ there." Vivino has been blocked since July. This costs 46 wines — 13 of them
 from The Cider Farm, whose own site carries the photographs (verified). Remove
 the skip; the identity gates already protect against bad matches.
 
-**Vision spend is avoidable on Windows.** `imgcheck` reads labels with the OCR
-built into Windows (`tools/imgcheck/ocr.ps1`, `Windows.Media.Ocr`) — local, free,
-no API key. The nightly CI runner is `ubuntu-latest`, which cannot use it, so CI
-passes `--vision-first` and pays OpenAI (`gpt-4.1-nano`) for every candidate
-image instead. The repo is public, so GitHub Actions minutes are free on any
-runner OS. Whether `Windows.Media.Ocr` works on GitHub's Windows Server image is
-**unverified** — one throwaway workflow run would settle it.
+**Vision spend is bounded.** Bottle shape and visual similarity are local. Only
+the strongest repeated design is read, in one `gpt-4.1-nano` request containing
+at most three representative images. There is no escalation and no per-result
+vision loop. A reader outage leaves the wine due instead of manufacturing a
+cached miss.
 
 ## How to check your work
 

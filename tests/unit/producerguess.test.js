@@ -52,4 +52,15 @@ describe('deriveProducer', () => {
     ];
     assert.equal(deriveProducer('Boigey Freres Vosne Romanee', all), 'Boigey Freres');
   });
+
+  test('does not shrink a producer to a meaningless connector prefix', () => {
+    const all = [
+      'Domaine de la Villaudiere Sauvignon Blanc Igp Val de Loire',
+      'Domaine de la Grosse Pierre Chiroubles aux Craz',
+    ];
+    assert.equal(
+      deriveProducer('Domaine de la Villaudiere Sauvignon Blanc Igp Val de Loire', all),
+      'Domaine de la Villaudiere'
+    );
+  });
 });

@@ -72,6 +72,24 @@ func TestWrongCuveeFromTheRightProducerIsRefused(t *testing.T) {
 	}
 }
 
+func TestJeanRoyerTraditionCannotStandInForPrestige(t *testing.T) {
+	sib := BuildSiblings([]NameProducer{
+		{Name: "Domaine Jean Royer Chateauneuf du Pape Cuvee Prestige"},
+		{Name: "Domaine Jean Royer Chateauneuf du Pape Tradition"},
+		{Name: "Domaine Jean Royer Chateauneuf du Pape Sables de la Crau"},
+	})
+	r := matchWithSiblings(
+		"Domaine Jean Royer Chateauneuf du Pape Cuvee Prestige",
+		"Jean Royer",
+		"Domaine Jean Royer Cuvee Tradition Chateauneuf du Pape",
+		nil,
+		sib,
+	)
+	if r.ok {
+		t.Fatal("Jean Royer Tradition was accepted for Cuvee Prestige")
+	}
+}
+
 func TestTheRightCuveeStillPasses(t *testing.T) {
 	sib := testSiblings()
 	for _, c := range []struct{ what, name, producer, label string }{
