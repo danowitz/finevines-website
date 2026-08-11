@@ -383,7 +383,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.189Z"
+  "updatedAt": "2026-08-11T19:10:10.843Z"
  },
  "tempo-d-angelus-bourdeaux-rouge-2019": {
   "slug": "tempo-d-angelus-bourdeaux-rouge-2019",
@@ -2812,7 +2812,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.190Z"
+  "updatedAt": "2026-08-11T19:10:10.883Z"
  },
  "rocca-di-montegrossi-chianti-classico-gran-selezione-vigneto-san-marcellino-2018": {
   "slug": "rocca-di-montegrossi-chianti-classico-gran-selezione-vigneto-san-marcellino-2018",
@@ -4224,8 +4224,8 @@
   "slug": "groffier-domaine-robert-groffier-chambertin-grand-cru-2022",
   "sku": "510755",
   "name": "Groffier Domaine Robert Groffier Chambertin Grand Cru",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -4254,7 +4254,9 @@
    "decodeFailures": 0,
    "comparedPairs": 21,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -4279,7 +4281,7 @@
     "conflict": "candidate label names a different cuvee: chamberrin"
    }
   ],
-  "updatedAt": "2026-08-11T15:54:24.474Z"
+  "updatedAt": "2026-08-11T19:10:10.844Z"
  },
  "maison-camille-giroud-bourgogne-aligote-2020": {
   "slug": "maison-camille-giroud-bourgogne-aligote-2020",
@@ -4847,7 +4849,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.189Z"
+  "updatedAt": "2026-08-11T19:10:10.844Z"
  },
  "lismore-estate-chardonnay-2018": {
   "slug": "lismore-estate-chardonnay-2018",
@@ -5070,7 +5072,7 @@
     }
    }
   ],
-  "updatedAt": "2026-08-11T16:34:07.869Z"
+  "updatedAt": "2026-08-11T19:10:10.838Z"
  },
  "band-of-vintners-sauvignon-blanc-napa-valley-2023": {
   "slug": "band-of-vintners-sauvignon-blanc-napa-valley-2023",
@@ -5131,7 +5133,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:07.870Z"
+  "updatedAt": "2026-08-11T19:10:10.839Z"
  },
  "benjamin-leroux-charmes-chambertin-les-mazoueres-grand-cru-2018": {
   "slug": "benjamin-leroux-charmes-chambertin-les-mazoueres-grand-cru-2018",
@@ -5248,7 +5250,7 @@
   "sku": "419067",
   "name": "Bouland Daniel Bouland Cote de Brouilly Cuvee Melanie",
   "ok": true,
-  "failureStage": "",
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -5267,7 +5269,7 @@
    "identityAnchors": 0,
    "explicitConflicts": 3,
    "publishableAnchors": 0,
-   "outcome": "imported",
+   "outcome": "failed",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -5278,8 +5280,8 @@
    "comparedPairs": 45,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 1,
-   "importStage": "imported"
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -5304,7 +5306,7 @@
     "conflict": "candidate producer is Côte de Brouilly; request is Bouland"
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.009Z"
+  "updatedAt": "2026-08-11T19:10:10.839Z"
  },
  "brand-napa-valley-proprietary-red-blend-napa-valley-2016": {
   "slug": "brand-napa-valley-proprietary-red-blend-napa-valley-2016",
@@ -5913,7 +5915,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.009Z"
+  "updatedAt": "2026-08-11T19:10:10.839Z"
  },
  "chateau-monplaisir-bordeaux-rouge-2022": {
   "slug": "chateau-monplaisir-bordeaux-rouge-2022",
@@ -5978,7 +5980,7 @@
     "conflict": "candidate label lacks requested discriminator bordeaux"
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.009Z"
+  "updatedAt": "2026-08-11T19:10:10.840Z"
  },
  "chateau-thieuley-bordeaux-blanc-2022": {
   "slug": "chateau-thieuley-bordeaux-blanc-2022",
@@ -6151,7 +6153,7 @@
   "sku": "513236",
   "name": "Confuron-Gindre Domaine Confuron-Gindre Bourgogne Chardonnay",
   "ok": true,
-  "failureStage": "",
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -6170,7 +6172,7 @@
    "identityAnchors": 0,
    "explicitConflicts": 3,
    "publishableAnchors": 0,
-   "outcome": "imported",
+   "outcome": "failed",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -6181,8 +6183,8 @@
    "comparedPairs": 28,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 1,
-   "importStage": "imported"
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -6204,7 +6206,7 @@
     "conflict": "candidate producer is Les Champs d'Argent; request is Confuron-Gindre"
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.081Z"
+  "updatedAt": "2026-08-11T19:10:10.840Z"
  },
  "confuron-gindre-domaine-confuron-gindre-vosne-romanee-1er-cru-les-chaumes-2017": {
   "slug": "confuron-gindre-domaine-confuron-gindre-vosne-romanee-1er-cru-les-chaumes-2017",
@@ -6336,14 +6338,14 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.082Z"
+  "updatedAt": "2026-08-11T19:10:10.840Z"
  },
  "daniel-bouland-domaine-daniel-bouland-cote-de-brouilly-cuvee-melanie-2017": {
   "slug": "daniel-bouland-domaine-daniel-bouland-cote-de-brouilly-cuvee-melanie-2017",
   "sku": "419057*",
   "name": "Daniel Bouland Domaine Daniel Bouland Cote de Brouilly Cuvee Melanie",
   "ok": true,
-  "failureStage": "",
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -6362,7 +6364,7 @@
    "identityAnchors": 0,
    "explicitConflicts": 3,
    "publishableAnchors": 0,
-   "outcome": "imported",
+   "outcome": "failed",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -6373,8 +6375,8 @@
    "comparedPairs": 45,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 1,
-   "importStage": "imported"
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -6402,7 +6404,7 @@
     }
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.120Z"
+  "updatedAt": "2026-08-11T19:10:10.840Z"
  },
  "david-paige-wines-same-paige-pinot-noir-willamette-valley-2024": {
   "slug": "david-paige-wines-same-paige-pinot-noir-willamette-valley-2024",
@@ -6529,7 +6531,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.120Z"
+  "updatedAt": "2026-08-11T19:10:10.841Z"
  },
  "domaine-bachey-legros-santenay-rouge-les-champs-claude-vieilles-vignes-2023": {
   "slug": "domaine-bachey-legros-santenay-rouge-les-champs-claude-vieilles-vignes-2023",
@@ -6687,8 +6689,8 @@
   "slug": "domaine-daniel-bouland-morgon-bellevue-sable-2021",
   "sku": "419083",
   "name": "Domaine Daniel Bouland Morgon Bellevue Sable",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -6717,7 +6719,9 @@
    "decodeFailures": 0,
    "comparedPairs": 45,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -6738,7 +6742,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T15:50:47.094Z"
+  "updatedAt": "2026-08-11T19:10:10.841Z"
  },
  "domaine-daniel-bouland-morgon-delys-vieilles-vignes-2018": {
   "slug": "domaine-daniel-bouland-morgon-delys-vieilles-vignes-2018",
@@ -6923,7 +6927,7 @@
   "sku": "714837",
   "name": "Domaine des Comte Lafon Volnay 1er Cru Santenots du Milieu",
   "ok": true,
-  "failureStage": "",
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -6942,7 +6946,7 @@
    "identityAnchors": 0,
    "explicitConflicts": 3,
    "publishableAnchors": 0,
-   "outcome": "imported",
+   "outcome": "failed",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 1,
    "downloadUnsupported": 0,
@@ -6953,8 +6957,8 @@
    "comparedPairs": 36,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 1,
-   "importStage": "imported"
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -6976,7 +6980,7 @@
     "conflict": "candidate producer is VOLLNAY-SANTENOTS DU MILIEU; request is Domaine des Comte Lafon"
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.188Z"
+  "updatedAt": "2026-08-11T19:10:10.841Z"
  },
  "domaine-des-epeneaux-auxey-duresses-rouge-2022": {
   "slug": "domaine-des-epeneaux-auxey-duresses-rouge-2022",
@@ -7323,7 +7327,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.188Z"
+  "updatedAt": "2026-08-11T19:10:10.841Z"
  },
  "domaine-gilles-morat-pouilly-fuisse-terroirs-de-vergisson-2022": {
   "slug": "domaine-gilles-morat-pouilly-fuisse-terroirs-de-vergisson-2022",
@@ -7383,7 +7387,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.188Z"
+  "updatedAt": "2026-08-11T19:10:10.841Z"
  },
  "domaine-guy-bocard-bourgogne-aliote-les-chanterelles-2020": {
   "slug": "domaine-guy-bocard-bourgogne-aliote-les-chanterelles-2020",
@@ -7899,7 +7903,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.189Z"
+  "updatedAt": "2026-08-11T19:10:10.842Z"
  },
  "domaine-jl-chave-saint-joseph-clos-florentin-2023": {
   "slug": "domaine-jl-chave-saint-joseph-clos-florentin-2023",
@@ -7959,7 +7963,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.189Z"
+  "updatedAt": "2026-08-11T19:10:10.842Z"
  },
  "domaine-la-bastide-blanche-bandol-rouge-2020": {
   "slug": "domaine-la-bastide-blanche-bandol-rouge-2020",
@@ -8177,8 +8181,8 @@
   "slug": "domaine-parent-ladoix-2020",
   "sku": "210434",
   "name": "Domaine Parent Ladoix",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -8207,7 +8211,9 @@
    "decodeFailures": 0,
    "comparedPairs": 28,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -8229,7 +8235,7 @@
     "conflict": "candidate is premier cru; request is not"
    }
   ],
-  "updatedAt": "2026-08-11T15:52:47.899Z"
+  "updatedAt": "2026-08-11T19:10:10.842Z"
  },
  "domaine-paul-pernot-beaune-blanc-1er-cru-les-reversees-2024": {
   "slug": "domaine-paul-pernot-beaune-blanc-1er-cru-les-reversees-2024",
@@ -8286,8 +8292,8 @@
   "slug": "domaine-paul-prieur-sancerre-la-pitaude-2021",
   "sku": "534016",
   "name": "Domaine Paul Prieur Sancerre la Pitaude",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -8316,7 +8322,9 @@
    "decodeFailures": 0,
    "comparedPairs": 36,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -8337,7 +8345,7 @@
     "conflict": "candidate producer is La Pialade; request is Domaine Paul"
    }
   ],
-  "updatedAt": "2026-08-11T15:52:55.792Z"
+  "updatedAt": "2026-08-11T19:10:10.842Z"
  },
  "domaine-philippe-bouzereau-meursault-1er-cru-les-poruzots-2022": {
   "slug": "domaine-philippe-bouzereau-meursault-1er-cru-les-poruzots-2022",
@@ -8490,8 +8498,8 @@
   "slug": "domaine-saint-damien-gigondas-vieiles-vignes-2020",
   "sku": "442770*",
   "name": "Domaine Saint Damien Gigondas Vieiles Vignes",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -8520,7 +8528,9 @@
    "decodeFailures": 0,
    "comparedPairs": 28,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -8543,7 +8553,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T15:53:24.546Z"
+  "updatedAt": "2026-08-11T19:10:10.843Z"
  },
  "domaine-servin-chablis-grand-cru-bougerots-2019": {
   "slug": "domaine-servin-chablis-grand-cru-bougerots-2019",
@@ -8703,8 +8713,8 @@
   "slug": "elizabeth-rose-chockablock-napa-valley-red-blend-2023",
   "sku": "500699*",
   "name": "Elizabeth Rose Chockablock Napa Valley Red Blend",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -8733,7 +8743,9 @@
    "decodeFailures": 0,
    "comparedPairs": 28,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -8755,7 +8767,7 @@
     "conflict": "requested rose; candidate pixels show red"
    }
   ],
-  "updatedAt": "2026-08-11T15:53:55.519Z"
+  "updatedAt": "2026-08-11T19:10:10.843Z"
  },
  "eyrie-the-eyrie-vineyards-pinot-noir-the-eyrie-2021": {
   "slug": "eyrie-the-eyrie-vineyards-pinot-noir-the-eyrie-2021",
@@ -8854,8 +8866,8 @@
   "slug": "finca-bacara-crazy-grapes-2018",
   "sku": "680306",
   "name": "Finca Bacara Crazy Grapes",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -8884,7 +8896,9 @@
    "decodeFailures": 0,
    "comparedPairs": 45,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -8905,7 +8919,7 @@
     "conflict": "candidate producer is CRAZY; request is Finca Bacara"
    }
   ],
-  "updatedAt": "2026-08-11T15:54:04.290Z"
+  "updatedAt": "2026-08-11T19:10:10.843Z"
  },
  "gagnard-jn-gagnard-santenay-1er-cru-clos-tavannes-2014": {
   "slug": "gagnard-jn-gagnard-santenay-1er-cru-clos-tavannes-2014",
@@ -9073,8 +9087,8 @@
   "slug": "groffier-domaine-robert-groffier-bourgogne-passetoutgrains-2023",
   "sku": "510757",
   "name": "Groffier Domaine Robert Groffier Bourgogne Passetoutgrains",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -9103,7 +9117,9 @@
    "decodeFailures": 0,
    "comparedPairs": 15,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -9128,7 +9144,7 @@
     "conflict": "candidate producer is domaine Robert Goffier Père & Fils; request is Groffier"
    }
   ],
-  "updatedAt": "2026-08-11T15:54:24.469Z"
+  "updatedAt": "2026-08-11T19:10:10.843Z"
  },
  "groffier-domaine-robert-groffier-gevrey-chambertin-les-seuvrees-2019": {
   "slug": "groffier-domaine-robert-groffier-gevrey-chambertin-les-seuvrees-2019",
@@ -9646,7 +9662,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.190Z"
+  "updatedAt": "2026-08-11T19:10:10.844Z"
  },
  "kracher-gerhard-kracher-trockenbeerenauslese-6-welschriesling-nv-2020": {
   "slug": "kracher-gerhard-kracher-trockenbeerenauslese-6-welschriesling-nv-2020",
@@ -10306,8 +10322,8 @@
   "slug": "manotsuru-pure-bloom-junmai-ginjo-sake",
   "sku": "603414",
   "name": "Manotsuru Pure Bloom Junmai Ginjo Sake",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -10326,7 +10342,7 @@
    "identityAnchors": 0,
    "explicitConflicts": 3,
    "publishableAnchors": 0,
-   "outcome": "failed",
+   "outcome": "imported",
    "downloadHttpFailures": 1,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -10336,7 +10352,12 @@
    "decodeFailures": 0,
    "comparedPairs": 28,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0,
+   "imported": 1,
+   "importStage": "imported"
   },
   "evidence": [
    {
@@ -10358,7 +10379,7 @@
     "conflict": "candidate producer is KURA SELECTORS; request is Manotsuru"
    }
   ],
-  "updatedAt": "2026-08-11T15:56:21.989Z"
+  "updatedAt": "2026-08-11T19:10:10.883Z"
  },
  "maxime-cheurin-noellat-maxine-cheurlin-noellat-morey-saint-denis-2019": {
   "slug": "maxime-cheurin-noellat-maxine-cheurlin-noellat-morey-saint-denis-2019",
@@ -10452,7 +10473,7 @@
     "conflict": "candidate label names a different cuvee: cotes nuits"
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.190Z"
+  "updatedAt": "2026-08-11T19:10:10.883Z"
  },
  "mcnab-ridge-cabernet-sauvignon-mendocino-county-2020": {
   "slug": "mcnab-ridge-cabernet-sauvignon-mendocino-county-2020",
@@ -11144,8 +11165,8 @@
   "slug": "romariz-reserva-latina-tawny",
   "sku": "296118**",
   "name": "Romariz Reserva Latina Tawny",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -11164,7 +11185,7 @@
    "identityAnchors": 0,
    "explicitConflicts": 3,
    "publishableAnchors": 0,
-   "outcome": "failed",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -11174,7 +11195,12 @@
    "decodeFailures": 0,
    "comparedPairs": 36,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0,
+   "imported": 1,
+   "importStage": "imported"
   },
   "evidence": [
    {
@@ -11196,7 +11222,7 @@
     "conflict": "candidate label lacks requested tier reserva"
    }
   ],
-  "updatedAt": "2026-08-11T15:57:48.048Z"
+  "updatedAt": "2026-08-11T19:10:10.929Z"
  },
  "rose-arrow-estate-pinot-noir-highland-close-chehlaem-mountains-2021": {
   "slug": "rose-arrow-estate-pinot-noir-highland-close-chehlaem-mountains-2021",
@@ -11406,7 +11432,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.190Z"
+  "updatedAt": "2026-08-11T19:10:10.929Z"
  },
  "sorelli-cantina-sorelli-chianti-2024": {
   "slug": "sorelli-cantina-sorelli-chianti-2024",
@@ -12595,7 +12621,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.190Z"
+  "updatedAt": "2026-08-11T19:10:10.929Z"
  },
  "anecoop-flare-sparkling-moscatel-do-valencia": {
   "slug": "anecoop-flare-sparkling-moscatel-do-valencia",
@@ -12695,7 +12721,7 @@
   "sku": "504222",
   "name": "Band of Vintners Pinot Noir Willamette Valley",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -12714,7 +12740,7 @@
    "identityAnchors": 1,
    "explicitConflicts": 1,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 1,
    "downloadUnsupported": 0,
@@ -12725,8 +12751,11 @@
    "comparedPairs": 28,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -12746,7 +12775,7 @@
     "conflict": "candidate source says sauvignon blanc; request is pinot noir"
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.191Z"
+  "updatedAt": "2026-08-11T19:10:11.015Z"
  },
  "benjamin-leroux-bourgogne-rouge-2023": {
   "slug": "benjamin-leroux-bourgogne-rouge-2023",
@@ -13218,7 +13247,7 @@
   "sku": "510264",
   "name": "Castagnier Domaine Jerome Castagnier Bourgogne Pinot Noir",
   "ok": true,
-  "failureStage": "",
+  "failureStage": "import-existing-photo",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -13237,7 +13266,7 @@
    "identityAnchors": 0,
    "explicitConflicts": 3,
    "publishableAnchors": 0,
-   "outcome": "imported",
+   "outcome": "failed",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -13248,8 +13277,8 @@
    "comparedPairs": 45,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 1,
-   "importStage": "imported"
+   "imported": 0,
+   "importStage": "existing-photo"
   },
   "evidence": [
    {
@@ -13280,7 +13309,7 @@
     }
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.226Z"
+  "updatedAt": "2026-08-11T19:10:11.015Z"
  },
  "chakana-estate-red-2017": {
   "slug": "chakana-estate-red-2017",
@@ -13559,7 +13588,7 @@
   "sku": "520686",
   "name": "Château Marjosse Bordeaux Rouge",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -13578,7 +13607,7 @@
    "identityAnchors": 3,
    "explicitConflicts": 0,
    "publishableAnchors": 3,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -13589,8 +13618,11 @@
    "comparedPairs": 45,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -13609,14 +13641,14 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.226Z"
+  "updatedAt": "2026-08-11T19:10:11.177Z"
  },
  "chateau-tertre-roteboeuf-saint-emilion-2018": {
   "slug": "chateau-tertre-roteboeuf-saint-emilion-2018",
   "sku": "520464*",
   "name": "Château Tertre Roteboeuf Saint Emilion",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -13635,7 +13667,7 @@
    "identityAnchors": 3,
    "explicitConflicts": 0,
    "publishableAnchors": 3,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -13646,8 +13678,11 @@
    "comparedPairs": 45,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -13666,7 +13701,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.226Z"
+  "updatedAt": "2026-08-11T19:10:11.315Z"
  },
  "cider-farm-the-cider-farm-wisconsin-apple-brandy-aged-two-years": {
   "slug": "cider-farm-the-cider-farm-wisconsin-apple-brandy-aged-two-years",
@@ -13993,7 +14028,7 @@
   "sku": "500234",
   "name": "David Paige Wines Eola-Amity Hills Pinot Noir",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -14012,7 +14047,7 @@
    "identityAnchors": 1,
    "explicitConflicts": 2,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -14023,8 +14058,11 @@
    "comparedPairs": 28,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -14051,7 +14089,7 @@
     }
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.227Z"
+  "updatedAt": "2026-08-11T19:10:11.416Z"
  },
  "domaine-alex-moreau-saint-aubin-blanc-sur-gamay-2022": {
   "slug": "domaine-alex-moreau-saint-aubin-blanc-sur-gamay-2022",
@@ -14324,7 +14362,7 @@
   "sku": "419094",
   "name": "Domaine Daniel Bouland Morgon Delys Vieilles Vignes 1926",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -14343,7 +14381,7 @@
    "identityAnchors": 3,
    "explicitConflicts": 0,
    "publishableAnchors": 3,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -14354,8 +14392,11 @@
    "comparedPairs": 36,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -14374,7 +14415,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.227Z"
+  "updatedAt": "2026-08-11T19:10:11.472Z"
  },
  "domaine-darviot-perrin-meursault-clos-de-la-velle-2023": {
   "slug": "domaine-darviot-perrin-meursault-clos-de-la-velle-2023",
@@ -15539,7 +15580,7 @@
   "sku": "540264",
   "name": "Domaine Jl Chave Saint Joseph",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -15558,7 +15599,7 @@
    "identityAnchors": 1,
    "explicitConflicts": 0,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -15569,8 +15610,11 @@
    "comparedPairs": 45,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -15589,7 +15633,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.227Z"
+  "updatedAt": "2026-08-11T19:10:11.561Z"
  },
  "domaine-jp-grossot-chablis-2020": {
   "slug": "domaine-jp-grossot-chablis-2020",
@@ -15896,7 +15940,7 @@
   "sku": "660548",
   "name": "Domaine Philippe Bouzereau Bourgogne Pinot Noir Cote D'or",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -15915,7 +15959,7 @@
    "identityAnchors": 2,
    "explicitConflicts": 1,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -15926,8 +15970,11 @@
    "comparedPairs": 45,
    "anchorShapeFailures": 1,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -15950,14 +15997,14 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.227Z"
+  "updatedAt": "2026-08-11T19:10:11.595Z"
  },
  "domaine-philippe-jouan-gevrey-chambertin-aux-echezeaux-2023": {
   "slug": "domaine-philippe-jouan-gevrey-chambertin-aux-echezeaux-2023",
   "sku": "410826",
   "name": "Domaine Philippe Jouan Gevrey Chambertin aux Echezeaux",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -15976,7 +16023,7 @@
    "identityAnchors": 0,
    "explicitConflicts": 3,
    "publishableAnchors": 0,
-   "outcome": "failed",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -15986,7 +16033,12 @@
    "decodeFailures": 0,
    "comparedPairs": 36,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0,
+   "imported": 1,
+   "importStage": "imported"
   },
   "evidence": [
    {
@@ -16011,7 +16063,7 @@
     "conflict": "candidate producer is Gebrey-Chambertin; request is Domaine Philippe"
    }
   ],
-  "updatedAt": "2026-08-11T16:07:38.200Z"
+  "updatedAt": "2026-08-11T19:10:11.640Z"
  },
  "domaine-pierre-morey-volnay-1er-cru-les-santenots-2020": {
   "slug": "domaine-pierre-morey-volnay-1er-cru-les-santenots-2020",
@@ -16771,7 +16823,7 @@
   "sku": "510733",
   "name": "Groffier Domaine Robert Groffier Bourgogne Passetoutgrain",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -16790,7 +16842,7 @@
    "identityAnchors": 1,
    "explicitConflicts": 2,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 2,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -16801,8 +16853,11 @@
    "comparedPairs": 15,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -16829,14 +16884,14 @@
     }
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.227Z"
+  "updatedAt": "2026-08-11T19:10:11.690Z"
  },
  "groffier-domaine-robert-groffier-chambertin-clos-de-beze-grand-cru-2020": {
   "slug": "groffier-domaine-robert-groffier-chambertin-clos-de-beze-grand-cru-2020",
   "sku": "510740",
   "name": "Groffier Domaine Robert Groffier Chambertin Clos de Beze Grand Cru",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -16855,7 +16910,7 @@
    "identityAnchors": 1,
    "explicitConflicts": 1,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 1,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -16866,8 +16921,11 @@
    "comparedPairs": 36,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -16890,14 +16948,14 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.228Z"
+  "updatedAt": "2026-08-11T19:10:11.756Z"
  },
  "groffier-domaine-robert-groffier-chambolle-musigny-1er-cru-les-sentieres-2023": {
   "slug": "groffier-domaine-robert-groffier-chambolle-musigny-1er-cru-les-sentieres-2023",
   "sku": "510759",
   "name": "Groffier Domaine Robert Groffier Chambolle Musigny 1er Cru les Sentieres",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -16916,7 +16974,7 @@
    "identityAnchors": 0,
    "explicitConflicts": 2,
    "publishableAnchors": 0,
-   "outcome": "failed",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 1,
    "downloadUnsupported": 0,
@@ -16926,7 +16984,12 @@
    "decodeFailures": 0,
    "comparedPairs": 15,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0,
+   "imported": 1,
+   "importStage": "imported"
   },
   "evidence": [
    {
@@ -16953,7 +17016,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:09:02.491Z"
+  "updatedAt": "2026-08-11T19:10:11.789Z"
  },
  "h-lamy-domaine-hubert-lamy-santenay-rouge-clos-des-hates-2017": {
   "slug": "h-lamy-domaine-hubert-lamy-santenay-rouge-clos-des-hates-2017",
@@ -17137,7 +17200,7 @@
   "sku": "315202",
   "name": "Jb Jessiaume Rully Blanc 1er Cru Marissou",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -17156,7 +17219,7 @@
    "identityAnchors": 3,
    "explicitConflicts": 0,
    "publishableAnchors": 3,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -17167,8 +17230,11 @@
    "comparedPairs": 45,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -17187,7 +17253,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.228Z"
+  "updatedAt": "2026-08-11T19:10:11.926Z"
  },
  "jc-ramonet-chevalier-montrachet-grand-cru-2022": {
   "slug": "jc-ramonet-chevalier-montrachet-grand-cru-2022",
@@ -17338,7 +17404,7 @@
   "sku": "500051*",
   "name": "Kerr Cellars Napa Valley Cabernet Sauvignon Beckstoffer Georges III",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -17357,7 +17423,7 @@
    "identityAnchors": 1,
    "explicitConflicts": 2,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -17368,8 +17434,11 @@
    "comparedPairs": 28,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -17390,7 +17459,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.228Z"
+  "updatedAt": "2026-08-11T19:10:11.960Z"
  },
  "kracher-gerhard-kracher-trockenbeerenauslese-3-grand-cuvee-nv-2021": {
   "slug": "kracher-gerhard-kracher-trockenbeerenauslese-3-grand-cuvee-nv-2021",
@@ -17611,7 +17680,7 @@
   "sku": "711582",
   "name": "Lignier Michelot Domaine Lignier-Michelot Morey Saint Denis 1er Cru Faconnieres",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -17630,7 +17699,7 @@
    "identityAnchors": 2,
    "explicitConflicts": 0,
    "publishableAnchors": 2,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -17641,8 +17710,11 @@
    "comparedPairs": 28,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -17661,7 +17733,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.228Z"
+  "updatedAt": "2026-08-11T19:10:11.990Z"
  },
  "loumelat-chateau-loumelat-blaye-cotes-de-bordeaux-rouge-2019": {
   "slug": "loumelat-chateau-loumelat-blaye-cotes-de-bordeaux-rouge-2019",
@@ -17724,7 +17796,7 @@
   "sku": "501526*",
   "name": "Mail Road Wines Pinot Noir Mount Carmel Vineyard Santa Rita Hills",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -17743,7 +17815,7 @@
    "identityAnchors": 1,
    "explicitConflicts": 2,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -17754,8 +17826,11 @@
    "comparedPairs": 36,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -17776,7 +17851,7 @@
     "conflict": "label does not tell this apart from another Mail Road wine (looked for: carmel, mount, vineyard)"
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.228Z"
+  "updatedAt": "2026-08-11T19:10:12.103Z"
  },
  "maison-camille-giroud-maranges-1er-cru-le-croix-aux-moines-2018": {
   "slug": "maison-camille-giroud-maranges-1er-cru-le-croix-aux-moines-2018",
@@ -17938,8 +18013,8 @@
   "slug": "manotsuru-countless-visions-nigori-sake",
   "sku": "603407*",
   "name": "Manotsuru Countless Visions Nigori Sake",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -17958,7 +18033,7 @@
    "identityAnchors": 0,
    "explicitConflicts": 1,
    "publishableAnchors": 0,
-   "outcome": "failed",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -17968,7 +18043,12 @@
    "decodeFailures": 0,
    "comparedPairs": 36,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0,
+   "imported": 1,
+   "importStage": "imported"
   },
   "evidence": [
    {
@@ -17988,14 +18068,14 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:10:17.372Z"
+  "updatedAt": "2026-08-11T19:10:12.139Z"
  },
  "manotsuru-pure-bloom-junmai-ginjo": {
   "slug": "manotsuru-pure-bloom-junmai-ginjo",
   "sku": "603408",
   "name": "Manotsuru Pure Bloom Junmai Ginjo",
-  "ok": false,
-  "failureStage": "identity-anchor",
+  "ok": true,
+  "failureStage": "",
   "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
@@ -18014,7 +18094,7 @@
    "identityAnchors": 0,
    "explicitConflicts": 0,
    "publishableAnchors": 0,
-   "outcome": "failed",
+   "outcome": "imported",
    "downloadHttpFailures": 1,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -18024,7 +18104,12 @@
    "decodeFailures": 0,
    "comparedPairs": 28,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0,
+   "imported": 1,
+   "importStage": "imported"
   },
   "evidence": [
    {
@@ -18043,7 +18128,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:10:25.903Z"
+  "updatedAt": "2026-08-11T19:10:12.192Z"
  },
  "marina-coppi-marine-favorita-colli-tortonesi-2016": {
   "slug": "marina-coppi-marine-favorita-colli-tortonesi-2016",
@@ -18616,7 +18701,7 @@
   "sku": "713620",
   "name": "Pierre Morey Domaine Pierre Morey Monthelie (Rouge)",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -18635,7 +18720,7 @@
    "identityAnchors": 1,
    "explicitConflicts": 2,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -18646,8 +18731,11 @@
    "comparedPairs": 45,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -18671,7 +18759,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.229Z"
+  "updatedAt": "2026-08-11T19:10:12.283Z"
  },
  "proscotto-sparkling-wine": {
   "slug": "proscotto-sparkling-wine",
@@ -18986,7 +19074,7 @@
   "sku": "570218",
   "name": "Roseline Château Sainte Roseline Cotes de Provence Cru Classe Rose le Cloitre",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -19005,7 +19093,7 @@
    "identityAnchors": 3,
    "explicitConflicts": 0,
    "publishableAnchors": 2,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -19016,8 +19104,11 @@
    "comparedPairs": 21,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 1,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -19036,7 +19127,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.229Z"
+  "updatedAt": "2026-08-11T19:10:12.315Z"
  },
  "saint-remy-pinot-blanc-2020": {
   "slug": "saint-remy-pinot-blanc-2020",
@@ -19094,7 +19185,7 @@
   "sku": "660010",
   "name": "Serafin Charmes Chambertin",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -19113,7 +19204,7 @@
    "identityAnchors": 1,
    "explicitConflicts": 2,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -19124,8 +19215,11 @@
    "comparedPairs": 21,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -19152,14 +19246,14 @@
     }
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.229Z"
+  "updatedAt": "2026-08-11T19:10:12.350Z"
  },
  "serafin-pere-et-fils-gevrey-chambertin-vieilles-vignes-2012": {
   "slug": "serafin-pere-et-fils-gevrey-chambertin-vieilles-vignes-2012",
   "sku": "660029",
   "name": "Serafin Pere et Fils Gevrey Chambertin Vieilles Vignes",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -19178,7 +19272,7 @@
    "identityAnchors": 1,
    "explicitConflicts": 0,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 2,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -19189,8 +19283,11 @@
    "comparedPairs": 15,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -19209,7 +19306,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.229Z"
+  "updatedAt": "2026-08-11T19:10:12.386Z"
  },
  "shibumi-knoll-pinot-noir-sonoma-coast-2022": {
   "slug": "shibumi-knoll-pinot-noir-sonoma-coast-2022",
@@ -19331,7 +19428,7 @@
   "sku": "520661*",
   "name": "Tempo D'angelus Bordeaux Rouge",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -19350,7 +19447,7 @@
    "identityAnchors": 3,
    "explicitConflicts": 0,
    "publishableAnchors": 3,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -19361,8 +19458,11 @@
    "comparedPairs": 21,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -19381,7 +19481,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.229Z"
+  "updatedAt": "2026-08-11T19:10:12.425Z"
  },
  "the-eyrie-vineyards-pinot-gris-estate-2023": {
   "slug": "the-eyrie-vineyards-pinot-gris-estate-2023",
@@ -20360,7 +20460,7 @@
   "sku": "603578",
   "name": "Zolo Cabernet Sauvignon Reserve",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -20379,7 +20479,7 @@
    "identityAnchors": 3,
    "explicitConflicts": 0,
    "publishableAnchors": 3,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 3,
    "downloadUnsupported": 0,
@@ -20390,8 +20490,11 @@
    "comparedPairs": 21,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -20410,14 +20513,14 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.230Z"
+  "updatedAt": "2026-08-11T19:10:12.477Z"
  },
  "zolo-signature-white": {
   "slug": "zolo-signature-white",
   "sku": "603571",
   "name": "Zolo Signature White",
   "ok": true,
-  "failureStage": "import-watermark-unresolved",
+  "failureStage": "",
   "reason": "",
   "funnel": {
    "googleSearched": true,
@@ -20436,7 +20539,7 @@
    "identityAnchors": 1,
    "explicitConflicts": 2,
    "publishableAnchors": 1,
-   "outcome": "pending",
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 1,
    "downloadUnsupported": 0,
@@ -20447,8 +20550,11 @@
    "comparedPairs": 36,
    "anchorShapeFailures": 0,
    "anchorResolutionFailures": 0,
-   "imported": 0,
-   "importStage": "watermark-unresolved"
+   "imported": 1,
+   "importStage": "imported",
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0
   },
   "evidence": [
    {
@@ -20469,6 +20575,6 @@
     "conflict": "candidate label lacks requested discriminator signature"
    }
   ],
-  "updatedAt": "2026-08-11T16:34:08.230Z"
+  "updatedAt": "2026-08-11T19:10:12.525Z"
  }
 }
