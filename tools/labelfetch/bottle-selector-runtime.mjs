@@ -117,7 +117,14 @@ function containsToken(text, wanted) {
 function identityConflict(wine, candidate, identity) {
   const expectedProducer = tokens(wine.producer || '').filter((token) =>
     token.length > 2 && !PRODUCER_NOISE.has(token));
-  const seenProducer = tokens(identity.producerBrand || '');
+  const requestedProduct = new Set(tokens(wine.name || '').filter((token) =>
+    !expectedProducer.includes(token)));
+  // Nano occasionally puts the appellation in producer_brand when the small
+  // producer line is unreadable. Treat words that are already exact requested
+  // product/place words as missing producer evidence, not as a contradictory
+  // producer. A genuinely different name remains an explicit conflict.
+  const seenProducer = tokens(identity.producerBrand || '').filter((token) =>
+    !requestedProduct.has(token));
   const producerTokenSeen = (wanted) => seenProducer.some((seen) =>
     seen === wanted || seen.startsWith(wanted) || wanted.startsWith(seen));
   // Hyphenated estates are compound identities: F.X. Pichler is not

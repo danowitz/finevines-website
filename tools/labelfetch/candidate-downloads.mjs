@@ -36,19 +36,20 @@ export async function downloadFirstTen({
         headers: { 'user-agent': 'Mozilla/5.0' },
         signal: AbortSignal.timeout(30_000),
       });
-      if (!response.ok) return { candidate: null, failure: 'http' };
+      if (!response.ok) return { candidate: null, failure: 'http', status: response.status || 0, bytes: 0 };
       let bytes = Buffer.from(await response.arrayBuffer());
-      if (bytes.length < 2000) return { candidate: null, failure: 'tooSmall' };
+      const receivedBytes = bytes.length;
+      if (bytes.length < 2000) return { candidate: null, failure: 'tooSmall', status: response.status || 200, bytes: receivedBytes };
       if (!supported(bytes)) {
-        if (!convert) return { candidate: null, failure: 'unsupported' };
+        if (!convert) return { candidate: null, failure: 'unsupported', status: response.status || 200, bytes: receivedBytes };
         bytes = await convert(bytes);
-        if (!bytes || bytes.length < 2000) return { candidate: null, failure: 'conversion' };
+        if (!bytes || bytes.length < 2000) return { candidate: null, failure: 'conversion', status: response.status || 200, bytes: receivedBytes };
       }
       const file = join(directory, `candidate-${String(index + 1).padStart(2, '0')}.png`);
       await writeFileImpl(file, bytes);
-      return { candidate: { ...item, id: `candidate-${index + 1}`, file }, failure: '' };
-    } catch {
-      return { candidate: null, failure: 'transport' };
+      return { candidate: { ...item, id: `candidate-${index + 1}`, file }, failure: '', status: response.status || 200, bytes: bytes.length };
+    } catch (error) {
+      return { candidate: null, failure: 'transport', status: 0, bytes: 0, error: String(error?.message || error).split('\n')[0] };
     }
   });
   const failures = (kind) => results.filter((result) => result.failure === kind).length;
@@ -63,5 +64,18 @@ export async function downloadFirstTen({
       downloadConversionFailures: failures('conversion'),
       downloadTransportFailures: failures('transport'),
     },
+    trace: results.map((result, index) => ({
+      index: index + 1,
+      url: attempted[index]?.url || '',
+      context: attempted[index]?.context || '',
+      title: attempted[index]?.title || '',
+      declaredWidth: attempted[index]?.width || 0,
+      declaredHeight: attempted[index]?.height || 0,
+      status: result.status || 0,
+      bytes: result.bytes || 0,
+      outcome: result.failure || 'downloaded',
+      file: result.candidate?.file || '',
+      error: result.error || '',
+    })),
   };
 }

@@ -63,4 +63,15 @@ describe('deriveProducer', () => {
       'Domaine de la Villaudiere'
     );
   });
+
+  test('does not confuse a shared Domaine plus first name with a producer', () => {
+    const all = [
+      'Domaine Philippe Jouan Chambolle Musigny',
+      'Domaine Philippe Bouzereau Meursault',
+    ];
+    assert.equal(
+      deriveProducer('Domaine Philippe Jouan Chambolle Musigny', all),
+      'Domaine Philippe Jouan'
+    );
+  });
 });

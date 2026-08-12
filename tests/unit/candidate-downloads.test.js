@@ -66,4 +66,10 @@ test('reports each download failure rule separately', async () => {
   assert.equal(result.diagnostics.downloadTooSmall, 1);
   assert.equal(result.diagnostics.downloadUnsupported, 1);
   assert.equal(result.diagnostics.downloadTransportFailures, 1);
+  assert.deepEqual(result.trace.map(({ index, outcome }) => ({ index, outcome })), [
+    { index: 1, outcome: 'http' },
+    { index: 2, outcome: 'tooSmall' },
+    { index: 3, outcome: 'unsupported' },
+    { index: 4, outcome: 'transport' },
+  ]);
 });

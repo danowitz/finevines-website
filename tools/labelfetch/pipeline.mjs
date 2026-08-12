@@ -43,6 +43,8 @@ const BUDGET_MS = Math.max(0, Number.parseFloat(opt('budget-minutes', '0')) || 0
 const STARTED_AT = Date.now();
 const DUE_ONLY = has('due-only');
 const CANARY = has('canary');
+const TRACE = has('trace');
+const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
 const RECORD_ATTEMPTS = !CANARY && (!opt('slug') || has('record-attempts'));
 
 async function exists(file) {
@@ -178,7 +180,7 @@ async function processWine(wine) {
     previous,
     Boolean(previous?.file) && await exists(previous.file),
   );
-  if (reusable) {
+  if (reusable && !TRACE) {
     return {
       wine,
       rec: reusable,
@@ -220,7 +222,25 @@ async function processWine(wine) {
       outcome: 'pending',
     },
   };
+  const trace = TRACE ? {
+    generatedAt: new Date().toISOString(),
+    catalogInput: identity,
+    query: rec.query,
+    discovery: null,
+    downloads: null,
+    selector: null,
+  } : null;
+  if (trace) rec.debugTrace = trace;
   const google = await googleDiscover(rec.query);
+  if (trace) trace.discovery = {
+    status: google.status,
+    searched: google.searched,
+    returned: google.returned || 0,
+    blocked: google.blocked || 0,
+    error: google.error || '',
+    results: google.trace || [],
+    permittedCandidates: google.items,
+  };
   Object.assign(rec.funnel, {
     googleSearched: google.searched,
     searchResults: google.returned || 0,
@@ -245,6 +265,7 @@ async function processWine(wine) {
     directory: join(CANDIDATE_DIR, wine.slug),
     convert: convertToPng,
   });
+  if (trace) trace.downloads = downloaded.trace || [];
   const candidates = downloaded.candidates;
   Object.assign(rec.funnel, downloaded.diagnostics);
   const downloadFailures = google.items.length - candidates.length;
@@ -256,6 +277,7 @@ async function processWine(wine) {
   let result;
   try {
     result = await selector.select(identity, candidates);
+    if (trace) trace.selector = result.trace || null;
   } catch (error) {
     if (error instanceof ReaderUnavailableError) {
       fail(rec, 'identity-reader-unavailable', `identity reader unavailable: ${error.message}`);
@@ -320,6 +342,24 @@ for (let offset = 0; offset < wines.length; offset += WINE_CONCURRENCY) {
   for (const result of results) {
     attempted++;
     const { wine, rec, evaluated, unevaluated, discoveryComplete, reused = false } = result;
+    if (TRACE && rec.debugTrace) {
+      const traceDirectory = join(TRACE_DIR, wine.slug);
+      await mkdir(traceDirectory, { recursive: true });
+      await writeFile(join(traceDirectory, 'trace.json'), JSON.stringify({
+        ...rec.debugTrace,
+        final: {
+          ok: rec.ok,
+          failureStage: rec.failureStage || '',
+          tried: rec.tried || [],
+          funnel: rec.funnel || {},
+          selectedFile: rec.file || '',
+          selectedImage: rec.image || '',
+          selectedPage: rec.page || '',
+        },
+      }, null, 2) + '\n');
+      console.log(`TRACE ${wine.slug} -> ${join(traceDirectory, 'trace.json')}`);
+      delete rec.debugTrace;
+    }
     runRows.push(rec);
     manifest[wine.slug] = rec;
     if (!CANARY) recordFunnel(funnelStore, rec);

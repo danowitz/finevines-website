@@ -37,6 +37,15 @@ describe('Google image discovery', () => {
       host: 'producer.example',
       title: '', width: 0, height: 0,
     }]);
+    assert.deepEqual(result.trace, [{
+      index: 1,
+      outcome: 'permitted',
+      image: 'https://producer.example/bottle.png',
+      context: 'https://producer.example/wine',
+      title: '',
+      width: 0,
+      height: 0,
+    }]);
   });
 
   test('keeps distinct direct images from the same host', async () => {
@@ -70,6 +79,7 @@ describe('Google image discovery', () => {
     const missing = createGoogleImageDiscovery({});
     assert.deepEqual(await missing('wine'), {
       status: 'unavailable', searched: false, items: [], error: 'credentials missing', returned: 0, blocked: 0,
+      trace: [],
     });
 
     let calls = 0;

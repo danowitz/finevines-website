@@ -82,7 +82,9 @@ export function deriveProducer(name, allNames = []) {
   // that shared stem (the rest differs per cuvée). Only shrink, never grow.
   if (allNames.length) {
     const mine = raw.map((t) => t.toLowerCase());
-    for (let len = cut - 1; len >= 2; len--) {
+    const genericLead = ['domaine', 'chateau', 'maison', 'weingut', 'estate'].includes(mine[0]);
+    const minimumStem = genericLead ? 3 : 2;
+    for (let len = cut - 1; len >= minimumStem; len--) {
       const stem = mine.slice(0, len).join(' ');
       // "Domaine de la Villaudiere" and "Domaine de la Grosse Pierre"
       // share a grammar prefix, not a producer. Never shrink a verified name

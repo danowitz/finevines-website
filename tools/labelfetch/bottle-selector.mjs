@@ -24,31 +24,43 @@ async function mapLimit(items, limit, work) {
 }
 
 function groupsFromPairs(candidates, pairs, threshold) {
-  const parent = candidates.map((_, index) => index);
-  const find = (index) => parent[index] === index ? index : (parent[index] = find(parent[index]));
-  const union = (left, right) => {
-    left = find(left);
-    right = find(right);
-    if (left !== right) parent[right] = left;
-  };
-  for (const pair of pairs) {
-    if (pair.score >= threshold) union(pair.a, pair.b);
+  const edge = new Map(pairs.map((pair) => [`${Math.min(pair.a, pair.b)}:${Math.max(pair.a, pair.b)}`, pair.score]));
+  const cliques = [];
+  // Ten candidates means at most 1,024 subsets. Requiring every member to
+  // match every other member prevents A~B~C chains from dragging a visibly
+  // different sibling into one giant connected component.
+  for (let mask = 1; mask < (1 << candidates.length); mask++) {
+    const indexes = [];
+    for (let index = 0; index < candidates.length; index++) if (mask & (1 << index)) indexes.push(index);
+    if (indexes.length < 2) continue;
+    let coherent = true;
+    let total = 0;
+    let count = 0;
+    for (let left = 0; left < indexes.length && coherent; left++) {
+      for (let right = left + 1; right < indexes.length; right++) {
+        const score = edge.get(`${indexes[left]}:${indexes[right]}`) || 0;
+        if (score < threshold) { coherent = false; break; }
+        total += score;
+        count++;
+      }
+    }
+    if (coherent) cliques.push({ indexes, mean: total / count });
   }
-  const groups = new Map();
-  for (let index = 0; index < candidates.length; index++) {
-    const root = find(index);
-    const group = groups.get(root) || [];
-    group.push(candidates[index]);
-    groups.set(root, group);
-  }
-  return [...groups.values()].filter((group) => group.length >= 2)
-    .sort((a, b) => b.length - a.length);
+  const maximal = cliques.filter((clique) => !cliques.some((other) =>
+    other.indexes.length > clique.indexes.length &&
+    clique.indexes.every((index) => other.indexes.includes(index))));
+  return maximal.sort((a, b) =>
+    b.indexes.length - a.indexes.length || b.mean - a.mean)
+    .map((clique) => clique.indexes.map((index) => candidates[index]));
 }
 
 function corroboratesTitle(wine, candidate) {
   const wanted = [...new Set(tokens(wine.name || ''))];
   if (wanted.length < 2) return false;
   const title = normalize(candidate.title || '');
+  const wantedVintage = String(wine.vintage || '').match(/\b(?:19|20)\d{2}\b/)?.[0] || '';
+  const visibleVintages = String(candidate.title || '').match(/\b(?:19|20)\d{2}\b/g) || [];
+  if (wantedVintage && visibleVintages.length && !visibleVintages.includes(wantedVintage)) return false;
   const found = wanted.filter((token) => title.includes(token));
   return found.length / wanted.length >= 0.75;
 }
@@ -128,6 +140,25 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         ...await inspect(candidate),
       }));
       const inspected = inspectedAll.filter((candidate) => candidate.visualOk !== false);
+      const trace = {
+        input: firstTenCandidates.slice(0, 10).map((candidate) => ({ ...candidate })),
+        inspections: inspectedAll.map((candidate) => ({
+          id: candidate.id,
+          file: candidate.file,
+          visualOk: candidate.visualOk !== false,
+          shapeOk: candidate.shapeOk === true,
+          cleanBackground: candidate.cleanBackground === true,
+          inspectError: candidate.inspectError || '',
+          width: candidate.width || 0,
+          height: candidate.height || 0,
+        })),
+        pairs: [],
+        groups: [],
+        representatives: [],
+        evidence: [],
+        pick: '',
+        reason: '',
+      };
       const diagnostics = {
         selectorReceived: inspectedAll.length,
         decodedImages: inspected.length,
@@ -146,19 +177,23 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       if (inspected.length < 2) return {
         pick: null,
         reason: 'fewer than two decodable images',
+        trace: { ...trace, reason: 'fewer than two decodable images' },
         diagnostics,
         reviewCandidates: reviewCandidates(inspected),
       };
 
       const pairs = corroboratedVisualPairs(wine, inspected, await compare(inspected), similarityThreshold);
+      trace.pairs = pairs;
       diagnostics.comparedPairs = pairs.length;
       diagnostics.similarPairs = pairs.filter((pair) => pair.score >= similarityThreshold).length;
       const groups = groupsFromPairs(inspected, pairs, similarityThreshold);
+      trace.groups = groups.map((group) => group.map((candidate) => candidate.id));
       diagnostics.repeatedGroups = groups.length;
       diagnostics.strongestGroupImages = groups[0]?.length || 0;
       if (!groups.length) return {
         pick: null,
         reason: 'no repeated bottle design',
+        trace: { ...trace, reason: 'no repeated bottle design' },
         diagnostics,
         reviewCandidates: reviewCandidates(inspected),
       };
@@ -168,8 +203,10 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       // batch and recreates the spend this module exists to remove.
       const group = groups[0];
       const candidates = representatives(group);
+      trace.representatives = candidates.map((candidate) => candidate.id);
       diagnostics.labelImagesRead = candidates.length;
       const evidence = await read(wine, candidates);
+      trace.evidence = evidence;
       const byID = new Map(evidence.map((item) => [item.id, item]));
       const judged = candidates.map((candidate) => ({
         ...candidate,
@@ -186,6 +223,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         publishableAnchors: evaluated.diagnostics.publishableAnchors,
       });
       if (pick) {
+        trace.pick = pick.id;
         return {
           pick,
           reason: '',
@@ -193,6 +231,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
           inspectedImages: candidates.length,
           anchorLabels: evidence.filter((item) => item.anchor).map((item) => item.label).filter(Boolean),
           evidence,
+          trace,
           diagnostics,
           reviewCandidates: reviewCandidates(inspected, group, evidence),
         };
@@ -203,6 +242,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       return {
         pick: null,
         reason,
+        trace: { ...trace, reason },
         evidence,
         diagnostics,
         reviewCandidates: reviewCandidates(inspected, group, evidence),

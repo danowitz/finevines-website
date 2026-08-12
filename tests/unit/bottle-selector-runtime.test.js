@@ -451,3 +451,20 @@ test('a readable named cuvee absent from the request is a sibling conflict', asy
   assert.equal(evidence.anchor, false);
   assert.match(evidence.conflict, /different cuvee: morgeot/);
 });
+
+test('an appellation misplaced into producer_brand is not a false producer conflict', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test', readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      single_bottle: true, producer_brand: 'Chambolle-Musigny', product_cuvee: 'Vieilles Vignes',
+      appellation: '', vintage: '', wine_style: 'red',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: false }),
+  });
+  const [evidence] = await reader(
+    { name: 'Domaine Philippe Jouan Chambolle Musigny', producer: 'Domaine Philippe Jouan', vintage: '2023' },
+    [{ ...candidates[0], title: '2023 Domaine Henri & Philippe Jouan Chambolle Musigny' }],
+  );
+  assert.equal(evidence.anchor, true);
+  assert.equal(evidence.explicitConflict, false);
+});

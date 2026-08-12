@@ -9,10 +9,10 @@ export function createGoogleImageDiscovery({ key, cx, fetchImpl = globalThis.fet
 
   return async function discoverGoogleImages(query) {
     if (!key || !cx) {
-      return { status: 'unavailable', searched: false, items: [], error: 'credentials missing', returned: 0, blocked: 0 };
+      return { status: 'unavailable', searched: false, items: [], error: 'credentials missing', returned: 0, blocked: 0, trace: [] };
     }
     if (down) {
-      return { status: 'unavailable', searched: false, items: [], error: down, returned: 0, blocked: 0 };
+      return { status: 'unavailable', searched: false, items: [], error: down, returned: 0, blocked: 0, trace: [] };
     }
 
     try {
@@ -31,19 +31,34 @@ export function createGoogleImageDiscovery({ key, cx, fetchImpl = globalThis.fet
         let detail = '';
         try { detail = String((await res.json())?.error?.message || '').split('\n')[0]; } catch {}
         down = `HTTP ${res.status}${detail ? `: ${detail}` : ''}`;
-        return { status: 'unavailable', searched: false, items: [], error: down, returned: 0, blocked: 0 };
+        return { status: 'unavailable', searched: false, items: [], error: down, returned: 0, blocked: 0, trace: [] };
       }
 
       const items = (await res.json()).items || [];
       const candidates = [];
+      const trace = [];
       let blocked = 0;
-      for (const item of items) {
+      for (const [index, item] of items.entries()) {
         const image = item.link || '';
         const context = item.image?.contextLink || '';
         // Image and context are one provenance record. If either side points at
         // a blocked competitor, reject the whole record rather than laundering
         // its pixels through an allowed CDN hostname.
-        if (!image || blockedBy(image) || (context && blockedBy(context)) || /_pb_x\d+/.test(image)) {
+        let outcome = 'permitted';
+        if (!image) outcome = 'missing-image-url';
+        else if (blockedBy(image)) outcome = 'blocked-image-host';
+        else if (context && blockedBy(context)) outcome = 'blocked-context-host';
+        else if (/_pb_x\d+/.test(image)) outcome = 'blocked-placeholder';
+        trace.push({
+          index: index + 1,
+          outcome,
+          image,
+          context,
+          title: item.title || '',
+          width: item.image?.width || 0,
+          height: item.image?.height || 0,
+        });
+        if (outcome !== 'permitted') {
           blocked++;
           continue;
         }
@@ -66,10 +81,11 @@ export function createGoogleImageDiscovery({ key, cx, fetchImpl = globalThis.fet
         returned: items.length,
         blocked,
         error: '',
+        trace,
       };
     } catch (error) {
       down = String(error?.message || error).split('\n')[0] || 'request failed';
-      return { status: 'unavailable', searched: false, items: [], error: down, returned: 0, blocked: 0 };
+      return { status: 'unavailable', searched: false, items: [], error: down, returned: 0, blocked: 0, trace: [] };
     }
   };
 }
