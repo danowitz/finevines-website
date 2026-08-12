@@ -8,7 +8,7 @@
 // This command only stages files and provenance. import.mjs remains the separate
 // operation that changes the catalog.
 import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { extname, join } from 'node:path';
 import { openBrowser } from '../../tests/helpers/browser.js';
 import { binPath, envOrFile, openaiKey } from './env.mjs';
 import { loadAttempts, isDue, recordAttempt, saveAttempts, shouldRecordAttempt } from './attempts.mjs';
@@ -19,6 +19,7 @@ import { imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
 import { downloadFirstTen } from './candidate-downloads.mjs';
 import { createBottleSelector } from './bottle-selector.mjs';
 import { reusableStagedRecord } from './staged-record.mjs';
+import { buildCatalogImageDonors, reusableCatalogImage } from './catalog-image-reuse.mjs';
 import { loadFunnelStore, recordFunnel, saveFunnelStore } from './funnel-store.mjs';
 import {
   createBoundedLabelReader,
@@ -90,12 +91,12 @@ function selectWines(catalog, attempts, funnelStore) {
 }
 
 let browserPromise;
-async function convertToPng(bytes) {
+async function convertToPng(bytes, contentType = '') {
   browserPromise ||= openBrowser();
   const browser = await browserPromise;
   const page = await browser.newPage();
   try {
-    const data = await page.evaluate((base64) => new Promise((resolve) => {
+    const data = await page.evaluate(({ base64, mime }) => new Promise((resolve) => {
       const image = new Image();
       image.onload = () => {
         const canvas = document.createElement('canvas');
@@ -105,8 +106,13 @@ async function convertToPng(bytes) {
         resolve(canvas.toDataURL('image/png'));
       };
       image.onerror = () => resolve('');
-      image.src = `data:application/octet-stream;base64,${base64}`;
-    }), bytes.toString('base64'));
+      image.src = `data:${mime};base64,${base64}`;
+    }), {
+      base64: bytes.toString('base64'),
+      mime: /^image\/[a-z0-9.+-]+$/i.test(contentType.split(';')[0].trim())
+        ? contentType.split(';')[0].trim()
+        : 'application/octet-stream',
+    });
     return data ? Buffer.from(data.split(',')[1], 'base64') : null;
   } finally {
     await page.close();
@@ -124,6 +130,7 @@ if (!catalog.length) {
   process.exit(2);
 }
 const catalogBySku = new Map(catalog.map((wine) => [wine.sku, wine]));
+const catalogImageDonors = buildCatalogImageDonors(catalog);
 const attempts = await loadAttempts();
 const funnelStore = await loadFunnelStore();
 const wines = selectWines(catalog, attempts, funnelStore);
@@ -225,6 +232,38 @@ async function processWine(wine) {
       outcome: 'pending',
     },
   };
+  const donor = reusableCatalogImage(catalogImageDonors, wine);
+  if (donor && await exists(donor.imagePath)) {
+    try {
+      const extension = extname(donor.imagePath) || '.jpg';
+      const dest = join(OUT_DIR, `${wine.slug}${extension}`);
+      await mkdir(OUT_DIR, { recursive: true });
+      await copyFile(donor.imagePath, dest);
+      rec.ok = true;
+      rec.funnel.catalogImageReused = 1;
+      rec.funnel.outcome = 'accepted';
+      rec.file = dest;
+      rec.page = donor.imageSourceUrl || '';
+      rec.image = donor.imageSourceUrl || '';
+      rec.size = 'catalog copy';
+      rec.label = donor.name || name;
+      rec.verifiedBy = `exact catalog product + vintage match from SKU ${donor.sku}`;
+      rec.selectionIdentityVerified = true;
+      rec.matchingImages = 1;
+      rec.anchorImages = [`catalog:${donor.sku}`];
+      rec.evidence = [{
+        id: `catalog:${donor.sku}`,
+        anchor: true,
+        explicitConflict: false,
+        label: donor.name || name,
+      }];
+      rec.alternates = [];
+      rec.review = [];
+      return { wine, rec, evaluated: 0, unevaluated: 0, discoveryComplete: true };
+    } catch (error) {
+      console.warn(`catalog image reuse failed for ${wine.slug}: ${String(error?.message || error).split('\n')[0]}; falling back to Google Images`);
+    }
+  }
   const trace = TRACE ? {
     generatedAt: new Date().toISOString(),
     catalogInput: identity,

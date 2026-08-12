@@ -73,3 +73,30 @@ test('reports each download failure rule separately', async () => {
     { index: 4, outcome: 'transport' },
   ]);
 });
+
+test('passes the response image MIME type to the converter', async () => {
+  const source = Buffer.alloc(2100, 1);
+  const png = Buffer.alloc(2100, 2);
+  png[0] = 0x89;
+  png[1] = 0x50;
+  png[2] = 0x4e;
+  png[3] = 0x47;
+  let seenType = '';
+  const result = await downloadFirstTen({
+    items: [{ url: 'https://example.test/bottle.webp' }],
+    directory: 'ignored',
+    mkdirImpl: async () => {},
+    writeFileImpl: async () => {},
+    fetchImpl: async () => ({
+      ok: true,
+      headers: { get: () => 'image/webp' },
+      arrayBuffer: async () => source,
+    }),
+    convert: async (_bytes, contentType) => {
+      seenType = contentType;
+      return png;
+    },
+  });
+  assert.equal(seenType, 'image/webp');
+  assert.equal(result.candidates.length, 1);
+});

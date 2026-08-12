@@ -42,7 +42,7 @@ export async function downloadFirstTen({
       if (bytes.length < 2000) return { candidate: null, failure: 'tooSmall', status: response.status || 200, bytes: receivedBytes };
       if (!supported(bytes)) {
         if (!convert) return { candidate: null, failure: 'unsupported', status: response.status || 200, bytes: receivedBytes };
-        bytes = await convert(bytes);
+        bytes = await convert(bytes, response.headers?.get?.('content-type') || '');
         if (!bytes || bytes.length < 2000) return { candidate: null, failure: 'conversion', status: response.status || 200, bytes: receivedBytes };
       }
       const file = join(directory, `candidate-${String(index + 1).padStart(2, '0')}.png`);
