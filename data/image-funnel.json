@@ -5560,7 +5560,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:36.423Z"
+  "updatedAt": "2026-08-12T22:16:06.648Z"
  },
  "anne-parent-domaine-anne-parent-bourgogne-selection-pomone-2018": {
   "slug": "anne-parent-domaine-anne-parent-bourgogne-selection-pomone-2018",
@@ -7710,7 +7710,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:40.753Z"
+  "updatedAt": "2026-08-12T22:16:09.411Z"
  },
  "domaine-georges-noellat-clos-vougeot-grand-cru-2019": {
   "slug": "domaine-georges-noellat-clos-vougeot-grand-cru-2019",
@@ -9639,13 +9639,13 @@
   "name": "Grand Veneur - Rcl Chateauneuf du Pape",
   "ok": false,
   "failureStage": "download",
-  "reason": "only 0 of 6 candidates downloaded",
+  "reason": "only 0 of 10 candidates downloaded",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 4,
-   "permittedCandidates": 6,
-   "downloadAttempted": 6,
+   "sourcePolicyBlocked": 0,
+   "permittedCandidates": 10,
+   "downloadAttempted": 10,
    "downloaded": 0,
    "decodedImages": 0,
    "bottleShapePassed": 0,
@@ -9659,13 +9659,13 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "downloadHttpFailures": 1,
-   "downloadTooSmall": 5,
+   "downloadTooSmall": 9,
    "downloadUnsupported": 0,
    "downloadConversionFailures": 0,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:44.446Z"
+  "updatedAt": "2026-08-12T22:16:14.921Z"
  },
  "groffier-domaine-robert-groffier-bourgogne-passetoutgrains-2023": {
   "slug": "groffier-domaine-robert-groffier-bourgogne-passetoutgrains-2023",
@@ -14874,14 +14874,14 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
-   "downloadHttpFailures": 5,
+   "downloadHttpFailures": 2,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 4,
+   "downloadConversionFailures": 7,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:38.600Z"
+  "updatedAt": "2026-08-12T22:16:09.410Z"
  },
  "domaine-daniel-bouland-morgon-bellevue-sable-2022": {
   "slug": "domaine-daniel-bouland-morgon-bellevue-sable-2022",
@@ -24940,7 +24940,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:42.152Z"
+  "updatedAt": "2026-08-12T22:16:13.252Z"
  },
  "drouhin-laroze-domaine-drouhin-laroze-clos-vougeot-grand-cru-2013": {
   "slug": "drouhin-laroze-domaine-drouhin-laroze-clos-vougeot-grand-cru-2013",
@@ -29141,7 +29141,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:36.423Z"
+  "updatedAt": "2026-08-12T22:16:06.648Z"
  },
  "bart-domaine-bart-marsannay-saint-jacques-2020": {
   "slug": "bart-domaine-bart-marsannay-saint-jacques-2020",
@@ -32984,7 +32984,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:43.963Z"
+  "updatedAt": "2026-08-12T22:16:14.921Z"
  },
  "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020": {
   "slug": "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020",
@@ -33749,7 +33749,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:44.446Z"
+  "updatedAt": "2026-08-12T22:16:16.249Z"
  },
  "kraft-domaine-kraft-vouvray-demi-sec-2016": {
   "slug": "kraft-domaine-kraft-vouvray-demi-sec-2016",
@@ -34876,7 +34876,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:47.015Z"
+  "updatedAt": "2026-08-12T22:16:18.062Z"
  },
  "peyros-chateau-peyros-madiran-vielles-vignes-2019": {
   "slug": "peyros-chateau-peyros-madiran-vielles-vignes-2019",
@@ -47565,14 +47565,14 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
-   "downloadHttpFailures": 8,
+   "downloadHttpFailures": 5,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 1,
+   "downloadConversionFailures": 4,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:40.753Z"
+  "updatedAt": "2026-08-12T22:16:11.219Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023",
@@ -47606,7 +47606,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:42.152Z"
+  "updatedAt": "2026-08-12T22:16:11.219Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025",
@@ -50271,7 +50271,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:43.963Z"
+  "updatedAt": "2026-08-12T22:16:13.252Z"
  },
  "far-north-spirits-bodalen-bourbon-whiskey": {
   "slug": "far-north-spirits-bodalen-bourbon-whiskey",
@@ -53658,18 +53658,18 @@
   "sku": "510681",
   "name": "Kracher Gerhard Kracher Trockenbeerenauslese #2 Welschriesling NV",
   "ok": false,
-  "failureStage": "download",
-  "reason": "only 1 of 7 candidates downloaded",
+  "failureStage": "visual-consensus",
+  "reason": "no repeated bottle design",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 3,
-   "permittedCandidates": 7,
-   "downloadAttempted": 7,
-   "downloaded": 1,
-   "decodedImages": 0,
+   "sourcePolicyBlocked": 5,
+   "permittedCandidates": 5,
+   "downloadAttempted": 5,
+   "downloaded": 2,
+   "decodedImages": 2,
    "bottleShapePassed": 0,
-   "cleanBackgrounds": 0,
+   "cleanBackgrounds": 2,
    "similarPairs": 0,
    "repeatedGroups": 0,
    "strongestGroupImages": 0,
@@ -53678,14 +53678,18 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
-   "downloadHttpFailures": 5,
+   "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
    "downloadConversionFailures": 0,
-   "downloadTransportFailures": 1
+   "downloadTransportFailures": 3,
+   "selectorReceived": 2,
+   "decodeFailures": 0,
+   "comparedPairs": 1,
+   "sourceIdentityAnchors": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:45.571Z"
+  "updatedAt": "2026-08-12T22:16:16.249Z"
  },
  "kracher-gerhard-kracher-trockenbeerenauslese-6-welschriesling-zds-2021": {
   "slug": "kracher-gerhard-kracher-trockenbeerenauslese-6-welschriesling-zds-2021",
@@ -57653,7 +57657,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:45.571Z"
+  "updatedAt": "2026-08-12T22:16:18.062Z"
  },
  "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023": {
   "slug": "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023",
@@ -57879,14 +57883,14 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
-   "downloadHttpFailures": 1,
+   "downloadHttpFailures": 0,
    "downloadTooSmall": 1,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 3,
+   "downloadConversionFailures": 4,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:47.015Z"
+  "updatedAt": "2026-08-12T22:16:20.542Z"
  },
  "pierre-amadieu-gigondas-cuvee-romane-machotte-blanc-2024": {
   "slug": "pierre-amadieu-gigondas-cuvee-romane-machotte-blanc-2024",
@@ -58614,7 +58618,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:57.516Z"
+  "updatedAt": "2026-08-12T22:16:20.542Z"
  },
  "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019": {
   "slug": "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019",
@@ -63212,18 +63216,18 @@
   "sku": "495322",
   "name": "Weingut Pichler-Krutzler Gruner Veltliner Ried Rothenhof Alte Reben",
   "ok": false,
-  "failureStage": "download",
-  "reason": "only 1 of 4 candidates downloaded",
+  "failureStage": "visual-consensus",
+  "reason": "no repeated bottle design",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 6,
-   "permittedCandidates": 4,
-   "downloadAttempted": 4,
-   "downloaded": 1,
-   "decodedImages": 0,
-   "bottleShapePassed": 0,
-   "cleanBackgrounds": 0,
+   "sourcePolicyBlocked": 5,
+   "permittedCandidates": 5,
+   "downloadAttempted": 5,
+   "downloaded": 2,
+   "decodedImages": 2,
+   "bottleShapePassed": 2,
+   "cleanBackgrounds": 2,
    "similarPairs": 0,
    "repeatedGroups": 0,
    "strongestGroupImages": 0,
@@ -63232,14 +63236,18 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
-   "downloadHttpFailures": 2,
+   "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 0,
-   "downloadTransportFailures": 1
+   "downloadConversionFailures": 2,
+   "downloadTransportFailures": 1,
+   "selectorReceived": 2,
+   "decodeFailures": 0,
+   "comparedPairs": 1,
+   "sourceIdentityAnchors": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:50:57.516Z"
+  "updatedAt": "2026-08-12T22:16:32.661Z"
  },
  "weingut-pichler-krutzler-riesling-ried-kellerberg-2023": {
   "slug": "weingut-pichler-krutzler-riesling-ried-kellerberg-2023",
