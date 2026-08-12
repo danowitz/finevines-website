@@ -24,11 +24,6 @@ if (apply === canary) {
   console.error('choose exactly one mode: --apply or --canary');
   process.exit(2);
 }
-if (retryMisses && !canary) {
-  console.error('--retry-misses is a canary-only selector');
-  process.exit(2);
-}
-
 const reportPath = opt('report', '.run/image-workflow.json');
 // Process the complete due backlog by default. The wall-clock budget remains
 // the safety valve: a run stops cleanly at two hours and commits its ledger,

@@ -86,3 +86,17 @@ test('recovery canary retries recorded misses without waiting for backoff', asyn
     '--n', '25', '--budget-minutes', '30', '--missing', '--retry-misses', '--canary',
   ]]);
 });
+
+test('production recovery retries recorded misses and keeps every import gate', async () => {
+  const h = harness();
+  const result = await runAutonomousImageWorkflow({ ...config, retryMisses: true }, h.adapters);
+  assert.equal(result.outcome, 'completed');
+  assert.deepEqual(h.calls, [
+    'preflight',
+    ['pipeline', ['--n', '25', '--budget-minutes', '30', '--missing', '--retry-misses']],
+    ['auto-approve', ['--apply']],
+    ['watermark-sweep', ['--apply']],
+    ['import', ['--apply', '--clean-only']],
+    ['review', []],
+  ]);
+});

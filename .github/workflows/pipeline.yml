@@ -23,6 +23,18 @@ on:
   schedule:
     - cron: '15 8 * * *'
   workflow_dispatch:
+    inputs:
+      retry_image_misses:
+        description: Retry prior image misses now instead of waiting for cooldown
+        required: true
+        default: false
+        type: boolean
+      image_limit:
+        description: Maximum prior misses to retry
+        required: true
+        default: '5000'
+        type: choice
+        options: ['30', '100', '500', '5000']
   # Fired by the review console's Edge Script the moment a reviewer submits a
   # change, so their fix is live in minutes rather than at the next nightly run.
   repository_dispatch:
@@ -170,7 +182,12 @@ jobs:
       #    its two-hour wall-clock budget so it cannot consume the whole job
       #    timeout and lose the ledger writes that make it converge.
       - name: Source images
-        run: node tools/labelfetch/autonomous.mjs --apply
+        run: |
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.retry_image_misses }}" = "true" ]; then
+            node tools/labelfetch/autonomous.mjs --apply --retry-misses --n "${{ inputs.image_limit }}"
+          else
+            node tools/labelfetch/autonomous.mjs --apply
+          fi
 
       # The runner is disposable; retain the stage-by-stage receipt even when
       # the image workflow fails. This is operational evidence, not catalog
