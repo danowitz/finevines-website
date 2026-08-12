@@ -1,0 +1,89 @@
+name: image search A/B
+
+on:
+  workflow_dispatch:
+    inputs:
+      sample_size:
+        description: Identical prior misses tested by each profile
+        required: true
+        default: '30'
+        type: choice
+        options: ['10', '30', '100']
+      budget_minutes:
+        description: Maximum runtime per profile
+        required: true
+        default: '30'
+        type: choice
+        options: ['15', '30', '60']
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: ${{ matrix.profile }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [baseline, consensus]
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      FINEVINES_GOOGLE_CSE_KEY: ${{ secrets.FINEVINES_GOOGLE_CSE_KEY }}
+      FINEVINES_GOOGLE_CSE_CX: ${{ secrets.FINEVINES_GOOGLE_CSE_CX }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-image.txt
+
+      - name: Install image runtime
+        run: |
+          python -m pip install -r requirements-image.txt
+          npm ci --ignore-scripts
+
+      - name: Verify and build image tools
+        run: |
+          node --test tests/unit/google-images.test.js tests/unit/autonomous-workflow.test.js
+          go test ./tools/...
+          go build -o imgcheck ./tools/imgcheck
+          go build -o imghash ./tools/imghash
+          go build -o imgnorm ./tools/imgnorm
+
+      - name: Test search profile
+        run: >-
+          node tools/labelfetch/autonomous.mjs
+          --canary
+          --retry-misses
+          --no-catalog-reuse
+          --trace
+          --search-profile "${{ matrix.profile }}"
+          --n "${{ inputs.sample_size }}"
+          --budget-minutes "${{ inputs.budget_minutes }}"
+
+      - name: Upload profile result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-search-${{ matrix.profile }}-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            .run/image-workflow.json
+            out-bottle/image-canary.json
+            out-bottle/image-canary.html
+            out-bottle/image-traces/

@@ -6,7 +6,7 @@ import { access, mkdir, rename, writeFile } from 'node:fs/promises';
 import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { dirname } from 'node:path';
-import { createGoogleImageDiscovery } from './google-images.mjs';
+import { createGoogleImageDiscovery, googleImageSearchProfile } from './google-images.mjs';
 import { binPath, envOrFile, openaiKey } from './env.mjs';
 import { runAutonomousImageWorkflow } from './autonomous-workflow.mjs';
 
@@ -23,6 +23,14 @@ const retryMisses = has('retry-misses');
 const slug = opt('slug', '');
 const trace = has('trace');
 const noCatalogReuse = has('no-catalog-reuse');
+const searchProfileName = opt('search-profile', 'baseline');
+let searchProfile;
+try {
+  searchProfile = googleImageSearchProfile(searchProfileName);
+} catch (error) {
+  console.error(error.message);
+  process.exit(2);
+}
 if (apply === canary) {
   console.error('choose exactly one mode: --apply or --canary');
   process.exit(2);
@@ -75,7 +83,7 @@ async function preflight() {
 
   // An actual image-mode request catches a disabled API, invalid CX, quota,
   // and key-restriction errors before any wine can receive a cached verdict.
-  const health = await createGoogleImageDiscovery({ key: googleKey, cx: googleCx })(
+  const health = await createGoogleImageDiscovery({ key: googleKey, cx: googleCx, searchParams: searchProfile })(
     'Fine Vines wine bottle image workflow health check',
   );
   if (!health.searched) throw new Error(`Google image discovery unavailable: ${health.error}`);
@@ -98,6 +106,7 @@ try {
     slug,
     trace,
     noCatalogReuse,
+    searchProfile: searchProfileName,
     manifestPath: 'data/fetched-images/manifest.json',
   }, {
     preflight,

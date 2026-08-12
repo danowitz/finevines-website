@@ -14,7 +14,7 @@ import { binPath, envOrFile, openaiKey } from './env.mjs';
 import { loadAttempts, isDue, recordAttempt, saveAttempts, shouldRecordAttempt } from './attempts.mjs';
 import { buildProducerLookup, expectedProducer } from './catalog-producer.mjs';
 import { deriveProducer } from './producerguess.mjs';
-import { createGoogleImageDiscovery } from './google-images.mjs';
+import { createGoogleImageDiscovery, googleImageSearchProfile } from './google-images.mjs';
 import { imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
 import { downloadFirstTen } from './candidate-downloads.mjs';
 import { createBottleSelector } from './bottle-selector.mjs';
@@ -48,6 +48,14 @@ const RETRY_MISSES = has('retry-misses');
 const CATALOG_REUSE = !has('no-catalog-reuse');
 const TRACE = has('trace');
 const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
+const SEARCH_PROFILE_NAME = opt('search-profile', 'baseline');
+let searchProfile;
+try {
+  searchProfile = googleImageSearchProfile(SEARCH_PROFILE_NAME);
+} catch (error) {
+  console.error(error.message);
+  process.exit(2);
+}
 const RECORD_ATTEMPTS = !CANARY && (!opt('slug') || has('record-attempts'));
 
 async function exists(file) {
@@ -150,7 +158,7 @@ if (!googleKey || !googleCx) {
   console.error('Google image discovery credentials are missing; no wine was searched and no miss was recorded');
   process.exit(2);
 }
-const googleDiscover = createGoogleImageDiscovery({ key: googleKey, cx: googleCx });
+const googleDiscover = createGoogleImageDiscovery({ key: googleKey, cx: googleCx, searchParams: searchProfile });
 const visionKey = await openaiKey();
 const producerLookup = buildProducerLookup(catalog);
 const catalogNames = catalog.map((wine) => wine.name);
@@ -176,6 +184,7 @@ await mkdir(CANDIDATE_DIR, { recursive: true });
 const manifest = (await exists(MANIFEST)) ? JSON.parse(await readFile(MANIFEST, 'utf8')) : {};
 
 console.log(`google image discovery: ${googleKey && googleCx ? 'ready' : 'unavailable - wines will stay due'}`);
+console.log(`google image search profile: ${SEARCH_PROFILE_NAME}`);
 console.log(`identity reader: ${visionKey ? `${MODEL}, one request of at most three images per grouped wine` : 'unavailable - grouped wines will stay due'}`);
 console.log(`processing up to ${WINE_CONCURRENCY} wines concurrently`);
 
@@ -455,6 +464,7 @@ if (CANARY) {
   await mkdir('out-bottle', { recursive: true });
   await writeFile('out-bottle/image-canary.json', JSON.stringify({
     generatedAt: new Date().toISOString(),
+    searchProfile: SEARCH_PROFILE_NAME,
     attempted,
     accepted,
     recovered,

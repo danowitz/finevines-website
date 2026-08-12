@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { createGoogleImageDiscovery } from '../../tools/labelfetch/google-images.mjs';
+import {
+  createGoogleImageDiscovery,
+  googleImageSearchProfile,
+} from '../../tools/labelfetch/google-images.mjs';
 
 const response = (status, body = {}) => ({
   ok: status >= 200 && status < 300,
@@ -59,6 +62,31 @@ describe('Google image discovery', () => {
     assert.deepEqual((await discover('wine')).items.map((item) => item.url), [
       'https://importer.example/a.png', 'https://importer.example/b.png',
     ]);
+  });
+
+  test('applies the bounded consensus profile without changing the query identity', async () => {
+    let requested = '';
+    const discover = createGoogleImageDiscovery({
+      key: 'key',
+      cx: 'cx',
+      searchParams: googleImageSearchProfile('consensus'),
+      fetchImpl: async (url) => {
+        requested = String(url);
+        return response(200, { items: [] });
+      },
+    });
+    await discover('Exact Producer Exact Wine 2022');
+    const params = new URL(requested).searchParams;
+    assert.equal(params.get('q'), 'Exact Producer Exact Wine 2022');
+    assert.equal(params.get('filter'), '0');
+    assert.equal(params.get('hl'), 'en');
+    assert.equal(params.get('gl'), 'us');
+    assert.equal(params.has('imgType'), false);
+    assert.equal(params.has('imgSize'), false);
+  });
+
+  test('rejects unknown search profiles', () => {
+    assert.throws(() => googleImageSearchProfile('expensive-mystery'), /unknown Google image search profile/);
   });
 
   test('filters blocked image and context hosts', async () => {

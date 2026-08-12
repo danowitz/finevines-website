@@ -4,7 +4,23 @@ import { blockedBy } from './sources.mjs';
 // it is unavailable, later wines must not burn one doomed request apiece.
 // Every call reports whether a search actually happened so an outage can never
 // be recorded as "nothing found" in the attempt ledger.
-export function createGoogleImageDiscovery({ key, cx, fetchImpl = globalThis.fetch } = {}) {
+export const GOOGLE_IMAGE_SEARCH_PROFILES = Object.freeze({
+  baseline: Object.freeze({}),
+  consensus: Object.freeze({ filter: '0', hl: 'en', gl: 'us' }),
+});
+
+export function googleImageSearchProfile(name = 'baseline') {
+  const profile = GOOGLE_IMAGE_SEARCH_PROFILES[name];
+  if (!profile) throw new Error(`unknown Google image search profile: ${name}`);
+  return profile;
+}
+
+export function createGoogleImageDiscovery({
+  key,
+  cx,
+  searchParams = GOOGLE_IMAGE_SEARCH_PROFILES.baseline,
+  fetchImpl = globalThis.fetch,
+} = {}) {
   let down = '';
 
   return async function discoverGoogleImages(query) {
@@ -23,6 +39,7 @@ export function createGoogleImageDiscovery({ key, cx, fetchImpl = globalThis.fet
         searchType: 'image',
         num: '10',
         safe: 'active',
+        ...searchParams,
       });
       const res = await fetchImpl('https://www.googleapis.com/customsearch/v1?' + params, {
         signal: AbortSignal.timeout(30_000),
