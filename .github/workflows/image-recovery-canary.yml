@@ -15,6 +15,11 @@ on:
         default: '30'
         type: choice
         options: ['15', '30', '60']
+      target_slug:
+        description: Optional single catalog slug for a full diagnostic trace
+        required: false
+        default: ''
+        type: string
 
 concurrency:
   group: image-recovery-canary
@@ -64,12 +69,15 @@ jobs:
           go build -o imgnorm ./tools/imgnorm
 
       - name: Retry prior misses
-        run: >-
-          node tools/labelfetch/autonomous.mjs
-          --canary
-          --retry-misses
-          --n "${{ inputs.sample_size }}"
-          --budget-minutes "${{ inputs.budget_minutes }}"
+        shell: bash
+        env:
+          TARGET_SLUG: ${{ inputs.target_slug }}
+        run: |
+          args=(--canary --retry-misses --n "${{ inputs.sample_size }}" --budget-minutes "${{ inputs.budget_minutes }}")
+          if [ -n "$TARGET_SLUG" ]; then
+            args+=(--slug "$TARGET_SLUG" --trace --no-catalog-reuse)
+          fi
+          node tools/labelfetch/autonomous.mjs "${args[@]}"
 
       - name: Upload review package
         if: always()
@@ -82,5 +90,6 @@ jobs:
             .run/image-workflow.json
             out-bottle/image-canary.json
             out-bottle/image-canary.html
+            out-bottle/image-traces/
             data/fetched-images/candidates/
             data/fetched-images/*.png

@@ -20,6 +20,9 @@ const opt = (name, fallback) => {
 const apply = has('apply');
 const canary = has('canary');
 const retryMisses = has('retry-misses');
+const slug = opt('slug', '');
+const trace = has('trace');
+const noCatalogReuse = has('no-catalog-reuse');
 if (apply === canary) {
   console.error('choose exactly one mode: --apply or --canary');
   process.exit(2);
@@ -92,6 +95,9 @@ try {
     winesPerRun,
     budgetMinutes,
     retryMisses,
+    slug,
+    trace,
+    noCatalogReuse,
     manifestPath: 'data/fetched-images/manifest.json',
   }, {
     preflight,

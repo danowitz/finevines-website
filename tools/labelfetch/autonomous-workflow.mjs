@@ -56,6 +56,9 @@ export async function runAutonomousImageWorkflow(config, adapters) {
     '--missing',
     ...(config.retryMisses ? ['--retry-misses'] : ['--due-only']),
     ...(config.canary ? ['--canary'] : []),
+    ...(config.slug ? ['--slug', config.slug] : []),
+    ...(config.trace ? ['--trace'] : []),
+    ...(config.noCatalogReuse ? ['--no-catalog-reuse'] : []),
   ];
   await stage('fetch-and-verify', () => runStage('pipeline', pipelineArgs));
 

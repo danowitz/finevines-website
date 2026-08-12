@@ -45,6 +45,7 @@ const STARTED_AT = Date.now();
 const DUE_ONLY = has('due-only');
 const CANARY = has('canary');
 const RETRY_MISSES = has('retry-misses');
+const CATALOG_REUSE = !has('no-catalog-reuse');
 const TRACE = has('trace');
 const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
 const RECORD_ATTEMPTS = !CANARY && (!opt('slug') || has('record-attempts'));
@@ -232,7 +233,7 @@ async function processWine(wine) {
       outcome: 'pending',
     },
   };
-  const donor = reusableCatalogImage(catalogImageDonors, wine);
+  const donor = CATALOG_REUSE ? reusableCatalogImage(catalogImageDonors, wine) : null;
   if (donor && await exists(donor.imagePath)) {
     try {
       const extension = extname(donor.imagePath) || '.jpg';

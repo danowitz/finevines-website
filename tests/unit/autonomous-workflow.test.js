@@ -100,3 +100,19 @@ test('production recovery retries recorded misses and keeps every import gate', 
     ['review', []],
   ]);
 });
+
+test('targeted canary can retain a full trace while bypassing catalog reuse', async () => {
+  const h = harness();
+  await runAutonomousImageWorkflow({
+    ...config,
+    canary: true,
+    retryMisses: true,
+    slug: 'anne-patent-epenots-2018',
+    trace: true,
+    noCatalogReuse: true,
+  }, h.adapters);
+  assert.deepEqual(h.calls[1], ['pipeline', [
+    '--n', '25', '--budget-minutes', '30', '--missing', '--retry-misses', '--canary',
+    '--slug', 'anne-patent-epenots-2018', '--trace', '--no-catalog-reuse',
+  ]]);
+});
