@@ -5560,7 +5560,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:06.648Z"
+  "updatedAt": "2026-08-12T22:37:32.890Z"
  },
  "anne-parent-domaine-anne-parent-bourgogne-selection-pomone-2018": {
   "slug": "anne-parent-domaine-anne-parent-bourgogne-selection-pomone-2018",
@@ -7710,7 +7710,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:09.411Z"
+  "updatedAt": "2026-08-12T22:37:35.025Z"
  },
  "domaine-georges-noellat-clos-vougeot-grand-cru-2019": {
   "slug": "domaine-georges-noellat-clos-vougeot-grand-cru-2019",
@@ -9665,7 +9665,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:14.921Z"
+  "updatedAt": "2026-08-12T22:37:39.622Z"
  },
  "groffier-domaine-robert-groffier-bourgogne-passetoutgrains-2023": {
   "slug": "groffier-domaine-robert-groffier-bourgogne-passetoutgrains-2023",
@@ -14874,14 +14874,14 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
-   "downloadHttpFailures": 2,
+   "downloadHttpFailures": 5,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 7,
+   "downloadConversionFailures": 4,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:09.410Z"
+  "updatedAt": "2026-08-12T22:37:35.025Z"
  },
  "domaine-daniel-bouland-morgon-bellevue-sable-2022": {
   "slug": "domaine-daniel-bouland-morgon-bellevue-sable-2022",
@@ -24940,7 +24940,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:13.252Z"
+  "updatedAt": "2026-08-12T22:37:37.989Z"
  },
  "drouhin-laroze-domaine-drouhin-laroze-clos-vougeot-grand-cru-2013": {
   "slug": "drouhin-laroze-domaine-drouhin-laroze-clos-vougeot-grand-cru-2013",
@@ -29141,7 +29141,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:06.648Z"
+  "updatedAt": "2026-08-12T22:37:32.891Z"
  },
  "bart-domaine-bart-marsannay-saint-jacques-2020": {
   "slug": "bart-domaine-bart-marsannay-saint-jacques-2020",
@@ -32984,7 +32984,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:14.921Z"
+  "updatedAt": "2026-08-12T22:37:39.622Z"
  },
  "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020": {
   "slug": "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020",
@@ -33749,7 +33749,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:16.249Z"
+  "updatedAt": "2026-08-12T22:37:40.764Z"
  },
  "kraft-domaine-kraft-vouvray-demi-sec-2016": {
   "slug": "kraft-domaine-kraft-vouvray-demi-sec-2016",
@@ -34876,7 +34876,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:18.062Z"
+  "updatedAt": "2026-08-12T22:37:42.510Z"
  },
  "peyros-chateau-peyros-madiran-vielles-vignes-2019": {
   "slug": "peyros-chateau-peyros-madiran-vielles-vignes-2019",
@@ -47565,14 +47565,14 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
-   "downloadHttpFailures": 5,
+   "downloadHttpFailures": 8,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 4,
+   "downloadConversionFailures": 1,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:11.219Z"
+  "updatedAt": "2026-08-12T22:37:36.516Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023",
@@ -47606,7 +47606,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:11.219Z"
+  "updatedAt": "2026-08-12T22:37:36.516Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025",
@@ -50271,7 +50271,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:13.252Z"
+  "updatedAt": "2026-08-12T22:37:37.989Z"
  },
  "far-north-spirits-bodalen-bourbon-whiskey": {
   "slug": "far-north-spirits-bodalen-bourbon-whiskey",
@@ -57657,7 +57657,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:18.062Z"
+  "updatedAt": "2026-08-12T22:37:40.765Z"
  },
  "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023": {
   "slug": "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023",
@@ -57883,14 +57883,14 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
-   "downloadHttpFailures": 0,
+   "downloadHttpFailures": 1,
    "downloadTooSmall": 1,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 4,
+   "downloadConversionFailures": 3,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:20.542Z"
+  "updatedAt": "2026-08-12T22:37:42.510Z"
  },
  "pierre-amadieu-gigondas-cuvee-romane-machotte-blanc-2024": {
   "slug": "pierre-amadieu-gigondas-cuvee-romane-machotte-blanc-2024",
@@ -58618,7 +58618,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:16:20.542Z"
+  "updatedAt": "2026-08-12T22:37:44.531Z"
  },
  "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019": {
   "slug": "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019",
