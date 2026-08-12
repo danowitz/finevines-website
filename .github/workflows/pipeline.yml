@@ -166,9 +166,9 @@ jobs:
 
       # 3. Source bottle photographs: fetch + verify, watermark sweep, import
       #    survivors. Both verification stages are hard gates. Deliberately
-      #    BOUNDED — a slice of the due wines per night, capped by count and by
-      #    wall clock inside the autonomous runner — so this step cannot consume
-      #    the whole job timeout and lose the ledger writes that make it converge.
+      #    The runner attempts the complete due backlog. It remains bounded by
+      #    its two-hour wall-clock budget so it cannot consume the whole job
+      #    timeout and lose the ledger writes that make it converge.
       - name: Source images
         run: node tools/labelfetch/autonomous.mjs --apply
 

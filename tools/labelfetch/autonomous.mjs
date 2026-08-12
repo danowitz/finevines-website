@@ -25,7 +25,10 @@ if (apply === canary) {
 }
 
 const reportPath = opt('report', '.run/image-workflow.json');
-const winesPerRun = Number.parseInt(opt('n', process.env.WINES_PER_RUN || '150'), 10);
+// Process the complete due backlog by default. The wall-clock budget remains
+// the safety valve: a run stops cleanly at two hours and commits its ledger,
+// rather than artificially waiting another night after every 150 wines.
+const winesPerRun = Number.parseInt(opt('n', process.env.WINES_PER_RUN || '5000'), 10);
 const budgetMinutes = Number.parseFloat(opt('budget-minutes', process.env.IMAGE_BUDGET_MINUTES || '120'));
 if (!Number.isInteger(winesPerRun) || winesPerRun < 1 || !Number.isFinite(budgetMinutes) || budgetMinutes <= 0) {
   console.error('--n must be a positive integer and --budget-minutes must be a positive number');
