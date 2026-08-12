@@ -43,6 +43,7 @@ const BUDGET_MS = Math.max(0, Number.parseFloat(opt('budget-minutes', '0')) || 0
 const STARTED_AT = Date.now();
 const DUE_ONLY = has('due-only');
 const CANARY = has('canary');
+const RETRY_MISSES = has('retry-misses');
 const TRACE = has('trace');
 const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
 const RECORD_ATTEMPTS = !CANARY && (!opt('slug') || has('record-attempts'));
@@ -65,7 +66,7 @@ function needsImage(wine) {
     wine.imageSource === 'label-scan';
 }
 
-function selectWines(catalog, attempts) {
+function selectWines(catalog, attempts, funnelStore) {
   const only = opt('slug');
   let wines = [...catalog];
   if (only) {
@@ -74,7 +75,9 @@ function selectWines(catalog, attempts) {
     if (has('missing')) {
       wines = wines.filter(needsImage);
     }
-    if (DUE_ONLY) wines = wines.filter((wine) =>
+    if (RETRY_MISSES) {
+      wines = wines.filter((wine) => funnelStore[wine.slug]?.ok === false);
+    } else if (DUE_ONLY) wines = wines.filter((wine) =>
       isDue(attempts, wine.sku, new Date(), undefined, { imageMissing: needsImage(wine) }));
   }
   wines.sort((left, right) => left.slug.localeCompare(right.slug));
@@ -123,7 +126,7 @@ if (!catalog.length) {
 const catalogBySku = new Map(catalog.map((wine) => [wine.sku, wine]));
 const attempts = await loadAttempts();
 const funnelStore = await loadFunnelStore();
-const wines = selectWines(catalog, attempts);
+const wines = selectWines(catalog, attempts, funnelStore);
 if (!wines.length) {
   if (opt('slug')) {
     console.error(`no wine in the catalog has slug ${opt('slug')}`);
@@ -345,6 +348,14 @@ for (let offset = 0; offset < wines.length; offset += WINE_CONCURRENCY) {
   for (const result of results) {
     attempted++;
     const { wine, rec, evaluated, unevaluated, discoveryComplete, reused = false } = result;
+    if (CANARY && funnelStore[wine.slug]) {
+      const previous = funnelStore[wine.slug];
+      rec.previous = {
+        ok: previous.ok === true,
+        failureStage: previous.failureStage || '',
+        reason: previous.reason || '',
+      };
+    }
     if (TRACE && rec.debugTrace) {
       const traceDirectory = join(TRACE_DIR, wine.slug);
       await mkdir(traceDirectory, { recursive: true });
@@ -400,11 +411,13 @@ if (failureSummary.size) {
 }
 console.log(`images -> ${OUT_DIR}/; manifest -> ${MANIFEST}`);
 if (CANARY) {
+  const recovered = runRows.filter((row) => row.ok && row.previous?.ok === false).length;
   await mkdir('out-bottle', { recursive: true });
   await writeFile('out-bottle/image-canary.json', JSON.stringify({
     generatedAt: new Date().toISOString(),
     attempted,
     accepted,
+    recovered,
     labelBatches,
     rows: runRows,
   }, null, 2) + '\n');

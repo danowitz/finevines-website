@@ -53,7 +53,8 @@ export async function runAutonomousImageWorkflow(config, adapters) {
   const pipelineArgs = [
     '--n', String(config.winesPerRun),
     '--budget-minutes', String(config.budgetMinutes),
-    '--missing', '--due-only',
+    '--missing',
+    ...(config.retryMisses ? ['--retry-misses'] : ['--due-only']),
     ...(config.canary ? ['--canary'] : []),
   ];
   await stage('fetch-and-verify', () => runStage('pipeline', pipelineArgs));

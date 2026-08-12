@@ -19,8 +19,13 @@ const opt = (name, fallback) => {
 };
 const apply = has('apply');
 const canary = has('canary');
+const retryMisses = has('retry-misses');
 if (apply === canary) {
   console.error('choose exactly one mode: --apply or --canary');
+  process.exit(2);
+}
+if (retryMisses && !canary) {
+  console.error('--retry-misses is a canary-only selector');
   process.exit(2);
 }
 
@@ -91,6 +96,7 @@ try {
     canary,
     winesPerRun,
     budgetMinutes,
+    retryMisses,
     manifestPath: 'data/fetched-images/manifest.json',
   }, {
     preflight,

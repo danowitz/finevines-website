@@ -78,3 +78,11 @@ test('canary mode cannot approve, sweep, or import', async () => {
   ]);
   assert.ok(h.calls[1][1].includes('--canary'));
 });
+
+test('recovery canary retries recorded misses without waiting for backoff', async () => {
+  const h = harness();
+  await runAutonomousImageWorkflow({ ...config, canary: true, retryMisses: true }, h.adapters);
+  assert.deepEqual(h.calls[1], ['pipeline', [
+    '--n', '25', '--budget-minutes', '30', '--missing', '--retry-misses', '--canary',
+  ]]);
+});
