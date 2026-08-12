@@ -5553,6 +5553,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 10,
    "downloadUnsupported": 0,
@@ -5560,7 +5561,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:32.890Z"
+  "updatedAt": "2026-08-12T23:50:06.760Z"
  },
  "anne-parent-domaine-anne-parent-bourgogne-selection-pomone-2018": {
   "slug": "anne-parent-domaine-anne-parent-bourgogne-selection-pomone-2018",
@@ -7703,6 +7704,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 2,
    "downloadUnsupported": 0,
@@ -7710,7 +7712,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:35.025Z"
+  "updatedAt": "2026-08-12T23:50:10.238Z"
  },
  "domaine-georges-noellat-clos-vougeot-grand-cru-2019": {
   "slug": "domaine-georges-noellat-clos-vougeot-grand-cru-2019",
@@ -9639,13 +9641,13 @@
   "name": "Grand Veneur - Rcl Chateauneuf du Pape",
   "ok": false,
   "failureStage": "download",
-  "reason": "only 0 of 10 candidates downloaded",
+  "reason": "only 0 of 6 candidates downloaded",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 0,
-   "permittedCandidates": 10,
-   "downloadAttempted": 10,
+   "sourcePolicyBlocked": 4,
+   "permittedCandidates": 6,
+   "downloadAttempted": 6,
    "downloaded": 0,
    "decodedImages": 0,
    "bottleShapePassed": 0,
@@ -9658,14 +9660,15 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 1,
-   "downloadTooSmall": 9,
+   "downloadTooSmall": 5,
    "downloadUnsupported": 0,
    "downloadConversionFailures": 0,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:39.622Z"
+  "updatedAt": "2026-08-12T23:50:16.653Z"
  },
  "groffier-domaine-robert-groffier-bourgogne-passetoutgrains-2023": {
   "slug": "groffier-domaine-robert-groffier-bourgogne-passetoutgrains-2023",
@@ -14874,6 +14877,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 5,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -14881,7 +14885,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:35.025Z"
+  "updatedAt": "2026-08-12T23:50:10.238Z"
  },
  "domaine-daniel-bouland-morgon-bellevue-sable-2022": {
   "slug": "domaine-daniel-bouland-morgon-bellevue-sable-2022",
@@ -24933,6 +24937,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -24940,7 +24945,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:37.989Z"
+  "updatedAt": "2026-08-12T23:50:14.497Z"
  },
  "drouhin-laroze-domaine-drouhin-laroze-clos-vougeot-grand-cru-2013": {
   "slug": "drouhin-laroze-domaine-drouhin-laroze-clos-vougeot-grand-cru-2013",
@@ -29134,6 +29139,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -29141,7 +29147,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:32.891Z"
+  "updatedAt": "2026-08-12T23:50:06.760Z"
  },
  "bart-domaine-bart-marsannay-saint-jacques-2020": {
   "slug": "bart-domaine-bart-marsannay-saint-jacques-2020",
@@ -32977,6 +32983,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 4,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -32984,7 +32991,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:39.622Z"
+  "updatedAt": "2026-08-12T23:50:16.653Z"
  },
  "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020": {
   "slug": "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020",
@@ -33742,6 +33749,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 1,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -33749,7 +33757,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:40.764Z"
+  "updatedAt": "2026-08-12T23:50:18.714Z"
  },
  "kraft-domaine-kraft-vouvray-demi-sec-2016": {
   "slug": "kraft-domaine-kraft-vouvray-demi-sec-2016",
@@ -34869,6 +34877,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -34876,7 +34885,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:42.510Z"
+  "updatedAt": "2026-08-12T23:50:20.802Z"
  },
  "peyros-chateau-peyros-madiran-vielles-vignes-2019": {
   "slug": "peyros-chateau-peyros-madiran-vielles-vignes-2019",
@@ -47565,6 +47574,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 8,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -47572,7 +47582,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:36.516Z"
+  "updatedAt": "2026-08-12T23:50:11.768Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023",
@@ -47599,6 +47609,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 1,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -47606,7 +47617,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:36.516Z"
+  "updatedAt": "2026-08-12T23:50:11.768Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025",
@@ -50264,6 +50275,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 5,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -50271,7 +50283,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:37.989Z"
+  "updatedAt": "2026-08-12T23:50:14.497Z"
  },
  "far-north-spirits-bodalen-bourbon-whiskey": {
   "slug": "far-north-spirits-bodalen-bourbon-whiskey",
@@ -57650,6 +57662,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 5,
    "downloadUnsupported": 0,
@@ -57657,7 +57670,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:40.765Z"
+  "updatedAt": "2026-08-12T23:50:18.714Z"
  },
  "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023": {
   "slug": "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023",
@@ -57883,6 +57896,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 1,
    "downloadTooSmall": 1,
    "downloadUnsupported": 0,
@@ -57890,7 +57904,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:42.510Z"
+  "updatedAt": "2026-08-12T23:50:20.802Z"
  },
  "pierre-amadieu-gigondas-cuvee-romane-machotte-blanc-2024": {
   "slug": "pierre-amadieu-gigondas-cuvee-romane-machotte-blanc-2024",
@@ -58611,6 +58625,7 @@
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
+   "searchProvider": "google",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 1,
    "downloadUnsupported": 0,
@@ -58618,7 +58633,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T22:37:44.531Z"
+  "updatedAt": "2026-08-12T23:50:23.293Z"
  },
  "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019": {
   "slug": "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019",
