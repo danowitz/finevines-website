@@ -5560,7 +5560,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:02:34.993Z"
+  "updatedAt": "2026-08-12T21:50:36.423Z"
  },
  "anne-parent-domaine-anne-parent-bourgogne-selection-pomone-2018": {
   "slug": "anne-parent-domaine-anne-parent-bourgogne-selection-pomone-2018",
@@ -7710,7 +7710,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:11:32.306Z"
+  "updatedAt": "2026-08-12T21:50:40.753Z"
  },
  "domaine-georges-noellat-clos-vougeot-grand-cru-2019": {
   "slug": "domaine-georges-noellat-clos-vougeot-grand-cru-2019",
@@ -9665,7 +9665,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:20:37.445Z"
+  "updatedAt": "2026-08-12T21:50:44.446Z"
  },
  "groffier-domaine-robert-groffier-bourgogne-passetoutgrains-2023": {
   "slug": "groffier-domaine-robert-groffier-bourgogne-passetoutgrains-2023",
@@ -14881,7 +14881,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:09:24.339Z"
+  "updatedAt": "2026-08-12T21:50:38.600Z"
  },
  "domaine-daniel-bouland-morgon-bellevue-sable-2022": {
   "slug": "domaine-daniel-bouland-morgon-bellevue-sable-2022",
@@ -24940,7 +24940,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:18:30.638Z"
+  "updatedAt": "2026-08-12T21:50:42.152Z"
  },
  "drouhin-laroze-domaine-drouhin-laroze-clos-vougeot-grand-cru-2013": {
   "slug": "drouhin-laroze-domaine-drouhin-laroze-clos-vougeot-grand-cru-2013",
@@ -29141,7 +29141,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:03:22.395Z"
+  "updatedAt": "2026-08-12T21:50:36.423Z"
  },
  "bart-domaine-bart-marsannay-saint-jacques-2020": {
   "slug": "bart-domaine-bart-marsannay-saint-jacques-2020",
@@ -32984,7 +32984,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:20:23.225Z"
+  "updatedAt": "2026-08-12T21:50:43.963Z"
  },
  "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020": {
   "slug": "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020",
@@ -33749,7 +33749,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:23:20.218Z"
+  "updatedAt": "2026-08-12T21:50:44.446Z"
  },
  "kraft-domaine-kraft-vouvray-demi-sec-2016": {
   "slug": "kraft-domaine-kraft-vouvray-demi-sec-2016",
@@ -34876,7 +34876,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:28:45.648Z"
+  "updatedAt": "2026-08-12T21:50:47.015Z"
  },
  "peyros-chateau-peyros-madiran-vielles-vignes-2019": {
   "slug": "peyros-chateau-peyros-madiran-vielles-vignes-2019",
@@ -37611,18 +37611,18 @@
   "sku": "400604",
   "name": "Bianchi Az Agricola Bianchi Luminae Biancho",
   "ok": false,
-  "failureStage": "download",
-  "reason": "only 1 of 6 candidates downloaded",
+  "failureStage": "visual-consensus",
+  "reason": "no repeated bottle design",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 4,
-   "permittedCandidates": 6,
-   "downloadAttempted": 6,
-   "downloaded": 1,
-   "decodedImages": 0,
-   "bottleShapePassed": 0,
-   "cleanBackgrounds": 0,
+   "sourcePolicyBlocked": 3,
+   "permittedCandidates": 7,
+   "downloadAttempted": 7,
+   "downloaded": 2,
+   "decodedImages": 2,
+   "bottleShapePassed": 2,
+   "cleanBackgrounds": 2,
    "similarPairs": 0,
    "repeatedGroups": 0,
    "strongestGroupImages": 0,
@@ -37635,10 +37635,14 @@
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
    "downloadConversionFailures": 5,
-   "downloadTransportFailures": 0
+   "downloadTransportFailures": 0,
+   "selectorReceived": 2,
+   "decodeFailures": 0,
+   "comparedPairs": 1,
+   "sourceIdentityAnchors": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:03:58.296Z"
+  "updatedAt": "2026-08-12T21:50:38.594Z"
  },
  "black-cabra-cabernet-sauvignon-2024": {
   "slug": "black-cabra-cabernet-sauvignon-2024",
@@ -47568,7 +47572,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:15:15.702Z"
+  "updatedAt": "2026-08-12T21:50:40.753Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023",
@@ -47602,7 +47606,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:15:15.702Z"
+  "updatedAt": "2026-08-12T21:50:42.152Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025",
@@ -50267,7 +50271,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:19:24.668Z"
+  "updatedAt": "2026-08-12T21:50:43.963Z"
  },
  "far-north-spirits-bodalen-bourbon-whiskey": {
   "slug": "far-north-spirits-bodalen-bourbon-whiskey",
@@ -53681,7 +53685,7 @@
    "downloadTransportFailures": 1
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:23:23.433Z"
+  "updatedAt": "2026-08-12T21:50:45.571Z"
  },
  "kracher-gerhard-kracher-trockenbeerenauslese-6-welschriesling-zds-2021": {
   "slug": "kracher-gerhard-kracher-trockenbeerenauslese-6-welschriesling-zds-2021",
@@ -57649,7 +57653,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:28:40.792Z"
+  "updatedAt": "2026-08-12T21:50:45.571Z"
  },
  "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023": {
   "slug": "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023",
@@ -57882,7 +57886,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:28:55.918Z"
+  "updatedAt": "2026-08-12T21:50:47.015Z"
  },
  "pierre-amadieu-gigondas-cuvee-romane-machotte-blanc-2024": {
   "slug": "pierre-amadieu-gigondas-cuvee-romane-machotte-blanc-2024",
@@ -58610,7 +58614,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:29:47.758Z"
+  "updatedAt": "2026-08-12T21:50:57.516Z"
  },
  "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019": {
   "slug": "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019",
@@ -63235,7 +63239,7 @@
    "downloadTransportFailures": 1
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T21:36:46.203Z"
+  "updatedAt": "2026-08-12T21:50:57.516Z"
  },
  "weingut-pichler-krutzler-riesling-ried-kellerberg-2023": {
   "slug": "weingut-pichler-krutzler-riesling-ried-kellerberg-2023",
