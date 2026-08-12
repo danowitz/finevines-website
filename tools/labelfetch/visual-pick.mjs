@@ -15,12 +15,11 @@ export function evaluateVisualPick(candidates) {
   diagnostics.identityAnchors = anchors.length;
   if (!anchors.length) return { pick: null, diagnostics };
 
-  // A visually similar sibling can share the bottle, typography, and label
-  // architecture (Pichler-Krutzler Loibenberg Riesling vs Klostersatz Gruner
-  // Veltliner measured above 0.93). Therefore only a positively read member
-  // may be published; similarity corroborates identity but cannot transfer it
-  // to an unreadable higher-resolution sibling.
-  const usable = anchors.filter((candidate) => {
+  // This group is already a strict all-pairs visual clique. A readable exact
+  // member establishes its identity; then choose the best non-conflicting
+  // product shot in that same group, just as a person uses a readable label to
+  // recognize a cleaner copy whose small print is not legible.
+  const usable = candidates.filter((candidate) => !candidate.explicitConflict).filter((candidate) => {
     const width = candidate.width || 0;
     const height = candidate.height || 0;
     // A tall, clean importer cutout can be narrow in pixels and still render

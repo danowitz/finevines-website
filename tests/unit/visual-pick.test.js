@@ -30,12 +30,12 @@ test('explicit contradictions cannot anchor or be selected', () => {
   assert.deepEqual(pick.anchorIds, ['anchor', 'clean']);
 });
 
-test('a larger lookalike without readable identity cannot beat an anchor', () => {
+test('a larger lookalike in an anchored strict group can be selected', () => {
   const pick = selectVisualPick([
     { id: 'anchor', anchor: true, shapeOk: true, cleanBackground: true, width: 600, height: 1200 },
     { id: 'sibling', shapeOk: true, cleanBackground: true, width: 2000, height: 5000 },
   ]);
-  assert.equal(pick.id, 'anchor');
+  assert.equal(pick.id, 'sibling');
 });
 
 test('a portrait bottle beats a larger square composite', () => {
@@ -46,11 +46,11 @@ test('a portrait bottle beats a larger square composite', () => {
   assert.equal(pick.id, 'portrait');
 });
 
-test('a tiny bottle image is not publishable', () => {
+test('a tiny readable anchor can identify a publishable matching bottle', () => {
   assert.equal(selectVisualPick([
     { id: 'tiny', anchor: true, shapeOk: true, cleanBackground: true, width: 191, height: 600 },
     { id: 'corroborator', shapeOk: true, cleanBackground: true, width: 800, height: 1200 },
-  ]), null);
+  ]).id, 'corroborator');
 });
 
 test('a tall clean importer cutout is publishable despite a narrow source width', () => {

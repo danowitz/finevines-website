@@ -15,7 +15,7 @@ function selector({ pairs = [], evidence = [] } = {}) {
   });
 }
 
-test('one readable anchor does not transfer identity to an unreadable lookalike', async () => {
+test('one readable anchor transfers identity within its strict visual group', async () => {
   const result = await selector({
     pairs: [{ a: 0, b: 1, score: 0.96 }, { a: 0, b: 2, score: 0.94 }],
     evidence: [
@@ -28,14 +28,14 @@ test('one readable anchor does not transfer identity to an unreadable lookalike'
     candidate('clean', { cleanBackground: true, width: 700, height: 1200 }),
     candidate('wrong', { cleanBackground: true, width: 2000, height: 3000 }),
   ]);
-  assert.equal(result.pick.id, 'readable');
+  assert.equal(result.pick.id, 'clean');
   assert.equal(result.matchingImages, 2);
-  assert.equal(result.inspectedImages, 2);
+  assert.equal(result.inspectedImages, 3);
   assert.equal(result.diagnostics.selectorReceived, 3);
   assert.equal(result.diagnostics.strongestGroupImages, 2);
   assert.equal(result.diagnostics.identityAnchors, 1);
-  assert.equal(result.diagnostics.explicitConflicts, 0);
-  assert.equal(result.diagnostics.publishableAnchors, 1);
+  assert.equal(result.diagnostics.explicitConflicts, 1);
+  assert.equal(result.diagnostics.publishableAnchors, 2);
 });
 
 test('two independent exact result titles let a clean bottle corroborate a matching scene', async () => {
@@ -204,4 +204,40 @@ test('weak transitive lookalikes cannot pull a sibling wine into the strongest g
 
   assert.deepEqual(result.trace.groups[0], ['target-1', 'target-2', 'target-scene']);
   assert.equal(result.pick.id, 'target-1');
+});
+
+test('an exact smaller group beats a larger sibling group and can donate identity to its clean member', async () => {
+  const reads = [];
+  const subject = createBottleSelector({
+    inspect: async (item) => ({ visualOk: true, shapeOk: item.shapeOk, cleanBackground: item.cleanBackground }),
+    compare: async () => [
+      { a: 0, b: 1, score: 0.98 },
+      { a: 0, b: 2, score: 0.97 },
+      { a: 1, b: 2, score: 0.96 },
+      { a: 3, b: 4, score: 0.99 },
+    ],
+    read: async (_wine, candidates) => {
+      reads.push(candidates.map(({ id }) => id));
+      return candidates.map(({ id }) => id === 'target-readable'
+        ? { id, anchor: true, label: 'Domaine Paul Prieur Sancerre 2022' }
+        : { id, anchor: false, explicitConflict: false });
+    },
+  });
+  const result = await subject.select(
+    { name: 'Domaine Paul Prieur Sancerre Blanc', vintage: '2022' },
+    [
+      candidate('sibling-1'), candidate('sibling-2'), candidate('sibling-3'),
+      candidate('target-readable', {
+        title: '2022 Domaine Paul Prieur Sancerre Blanc',
+        width: 400,
+        height: 700,
+      }),
+      candidate('target-clean', { cleanBackground: true, width: 900, height: 1500 }),
+    ],
+  );
+
+  assert.deepEqual(reads, [['target-readable', 'target-clean', 'sibling-1']]);
+  assert.equal(result.pick.id, 'target-clean');
+  assert.equal(result.matchingImages, 2);
+  assert.deepEqual(result.pick.anchorIds, ['target-readable']);
 });

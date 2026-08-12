@@ -105,6 +105,21 @@ function representatives(group) {
   return picked;
 }
 
+function rankGroups(wine, groups) {
+  return groups
+    .map((group, index) => ({
+      group,
+      index,
+      exactSources: group.filter((candidate) => exactVintageSourceAnchor(wine, candidate)).length,
+      corroboratingSources: group.filter((candidate) => corroboratesTitle(wine, candidate)).length,
+    }))
+    .sort((left, right) =>
+      right.exactSources - left.exactSources ||
+      right.corroboratingSources - left.corroboratingSources ||
+      left.index - right.index)
+    .map(({ group }) => group);
+}
+
 function conflictText(conflict) {
   if (!conflict) return '';
   if (typeof conflict === 'string') return conflict;
@@ -198,7 +213,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       trace.pairs = pairs;
       diagnostics.comparedPairs = pairs.length;
       diagnostics.similarPairs = pairs.filter((pair) => pair.score >= similarityThreshold).length;
-      const groups = groupsFromPairs(inspected, pairs, similarityThreshold);
+      const groups = rankGroups(wine, groupsFromPairs(inspected, pairs, similarityThreshold));
       trace.groups = groups.map((group) => group.map((candidate) => candidate.id));
       diagnostics.repeatedGroups = groups.length;
       diagnostics.strongestGroupImages = groups[0]?.length || 0;
@@ -210,53 +225,81 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         reviewCandidates: reviewCandidates(inspected),
       };
 
-      // Cost boundary: read only the strongest repeated design, once. Searching
-      // several weaker clusters turns one wine back into an open-ended image
-      // batch and recreates the spend this module exists to remove.
-      const group = groups[0];
-      const candidates = representatives(group);
+      // One bounded label request still covers the wine, but it samples across
+      // credible groups instead of blindly spending all three slots on the
+      // largest sibling-wine cluster. Exact-vintage result titles go first.
+      const candidates = [];
+      for (const group of groups) {
+        const ranked = [...representatives(group)].sort((left, right) =>
+          Number(exactVintageSourceAnchor(wine, right)) - Number(exactVintageSourceAnchor(wine, left)));
+        for (const candidate of ranked) {
+          if (!candidates.some(({ id }) => id === candidate.id)) candidates.push(candidate);
+          if (candidates.length === 3) break;
+        }
+        if (candidates.length === 3) break;
+      }
       trace.representatives = candidates.map((candidate) => candidate.id);
       diagnostics.labelImagesRead = candidates.length;
       const evidence = await read(wine, candidates);
       const byID = new Map(evidence.map((item) => [item.id, item]));
-      const judged = candidates.map((candidate) => ({
-        ...candidate,
-        explicitConflict: byID.get(candidate.id)?.explicitConflict === true,
-        sourceAnchor: exactVintageSourceAnchor(wine, candidate),
-        anchor: byID.get(candidate.id)?.anchor === true || (
-          byID.get(candidate.id)?.explicitConflict !== true && exactVintageSourceAnchor(wine, candidate)),
-      }));
-      trace.evidence = judged.map((candidate) => ({
-        ...(byID.get(candidate.id) || { id: candidate.id, anchor: false, explicitConflict: false }),
-        sourceAnchor: candidate.sourceAnchor,
-        effectiveAnchor: candidate.anchor,
-      }));
-      const evaluated = evaluateVisualPick(judged);
-      const pick = evaluated.pick;
+      let selectedGroup = groups[0];
+      let bestEvaluated = null;
+      let selectedSourceAnchorIds = [];
+      const traceEvidence = [];
+      for (const group of groups) {
+        const judged = group.map((candidate) => ({
+          ...candidate,
+          explicitConflict: byID.get(candidate.id)?.explicitConflict === true,
+          sourceAnchor: exactVintageSourceAnchor(wine, candidate),
+          anchor: byID.get(candidate.id)?.anchor === true || (
+            byID.get(candidate.id)?.explicitConflict !== true && exactVintageSourceAnchor(wine, candidate)),
+        }));
+        const evaluated = evaluateVisualPick(judged);
+        if (!bestEvaluated ||
+            evaluated.diagnostics.identityAnchors > bestEvaluated.diagnostics.identityAnchors ||
+            evaluated.diagnostics.publishableAnchors > bestEvaluated.diagnostics.publishableAnchors) {
+          bestEvaluated = evaluated;
+          selectedGroup = group;
+        }
+        for (const candidate of judged) {
+          if (!traceEvidence.some(({ id }) => id === candidate.id)) traceEvidence.push({
+            ...(byID.get(candidate.id) || { id: candidate.id, anchor: false, explicitConflict: false }),
+            sourceAnchor: candidate.sourceAnchor,
+            effectiveAnchor: candidate.anchor,
+          });
+        }
+        if (evaluated.pick) {
+          selectedGroup = group;
+          bestEvaluated = evaluated;
+          selectedSourceAnchorIds = judged
+            .filter((candidate) => candidate.sourceAnchor && !candidate.explicitConflict)
+            .map((candidate) => candidate.id);
+          break;
+        }
+      }
+      trace.evidence = traceEvidence;
+      const pick = bestEvaluated?.pick || null;
       Object.assign(diagnostics, {
-        identityAnchors: evaluated.diagnostics.identityAnchors,
-        explicitConflicts: evaluated.diagnostics.explicitConflicts,
-        anchorShapeFailures: evaluated.diagnostics.anchorShapeFailures,
-        anchorResolutionFailures: evaluated.diagnostics.anchorResolutionFailures,
-        publishableAnchors: evaluated.diagnostics.publishableAnchors,
-        sourceIdentityAnchors: judged.filter((candidate) => candidate.sourceAnchor && !candidate.explicitConflict).length,
+        identityAnchors: bestEvaluated?.diagnostics.identityAnchors || 0,
+        explicitConflicts: evidence.filter((item) => item.explicitConflict).length,
+        anchorShapeFailures: bestEvaluated?.diagnostics.anchorShapeFailures || 0,
+        anchorResolutionFailures: bestEvaluated?.diagnostics.anchorResolutionFailures || 0,
+        publishableAnchors: bestEvaluated?.diagnostics.publishableAnchors || 0,
+        sourceIdentityAnchors: selectedSourceAnchorIds.length,
       });
-      const sourceAnchorIds = judged
-        .filter((candidate) => candidate.sourceAnchor && !candidate.explicitConflict)
-        .map((candidate) => candidate.id);
       if (pick) {
         trace.pick = pick.id;
         return {
           pick,
           reason: '',
-          matchingImages: group.length,
+          matchingImages: selectedGroup.length,
           inspectedImages: candidates.length,
           anchorLabels: evidence.filter((item) => item.anchor).map((item) => item.label).filter(Boolean),
-          sourceAnchorIds,
+          sourceAnchorIds: selectedSourceAnchorIds,
           evidence,
           trace,
           diagnostics,
-          reviewCandidates: reviewCandidates(inspected, group, evidence),
+          reviewCandidates: reviewCandidates(inspected, selectedGroup, evidence),
         };
       }
       const reason = diagnostics.identityAnchors === 0
@@ -267,9 +310,9 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         reason,
         trace: { ...trace, reason },
         evidence,
-        sourceAnchorIds,
+        sourceAnchorIds: selectedSourceAnchorIds,
         diagnostics,
-        reviewCandidates: reviewCandidates(inspected, group, evidence),
+        reviewCandidates: reviewCandidates(inspected, selectedGroup, evidence),
       };
     },
   };
