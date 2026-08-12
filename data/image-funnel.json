@@ -48534,9 +48534,9 @@
   "slug": "domaine-philippe-jouan-chambolle-musigny-2023",
   "sku": "410827",
   "name": "Domaine Philippe Jouan Chambolle Musigny",
-  "ok": false,
-  "failureStage": "identity-anchor",
-  "reason": "repeated designs lacked an exact readable anchor",
+  "ok": true,
+  "failureStage": "",
+  "reason": "",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
@@ -48551,10 +48551,10 @@
    "repeatedGroups": 4,
    "strongestGroupImages": 2,
    "labelImagesRead": 2,
-   "identityAnchors": 0,
+   "identityAnchors": 1,
    "explicitConflicts": 0,
-   "publishableAnchors": 0,
-   "outcome": "failed",
+   "publishableAnchors": 1,
+   "outcome": "imported",
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -48563,13 +48563,19 @@
    "selectorReceived": 10,
    "decodeFailures": 0,
    "comparedPairs": 45,
+   "sourceIdentityAnchors": 0,
    "anchorShapeFailures": 0,
-   "anchorResolutionFailures": 0
+   "anchorResolutionFailures": 0,
+   "watermarkClean": 1,
+   "watermarkRejected": 0,
+   "watermarkUnresolved": 0,
+   "imported": 1,
+   "importStage": "imported"
   },
   "evidence": [
    {
     "id": "candidate-1",
-    "anchor": false,
+    "anchor": true,
     "explicitConflict": false
    },
    {
@@ -48578,7 +48584,7 @@
     "explicitConflict": false
    }
   ],
-  "updatedAt": "2026-08-12T21:16:26.033Z"
+  "updatedAt": "2026-08-12T21:48:43.841Z"
  },
  "domaine-pierre-morey-volnay-1er-cru-les-pitures-2018": {
   "slug": "domaine-pierre-morey-volnay-1er-cru-les-pitures-2018",

@@ -86,6 +86,46 @@ test('a wrong-vintage title cannot promote a weak visual pair', async () => {
   assert.equal(result.reason, 'no repeated bottle design');
 });
 
+test('an exact-vintage source anchors a repeated vintage-neutral bottle when the reader returns nothing', async () => {
+  const subject = createBottleSelector({
+    inspect: async (item) => ({ visualOk: true, shapeOk: item.shapeOk, cleanBackground: item.cleanBackground }),
+    compare: async () => [{ a: 0, b: 1, score: 0.99 }],
+    read: async () => [
+      { id: 'current', anchor: false, explicitConflict: false },
+      { id: 'older', anchor: false, explicitConflict: false },
+    ],
+  });
+  const result = await subject.select(
+    { name: 'Domaine Philippe Jouan Chambolle Musigny', vintage: '2023' },
+    [
+      candidate('current', { title: '2023 Domaine Henri & Philippe Jouan Chambolle Musigny' }),
+      candidate('older', { title: 'Domaine Henri & Philippe Jouan Chambolle Musigny 2022' }),
+    ],
+  );
+  assert.equal(result.pick.id, 'current');
+  assert.deepEqual(result.sourceAnchorIds, ['current']);
+  assert.equal(result.diagnostics.sourceIdentityAnchors, 1);
+});
+
+test('an exact source title cannot override a readable identity conflict', async () => {
+  const subject = createBottleSelector({
+    inspect: async (item) => ({ visualOk: true, shapeOk: item.shapeOk, cleanBackground: item.cleanBackground }),
+    compare: async () => [{ a: 0, b: 1, score: 0.99 }],
+    read: async () => [
+      { id: 'current', anchor: false, explicitConflict: true, conflict: 'different cuvee' },
+      { id: 'older', anchor: false, explicitConflict: false },
+    ],
+  });
+  const result = await subject.select(
+    { name: 'Domaine Philippe Jouan Chambolle Musigny', vintage: '2023' },
+    [
+      candidate('current', { title: '2023 Domaine Philippe Jouan Chambolle Musigny' }),
+      candidate('older', { title: 'Domaine Philippe Jouan Chambolle Musigny 2022' }),
+    ],
+  );
+  assert.equal(result.pick, null);
+});
+
 test('does not call the reader when no two bottles look alike', async () => {
   let reads = 0;
   const subject = createBottleSelector({

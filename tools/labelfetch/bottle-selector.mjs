@@ -65,6 +65,17 @@ function corroboratesTitle(wine, candidate) {
   return found.length / wanted.length >= 0.75;
 }
 
+function exactVintageSourceAnchor(wine, candidate) {
+  const wanted = [...new Set(tokens(wine.name || ''))];
+  if (wanted.length < 2) return false;
+  const titleTokens = new Set(tokens(candidate.title || ''));
+  if (!wanted.every((token) => titleTokens.has(token))) return false;
+  const wantedVintage = String(wine.vintage || '').match(/\b(?:19|20)\d{2}\b/)?.[0] || '';
+  if (!wantedVintage) return false;
+  const titleVintages = String(candidate.title || '').match(/\b(?:19|20)\d{2}\b/g) || [];
+  return titleVintages.length > 0 && titleVintages.every((vintage) => vintage === wantedVintage);
+}
+
 // Titles may corroborate a moderately similar visual pair, but they can never
 // connect two images on their own. Search pages routinely carry exact product
 // titles beside stale sibling-wine photographs; allowing title-only edges made
@@ -173,6 +184,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         identityAnchors: 0,
         explicitConflicts: 0,
         publishableAnchors: 0,
+        sourceIdentityAnchors: 0,
       };
       if (inspected.length < 2) return {
         pick: null,
@@ -206,12 +218,18 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       trace.representatives = candidates.map((candidate) => candidate.id);
       diagnostics.labelImagesRead = candidates.length;
       const evidence = await read(wine, candidates);
-      trace.evidence = evidence;
       const byID = new Map(evidence.map((item) => [item.id, item]));
       const judged = candidates.map((candidate) => ({
         ...candidate,
-        anchor: byID.get(candidate.id)?.anchor === true,
         explicitConflict: byID.get(candidate.id)?.explicitConflict === true,
+        sourceAnchor: exactVintageSourceAnchor(wine, candidate),
+        anchor: byID.get(candidate.id)?.anchor === true || (
+          byID.get(candidate.id)?.explicitConflict !== true && exactVintageSourceAnchor(wine, candidate)),
+      }));
+      trace.evidence = judged.map((candidate) => ({
+        ...(byID.get(candidate.id) || { id: candidate.id, anchor: false, explicitConflict: false }),
+        sourceAnchor: candidate.sourceAnchor,
+        effectiveAnchor: candidate.anchor,
       }));
       const evaluated = evaluateVisualPick(judged);
       const pick = evaluated.pick;
@@ -221,7 +239,11 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         anchorShapeFailures: evaluated.diagnostics.anchorShapeFailures,
         anchorResolutionFailures: evaluated.diagnostics.anchorResolutionFailures,
         publishableAnchors: evaluated.diagnostics.publishableAnchors,
+        sourceIdentityAnchors: judged.filter((candidate) => candidate.sourceAnchor && !candidate.explicitConflict).length,
       });
+      const sourceAnchorIds = judged
+        .filter((candidate) => candidate.sourceAnchor && !candidate.explicitConflict)
+        .map((candidate) => candidate.id);
       if (pick) {
         trace.pick = pick.id;
         return {
@@ -230,6 +252,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
           matchingImages: group.length,
           inspectedImages: candidates.length,
           anchorLabels: evidence.filter((item) => item.anchor).map((item) => item.label).filter(Boolean),
+          sourceAnchorIds,
           evidence,
           trace,
           diagnostics,
@@ -244,6 +267,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         reason,
         trace: { ...trace, reason },
         evidence,
+        sourceAnchorIds,
         diagnostics,
         reviewCandidates: reviewCandidates(inspected, group, evidence),
       };

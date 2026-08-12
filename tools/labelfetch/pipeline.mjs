@@ -314,10 +314,13 @@ async function processWine(wine) {
   rec.image = result.pick.url;
   rec.size = `${result.pick.width || 0}x${result.pick.height || 0}`;
   rec.label = result.anchorLabels?.[0] || '';
-  rec.verifiedBy = `${MODEL} transcription + local identity rules`;
+  rec.verifiedBy = result.sourceAnchorIds?.length
+    ? 'exact-vintage source title + repeated visual design + local conflict rules'
+    : `${MODEL} transcription + local identity rules`;
   // Import requires this explicit machine-readable verdict. The selector only
-  // returns a pick after a blind label transcription anchors a repeated bottle
-  // design and every readable identity conflict has been vetoed.
+  // returns a pick after either a blind label transcription or an exact-vintage
+  // source title anchors a repeated bottle design, and every readable identity
+  // conflict has been vetoed.
   rec.selectionIdentityVerified = true;
   rec.matchingImages = result.matchingImages;
   rec.anchorImages = result.pick.anchorIds;
