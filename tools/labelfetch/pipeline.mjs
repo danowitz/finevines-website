@@ -15,6 +15,7 @@ import { loadAttempts, isDue, recordAttempt, saveAttempts, shouldRecordAttempt }
 import { buildProducerLookup, expectedProducer } from './catalog-producer.mjs';
 import { deriveProducer } from './producerguess.mjs';
 import { createGoogleImageDiscovery, googleImageSearchProfile } from './google-images.mjs';
+import { createBraveImageDiscovery } from './brave-images.mjs';
 import { imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
 import { downloadFirstTen } from './candidate-downloads.mjs';
 import { createBottleSelector } from './bottle-selector.mjs';
@@ -49,6 +50,11 @@ const CATALOG_REUSE = !has('no-catalog-reuse');
 const TRACE = has('trace');
 const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
 const SEARCH_PROFILE_NAME = opt('search-profile', 'baseline');
+const SEARCH_PROVIDER = opt('search-provider', 'google');
+if (!['google', 'brave'].includes(SEARCH_PROVIDER)) {
+  console.error(`unknown image search provider: ${SEARCH_PROVIDER}`);
+  process.exit(2);
+}
 let searchProfile;
 try {
   searchProfile = googleImageSearchProfile(SEARCH_PROFILE_NAME);
@@ -154,11 +160,18 @@ if (!wines.length) {
 
 const googleKey = await envOrFile('FINEVINES_GOOGLE_CSE_KEY');
 const googleCx = await envOrFile('FINEVINES_GOOGLE_CSE_CX');
-if (!googleKey || !googleCx) {
+const braveKey = await envOrFile('FINEVINES_BRAVE_SEARCH_KEY');
+if (SEARCH_PROVIDER === 'google' && (!googleKey || !googleCx)) {
   console.error('Google image discovery credentials are missing; no wine was searched and no miss was recorded');
   process.exit(2);
 }
-const googleDiscover = createGoogleImageDiscovery({ key: googleKey, cx: googleCx, searchParams: searchProfile });
+if (SEARCH_PROVIDER === 'brave' && !braveKey) {
+  console.error('Brave image discovery credentials are missing; no wine was searched and no miss was recorded');
+  process.exit(2);
+}
+const imageDiscover = SEARCH_PROVIDER === 'brave'
+  ? createBraveImageDiscovery({ token: braveKey })
+  : createGoogleImageDiscovery({ key: googleKey, cx: googleCx, searchParams: searchProfile });
 const visionKey = await openaiKey();
 const producerLookup = buildProducerLookup(catalog);
 const catalogNames = catalog.map((wine) => wine.name);
@@ -183,8 +196,8 @@ await mkdir(OUT_DIR, { recursive: true });
 await mkdir(CANDIDATE_DIR, { recursive: true });
 const manifest = (await exists(MANIFEST)) ? JSON.parse(await readFile(MANIFEST, 'utf8')) : {};
 
-console.log(`google image discovery: ${googleKey && googleCx ? 'ready' : 'unavailable - wines will stay due'}`);
-console.log(`google image search profile: ${SEARCH_PROFILE_NAME}`);
+console.log(`${SEARCH_PROVIDER} image discovery: ready`);
+if (SEARCH_PROVIDER === 'google') console.log(`google image search profile: ${SEARCH_PROFILE_NAME}`);
 console.log(`identity reader: ${visionKey ? `${MODEL}, one request of at most three images per grouped wine` : 'unavailable - grouped wines will stay due'}`);
 console.log(`processing up to ${WINE_CONCURRENCY} wines concurrently`);
 
@@ -283,46 +296,49 @@ async function processWine(wine) {
     selector: null,
   } : null;
   if (trace) rec.debugTrace = trace;
-  const google = await googleDiscover(rec.query);
+  const discovery = await imageDiscover(rec.query);
   if (trace) trace.discovery = {
-    status: google.status,
-    searched: google.searched,
-    returned: google.returned || 0,
-    blocked: google.blocked || 0,
-    error: google.error || '',
-    results: google.trace || [],
-    permittedCandidates: google.items,
+    provider: SEARCH_PROVIDER,
+    status: discovery.status,
+    searched: discovery.searched,
+    returned: discovery.returned || 0,
+    blocked: discovery.blocked || 0,
+    error: discovery.error || '',
+    correctedQuery: discovery.correctedQuery || '',
+    results: discovery.trace || [],
+    permittedCandidates: discovery.items,
   };
   Object.assign(rec.funnel, {
-    googleSearched: google.searched,
-    searchResults: google.returned || 0,
-    sourcePolicyBlocked: google.blocked || 0,
-    permittedCandidates: google.items.length,
+    googleSearched: SEARCH_PROVIDER === 'google' && discovery.searched,
+    searchProvider: SEARCH_PROVIDER,
+    searchResults: discovery.returned || 0,
+    sourcePolicyBlocked: discovery.blocked || 0,
+    permittedCandidates: discovery.items.length,
   });
-  if (!google.searched) {
-    rec.discoveryError = `google: ${google.error}`;
-    fail(rec, 'google-unavailable', rec.discoveryError);
+  if (!discovery.searched) {
+    rec.discoveryError = `${SEARCH_PROVIDER}: ${discovery.error}`;
+    fail(rec, `${SEARCH_PROVIDER}-unavailable`, rec.discoveryError);
     return { wine, rec, evaluated: 0, unevaluated: 0, discoveryComplete: false };
   }
-  if (!google.items.length) {
+  if (!discovery.items.length) {
     const stage = rec.funnel.searchResults && rec.funnel.sourcePolicyBlocked
       ? 'source-policy'
-      : 'google-empty';
-    fail(rec, stage, 'Google Images returned no permitted candidates');
+      : `${SEARCH_PROVIDER}-empty`;
+    fail(rec, stage, `${SEARCH_PROVIDER} Images returned no permitted candidates`);
     return { wine, rec, evaluated: 0, unevaluated: 0, discoveryComplete: true };
   }
 
   const downloaded = await downloadFirstTen({
-    items: google.items,
+    items: discovery.items,
     directory: join(CANDIDATE_DIR, wine.slug),
     convert: convertToPng,
   });
   if (trace) trace.downloads = downloaded.trace || [];
   const candidates = downloaded.candidates;
   Object.assign(rec.funnel, downloaded.diagnostics);
-  const downloadFailures = google.items.length - candidates.length;
+  const downloadFailures = discovery.items.length - candidates.length;
   if (candidates.length < 2) {
-    fail(rec, 'download', `only ${candidates.length} of ${google.items.length} candidates downloaded`);
+    fail(rec, 'download', `only ${candidates.length} of ${discovery.items.length} candidates downloaded`);
     return { wine, rec, evaluated: 0, unevaluated: Math.max(1, downloadFailures), discoveryComplete: true };
   }
 
@@ -465,6 +481,7 @@ if (CANARY) {
   await writeFile('out-bottle/image-canary.json', JSON.stringify({
     generatedAt: new Date().toISOString(),
     searchProfile: SEARCH_PROFILE_NAME,
+    searchProvider: SEARCH_PROVIDER,
     attempted,
     accepted,
     recovered,

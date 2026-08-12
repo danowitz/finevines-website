@@ -1,0 +1,73 @@
+name: Brave image canary
+
+on:
+  workflow_dispatch:
+    inputs:
+      sample_size:
+        description: Prior misses to test
+        required: true
+        default: '30'
+        type: choice
+        options: ['10', '30', '100']
+      budget_minutes:
+        description: Maximum runtime
+        required: true
+        default: '30'
+        type: choice
+        options: ['15', '30', '60']
+
+permissions:
+  contents: read
+
+jobs:
+  brave:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      FINEVINES_BRAVE_SEARCH_KEY: ${{ secrets.FINEVINES_BRAVE_SEARCH_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-image.txt
+      - name: Install image runtime
+        run: |
+          python -m pip install -r requirements-image.txt
+          npm ci --ignore-scripts
+      - name: Verify and build image tools
+        run: |
+          node --test tests/unit/brave-images.test.js tests/unit/autonomous-workflow.test.js
+          go test ./tools/...
+          go build -o imgcheck ./tools/imgcheck
+          go build -o imghash ./tools/imghash
+          go build -o imgnorm ./tools/imgnorm
+      - name: Test Brave image search
+        run: >-
+          node tools/labelfetch/autonomous.mjs
+          --canary --retry-misses --no-catalog-reuse --trace
+          --search-provider brave
+          --n "${{ inputs.sample_size }}"
+          --budget-minutes "${{ inputs.budget_minutes }}"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brave-image-canary-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            .run/image-workflow.json
+            out-bottle/image-canary.json
+            out-bottle/image-canary.html
+            out-bottle/image-traces/

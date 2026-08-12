@@ -60,6 +60,7 @@ export async function runAutonomousImageWorkflow(config, adapters) {
     ...(config.trace ? ['--trace'] : []),
     ...(config.noCatalogReuse ? ['--no-catalog-reuse'] : []),
     ...(config.searchProfile ? ['--search-profile', config.searchProfile] : []),
+    ...(config.searchProvider ? ['--search-provider', config.searchProvider] : []),
   ];
   await stage('fetch-and-verify', () => runStage('pipeline', pipelineArgs));
 
