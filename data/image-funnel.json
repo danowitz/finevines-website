@@ -5533,35 +5533,52 @@
   "sku": "520200",
   "name": "Agostini Bordeaux Château Grand Portail Bordeaux Rouge",
   "ok": false,
-  "failureStage": "download",
-  "reason": "only 0 of 10 candidates downloaded",
+  "failureStage": "identity-anchor",
+  "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
    "sourcePolicyBlocked": 0,
    "permittedCandidates": 10,
    "downloadAttempted": 10,
-   "downloaded": 0,
-   "decodedImages": 0,
+   "downloaded": 2,
+   "decodedImages": 2,
    "bottleShapePassed": 0,
    "cleanBackgrounds": 0,
-   "similarPairs": 0,
-   "repeatedGroups": 0,
-   "strongestGroupImages": 0,
-   "labelImagesRead": 0,
+   "similarPairs": 1,
+   "repeatedGroups": 1,
+   "strongestGroupImages": 2,
+   "labelImagesRead": 2,
    "identityAnchors": 0,
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
    "downloadHttpFailures": 0,
-   "downloadTooSmall": 10,
+   "downloadTooSmall": 5,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 0,
-   "downloadTransportFailures": 0
+   "downloadConversionFailures": 3,
+   "downloadTransportFailures": 0,
+   "selectorReceived": 2,
+   "decodeFailures": 0,
+   "comparedPairs": 1,
+   "sourceIdentityAnchors": 0,
+   "anchorShapeFailures": 0,
+   "anchorResolutionFailures": 0
   },
-  "evidence": [],
-  "updatedAt": "2026-08-12T23:50:06.760Z"
+  "evidence": [
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-13T02:52:05.306Z"
  },
  "anne-parent-domaine-anne-parent-bourgogne-selection-pomone-2018": {
   "slug": "anne-parent-domaine-anne-parent-bourgogne-selection-pomone-2018",
@@ -7684,16 +7701,16 @@
   "sku": "541308*",
   "name": "Domaine E & J Durand Cornas Confidence",
   "ok": false,
-  "failureStage": "download",
-  "reason": "only 1 of 10 candidates downloaded",
+  "failureStage": "visual-consensus",
+  "reason": "no repeated bottle design",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
    "sourcePolicyBlocked": 0,
    "permittedCandidates": 10,
    "downloadAttempted": 10,
-   "downloaded": 1,
-   "decodedImages": 0,
+   "downloaded": 2,
+   "decodedImages": 2,
    "bottleShapePassed": 0,
    "cleanBackgrounds": 0,
    "similarPairs": 0,
@@ -7708,11 +7725,15 @@
    "downloadHttpFailures": 0,
    "downloadTooSmall": 2,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 7,
-   "downloadTransportFailures": 0
+   "downloadConversionFailures": 6,
+   "downloadTransportFailures": 0,
+   "selectorReceived": 2,
+   "decodeFailures": 0,
+   "comparedPairs": 1,
+   "sourceIdentityAnchors": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T23:50:10.238Z"
+  "updatedAt": "2026-08-13T02:52:07.488Z"
  },
  "domaine-georges-noellat-clos-vougeot-grand-cru-2019": {
   "slug": "domaine-georges-noellat-clos-vougeot-grand-cru-2019",
@@ -9640,18 +9661,18 @@
   "sku": "241241*",
   "name": "Grand Veneur - Rcl Chateauneuf du Pape",
   "ok": false,
-  "failureStage": "download",
-  "reason": "only 0 of 6 candidates downloaded",
+  "failureStage": "visual-consensus",
+  "reason": "no repeated bottle design",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 4,
-   "permittedCandidates": 6,
-   "downloadAttempted": 6,
-   "downloaded": 0,
-   "decodedImages": 0,
+   "sourcePolicyBlocked": 0,
+   "permittedCandidates": 10,
+   "downloadAttempted": 10,
+   "downloaded": 5,
+   "decodedImages": 5,
    "bottleShapePassed": 0,
-   "cleanBackgrounds": 0,
+   "cleanBackgrounds": 3,
    "similarPairs": 0,
    "repeatedGroups": 0,
    "strongestGroupImages": 0,
@@ -9661,14 +9682,18 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
-   "downloadHttpFailures": 1,
+   "downloadHttpFailures": 0,
    "downloadTooSmall": 5,
    "downloadUnsupported": 0,
    "downloadConversionFailures": 0,
-   "downloadTransportFailures": 0
+   "downloadTransportFailures": 0,
+   "selectorReceived": 5,
+   "decodeFailures": 0,
+   "comparedPairs": 10,
+   "sourceIdentityAnchors": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T23:50:16.653Z"
+  "updatedAt": "2026-08-13T02:52:17.593Z"
  },
  "groffier-domaine-robert-groffier-bourgogne-passetoutgrains-2023": {
   "slug": "groffier-domaine-robert-groffier-bourgogne-passetoutgrains-2023",
@@ -14858,14 +14883,14 @@
   "name": "Domaine Castera Jurancon Sweet White Sud-Quest",
   "ok": false,
   "failureStage": "download",
-  "reason": "only 0 of 9 candidates downloaded",
+  "reason": "only 1 of 6 candidates downloaded",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 1,
-   "permittedCandidates": 9,
-   "downloadAttempted": 9,
-   "downloaded": 0,
+   "sourcePolicyBlocked": 4,
+   "permittedCandidates": 6,
+   "downloadAttempted": 6,
+   "downloaded": 1,
    "decodedImages": 0,
    "bottleShapePassed": 0,
    "cleanBackgrounds": 0,
@@ -14878,14 +14903,14 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
-   "downloadHttpFailures": 5,
+   "downloadHttpFailures": 3,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 4,
+   "downloadConversionFailures": 2,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T23:50:10.238Z"
+  "updatedAt": "2026-08-13T02:52:07.487Z"
  },
  "domaine-daniel-bouland-morgon-bellevue-sable-2022": {
   "slug": "domaine-daniel-bouland-morgon-bellevue-sable-2022",
@@ -24917,23 +24942,23 @@
   "sku": "711462",
   "name": "Domaine Sylvain Pataille Marsannay Rouge en Clemengots",
   "ok": false,
-  "failureStage": "download",
-  "reason": "only 1 of 1 candidates downloaded",
+  "failureStage": "publication-quality",
+  "reason": "exact anchors failed bottle-shape or resolution publication rules",
   "funnel": {
    "googleSearched": true,
-   "searchResults": 1,
-   "sourcePolicyBlocked": 0,
-   "permittedCandidates": 1,
-   "downloadAttempted": 1,
-   "downloaded": 1,
-   "decodedImages": 0,
+   "searchResults": 10,
+   "sourcePolicyBlocked": 6,
+   "permittedCandidates": 4,
+   "downloadAttempted": 4,
+   "downloaded": 4,
+   "decodedImages": 4,
    "bottleShapePassed": 0,
-   "cleanBackgrounds": 0,
-   "similarPairs": 0,
-   "repeatedGroups": 0,
-   "strongestGroupImages": 0,
-   "labelImagesRead": 0,
-   "identityAnchors": 0,
+   "cleanBackgrounds": 2,
+   "similarPairs": 1,
+   "repeatedGroups": 1,
+   "strongestGroupImages": 2,
+   "labelImagesRead": 2,
+   "identityAnchors": 1,
    "explicitConflicts": 0,
    "publishableAnchors": 0,
    "outcome": "failed",
@@ -24942,10 +24967,27 @@
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
    "downloadConversionFailures": 0,
-   "downloadTransportFailures": 0
+   "downloadTransportFailures": 0,
+   "selectorReceived": 4,
+   "decodeFailures": 0,
+   "comparedPairs": 6,
+   "sourceIdentityAnchors": 0,
+   "anchorShapeFailures": 2,
+   "anchorResolutionFailures": 0
   },
-  "evidence": [],
-  "updatedAt": "2026-08-12T23:50:14.497Z"
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": true,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-13T02:52:16.128Z"
  },
  "drouhin-laroze-domaine-drouhin-laroze-clos-vougeot-grand-cru-2013": {
   "slug": "drouhin-laroze-domaine-drouhin-laroze-clos-vougeot-grand-cru-2013",
@@ -29119,22 +29161,22 @@
   "sku": "730505",
   "name": "Badouin Domaine Patrick Badouin Coteaux du Layon les Couteaux",
   "ok": false,
-  "failureStage": "download",
-  "reason": "only 0 of 5 candidates downloaded",
+  "failureStage": "identity-anchor",
+  "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 5,
-   "permittedCandidates": 5,
-   "downloadAttempted": 5,
-   "downloaded": 0,
-   "decodedImages": 0,
+   "sourcePolicyBlocked": 3,
+   "permittedCandidates": 7,
+   "downloadAttempted": 7,
+   "downloaded": 4,
+   "decodedImages": 4,
    "bottleShapePassed": 0,
-   "cleanBackgrounds": 0,
-   "similarPairs": 0,
-   "repeatedGroups": 0,
-   "strongestGroupImages": 0,
-   "labelImagesRead": 0,
+   "cleanBackgrounds": 2,
+   "similarPairs": 1,
+   "repeatedGroups": 1,
+   "strongestGroupImages": 2,
+   "labelImagesRead": 2,
    "identityAnchors": 0,
    "explicitConflicts": 0,
    "publishableAnchors": 0,
@@ -29143,11 +29185,28 @@
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 5,
-   "downloadTransportFailures": 0
+   "downloadConversionFailures": 3,
+   "downloadTransportFailures": 0,
+   "selectorReceived": 4,
+   "decodeFailures": 0,
+   "comparedPairs": 6,
+   "sourceIdentityAnchors": 0,
+   "anchorShapeFailures": 0,
+   "anchorResolutionFailures": 0
   },
-  "evidence": [],
-  "updatedAt": "2026-08-12T23:50:06.760Z"
+  "evidence": [
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-13T02:52:05.315Z"
  },
  "bart-domaine-bart-marsannay-saint-jacques-2020": {
   "slug": "bart-domaine-bart-marsannay-saint-jacques-2020",
@@ -32991,7 +33050,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T23:50:16.653Z"
+  "updatedAt": "2026-08-13T02:52:17.592Z"
  },
  "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020": {
   "slug": "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020",
@@ -33757,7 +33816,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T23:50:18.714Z"
+  "updatedAt": "2026-08-13T02:52:18.955Z"
  },
  "kraft-domaine-kraft-vouvray-demi-sec-2016": {
   "slug": "kraft-domaine-kraft-vouvray-demi-sec-2016",
@@ -34885,7 +34944,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T23:50:20.802Z"
+  "updatedAt": "2026-08-13T02:52:20.230Z"
  },
  "peyros-chateau-peyros-madiran-vielles-vignes-2019": {
   "slug": "peyros-chateau-peyros-madiran-vielles-vignes-2019",
@@ -47555,13 +47614,13 @@
   "name": "Domaine Nicolas Millet Sancerre Blanc le Chene Marchand",
   "ok": false,
   "failureStage": "download",
-  "reason": "only 1 of 10 candidates downloaded",
+  "reason": "only 1 of 9 candidates downloaded",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 0,
-   "permittedCandidates": 10,
-   "downloadAttempted": 10,
+   "sourcePolicyBlocked": 1,
+   "permittedCandidates": 9,
+   "downloadAttempted": 9,
    "downloaded": 1,
    "decodedImages": 0,
    "bottleShapePassed": 0,
@@ -47578,11 +47637,11 @@
    "downloadHttpFailures": 8,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 1,
+   "downloadConversionFailures": 0,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T23:50:11.768Z"
+  "updatedAt": "2026-08-13T02:52:08.912Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023",
@@ -47617,7 +47676,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T23:50:11.768Z"
+  "updatedAt": "2026-08-13T02:52:08.912Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025",
@@ -50255,35 +50314,57 @@
   "sku": "510221",
   "name": "Famille Rotalier Beaujolais Villages sous le Chemin",
   "ok": false,
-  "failureStage": "download",
-  "reason": "only 0 of 9 candidates downloaded",
+  "failureStage": "identity-anchor",
+  "reason": "repeated designs lacked an exact readable anchor",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
    "sourcePolicyBlocked": 1,
    "permittedCandidates": 9,
    "downloadAttempted": 9,
-   "downloaded": 0,
-   "decodedImages": 0,
+   "downloaded": 2,
+   "decodedImages": 2,
    "bottleShapePassed": 0,
-   "cleanBackgrounds": 0,
-   "similarPairs": 0,
-   "repeatedGroups": 0,
-   "strongestGroupImages": 0,
-   "labelImagesRead": 0,
+   "cleanBackgrounds": 2,
+   "similarPairs": 1,
+   "repeatedGroups": 1,
+   "strongestGroupImages": 2,
+   "labelImagesRead": 2,
    "identityAnchors": 0,
-   "explicitConflicts": 0,
+   "explicitConflicts": 2,
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
-   "downloadHttpFailures": 5,
+   "downloadHttpFailures": 6,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 4,
-   "downloadTransportFailures": 0
+   "downloadConversionFailures": 1,
+   "downloadTransportFailures": 0,
+   "selectorReceived": 2,
+   "decodeFailures": 0,
+   "comparedPairs": 1,
+   "sourceIdentityAnchors": 0,
+   "anchorShapeFailures": 0,
+   "anchorResolutionFailures": 0
   },
-  "evidence": [],
-  "updatedAt": "2026-08-12T23:50:14.497Z"
+  "evidence": [
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": {
+     "expected": "2021",
+     "visible": "2020"
+    }
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate label lacks requested discriminator chemin"
+   }
+  ],
+  "updatedAt": "2026-08-13T02:52:16.134Z"
  },
  "far-north-spirits-bodalen-bourbon-whiskey": {
   "slug": "far-north-spirits-bodalen-bourbon-whiskey",
@@ -57643,14 +57724,14 @@
   "name": "Paul Lato Wines Pinot Noir Prospect Rancho Real Vineyard Santa Maria Valley",
   "ok": false,
   "failureStage": "download",
-  "reason": "only 1 of 9 candidates downloaded",
+  "reason": "only 0 of 8 candidates downloaded",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 1,
-   "permittedCandidates": 9,
-   "downloadAttempted": 9,
-   "downloaded": 1,
+   "sourcePolicyBlocked": 2,
+   "permittedCandidates": 8,
+   "downloadAttempted": 8,
+   "downloaded": 0,
    "decodedImages": 0,
    "bottleShapePassed": 0,
    "cleanBackgrounds": 0,
@@ -57670,7 +57751,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T23:50:18.714Z"
+  "updatedAt": "2026-08-13T02:52:18.955Z"
  },
  "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023": {
   "slug": "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023",
@@ -57876,18 +57957,18 @@
   "sku": "570015",
   "name": "Petroni Domaine Petroni Rouge Corse Aop",
   "ok": false,
-  "failureStage": "download",
-  "reason": "only 1 of 6 candidates downloaded",
+  "failureStage": "visual-consensus",
+  "reason": "no repeated bottle design",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 4,
-   "permittedCandidates": 6,
-   "downloadAttempted": 6,
-   "downloaded": 1,
-   "decodedImages": 0,
-   "bottleShapePassed": 0,
-   "cleanBackgrounds": 0,
+   "sourcePolicyBlocked": 5,
+   "permittedCandidates": 5,
+   "downloadAttempted": 5,
+   "downloaded": 2,
+   "decodedImages": 2,
+   "bottleShapePassed": 1,
+   "cleanBackgrounds": 1,
    "similarPairs": 0,
    "repeatedGroups": 0,
    "strongestGroupImages": 0,
@@ -57897,14 +57978,18 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
-   "downloadHttpFailures": 1,
+   "downloadHttpFailures": 0,
    "downloadTooSmall": 1,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 3,
-   "downloadTransportFailures": 0
+   "downloadConversionFailures": 2,
+   "downloadTransportFailures": 0,
+   "selectorReceived": 2,
+   "decodeFailures": 0,
+   "comparedPairs": 1,
+   "sourceIdentityAnchors": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T23:50:20.802Z"
+  "updatedAt": "2026-08-13T02:52:20.230Z"
  },
  "pierre-amadieu-gigondas-cuvee-romane-machotte-blanc-2024": {
   "slug": "pierre-amadieu-gigondas-cuvee-romane-machotte-blanc-2024",
@@ -58633,7 +58718,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-12T23:50:23.293Z"
+  "updatedAt": "2026-08-13T02:52:22.206Z"
  },
  "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019": {
   "slug": "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019",
