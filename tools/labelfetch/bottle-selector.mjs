@@ -25,30 +25,42 @@ async function mapLimit(items, limit, work) {
 
 function groupsFromPairs(candidates, pairs, threshold) {
   const edge = new Map(pairs.map((pair) => [`${Math.min(pair.a, pair.b)}:${Math.max(pair.a, pair.b)}`, pair.score]));
-  const cliques = [];
-  // Ten candidates means at most 1,024 subsets. Requiring every member to
-  // match every other member prevents A~B~C chains from dragging a visibly
-  // different sibling into one giant connected component.
-  for (let mask = 1; mask < (1 << candidates.length); mask++) {
-    const indexes = [];
-    for (let index = 0; index < candidates.length; index++) if (mask & (1 << index)) indexes.push(index);
-    if (indexes.length < 2) continue;
-    let coherent = true;
-    let total = 0;
-    let count = 0;
-    for (let left = 0; left < indexes.length && coherent; left++) {
-      for (let right = left + 1; right < indexes.length; right++) {
-        const score = edge.get(`${indexes[left]}:${indexes[right]}`) || 0;
-        if (score < threshold) { coherent = false; break; }
-        total += score;
-        count++;
-      }
-    }
-    if (coherent) cliques.push({ indexes, mean: total / count });
+  const adjacent = candidates.map(() => new Set());
+  for (const pair of pairs) {
+    if (pair.score < threshold) continue;
+    adjacent[pair.a].add(pair.b);
+    adjacent[pair.b].add(pair.a);
   }
-  const maximal = cliques.filter((clique) => !cliques.some((other) =>
-    other.indexes.length > clique.indexes.length &&
-    clique.indexes.every((index) => other.indexes.includes(index))));
+  const maximal = [];
+  // Enumerate maximal mutually matching groups directly. This preserves the
+  // no-transitive-chain safety rule without scanning every possible subset.
+  function visit(group, possible, excluded) {
+    if (!possible.size && !excluded.size) {
+      if (group.length < 2) return;
+      let total = 0;
+      let count = 0;
+      for (let left = 0; left < group.length; left++) {
+        for (let right = left + 1; right < group.length; right++) {
+          const key = `${Math.min(group[left], group[right])}:${Math.max(group[left], group[right])}`;
+          total += edge.get(key) || 0;
+          count++;
+        }
+      }
+      maximal.push({ indexes: group, mean: total / count });
+      return;
+    }
+    for (const candidate of [...possible]) {
+      const neighbors = adjacent[candidate];
+      visit(
+        [...group, candidate],
+        new Set([...possible].filter((index) => neighbors.has(index))),
+        new Set([...excluded].filter((index) => neighbors.has(index))),
+      );
+      possible.delete(candidate);
+      excluded.add(candidate);
+    }
+  }
+  visit([], new Set(candidates.map((_, index) => index)), new Set());
   const groups = maximal.sort((a, b) =>
     b.indexes.length - a.indexes.length || b.mean - a.mean)
     .map((clique) => clique.indexes.map((index) => candidates[index]));
@@ -182,14 +194,14 @@ function reviewCandidates(inspected, strongestGroup = [], evidence = []) {
 // inspection, similarity computation, and the bounded label reader.
 export function createBottleSelector({ inspect, compare, read, similarityThreshold = 0.90, inspectConcurrency = 3 }) {
   return {
-    async select(wine, firstTenCandidates) {
-      const inspectedAll = await mapLimit(firstTenCandidates.slice(0, 10), inspectConcurrency, async (candidate) => ({
+    async select(wine, candidates) {
+      const inspectedAll = await mapLimit(candidates, inspectConcurrency, async (candidate) => ({
         ...candidate,
         ...await inspect(candidate),
       }));
       const inspected = inspectedAll.filter((candidate) => candidate.visualOk !== false);
       const trace = {
-        input: firstTenCandidates.slice(0, 10).map((candidate) => ({ ...candidate })),
+        input: candidates.map((candidate) => ({ ...candidate })),
         inspections: inspectedAll.map((candidate) => ({
           id: candidate.id,
           file: candidate.file,
@@ -250,19 +262,19 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       // One bounded label request still covers the wine, but it samples across
       // credible groups instead of blindly spending all three slots on the
       // largest sibling-wine cluster. Exact-vintage result titles go first.
-      const candidates = [];
+      const representativesToRead = [];
       for (const group of groups) {
         const ranked = [...representatives(group)].sort((left, right) =>
           Number(exactVintageSourceAnchor(wine, right)) - Number(exactVintageSourceAnchor(wine, left)));
         for (const candidate of ranked) {
-          if (!candidates.some(({ id }) => id === candidate.id)) candidates.push(candidate);
-          if (candidates.length === 3) break;
+          if (!representativesToRead.some(({ id }) => id === candidate.id)) representativesToRead.push(candidate);
+          if (representativesToRead.length === 3) break;
         }
-        if (candidates.length === 3) break;
+        if (representativesToRead.length === 3) break;
       }
-      trace.representatives = candidates.map((candidate) => candidate.id);
-      diagnostics.labelImagesRead = candidates.length;
-      const evidence = await read(wine, candidates);
+      trace.representatives = representativesToRead.map((candidate) => candidate.id);
+      diagnostics.labelImagesRead = representativesToRead.length;
+      const evidence = await read(wine, representativesToRead);
       const byID = new Map(evidence.map((item) => [item.id, item]));
       let selectedGroup = groups[0];
       let bestEvaluated = null;
@@ -315,7 +327,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
           pick,
           reason: '',
           matchingImages: selectedGroup.length,
-          inspectedImages: candidates.length,
+          inspectedImages: inspected.length,
           anchorLabels: evidence.filter((item) => item.anchor).map((item) => item.label).filter(Boolean),
           sourceAnchorIds: selectedSourceAnchorIds,
           evidence,

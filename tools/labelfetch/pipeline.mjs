@@ -1,7 +1,7 @@
 // Find a real bottle photograph without turning image search into a page-
 // scraping or model-spend problem:
 //
-//   exact Google Image query -> first ten direct images -> local bottle check
+//   exact image query -> bounded 10+5 result window -> local bottle check
 //   -> local visual grouping -> one nano transcription of at most three images
 //   -> best clean/high-resolution member of the anchored group
 //
@@ -17,7 +17,8 @@ import { deriveProducer } from './producerguess.mjs';
 import { createGoogleImageDiscovery, googleImageSearchProfile } from './google-images.mjs';
 import { createBraveImageDiscovery } from './brave-images.mjs';
 import { imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
-import { downloadFirstTen } from './candidate-downloads.mjs';
+import { downloadCandidates } from './candidate-downloads.mjs';
+import { candidateWindow } from './candidate-window.mjs';
 import { createBottleSelector } from './bottle-selector.mjs';
 import { reusableStagedRecord } from './staged-record.mjs';
 import { buildCatalogImageDonors, reusableCatalogImage } from './catalog-image-reuse.mjs';
@@ -328,17 +329,19 @@ async function processWine(wine) {
     return { wine, rec, evaluated: 0, unevaluated: 0, discoveryComplete: true };
   }
 
-  const downloaded = await downloadFirstTen({
-    items: discovery.items,
+  const window = candidateWindow(discovery.items);
+  Object.assign(rec.funnel, window.diagnostics);
+  const downloaded = await downloadCandidates({
+    items: window.candidates,
     directory: join(CANDIDATE_DIR, wine.slug),
     convert: convertToPng,
   });
   if (trace) trace.downloads = downloaded.trace || [];
   const candidates = downloaded.candidates;
   Object.assign(rec.funnel, downloaded.diagnostics);
-  const downloadFailures = discovery.items.length - candidates.length;
+  const downloadFailures = window.candidates.length - candidates.length;
   if (candidates.length < 2) {
-    fail(rec, 'download', `only ${candidates.length} of ${discovery.items.length} candidates downloaded`);
+    fail(rec, 'download', `only ${candidates.length} of ${window.candidates.length} candidates downloaded`);
     return { wine, rec, evaluated: 0, unevaluated: Math.max(1, downloadFailures), discoveryComplete: true };
   }
 

@@ -1,9 +1,10 @@
 import { blockedBy } from './sources.mjs';
+import { IMAGE_SEARCH_RESULT_COUNT } from './candidate-window.mjs';
 
 // Brave exposes an actual image-search contract: result.url is the source page
 // and result.properties.url is the original image. Keep that pairing intact so
 // source policy and provenance apply to both sides of every candidate.
-export function createBraveImageDiscovery({ token, count = 10, fetchImpl = globalThis.fetch } = {}) {
+export function createBraveImageDiscovery({ token, count = IMAGE_SEARCH_RESULT_COUNT, fetchImpl = globalThis.fetch } = {}) {
   let down = '';
 
   return async function discoverBraveImages(query) {

@@ -19,7 +19,7 @@ async function mapLimit(items, limit, work) {
   return output;
 }
 
-export async function downloadFirstTen({
+export async function downloadCandidates({
   items,
   directory,
   fetchImpl = globalThis.fetch,
@@ -29,7 +29,7 @@ export async function downloadFirstTen({
   concurrency = 3,
 }) {
   await mkdirImpl(directory, { recursive: true });
-  const attempted = items.slice(0, 10);
+  const attempted = items;
   const results = await mapLimit(attempted, concurrency, async (item, index) => {
     try {
       const response = await fetchImpl(item.url, {

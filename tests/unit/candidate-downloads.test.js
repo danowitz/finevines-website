@@ -1,15 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { downloadFirstTen } from '../../tools/labelfetch/candidate-downloads.mjs';
+import { downloadCandidates } from '../../tools/labelfetch/candidate-downloads.mjs';
 
-test('downloads only the first ten structured image results with bounded concurrency', async () => {
+test('downloads every candidate supplied by the pipeline with bounded concurrency', async () => {
   let active = 0;
   let peak = 0;
   const writes = [];
   const items = Array.from({ length: 12 }, (_, index) => ({
     url: `https://images.example/${index}.jpg`, context: `https://source.example/${index}`, width: index, height: 800,
   }));
-  const result = await downloadFirstTen({
+  const result = await downloadCandidates({
     items,
     directory: 'ignored',
     concurrency: 3,
@@ -26,14 +26,14 @@ test('downloads only the first ten structured image results with bounded concurr
       return { ok: true, arrayBuffer: async () => bytes };
     },
   });
-  assert.equal(result.candidates.length, 10);
-  assert.equal(writes.length, 10);
+  assert.equal(result.candidates.length, 12);
+  assert.equal(writes.length, 12);
   assert.ok(peak <= 3);
   assert.equal(result.candidates[0].context, items[0].context);
-  assert.equal(result.candidates[9].url, items[9].url);
+  assert.equal(result.candidates[11].url, items[11].url);
   assert.deepEqual(result.diagnostics, {
-    downloadAttempted: 10,
-    downloaded: 10,
+    downloadAttempted: 12,
+    downloaded: 12,
     downloadHttpFailures: 0,
     downloadTooSmall: 0,
     downloadUnsupported: 0,
@@ -44,7 +44,7 @@ test('downloads only the first ten structured image results with bounded concurr
 
 test('reports each download failure rule separately', async () => {
   const bytes = Buffer.alloc(2100);
-  const result = await downloadFirstTen({
+  const result = await downloadCandidates({
     items: [
       { url: 'https://example.test/http' },
       { url: 'https://example.test/small' },
@@ -82,7 +82,7 @@ test('passes the response image MIME type to the converter', async () => {
   png[2] = 0x4e;
   png[3] = 0x47;
   let seenType = '';
-  const result = await downloadFirstTen({
+  const result = await downloadCandidates({
     items: [{ url: 'https://example.test/bottle.webp' }],
     directory: 'ignored',
     mkdirImpl: async () => {},

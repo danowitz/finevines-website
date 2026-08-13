@@ -178,7 +178,7 @@ test('similar siblings without an exact anchor remain a no-pick', async () => {
   assert.match(result.reviewCandidates[1].why, /identity not proven|conflict/i);
 });
 
-test('only the first ten search results enter the selector', async () => {
+test('every candidate supplied by the pipeline enters the selector', async () => {
   let inspected = 0;
   const subject = createBottleSelector({
     inspect: async () => { inspected++; return { shapeOk: false }; },
@@ -186,7 +186,7 @@ test('only the first ten search results enter the selector', async () => {
     read: async () => [],
   });
   await subject.select({}, Array.from({ length: 12 }, (_, index) => candidate(String(index))));
-  assert.equal(inspected, 10);
+  assert.equal(inspected, 12);
 });
 
 test('returns candidate-level trace through inspection, comparison, grouping, and identity', async () => {

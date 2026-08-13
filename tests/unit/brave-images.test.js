@@ -9,7 +9,7 @@ const response = (status, body = {}) => ({
 });
 
 describe('Brave image discovery', () => {
-  test('requests ten US English images and maps source-page provenance to the original image', async () => {
+  test('requests the bounded 10+5 US English window and maps source-page provenance to the original image', async () => {
     let requested = '';
     let headers = {};
     const discover = createBraveImageDiscovery({
@@ -27,7 +27,7 @@ describe('Brave image discovery', () => {
     const result = await discover('Exact Wnie');
     const params = new URL(requested).searchParams;
     assert.equal(params.get('q'), 'Exact Wnie');
-    assert.equal(params.get('count'), '10');
+    assert.equal(params.get('count'), '15');
     assert.equal(params.get('country'), 'US');
     assert.equal(params.get('search_lang'), 'en');
     assert.equal(headers['X-Subscription-Token'], 'brave-token');
