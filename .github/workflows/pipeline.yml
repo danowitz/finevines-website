@@ -185,9 +185,9 @@ jobs:
       - name: Source images
         run: |
           if [ "${{ github.event_name == 'workflow_dispatch' && inputs.retry_image_misses }}" = "true" ]; then
-            node tools/labelfetch/autonomous.mjs --apply --retry-misses --n "${{ inputs.image_limit }}"
+            node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --n "${{ inputs.image_limit }}"
           else
-            node tools/labelfetch/autonomous.mjs --apply
+            node tools/labelfetch/autonomous.mjs --apply --search-provider brave
           fi
 
       # The runner is disposable; retain the stage-by-stage receipt even when

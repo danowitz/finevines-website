@@ -39,10 +39,10 @@ node tools/labelfetch/import.mjs --apply --clean-only
 The unattended entrypoint is:
 
 ```sh
-node tools/labelfetch/autonomous.mjs --apply
+node tools/labelfetch/autonomous.mjs --apply --search-provider brave
 ```
 
-It performs a live Google image-endpoint health check before touching a wine,
+It performs a live configured image-endpoint health check before touching a wine,
 then owns the fixed order: fetch/verify â†’ two-source auto-approval â†’ watermark
 gate â†’ clean-only import â†’ exception review. It writes an atomic run receipt
 to `.run/image-workflow.json` before and after every stage. A missing credential,
