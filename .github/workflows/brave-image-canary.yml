@@ -15,6 +15,12 @@ on:
         default: '30'
         type: choice
         options: ['15', '30', '60']
+      label_model:
+        description: Vision label reader used for this canary
+        required: true
+        default: 'gpt-4.1-nano'
+        type: choice
+        options: ['gpt-4.1-nano', 'gpt-4.1-mini']
 
 permissions:
   contents: read
@@ -58,6 +64,7 @@ jobs:
           node tools/labelfetch/autonomous.mjs
           --canary --retry-misses --no-catalog-reuse --trace
           --search-provider brave
+          --label-model "${{ inputs.label_model }}"
           --n "${{ inputs.sample_size }}"
           --budget-minutes "${{ inputs.budget_minutes }}"
       - name: Upload result

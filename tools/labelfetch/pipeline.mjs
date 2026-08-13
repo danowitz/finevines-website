@@ -33,7 +33,6 @@ const OUT_DIR = 'data/fetched-images';
 const CANDIDATE_DIR = join(OUT_DIR, 'candidates');
 const MANIFEST = join(OUT_DIR, 'manifest.json');
 const VERIFIER = binPath('imgcheck');
-const MODEL = 'gpt-4.1-nano';
 const WINE_CONCURRENCY = 2;
 
 const args = process.argv.slice(2);
@@ -52,8 +51,13 @@ const TRACE = has('trace');
 const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
 const SEARCH_PROFILE_NAME = opt('search-profile', 'baseline');
 const SEARCH_PROVIDER = opt('search-provider', 'google');
+const MODEL = opt('label-model', process.env.FINEVINES_LABEL_MODEL || 'gpt-4.1-nano');
 if (!['google', 'brave'].includes(SEARCH_PROVIDER)) {
   console.error(`unknown image search provider: ${SEARCH_PROVIDER}`);
+  process.exit(2);
+}
+if (!['gpt-4.1-nano', 'gpt-4.1-mini'].includes(MODEL)) {
+  console.error(`unsupported label model: ${MODEL}`);
   process.exit(2);
 }
 let searchProfile;
@@ -312,6 +316,7 @@ async function processWine(wine) {
   Object.assign(rec.funnel, {
     googleSearched: SEARCH_PROVIDER === 'google' && discovery.searched,
     searchProvider: SEARCH_PROVIDER,
+    labelModel: MODEL,
     searchResults: discovery.returned || 0,
     sourcePolicyBlocked: discovery.blocked || 0,
     permittedCandidates: discovery.items.length,
@@ -485,6 +490,7 @@ if (CANARY) {
     generatedAt: new Date().toISOString(),
     searchProfile: SEARCH_PROFILE_NAME,
     searchProvider: SEARCH_PROVIDER,
+    labelModel: MODEL,
     attempted,
     accepted,
     recovered,

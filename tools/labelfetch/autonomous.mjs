@@ -26,6 +26,7 @@ const trace = has('trace');
 const noCatalogReuse = has('no-catalog-reuse');
 const searchProfileName = opt('search-profile', 'baseline');
 const searchProvider = opt('search-provider', 'google');
+const labelModel = opt('label-model', '');
 if (!['google', 'brave'].includes(searchProvider)) {
   console.error(`unknown image search provider: ${searchProvider}`);
   process.exit(2);
@@ -119,6 +120,7 @@ try {
     noCatalogReuse,
     searchProfile: searchProfileName,
     searchProvider,
+    labelModel,
     manifestPath: 'data/fetched-images/manifest.json',
   }, {
     preflight,

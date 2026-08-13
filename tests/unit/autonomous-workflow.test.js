@@ -116,3 +116,9 @@ test('targeted canary can retain a full trace while bypassing catalog reuse', as
     '--slug', 'anne-patent-epenots-2018', '--trace', '--no-catalog-reuse',
   ]]);
 });
+
+test('a canary can select a stronger label model without changing production defaults', async () => {
+  const h = harness();
+  await runAutonomousImageWorkflow({ ...config, canary: true, labelModel: 'gpt-4.1-mini' }, h.adapters);
+  assert.deepEqual(h.calls[1][1].slice(-2), ['--label-model', 'gpt-4.1-mini']);
+});
