@@ -7,9 +7,11 @@ function permitted(url) {
   return url && !blockedBy(url);
 }
 
-// Deep module: callers provide already-verified anchors and receive only
-// provenance-paired full matches. Authentication, request shape, response
-// association, source policy, deduplication and spend bounds stay inside.
+// Deep module: callers provide verified or provisional visual seeds and
+// receive bounded related-image candidates. Only full matches of verified
+// seeds inherit identity; partial and visually-similar results remain
+// provisional. Authentication, response association, source policy,
+// deduplication and spend bounds stay inside.
 export function createWebMatchExpander({
   apiKey,
   fetchImpl = globalThis.fetch,
@@ -64,6 +66,37 @@ export function createWebMatchExpander({
         requests, blocked, trace,
       };
       const web = annotation?.webDetection || {};
+      const addMatch = ({ match, context = '', title = '', kind }) => {
+        const url = match.url || '';
+        const outcome = url === seed.url ? 'seed-duplicate'
+          : !permitted(url) ? 'blocked-image-host'
+          : context && !permitted(context) ? 'blocked-context-host' : `permitted-${kind}-match`;
+        trace.push({
+          seed: seed.id, seedIdentity: verifiedIdentity ? 'verified' : 'provisional',
+          kind, url, context, outcome, score: match.score || 0,
+        });
+        if (!outcome.startsWith('permitted-')) {
+          if (outcome.startsWith('blocked-')) blocked++;
+          return;
+        }
+        let host = '';
+        try { host = new URL(context || url).host.replace(/^www\./, ''); } catch {}
+        const trustedFullMatch = kind === 'full' && verifiedIdentity;
+        items.push({
+          url,
+          context,
+          host,
+          title,
+          width: 0,
+          height: 0,
+          trustedFullMatch,
+          provisionalFullMatch: !trustedFullMatch,
+          webMatchKind: kind,
+          identityAnchorUrl: seed.url,
+          discovery: 'google-web-detection',
+        });
+      };
+
       for (const page of web.pagesWithMatchingImages || []) {
         const context = page.url || '';
         if (permitted(context) && corroborationPages.length < 20) {
@@ -75,35 +108,18 @@ export function createWebMatchExpander({
           });
         }
         for (const match of page.fullMatchingImages || []) {
-          const url = match.url || '';
-          const outcome = url === seed.url ? 'seed-duplicate'
-            : !permitted(url) ? 'blocked-image-host'
-            : !permitted(context) ? 'blocked-context-host' : 'permitted-full-match';
-          trace.push({
-            seed: seed.id, seedIdentity: verifiedIdentity ? 'verified' : 'provisional',
-            url, context, outcome, score: match.score || 0,
-          });
-          if (outcome !== 'permitted-full-match') {
-            if (outcome.startsWith('blocked-')) blocked++;
-            continue;
-          }
-          let host = '';
-          try { host = new URL(context).host.replace(/^www\./, ''); } catch {}
-          items.push({
-            url,
-            context,
-            host,
-            title: page.pageTitle || '',
-            width: 0,
-            height: 0,
-            trustedFullMatch: verifiedIdentity,
-            provisionalFullMatch: !verifiedIdentity,
-            identityAnchorUrl: seed.url,
-            discovery: 'google-web-detection',
-          });
+          addMatch({ match, context, title: page.pageTitle || '', kind: 'full' });
           if (items.length >= maxCandidates) break;
         }
+        for (const match of page.partialMatchingImages || []) {
+          if (items.length >= maxCandidates) break;
+          addMatch({ match, context, title: page.pageTitle || '', kind: 'partial' });
+        }
         if (items.length >= maxCandidates) break;
+      }
+      for (const match of web.visuallySimilarImages || []) {
+        if (items.length >= maxCandidates) break;
+        addMatch({ match, kind: 'similar' });
       }
       if (items.length >= maxCandidates) break;
     }

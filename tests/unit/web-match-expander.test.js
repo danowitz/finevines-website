@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createWebMatchExpander } from '../../tools/labelfetch/web-match-expander.mjs';
 
-test('returns only provenance-paired permitted full matches and preserves anchor trust', async () => {
+test('returns provenance-paired permitted full matches and preserves anchor trust', async () => {
   let request;
   const expand = createWebMatchExpander({
     apiKey: 'vision-key',
@@ -19,7 +19,7 @@ test('returns only provenance-paired permitted full matches and preserves anchor
             { url: 'https://clean.test/bottle.jpg', score: 0.98 },
           ] },
         ],
-        visuallySimilarImages: [{ url: 'https://producer.test/sibling.jpg' }],
+        visuallySimilarImages: [],
       } }] }) };
     },
   });
@@ -46,6 +46,7 @@ test('returns only provenance-paired permitted full matches and preserves anchor
     height: 0,
     trustedFullMatch: true,
     provisionalFullMatch: false,
+    webMatchKind: 'full',
     identityAnchorUrl: 'https://seed.test/a.jpg',
     discovery: 'google-web-detection',
   }]);
@@ -76,4 +77,34 @@ test('a full match from a provisional seed does not inherit verified identity', 
   assert.equal(result.items.length, 1);
   assert.equal(result.items[0].trustedFullMatch, false);
   assert.equal(result.items[0].provisionalFullMatch, true);
+  assert.equal(result.items[0].webMatchKind, 'full');
+});
+
+test('partial and visually similar results remain provisional candidates', async () => {
+  const expand = createWebMatchExpander({
+    apiKey: 'vision-key',
+    readFileImpl: async () => Buffer.from('anchor'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ responses: [{ webDetection: {
+      pagesWithMatchingImages: [{
+        url: 'https://merchant.test/wine',
+        pageTitle: 'Requested Wine 2022',
+        partialMatchingImages: [{ url: 'https://merchant.test/partial.jpg' }],
+      }],
+      visuallySimilarImages: [
+        { url: 'https://images.test/similar.jpg' },
+        { url: 'https://vivino.com/blocked.jpg' },
+      ],
+    } }] }) }),
+  });
+  const result = await expand([{
+    id: 'verified-seed', file: 'seed.png', url: 'https://seed.test/a.jpg', verifiedIdentity: true,
+  }]);
+
+  assert.deepEqual(result.items.map(({ webMatchKind, trustedFullMatch, context }) => ({
+    webMatchKind, trustedFullMatch, context,
+  })), [
+    { webMatchKind: 'partial', trustedFullMatch: false, context: 'https://merchant.test/wine' },
+    { webMatchKind: 'similar', trustedFullMatch: false, context: '' },
+  ]);
+  assert.equal(result.blocked, 1);
 });
