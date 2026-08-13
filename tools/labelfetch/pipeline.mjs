@@ -52,13 +52,19 @@ const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
 const SEARCH_PROFILE_NAME = opt('search-profile', 'baseline');
 const SEARCH_PROVIDER = opt('search-provider', 'google');
 const MODEL = opt('label-model', process.env.FINEVINES_LABEL_MODEL || 'gpt-4.1-nano');
-const SUPPORTED_LABEL_MODELS = new Set(['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1']);
+const SUPPORTED_LABEL_MODELS = new Set(['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-5.6-sol']);
+const REASONING_EFFORTS = new Set(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
+const LABEL_REASONING_EFFORT = MODEL === 'gpt-5.6-sol' ? opt('label-reasoning-effort', 'medium') : '';
 if (!['google', 'brave'].includes(SEARCH_PROVIDER)) {
   console.error(`unknown image search provider: ${SEARCH_PROVIDER}`);
   process.exit(2);
 }
 if (!SUPPORTED_LABEL_MODELS.has(MODEL)) {
   console.error(`unsupported label model: ${MODEL}`);
+  process.exit(2);
+}
+if (LABEL_REASONING_EFFORT && !REASONING_EFFORTS.has(LABEL_REASONING_EFFORT)) {
+  console.error(`unsupported label reasoning effort: ${LABEL_REASONING_EFFORT}`);
   process.exit(2);
 }
 let searchProfile;
@@ -186,6 +192,7 @@ let labelBatches = 0;
 const boundedReader = createBoundedLabelReader({
   apiKey: visionKey,
   model: MODEL,
+  reasoningEffort: LABEL_REASONING_EFFORT,
   verifyIdentity: local.verifyIdentity,
   prepareImage: local.prepareForReading,
 });
@@ -204,7 +211,7 @@ const manifest = (await exists(MANIFEST)) ? JSON.parse(await readFile(MANIFEST, 
 
 console.log(`${SEARCH_PROVIDER} image discovery: ready`);
 if (SEARCH_PROVIDER === 'google') console.log(`google image search profile: ${SEARCH_PROFILE_NAME}`);
-console.log(`identity reader: ${visionKey ? `${MODEL}, one request of at most three images per grouped wine` : 'unavailable - grouped wines will stay due'}`);
+console.log(`identity reader: ${visionKey ? `${MODEL}${LABEL_REASONING_EFFORT ? ` (${LABEL_REASONING_EFFORT} effort)` : ''}, one request of at most three images per grouped wine` : 'unavailable - grouped wines will stay due'}`);
 console.log(`processing up to ${WINE_CONCURRENCY} wines concurrently`);
 
 function fail(rec, stage, reason) {
@@ -318,6 +325,7 @@ async function processWine(wine) {
     googleSearched: SEARCH_PROVIDER === 'google' && discovery.searched,
     searchProvider: SEARCH_PROVIDER,
     labelModel: MODEL,
+    labelReasoningEffort: LABEL_REASONING_EFFORT,
     searchResults: discovery.returned || 0,
     sourcePolicyBlocked: discovery.blocked || 0,
     permittedCandidates: discovery.items.length,
@@ -492,6 +500,7 @@ if (CANARY) {
     searchProfile: SEARCH_PROFILE_NAME,
     searchProvider: SEARCH_PROVIDER,
     labelModel: MODEL,
+    labelReasoningEffort: LABEL_REASONING_EFFORT,
     attempted,
     accepted,
     recovered,

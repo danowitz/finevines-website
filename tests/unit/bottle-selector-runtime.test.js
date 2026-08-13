@@ -49,6 +49,25 @@ test('bounded reader sends one nano request containing at most three images', as
   assert.equal(evidence[1].explicitConflict, true);
 });
 
+test('bounded reader sends an explicit reasoning effort only for a configured reasoning model', async () => {
+  let body;
+  const reader = createBoundedLabelReader({
+    apiKey: 'test',
+    model: 'gpt-5.6-sol',
+    reasoningEffort: 'medium',
+    readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async (_url, options) => {
+      body = JSON.parse(options.body);
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '[]' } }] }) };
+    },
+    verifyIdentity: async () => ({ accept: false }),
+  });
+  await reader({ name: 'Test Wine' }, candidates.slice(0, 1));
+  assert.equal(body.model, 'gpt-5.6-sol');
+  assert.equal(body.reasoning_effort, 'medium');
+  assert.equal(body.max_completion_tokens, 4000);
+});
+
 test('bounded reader can replace each full shot with one local label crop', async () => {
   const prepared = [];
   let body;

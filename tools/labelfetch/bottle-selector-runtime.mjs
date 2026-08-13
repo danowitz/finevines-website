@@ -247,6 +247,7 @@ export function createBoundedLabelReader({
   apiKey,
   verifyIdentity,
   model = 'gpt-4.1-nano',
+  reasoningEffort = '',
   fetchImpl = globalThis.fetch,
   readFileImpl = readFile,
   prepareImage,
@@ -279,8 +280,13 @@ export function createBoundedLabelReader({
       response = await fetchImpl('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(45_000),
-        body: JSON.stringify({ model, messages: [{ role: 'user', content }], max_completion_tokens: 1200 }),
+        signal: AbortSignal.timeout(reasoningEffort ? 90_000 : 45_000),
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content }],
+          max_completion_tokens: reasoningEffort ? 4000 : 1200,
+          ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
+        }),
       });
     } catch (error) {
       throw new ReaderUnavailableError(String(error?.message || error).split('\n')[0]);

@@ -62,6 +62,7 @@ export async function runAutonomousImageWorkflow(config, adapters) {
     ...(config.searchProfile ? ['--search-profile', config.searchProfile] : []),
     ...(config.searchProvider ? ['--search-provider', config.searchProvider] : []),
     ...(config.labelModel ? ['--label-model', config.labelModel] : []),
+    ...(config.labelReasoningEffort ? ['--label-reasoning-effort', config.labelReasoningEffort] : []),
   ];
   await stage('fetch-and-verify', () => runStage('pipeline', pipelineArgs));
 

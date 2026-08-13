@@ -119,6 +119,13 @@ test('targeted canary can retain a full trace while bypassing catalog reuse', as
 
 test('a canary can select a stronger label model without changing production defaults', async () => {
   const h = harness();
-  await runAutonomousImageWorkflow({ ...config, canary: true, labelModel: 'gpt-4.1' }, h.adapters);
-  assert.deepEqual(h.calls[1][1].slice(-2), ['--label-model', 'gpt-4.1']);
+  await runAutonomousImageWorkflow({
+    ...config,
+    canary: true,
+    labelModel: 'gpt-5.6-sol',
+    labelReasoningEffort: 'medium',
+  }, h.adapters);
+  assert.deepEqual(h.calls[1][1].slice(-4), [
+    '--label-model', 'gpt-5.6-sol', '--label-reasoning-effort', 'medium',
+  ]);
 });
