@@ -55,6 +55,7 @@ export async function runAutonomousImageWorkflow(config, adapters) {
     '--budget-minutes', String(config.budgetMinutes),
     '--missing',
     ...(config.retryMisses ? ['--retry-misses'] : ['--due-only']),
+    ...(config.candidateRecovery ? ['--candidate-recovery'] : []),
     ...(config.canary ? ['--canary'] : []),
     ...(config.slug ? ['--slug', config.slug] : []),
     ...(config.trace ? ['--trace'] : []),

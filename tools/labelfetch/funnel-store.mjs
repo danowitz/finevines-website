@@ -38,3 +38,18 @@ export function recordFunnel(store, record, now) {
 export async function saveFunnelStore(store, path = FUNNEL_PATH) {
   await writeFile(path, JSON.stringify(store, null, 1) + '\n');
 }
+
+// A stronger reader can help only when discovery and local visual grouping
+// already succeeded and the cheap reader was the sole stopping point. Keep
+// this policy beside the durable funnel schema so every caller uses the same
+// definition and hard failures (watermark, conflict, quality, download) never
+// leak into a paid recovery pass.
+export function recoverableCandidateSlugs(store) {
+  return new Set(Object.values(store || {})
+    .filter((entry) => entry?.ok === false &&
+      entry.failureStage === 'identity-anchor' &&
+      Number(entry.funnel?.downloaded || 0) >= 2 &&
+      Number(entry.funnel?.repeatedGroups || 0) >= 1)
+    .map((entry) => entry.slug)
+    .filter(Boolean));
+}

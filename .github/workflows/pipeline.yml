@@ -35,6 +35,11 @@ on:
         default: '5000'
         type: choice
         options: ['30', '100', '500', '5000']
+      candidate_recovery:
+        description: Re-evaluate prior repeated-design misses with the stronger label reader
+        required: true
+        default: false
+        type: boolean
   # Fired by the review console's Edge Script the moment a reviewer submits a
   # change, so their fix is live in minutes rather than at the next nightly run.
   repository_dispatch:
@@ -185,7 +190,9 @@ jobs:
       #    timeout and lose the ledger writes that make it converge.
       - name: Source images
         run: |
-          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.retry_image_misses }}" = "true" ]; then
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.candidate_recovery }}" = "true" ]; then
+            node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --candidate-recovery --label-model gpt-4.1-mini --budget-minutes 180 --n "${{ inputs.image_limit }}"
+          elif [ "${{ github.event_name == 'workflow_dispatch' && inputs.retry_image_misses }}" = "true" ]; then
             node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --n "${{ inputs.image_limit }}"
           else
             node tools/labelfetch/autonomous.mjs --apply --search-provider brave

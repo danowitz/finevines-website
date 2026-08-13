@@ -21,6 +21,7 @@ const opt = (name, fallback) => {
 const apply = has('apply');
 const canary = has('canary');
 const retryMisses = has('retry-misses');
+const candidateRecovery = has('candidate-recovery');
 const slug = opt('slug', '');
 const trace = has('trace');
 const noCatalogReuse = has('no-catalog-reuse');
@@ -29,6 +30,10 @@ const searchProvider = opt('search-provider', 'google');
 const labelModel = opt('label-model', '');
 const labelReasoningEffort = opt('label-reasoning-effort', '');
 const excludePassedReport = opt('exclude-passed-report', '');
+if (candidateRecovery && !retryMisses) {
+  console.error('--candidate-recovery requires --retry-misses');
+  process.exit(2);
+}
 if (!['google', 'brave'].includes(searchProvider)) {
   console.error(`unknown image search provider: ${searchProvider}`);
   process.exit(2);
@@ -117,6 +122,7 @@ try {
     winesPerRun,
     budgetMinutes,
     retryMisses,
+    candidateRecovery,
     slug,
     trace,
     noCatalogReuse,

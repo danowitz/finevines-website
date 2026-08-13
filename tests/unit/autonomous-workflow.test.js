@@ -101,6 +101,23 @@ test('production recovery retries recorded misses and keeps every import gate', 
   ]);
 });
 
+test('candidate recovery is a scoped retry that keeps every import gate', async () => {
+  const h = harness();
+  await runAutonomousImageWorkflow({
+    ...config,
+    retryMisses: true,
+    candidateRecovery: true,
+    labelModel: 'gpt-4.1-mini',
+  }, h.adapters);
+  assert.deepEqual(h.calls[1], ['pipeline', [
+    '--n', '25', '--budget-minutes', '30', '--missing', '--retry-misses',
+    '--candidate-recovery', '--label-model', 'gpt-4.1-mini',
+  ]]);
+  assert.deepEqual(h.calls.slice(2).map(([name]) => name), [
+    'auto-approve', 'watermark-sweep', 'import', 'review',
+  ]);
+});
+
 test('targeted canary can retain a full trace while bypassing catalog reuse', async () => {
   const h = harness();
   await runAutonomousImageWorkflow({

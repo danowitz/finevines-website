@@ -24,7 +24,12 @@ import { createBottleSelector } from './bottle-selector.mjs';
 import { createWebMatchExpander } from './web-match-expander.mjs';
 import { reusableStagedRecord } from './staged-record.mjs';
 import { buildCatalogImageDonors, reusableCatalogImage } from './catalog-image-reuse.mjs';
-import { loadFunnelStore, recordFunnel, saveFunnelStore } from './funnel-store.mjs';
+import {
+  loadFunnelStore,
+  recordFunnel,
+  recoverableCandidateSlugs,
+  saveFunnelStore,
+} from './funnel-store.mjs';
 import {
   createBoundedLabelReader,
   createLocalBottleAdapters,
@@ -48,6 +53,7 @@ const STARTED_AT = Date.now();
 const DUE_ONLY = has('due-only');
 const CANARY = has('canary');
 const RETRY_MISSES = has('retry-misses');
+const CANDIDATE_RECOVERY = has('candidate-recovery');
 const CATALOG_REUSE = !has('no-catalog-reuse');
 const TRACE = has('trace');
 const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
@@ -110,6 +116,10 @@ function selectWines(catalog, attempts, funnelStore) {
       wines = wines.filter((wine) => funnelStore[wine.slug]?.ok === false);
     } else if (DUE_ONLY) wines = wines.filter((wine) =>
       isDue(attempts, wine.sku, new Date(), undefined, { imageMissing: needsImage(wine) }));
+  }
+  if (CANDIDATE_RECOVERY) {
+    const recoverable = recoverableCandidateSlugs(funnelStore);
+    wines = wines.filter((wine) => recoverable.has(wine.slug));
   }
   wines.sort((left, right) => left.slug.localeCompare(right.slug));
   wines = uniqueImageTargets(wines);
@@ -183,6 +193,9 @@ const wines = EXCLUDE_PASSED_REPORT
   ? uniqueImageTargets(catalog.filter((wine) => continuationSlugs.has(wine.slug)))
       .sort((left, right) => left.slug.localeCompare(right.slug))
   : withoutPassed(selectWines(catalog, attempts, funnelStore), inheritedPassed);
+if (CANDIDATE_RECOVERY) {
+  console.log(`candidate recovery: ${wines.length} prior identity-anchor misses selected`);
+}
 if (!wines.length) {
   if (opt('slug')) {
     console.error(`no wine in the catalog has slug ${opt('slug')}`);
