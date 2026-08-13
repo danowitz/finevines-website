@@ -70,4 +70,5 @@ jobs:
             .run/image-workflow.json
             out-bottle/image-canary.json
             out-bottle/image-canary.html
+            out-bottle/image-canary-assets/
             out-bottle/image-traces/

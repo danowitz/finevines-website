@@ -1,26 +1,10 @@
-// Preserve the catalog identity in the first search. Removing the producer or
-// vintage is a fallback strategy, never the default: exact Google Image queries
-// are what surfaced the producer/importer photographs the old page scraper hid.
+// Search exactly what a person sees in the catalog. Do not append search hints,
+// rewrite producers, quote fragments, or generate fallback queries: pasting the
+// full display name and vintage into image search is the measured behavior.
 export function imageSearchQuery(wine) {
-  const name = String(wine.name || '')
-    .replace(/\*+/g, '')
-    .replace(/\b\d+\/\d+\b/g, '')
-    .replace(/\b\d+\s*(ml|l)\b/gi, '')
+  return `${String(wine.name || '').trim()} ${String(wine.vintage || '').trim()}`
     .replace(/\s+/g, ' ')
     .trim();
-  const rawProducer = String(wine.producer || '').trim();
-  // Salesforce's brand is "Cider Farm"; the producer and every useful search
-  // result use "The Cider Farm". Without the article, Google converges on the
-  // unrelated Sea Cider Farm. Keep measured catalog/search aliases explicit.
-  const producer = rawProducer.toLowerCase() === 'cider farm' ? 'The Cider Farm' : rawProducer;
-  const nameLower = name.toLowerCase();
-  const rawLower = rawProducer.toLowerCase();
-  const identity = rawProducer && nameLower.startsWith(rawLower)
-    ? `${producer}${name.slice(rawProducer.length)}`
-    : producer && !nameLower.startsWith(producer.toLowerCase())
-      ? `${producer} ${name}`
-      : name;
-  return `${identity} ${wine.vintage || ''} bottle`.replace(/\s+/g, ' ').trim();
 }
 
 export function uniqueImageTargets(wines) {
