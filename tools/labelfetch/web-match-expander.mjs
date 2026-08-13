@@ -28,6 +28,7 @@ export function createWebMatchExpander({
     let blocked = 0;
     let requests = 0;
     for (const seed of seeds.slice(0, maxSeeds)) {
+      const verifiedIdentity = seed.verifiedIdentity === true;
       let response;
       try {
         const bytes = await readFileImpl(seed.file);
@@ -78,7 +79,10 @@ export function createWebMatchExpander({
           const outcome = url === seed.url ? 'seed-duplicate'
             : !permitted(url) ? 'blocked-image-host'
             : !permitted(context) ? 'blocked-context-host' : 'permitted-full-match';
-          trace.push({ seed: seed.id, url, context, outcome, score: match.score || 0 });
+          trace.push({
+            seed: seed.id, seedIdentity: verifiedIdentity ? 'verified' : 'provisional',
+            url, context, outcome, score: match.score || 0,
+          });
           if (outcome !== 'permitted-full-match') {
             if (outcome.startsWith('blocked-')) blocked++;
             continue;
@@ -92,7 +96,8 @@ export function createWebMatchExpander({
             title: page.pageTitle || '',
             width: 0,
             height: 0,
-            trustedFullMatch: true,
+            trustedFullMatch: verifiedIdentity,
+            provisionalFullMatch: !verifiedIdentity,
             identityAnchorUrl: seed.url,
             discovery: 'google-web-detection',
           });

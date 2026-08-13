@@ -23,7 +23,9 @@ test('returns only provenance-paired permitted full matches and preserves anchor
       } }] }) };
     },
   });
-  const result = await expand([{ id: 'anchor-1', file: 'anchor.png', url: 'https://seed.test/a.jpg' }]);
+  const result = await expand([{
+    id: 'anchor-1', file: 'anchor.png', url: 'https://seed.test/a.jpg', verifiedIdentity: true,
+  }]);
   assert.match(request.url, /vision\.googleapis\.com/);
   assert.equal(request.headers['x-goog-api-key'], 'vision-key');
   assert.equal(request.body.requests[0].features[0].type, 'WEB_DETECTION');
@@ -43,6 +45,7 @@ test('returns only provenance-paired permitted full matches and preserves anchor
     width: 0,
     height: 0,
     trustedFullMatch: true,
+    provisionalFullMatch: false,
     identityAnchorUrl: 'https://seed.test/a.jpg',
     discovery: 'google-web-detection',
   }]);
@@ -52,4 +55,25 @@ test('missing credentials disable expansion without turning a wine into a miss',
   const result = await createWebMatchExpander()([{ id: 'anchor' }]);
   assert.equal(result.status, 'disabled');
   assert.deepEqual(result.items, []);
+});
+
+test('a full match from a provisional seed does not inherit verified identity', async () => {
+  const expand = createWebMatchExpander({
+    apiKey: 'vision-key',
+    readFileImpl: async () => Buffer.from('hypothesis'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ responses: [{ webDetection: {
+      pagesWithMatchingImages: [{
+        url: 'https://merchant.test/target-wine-2022',
+        pageTitle: 'Target Wine 2022',
+        fullMatchingImages: [{ url: 'https://merchant.test/bottle.jpg' }],
+      }],
+    } }] }) }),
+  });
+  const result = await expand([{
+    id: 'pair-seed', file: 'seed.png', url: 'https://seed.test/a.jpg', verifiedIdentity: false,
+  }]);
+
+  assert.equal(result.items.length, 1);
+  assert.equal(result.items[0].trustedFullMatch, false);
+  assert.equal(result.items[0].provisionalFullMatch, true);
 });

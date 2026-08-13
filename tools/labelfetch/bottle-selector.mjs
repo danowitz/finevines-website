@@ -234,6 +234,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         explicitConflicts: 0,
         publishableAnchors: 0,
         sourceIdentityAnchors: 0,
+        provisionalExpansionSeeds: 0,
       };
       if (inspected.length < 2) return {
         pick: null,
@@ -280,6 +281,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       let bestEvaluated = null;
       let selectedSourceAnchorIds = [];
       const expansionSeeds = [];
+      const provisionalSeeds = [];
       const traceEvidence = [];
       for (const group of groups) {
         const judged = group.map((candidate) => {
@@ -298,7 +300,19 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         });
         for (const candidate of judged) {
           if (candidate.anchor && !candidate.explicitConflict &&
-              !expansionSeeds.some(({ id }) => id === candidate.id)) expansionSeeds.push(candidate);
+              !expansionSeeds.some(({ id }) => id === candidate.id)) {
+            expansionSeeds.push({ ...candidate, verifiedIdentity: true });
+          }
+        }
+        // A conflict-free repeated design is useful as a reverse-search
+        // hypothesis even when its tiny labels cannot prove identity. Keep it
+        // explicitly provisional: neither it nor its Web Detection copies may
+        // inherit anchor status from visual similarity alone.
+        if (!judged.some((candidate) => candidate.explicitConflict)) {
+          const seed = representatives(judged)[0];
+          if (seed && !provisionalSeeds.some(({ id }) => id === seed.id)) {
+            provisionalSeeds.push({ ...seed, verifiedIdentity: false });
+          }
         }
         const evaluated = evaluateVisualPick(judged);
         if (!bestEvaluated ||
@@ -325,6 +339,9 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       }
       trace.evidence = traceEvidence;
       const pick = bestEvaluated?.pick || null;
+      if (!expansionSeeds.length && provisionalSeeds.length) {
+        expansionSeeds.push(provisionalSeeds[0]);
+      }
       Object.assign(diagnostics, {
         identityAnchors: bestEvaluated?.diagnostics.identityAnchors || 0,
         explicitConflicts: evidence.filter((item) => item.explicitConflict).length,
@@ -332,6 +349,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         anchorResolutionFailures: bestEvaluated?.diagnostics.anchorResolutionFailures || 0,
         publishableAnchors: bestEvaluated?.diagnostics.publishableAnchors || 0,
         sourceIdentityAnchors: selectedSourceAnchorIds.length,
+        provisionalExpansionSeeds: expansionSeeds.filter((seed) => !seed.verifiedIdentity).length,
       });
       if (pick) {
         trace.pick = pick.id;

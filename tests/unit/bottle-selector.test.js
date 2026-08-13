@@ -176,6 +176,23 @@ test('similar siblings without an exact anchor remain a no-pick', async () => {
   assert.equal(result.reviewCandidates.length, 2);
   assert.equal(result.reviewCandidates[0].displayOk, true);
   assert.match(result.reviewCandidates[1].why, /identity not proven|conflict/i);
+  assert.deepEqual(result.expansionSeeds, []);
+});
+
+test('two matching conflict-free images yield one provisional reverse-search seed', async () => {
+  const result = await selector({
+    pairs: [{ a: 0, b: 1, score: 0.98 }],
+    evidence: [{ id: 'scene' }, { id: 'clean' }],
+  }).select({ name: 'Target Wine', vintage: '2022' }, [
+    candidate('scene', { width: 900, height: 1200 }),
+    candidate('clean', { cleanBackground: true, width: 500, height: 900 }),
+  ]);
+
+  assert.equal(result.pick, null);
+  assert.equal(result.expansionSeeds.length, 1);
+  assert.equal(result.expansionSeeds[0].id, 'clean');
+  assert.equal(result.expansionSeeds[0].verifiedIdentity, false);
+  assert.equal(result.diagnostics.provisionalExpansionSeeds, 1);
 });
 
 test('every candidate supplied by the pipeline enters the selector', async () => {
@@ -281,4 +298,38 @@ test('a Web Detection full match inherits identity from its verified seed', asyn
   ]);
   assert.equal(result.pick.id, 'web-copy');
   assert.deepEqual(result.pick.anchorIds, ['seed', 'web-copy']);
+});
+
+test('a provisional Web Detection copy must earn identity from its own evidence', async () => {
+  const subject = selector({
+    pairs: [{ a: 0, b: 1, score: 0.99 }],
+    evidence: [{ id: 'seed' }, { id: 'web-copy' }],
+  });
+  const result = await subject.select({ name: 'Domaine Example Target Cuvee', vintage: '2022' }, [
+    candidate('seed'),
+    candidate('web-copy', { provisionalFullMatch: true, cleanBackground: true }),
+  ]);
+
+  assert.equal(result.pick, null);
+  assert.equal(result.diagnostics.identityAnchors, 0);
+});
+
+test('an exact product title can promote a provisional Web Detection copy', async () => {
+  const subject = selector({
+    pairs: [{ a: 0, b: 1, score: 0.99 }],
+    evidence: [{ id: 'seed' }, { id: 'web-copy' }],
+  });
+  const result = await subject.select({ name: 'Domaine Example Target Cuvee', vintage: '2022' }, [
+    candidate('seed'),
+    candidate('web-copy', {
+      provisionalFullMatch: true,
+      title: 'Domaine Example Target Cuvee 2022',
+      cleanBackground: true,
+      width: 900,
+      height: 1500,
+    }),
+  ]);
+
+  assert.equal(result.pick.id, 'web-copy');
+  assert.deepEqual(result.sourceAnchorIds, ['web-copy']);
 });
