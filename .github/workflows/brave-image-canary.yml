@@ -48,6 +48,7 @@ jobs:
       - name: Verify and build image tools
         run: |
           node --test tests/unit/brave-images.test.js tests/unit/autonomous-workflow.test.js
+          python -m unittest discover -s tests/python
           go test ./tools/...
           go build -o imgcheck ./tools/imgcheck
           go build -o imghash ./tools/imghash

@@ -96,13 +96,20 @@ def features(path):
     }
 
 
+def ratio_matches(left_descriptors, right_descriptors):
+    if left_descriptors is None or right_descriptors is None:
+        return []
+    matcher = cv2.BFMatcher(cv2.NORM_L2)
+    return [
+        pair[0]
+        for pair in matcher.knnMatch(left_descriptors, right_descriptors, k=2)
+        if len(pair) == 2 and pair[0].distance < 0.72 * pair[1].distance
+    ]
+
+
 def compare(left, right):
-    good = 0
-    if left["descriptors"] is not None and right["descriptors"] is not None:
-        matcher = cv2.BFMatcher(cv2.NORM_L2)
-        for first, second in matcher.knnMatch(left["descriptors"], right["descriptors"], k=2):
-            if first.distance < 0.72 * second.distance:
-                good += 1
+    label_matches = ratio_matches(left["descriptors"], right["descriptors"])
+    good = len(label_matches)
     denominator = max(1, min(left["keypoints"], right["keypoints"]))
     sift_ratio = good / denominator
     histogram = float(cv2.compareHist(left["histogram"], right["histogram"], cv2.HISTCMP_CORREL))
@@ -111,12 +118,7 @@ def compare(left, right):
     # A clean bottle can appear as a small object inside a tasting scene or a
     # lineup. Locate identical local artwork geometrically in the full images;
     # backgrounds must not erase strong label-level corroboration.
-    local_matches = []
-    if left["full_descriptors"] is not None and right["full_descriptors"] is not None:
-        matcher = cv2.BFMatcher(cv2.NORM_L2)
-        for pair in matcher.knnMatch(left["full_descriptors"], right["full_descriptors"], k=2):
-            if len(pair) == 2 and pair[0].distance < 0.72 * pair[1].distance:
-                local_matches.append(pair[0])
+    local_matches = ratio_matches(left["full_descriptors"], right["full_descriptors"])
     local_inliers = 0
     local_ratio = 0.0
     if len(local_matches) >= 4:
