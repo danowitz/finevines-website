@@ -81,6 +81,7 @@ jobs:
       # Custom Search JSON API calls; a browser-referer-only key is invalid here.
       FINEVINES_GOOGLE_CSE_KEY: ${{ secrets.FINEVINES_GOOGLE_CSE_KEY }}
       FINEVINES_GOOGLE_CSE_CX: ${{ secrets.FINEVINES_GOOGLE_CSE_CX }}
+      FINEVINES_GOOGLE_VISION_KEY: ${{ secrets.FINEVINES_GOOGLE_VISION_KEY }}
       # Bunny.net — storage zone (deploy upload + the _review/ queue), pull zone
       # purge, and the redirect middleware's script ID.
       FINEVINES_BUNNY_STORAGE_ZONE: ${{ secrets.FINEVINES_BUNNY_STORAGE_ZONE }}

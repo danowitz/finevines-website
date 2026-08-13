@@ -279,15 +279,27 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       let selectedGroup = groups[0];
       let bestEvaluated = null;
       let selectedSourceAnchorIds = [];
+      const expansionSeeds = [];
       const traceEvidence = [];
       for (const group of groups) {
-        const judged = group.map((candidate) => ({
-          ...candidate,
-          explicitConflict: byID.get(candidate.id)?.explicitConflict === true,
-          sourceAnchor: exactVintageSourceAnchor(wine, candidate),
-          anchor: byID.get(candidate.id)?.anchor === true || (
-            byID.get(candidate.id)?.explicitConflict !== true && exactVintageSourceAnchor(wine, candidate)),
-        }));
+        const judged = group.map((candidate) => {
+          const explicitConflict = byID.get(candidate.id)?.explicitConflict === true;
+          const sourceAnchor = exactVintageSourceAnchor(wine, candidate);
+          const identityAnchor = byID.get(candidate.id)?.anchor === true;
+          const inheritedFullMatch = candidate.trustedFullMatch === true;
+          return {
+            ...candidate,
+            explicitConflict,
+            sourceAnchor,
+            // A conflict vetoes every route to anchor status, including an
+            // otherwise trusted full-match relationship from Web Detection.
+            anchor: !explicitConflict && (identityAnchor || sourceAnchor || inheritedFullMatch),
+          };
+        });
+        for (const candidate of judged) {
+          if (candidate.anchor && !candidate.explicitConflict &&
+              !expansionSeeds.some(({ id }) => id === candidate.id)) expansionSeeds.push(candidate);
+        }
         const evaluated = evaluateVisualPick(judged);
         if (!bestEvaluated ||
             evaluated.diagnostics.identityAnchors > bestEvaluated.diagnostics.identityAnchors ||
@@ -334,6 +346,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
           trace,
           diagnostics,
           reviewCandidates: reviewCandidates(inspected, selectedGroup, evidence),
+          expansionSeeds,
         };
       }
       const reason = diagnostics.identityAnchors === 0
@@ -347,6 +360,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         sourceAnchorIds: selectedSourceAnchorIds,
         diagnostics,
         reviewCandidates: reviewCandidates(inspected, selectedGroup, evidence),
+        expansionSeeds,
       };
     },
   };

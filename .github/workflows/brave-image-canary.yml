@@ -44,6 +44,7 @@ jobs:
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       FINEVINES_BRAVE_SEARCH_KEY: ${{ secrets.FINEVINES_BRAVE_SEARCH_KEY }}
+      FINEVINES_GOOGLE_VISION_KEY: ${{ secrets.FINEVINES_GOOGLE_VISION_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

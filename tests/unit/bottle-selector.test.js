@@ -15,7 +15,7 @@ function selector({ pairs = [], evidence = [] } = {}) {
   });
 }
 
-test('one readable anchor transfers identity within its strict visual group', async () => {
+test('one readable anchor cannot transfer identity to an unverified group member', async () => {
   const result = await selector({
     pairs: [{ a: 0, b: 1, score: 0.96 }, { a: 0, b: 2, score: 0.94 }],
     evidence: [
@@ -28,14 +28,14 @@ test('one readable anchor transfers identity within its strict visual group', as
     candidate('clean', { cleanBackground: true, width: 700, height: 1200 }),
     candidate('wrong', { cleanBackground: true, width: 2000, height: 3000 }),
   ]);
-  assert.equal(result.pick.id, 'clean');
+  assert.equal(result.pick.id, 'readable');
   assert.equal(result.matchingImages, 2);
   assert.equal(result.inspectedImages, 3);
   assert.equal(result.diagnostics.selectorReceived, 3);
   assert.equal(result.diagnostics.strongestGroupImages, 2);
   assert.equal(result.diagnostics.identityAnchors, 1);
   assert.equal(result.diagnostics.explicitConflicts, 1);
-  assert.equal(result.diagnostics.publishableAnchors, 2);
+  assert.equal(result.diagnostics.publishableAnchors, 1);
 });
 
 test('two independent exact result titles let a clean bottle corroborate a matching scene', async () => {
@@ -230,7 +230,7 @@ test('weak transitive lookalikes cannot pull a sibling wine into the strongest g
   assert.equal(result.pick.id, 'target-1');
 });
 
-test('an exact smaller group beats a larger sibling group and can donate identity to its clean member', async () => {
+test('an exact smaller group beats a larger sibling group without donating identity', async () => {
   const reads = [];
   const subject = createBottleSelector({
     inspect: async (item) => ({ visualOk: true, shapeOk: item.shapeOk, cleanBackground: item.cleanBackground }),
@@ -261,7 +261,24 @@ test('an exact smaller group beats a larger sibling group and can donate identit
   );
 
   assert.deepEqual(reads, [['target-readable', 'target-clean', 'sibling-1']]);
-  assert.equal(result.pick.id, 'target-clean');
+  assert.equal(result.pick.id, 'target-readable');
   assert.equal(result.matchingImages, 2);
   assert.deepEqual(result.pick.anchorIds, ['target-readable']);
+});
+
+test('a Web Detection full match inherits identity from its verified seed', async () => {
+  const result = await selector({
+    pairs: [{ a: 0, b: 1, score: 0.99 }],
+    evidence: [{ id: 'seed', anchor: true, label: 'Exact Wine' }],
+  }).select({ name: 'Exact Wine' }, [
+    candidate('seed', { cleanBackground: false, width: 400, height: 700 }),
+    candidate('web-copy', {
+      trustedFullMatch: true,
+      cleanBackground: true,
+      width: 900,
+      height: 1500,
+    }),
+  ]);
+  assert.equal(result.pick.id, 'web-copy');
+  assert.deepEqual(result.pick.anchorIds, ['seed', 'web-copy']);
 });

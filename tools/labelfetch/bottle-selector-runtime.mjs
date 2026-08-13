@@ -208,6 +208,18 @@ function namedVarieties(text) {
   return VARIETIES.filter((variety) => normalized.includes(` ${variety} `));
 }
 
+function sourceVintageConflict(wine, candidate) {
+  const wanted = String(wine.vintage || '').match(/\b(?:19|20)\d{2}\b/)?.[0] || '';
+  if (!wanted) return '';
+  // Product titles are explicit evidence. Do not mine arbitrary page URLs or
+  // article dates: those can describe publication time rather than vintage.
+  const visible = String(candidate.title || '').match(/\b(?:19|20)\d{2}\b/g) || [];
+  if (visible.length && !visible.includes(wanted)) {
+    return `candidate source title says ${[...new Set(visible)].join('/')}; request is ${wanted}`;
+  }
+  return '';
+}
+
 function varietalConflict(wine, candidate, identity) {
   const wanted = namedVarieties([wine.name, wine.varietal].filter(Boolean).join(' '));
   if (!wanted.length) return '';
@@ -314,6 +326,7 @@ export function createBoundedLabelReader({
       const identityProblem = identityConflict(verifierWine, candidate, identity);
       const conflict = vintageConflict(wine.vintage, identity.vintage) ||
         vintageConflict(wine.vintage, localVintage) ||
+        sourceVintageConflict(wine, candidate) ||
         varietalConflict(wine, candidate, identity) ||
         styleConflict(wine, candidate, identity) ||
         identityProblem ||

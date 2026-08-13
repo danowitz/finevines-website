@@ -15,10 +15,10 @@ export function evaluateVisualPick(candidates) {
   diagnostics.identityAnchors = anchors.length;
   if (!anchors.length) return { pick: null, diagnostics };
 
-  // A readable exact member establishes identity inside a locally corroborated
-  // label group; then choose the best non-conflicting product shot, just as a
-  // person recognizes a clean small cutout from larger tasting-scene evidence.
-  const usable = candidates.filter((candidate) => !candidate.explicitConflict).filter((candidate) => {
+  // Similarity corroborates an identity decision; it does not transfer identity
+  // to an arbitrary sibling label. The published pixels must be an anchor in
+  // their own right (including a verified full-match copy of an anchor).
+  const usable = anchors.filter((candidate) => {
     const width = candidate.width || 0;
     const height = candidate.height || 0;
     // A tall, clean importer cutout can be narrow in pixels and still render

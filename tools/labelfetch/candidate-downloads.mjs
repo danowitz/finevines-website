@@ -27,6 +27,8 @@ export async function downloadCandidates({
   mkdirImpl = mkdir,
   writeFileImpl = writeFile,
   concurrency = 3,
+  idPrefix = 'candidate',
+  filePrefix = 'candidate',
 }) {
   await mkdirImpl(directory, { recursive: true });
   const attempted = items;
@@ -45,9 +47,9 @@ export async function downloadCandidates({
         bytes = await convert(bytes, response.headers?.get?.('content-type') || '');
         if (!bytes || bytes.length < 2000) return { candidate: null, failure: 'conversion', status: response.status || 200, bytes: receivedBytes };
       }
-      const file = join(directory, `candidate-${String(index + 1).padStart(2, '0')}.png`);
+      const file = join(directory, `${filePrefix}-${String(index + 1).padStart(2, '0')}.png`);
       await writeFileImpl(file, bytes);
-      return { candidate: { ...item, id: `candidate-${index + 1}`, file }, failure: '', status: response.status || 200, bytes: bytes.length };
+      return { candidate: { ...item, id: `${idPrefix}-${index + 1}`, file }, failure: '', status: response.status || 200, bytes: bytes.length };
     } catch (error) {
       return { candidate: null, failure: 'transport', status: 0, bytes: 0, error: String(error?.message || error).split('\n')[0] };
     }

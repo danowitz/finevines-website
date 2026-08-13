@@ -68,6 +68,24 @@ test('bounded reader sends an explicit reasoning effort only for a configured re
   assert.equal(body.max_completion_tokens, 4000);
 });
 
+test('an explicit wrong vintage in the source title vetoes a vintage-neutral label', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test',
+    readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([
+      { single_bottle: true, producer_brand: 'Exact', product_cuvee: 'Wine', appellation: '', vintage: '' },
+    ]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true }),
+  });
+  const [evidence] = await reader(
+    { name: 'Exact Wine', vintage: '2012' },
+    [{ id: 'wrong-source', file: 'wine.png', title: 'Exact Wine 2018' }],
+  );
+  assert.equal(evidence.anchor, false);
+  assert.equal(evidence.explicitConflict, true);
+  assert.match(evidence.conflict, /source title says 2018/);
+});
+
 test('bounded reader can replace each full shot with one local label crop', async () => {
   const prepared = [];
   let body;

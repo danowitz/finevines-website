@@ -21,6 +21,7 @@ import { downloadCandidates } from './candidate-downloads.mjs';
 import { candidateWindow } from './candidate-window.mjs';
 import { passedSlugs, unresolvedSlugs, withoutPassed } from './comparison-progress.mjs';
 import { createBottleSelector } from './bottle-selector.mjs';
+import { createWebMatchExpander } from './web-match-expander.mjs';
 import { reusableStagedRecord } from './staged-record.mjs';
 import { buildCatalogImageDonors, reusableCatalogImage } from './catalog-image-reuse.mjs';
 import { loadFunnelStore, recordFunnel, saveFunnelStore } from './funnel-store.mjs';
@@ -214,6 +215,7 @@ if (!wines.length) {
 const googleKey = await envOrFile('FINEVINES_GOOGLE_CSE_KEY');
 const googleCx = await envOrFile('FINEVINES_GOOGLE_CSE_CX');
 const braveKey = await envOrFile('FINEVINES_BRAVE_SEARCH_KEY');
+const googleVisionKey = await envOrFile('FINEVINES_GOOGLE_VISION_KEY');
 if (SEARCH_PROVIDER === 'google' && (!googleKey || !googleCx)) {
   console.error('Google image discovery credentials are missing; no wine was searched and no miss was recorded');
   process.exit(2);
@@ -245,6 +247,7 @@ const selector = createBottleSelector({
     return boundedReader(...readerArgs);
   },
 });
+const expandWebMatches = createWebMatchExpander({ apiKey: googleVisionKey });
 
 await mkdir(OUT_DIR, { recursive: true });
 await mkdir(CANDIDATE_DIR, { recursive: true });
@@ -253,6 +256,7 @@ const manifest = (await exists(MANIFEST)) ? JSON.parse(await readFile(MANIFEST, 
 console.log(`${SEARCH_PROVIDER} image discovery: ready`);
 if (SEARCH_PROVIDER === 'google') console.log(`google image search profile: ${SEARCH_PROFILE_NAME}`);
 console.log(`identity reader: ${visionKey ? `${MODEL}${LABEL_REASONING_EFFORT ? ` (${LABEL_REASONING_EFFORT} effort)` : ''}, one request of at most three images per grouped wine` : 'unavailable - grouped wines will stay due'}`);
+console.log(`verified-anchor expansion: ${googleVisionKey ? 'Google Cloud Vision Web Detection ready' : 'disabled - FINEVINES_GOOGLE_VISION_KEY is missing'}`);
 console.log(`processing up to ${WINE_CONCURRENCY} wines concurrently`);
 
 function fail(rec, stage, reason) {
@@ -306,6 +310,10 @@ async function processWine(wine) {
       identityAnchors: 0,
       explicitConflicts: 0,
       publishableAnchors: 0,
+      webExpansionRequests: 0,
+      webExpansionCandidates: 0,
+      webExpansionBlocked: 0,
+      webExpansionDownloaded: 0,
       outcome: 'pending',
     },
   };
@@ -348,6 +356,7 @@ async function processWine(wine) {
     discovery: null,
     downloads: null,
     selector: null,
+    webExpansion: null,
   } : null;
   if (trace) rec.debugTrace = trace;
   const discovery = await imageDiscover(rec.query);
@@ -411,6 +420,46 @@ async function processWine(wine) {
     }
     fail(rec, 'selector-error', `selector failed: ${String(error?.message || error).split('\n')[0]}`);
     return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
+  }
+
+  // Reverse-image expansion is a bounded rescue for a verified anchor that is
+  // not itself publishable. It is optional: an unavailable Web Detection API
+  // leaves the original selector verdict intact and visible in diagnostics.
+  if (!result.pick && result.expansionSeeds?.length && googleVisionKey) {
+    const expansion = await expandWebMatches(result.expansionSeeds);
+    Object.assign(rec.funnel, {
+      webExpansionStatus: expansion.status,
+      webExpansionRequests: expansion.requests || 0,
+      webExpansionCandidates: expansion.items?.length || 0,
+      webExpansionBlocked: expansion.blocked || 0,
+      webExpansionError: expansion.error || '',
+    });
+    if (trace) trace.webExpansion = expansion;
+    if (expansion.items?.length) {
+      const expandedDownloads = await downloadCandidates({
+        items: expansion.items,
+        directory: join(CANDIDATE_DIR, wine.slug),
+        convert: convertToPng,
+        idPrefix: 'web-match',
+        filePrefix: 'web-match',
+      });
+      rec.funnel.webExpansionDownloaded = expandedDownloads.candidates.length;
+      if (trace) trace.webExpansion.downloads = expandedDownloads.trace;
+      if (expandedDownloads.candidates.length) {
+        candidates.push(...expandedDownloads.candidates);
+        try {
+          result = await selector.select(identity, candidates);
+          if (trace) trace.selectorAfterWebExpansion = result.trace || null;
+        } catch (error) {
+          if (error instanceof ReaderUnavailableError) {
+            fail(rec, 'identity-reader-unavailable', `identity reader unavailable after Web Detection: ${error.message}`);
+            return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
+          }
+          fail(rec, 'selector-error', `selector failed after Web Detection: ${String(error?.message || error).split('\n')[0]}`);
+          return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
+        }
+      }
+    }
   }
 
   Object.assign(rec.funnel, result.diagnostics || {});
