@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-13T04:55:07Z",
+  "updated": "2026-08-13T05:03:25Z",
   "windowDays": 30,
   "wines": [
     {
@@ -8,7 +8,7 @@
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 110.24665999999999
+      "cases": 103.24665999999999
     },
     {
       "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
@@ -20,11 +20,11 @@
     },
     {
       "slug": "domaine-de-la-villaudiere-sauvignon-blanc-igp-val-de-loire-2025",
-      "cases": 51
+      "cases": 48
     },
     {
       "slug": "filare-italia-prosecco-doc-extra-dry",
-      "cases": 48.083330000000004
+      "cases": 47.083330000000004
     }
   ]
 }
