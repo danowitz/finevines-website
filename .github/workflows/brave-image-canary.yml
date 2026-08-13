@@ -1,4 +1,4 @@
-name: Brave image canary
+name: Brave image comparison
 
 on:
   workflow_dispatch:
@@ -16,11 +16,11 @@ on:
         type: choice
         options: ['15', '30', '60']
       label_model:
-        description: Vision label reader used for this canary
+        description: Vision label reader used for this comparison
         required: true
         default: 'gpt-4.1-nano'
         type: choice
-        options: ['gpt-4.1-nano', 'gpt-4.1-mini']
+        options: ['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1']
 
 permissions:
   contents: read

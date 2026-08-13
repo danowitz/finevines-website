@@ -2,7 +2,7 @@
 // scraping or model-spend problem:
 //
 //   exact image query -> bounded 10+5 result window -> local bottle check
-//   -> local visual grouping -> one nano transcription of at most three images
+//   -> local visual grouping -> one bounded transcription of at most three images
 //   -> best clean/high-resolution member of the anchored group
 //
 // This command only stages files and provenance. import.mjs remains the separate
@@ -52,11 +52,12 @@ const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
 const SEARCH_PROFILE_NAME = opt('search-profile', 'baseline');
 const SEARCH_PROVIDER = opt('search-provider', 'google');
 const MODEL = opt('label-model', process.env.FINEVINES_LABEL_MODEL || 'gpt-4.1-nano');
+const SUPPORTED_LABEL_MODELS = new Set(['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1']);
 if (!['google', 'brave'].includes(SEARCH_PROVIDER)) {
   console.error(`unknown image search provider: ${SEARCH_PROVIDER}`);
   process.exit(2);
 }
-if (!['gpt-4.1-nano', 'gpt-4.1-mini'].includes(MODEL)) {
+if (!SUPPORTED_LABEL_MODELS.has(MODEL)) {
   console.error(`unsupported label model: ${MODEL}`);
   process.exit(2);
 }
