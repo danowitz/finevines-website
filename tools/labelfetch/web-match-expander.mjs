@@ -16,6 +16,7 @@ export function createWebMatchExpander({
   apiKey,
   fetchImpl = globalThis.fetch,
   readFileImpl = readFile,
+  prepareSeed = async (seed) => readFileImpl(seed.file),
   maxSeeds = 2,
   maxCandidates = 10,
 } = {}) {
@@ -33,7 +34,10 @@ export function createWebMatchExpander({
       const verifiedIdentity = seed.verifiedIdentity === true;
       let response;
       try {
-        const bytes = await readFileImpl(seed.file);
+        // Search the identifying label crop in production, not the generic
+        // bottle silhouette. The default keeps the adapter independently
+        // usable and easy to test.
+        const bytes = await prepareSeed(seed);
         requests++;
         response = await fetchImpl(ENDPOINT, {
           method: 'POST',

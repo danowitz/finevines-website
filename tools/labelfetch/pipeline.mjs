@@ -247,7 +247,10 @@ const selector = createBottleSelector({
     return boundedReader(...readerArgs);
   },
 });
-const expandWebMatches = createWebMatchExpander({ apiKey: googleVisionKey });
+const expandWebMatches = createWebMatchExpander({
+  apiKey: googleVisionKey,
+  prepareSeed: local.prepareForReading,
+});
 
 await mkdir(OUT_DIR, { recursive: true });
 await mkdir(CANDIDATE_DIR, { recursive: true });
@@ -256,7 +259,7 @@ const manifest = (await exists(MANIFEST)) ? JSON.parse(await readFile(MANIFEST, 
 console.log(`${SEARCH_PROVIDER} image discovery: ready`);
 if (SEARCH_PROVIDER === 'google') console.log(`google image search profile: ${SEARCH_PROFILE_NAME}`);
 console.log(`identity reader: ${visionKey ? `${MODEL}${LABEL_REASONING_EFFORT ? ` (${LABEL_REASONING_EFFORT} effort)` : ''}, one request of at most three images per grouped wine` : 'unavailable - grouped wines will stay due'}`);
-console.log(`verified-anchor expansion: ${googleVisionKey ? 'Google Cloud Vision Web Detection ready' : 'disabled - FINEVINES_GOOGLE_VISION_KEY is missing'}`);
+console.log(`label reverse-search expansion: ${googleVisionKey ? 'Google Cloud Vision Web Detection ready' : 'disabled - FINEVINES_GOOGLE_VISION_KEY is missing'}`);
 console.log(`processing up to ${WINE_CONCURRENCY} wines concurrently`);
 
 function fail(rec, stage, reason) {
@@ -422,9 +425,9 @@ async function processWine(wine) {
     return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
   }
 
-  // Reverse-image expansion is a bounded rescue for a verified anchor that is
-  // not itself publishable. It is optional: an unavailable Web Detection API
-  // leaves the original selector verdict intact and visible in diagnostics.
+  // Reverse-image expansion is a bounded rescue for a verified anchor or a
+  // conflict-free repeated-design hypothesis. It is optional: an unavailable
+  // Web Detection API leaves the original selector verdict intact and visible.
   if (!result.pick && result.expansionSeeds?.length && googleVisionKey) {
     const expansion = await expandWebMatches(result.expansionSeeds);
     Object.assign(rec.funnel, {

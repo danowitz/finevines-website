@@ -29,6 +29,7 @@ test('returns provenance-paired permitted full matches and preserves anchor trus
   assert.match(request.url, /vision\.googleapis\.com/);
   assert.equal(request.headers['x-goog-api-key'], 'vision-key');
   assert.equal(request.body.requests[0].features[0].type, 'WEB_DETECTION');
+  assert.equal(request.body.requests[0].image.content, Buffer.from('anchor').toString('base64'));
   assert.equal(result.requests, 1);
   assert.equal(result.blocked, 1);
   assert.deepEqual(result.corroborationPages, [{
@@ -50,6 +51,27 @@ test('returns provenance-paired permitted full matches and preserves anchor trus
     identityAnchorUrl: 'https://seed.test/a.jpg',
     discovery: 'google-web-detection',
   }]);
+});
+
+test('uses the injected label-crop preparation seam', async () => {
+  let prepared;
+  let content;
+  const expand = createWebMatchExpander({
+    apiKey: 'vision-key',
+    prepareSeed: async (seed) => {
+      prepared = seed;
+      return Buffer.from('cropped-label');
+    },
+    fetchImpl: async (_url, options) => {
+      content = JSON.parse(options.body).requests[0].image.content;
+      return { ok: true, json: async () => ({ responses: [{}] }) };
+    },
+  });
+  const seed = { id: 'seed', file: 'bottle.png' };
+  await expand([seed]);
+
+  assert.equal(prepared, seed);
+  assert.equal(content, Buffer.from('cropped-label').toString('base64'));
 });
 
 test('missing credentials disable expansion without turning a wine into a miss', async () => {
