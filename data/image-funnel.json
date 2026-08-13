@@ -14883,14 +14883,14 @@
   "name": "Domaine Castera Jurancon Sweet White Sud-Quest",
   "ok": false,
   "failureStage": "download",
-  "reason": "only 1 of 6 candidates downloaded",
+  "reason": "only 0 of 8 candidates downloaded",
   "funnel": {
    "googleSearched": true,
    "searchResults": 10,
-   "sourcePolicyBlocked": 4,
-   "permittedCandidates": 6,
-   "downloadAttempted": 6,
-   "downloaded": 1,
+   "sourcePolicyBlocked": 2,
+   "permittedCandidates": 8,
+   "downloadAttempted": 8,
+   "downloaded": 0,
    "decodedImages": 0,
    "bottleShapePassed": 0,
    "cleanBackgrounds": 0,
@@ -14904,16 +14904,16 @@
    "outcome": "failed",
    "searchProvider": "google",
    "labelModel": "gpt-4.1-nano",
-   "initialWindowCandidates": 6,
+   "initialWindowCandidates": 8,
    "extensionWindowCandidates": 0,
-   "downloadHttpFailures": 3,
+   "downloadHttpFailures": 1,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 2,
+   "downloadConversionFailures": 7,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:56:31.069Z"
+  "updatedAt": "2026-08-13T04:12:22.353Z"
  },
  "domaine-daniel-bouland-morgon-bellevue-sable-2022": {
   "slug": "domaine-daniel-bouland-morgon-bellevue-sable-2022",
@@ -33056,7 +33056,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:56:32.508Z"
+  "updatedAt": "2026-08-13T04:12:24.363Z"
  },
  "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020": {
   "slug": "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020",
@@ -33825,7 +33825,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:56:34.625Z"
+  "updatedAt": "2026-08-13T04:12:25.713Z"
  },
  "kraft-domaine-kraft-vouvray-demi-sec-2016": {
   "slug": "kraft-domaine-kraft-vouvray-demi-sec-2016",
@@ -34956,7 +34956,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:56:36.419Z"
+  "updatedAt": "2026-08-13T04:12:27.588Z"
  },
  "peyros-chateau-peyros-madiran-vielles-vignes-2019": {
   "slug": "peyros-chateau-peyros-madiran-vielles-vignes-2019",
@@ -47649,14 +47649,14 @@
    "labelModel": "gpt-4.1-nano",
    "initialWindowCandidates": 9,
    "extensionWindowCandidates": 0,
-   "downloadHttpFailures": 8,
+   "downloadHttpFailures": 5,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 0,
+   "downloadConversionFailures": 3,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:56:31.070Z"
+  "updatedAt": "2026-08-13T04:12:22.353Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023",
@@ -47694,7 +47694,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:56:32.508Z"
+  "updatedAt": "2026-08-13T04:12:24.363Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025",
@@ -57772,7 +57772,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:56:34.625Z"
+  "updatedAt": "2026-08-13T04:12:25.713Z"
  },
  "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023": {
   "slug": "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023",
@@ -58742,7 +58742,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:56:36.419Z"
+  "updatedAt": "2026-08-13T04:12:27.588Z"
  },
  "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019": {
   "slug": "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019",
