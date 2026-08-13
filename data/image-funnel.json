@@ -14903,14 +14903,16 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
-   "downloadHttpFailures": 1,
+   "initialWindowCandidates": 6,
+   "extensionWindowCandidates": 0,
+   "downloadHttpFailures": 3,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 4,
+   "downloadConversionFailures": 2,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:17:38.542Z"
+  "updatedAt": "2026-08-13T03:39:47.342Z"
  },
  "domaine-daniel-bouland-morgon-bellevue-sable-2022": {
   "slug": "domaine-daniel-bouland-morgon-bellevue-sable-2022",
@@ -33043,6 +33045,8 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
+   "initialWindowCandidates": 5,
+   "extensionWindowCandidates": 0,
    "downloadHttpFailures": 4,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -33050,7 +33054,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:17:39.919Z"
+  "updatedAt": "2026-08-13T03:39:50.337Z"
  },
  "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020": {
   "slug": "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020",
@@ -33809,6 +33813,8 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
+   "initialWindowCandidates": 1,
+   "extensionWindowCandidates": 0,
    "downloadHttpFailures": 1,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -33816,7 +33822,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:17:41.461Z"
+  "updatedAt": "2026-08-13T03:39:53.170Z"
  },
  "kraft-domaine-kraft-vouvray-demi-sec-2016": {
   "slug": "kraft-domaine-kraft-vouvray-demi-sec-2016",
@@ -34937,6 +34943,8 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
+   "initialWindowCandidates": 1,
+   "extensionWindowCandidates": 0,
    "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -34944,7 +34952,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:17:43.487Z"
+  "updatedAt": "2026-08-13T03:39:56.221Z"
  },
  "peyros-chateau-peyros-madiran-vielles-vignes-2019": {
   "slug": "peyros-chateau-peyros-madiran-vielles-vignes-2019",
@@ -47634,14 +47642,16 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
-   "downloadHttpFailures": 5,
+   "initialWindowCandidates": 9,
+   "extensionWindowCandidates": 0,
+   "downloadHttpFailures": 8,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 3,
+   "downloadConversionFailures": 0,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:17:38.543Z"
+  "updatedAt": "2026-08-13T03:39:47.342Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023",
@@ -47669,6 +47679,8 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
+   "initialWindowCandidates": 2,
+   "extensionWindowCandidates": 0,
    "downloadHttpFailures": 1,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
@@ -47676,7 +47688,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:17:39.919Z"
+  "updatedAt": "2026-08-13T03:39:50.337Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025",
@@ -57744,6 +57756,8 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
+   "initialWindowCandidates": 8,
+   "extensionWindowCandidates": 0,
    "downloadHttpFailures": 0,
    "downloadTooSmall": 5,
    "downloadUnsupported": 0,
@@ -57751,7 +57765,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:17:41.461Z"
+  "updatedAt": "2026-08-13T03:39:53.170Z"
  },
  "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023": {
   "slug": "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023",
@@ -58711,6 +58725,8 @@
    "publishableAnchors": 0,
    "outcome": "failed",
    "searchProvider": "google",
+   "initialWindowCandidates": 8,
+   "extensionWindowCandidates": 0,
    "downloadHttpFailures": 0,
    "downloadTooSmall": 1,
    "downloadUnsupported": 0,
@@ -58718,7 +58734,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T03:17:43.487Z"
+  "updatedAt": "2026-08-13T03:39:56.221Z"
  },
  "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019": {
   "slug": "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019",
