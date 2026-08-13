@@ -19,6 +19,7 @@ import { createBraveImageDiscovery } from './brave-images.mjs';
 import { imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
 import { downloadCandidates } from './candidate-downloads.mjs';
 import { candidateWindow } from './candidate-window.mjs';
+import { passedSlugs, unresolvedSlugs, withoutPassed } from './comparison-progress.mjs';
 import { createBottleSelector } from './bottle-selector.mjs';
 import { reusableStagedRecord } from './staged-record.mjs';
 import { buildCatalogImageDonors, reusableCatalogImage } from './catalog-image-reuse.mjs';
@@ -52,6 +53,7 @@ const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
 const SEARCH_PROFILE_NAME = opt('search-profile', 'baseline');
 const SEARCH_PROVIDER = opt('search-provider', 'google');
 const MODEL = opt('label-model', process.env.FINEVINES_LABEL_MODEL || 'gpt-4.1-nano');
+const EXCLUDE_PASSED_REPORT = opt('exclude-passed-report', '');
 const SUPPORTED_LABEL_MODELS = new Set(['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-5.6-sol']);
 const REASONING_EFFORTS = new Set(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
 const LABEL_REASONING_EFFORT = MODEL === 'gpt-5.6-sol' ? opt('label-reasoning-effort', 'medium') : '';
@@ -160,11 +162,50 @@ const catalogBySku = new Map(catalog.map((wine) => [wine.sku, wine]));
 const catalogImageDonors = buildCatalogImageDonors(catalog);
 const attempts = await loadAttempts();
 const funnelStore = await loadFunnelStore();
-const wines = selectWines(catalog, attempts, funnelStore);
+let inheritedPassed = new Set();
+let continuationSlugs = new Set();
+if (EXCLUDE_PASSED_REPORT) {
+  if (!CANARY) {
+    console.error('--exclude-passed-report is comparison-only');
+    process.exit(2);
+  }
+  try {
+    const priorReport = JSON.parse(await readFile(EXCLUDE_PASSED_REPORT, 'utf8'));
+    inheritedPassed = passedSlugs(priorReport);
+    continuationSlugs = unresolvedSlugs(priorReport);
+  } catch (error) {
+    console.error(`could not read prior comparison report: ${String(error?.message || error).split('\n')[0]}`);
+    process.exit(2);
+  }
+}
+const wines = EXCLUDE_PASSED_REPORT
+  ? uniqueImageTargets(catalog.filter((wine) => continuationSlugs.has(wine.slug)))
+      .sort((left, right) => left.slug.localeCompare(right.slug))
+  : withoutPassed(selectWines(catalog, attempts, funnelStore), inheritedPassed);
 if (!wines.length) {
   if (opt('slug')) {
     console.error(`no wine in the catalog has slug ${opt('slug')}`);
     process.exit(2);
+  }
+  if (CANARY && EXCLUDE_PASSED_REPORT) {
+    await mkdir('out-bottle', { recursive: true });
+    await writeFile('out-bottle/image-canary.json', JSON.stringify({
+      generatedAt: new Date().toISOString(),
+      searchProfile: SEARCH_PROFILE_NAME,
+      searchProvider: SEARCH_PROVIDER,
+      labelModel: MODEL,
+      labelReasoningEffort: LABEL_REASONING_EFFORT,
+      inheritedPassed: inheritedPassed.size,
+      cumulativePassedSlugs: [...inheritedPassed].sort(),
+      remainingSlugs: [],
+      attempted: 0,
+      accepted: 0,
+      recovered: 0,
+      labelBatches: 0,
+      rows: [],
+    }, null, 2) + '\n');
+    console.log('comparison is converged; all scoped wines passed in earlier rounds');
+    process.exit(0);
   }
   console.log('no wines due tonight - image stage is converged; nothing to do');
   process.exit(0);
@@ -494,6 +535,12 @@ if (failureSummary.size) {
 console.log(`images -> ${OUT_DIR}/; manifest -> ${MANIFEST}`);
 if (CANARY) {
   const recovered = runRows.filter((row) => row.ok && row.previous?.ok === false).length;
+  const cumulativePassedSlugs = [...new Set([
+    ...inheritedPassed,
+    ...runRows.filter((row) => row.ok).map((row) => row.slug),
+  ])].sort();
+  const passedThisRound = new Set(runRows.filter((row) => row.ok).map((row) => row.slug));
+  const remainingSlugs = wines.map((wine) => wine.slug).filter((slug) => !passedThisRound.has(slug));
   await mkdir('out-bottle', { recursive: true });
   await writeFile('out-bottle/image-canary.json', JSON.stringify({
     generatedAt: new Date().toISOString(),
@@ -501,6 +548,9 @@ if (CANARY) {
     searchProvider: SEARCH_PROVIDER,
     labelModel: MODEL,
     labelReasoningEffort: LABEL_REASONING_EFFORT,
+    inheritedPassed: inheritedPassed.size,
+    cumulativePassedSlugs,
+    remainingSlugs,
     attempted,
     accepted,
     recovered,

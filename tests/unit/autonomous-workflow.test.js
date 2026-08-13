@@ -124,8 +124,10 @@ test('a canary can select a stronger label model without changing production def
     canary: true,
     labelModel: 'gpt-5.6-sol',
     labelReasoningEffort: 'medium',
+    excludePassedReport: 'previous/image-canary.json',
   }, h.adapters);
-  assert.deepEqual(h.calls[1][1].slice(-4), [
+  assert.deepEqual(h.calls[1][1].slice(-6), [
     '--label-model', 'gpt-5.6-sol', '--label-reasoning-effort', 'medium',
+    '--exclude-passed-report', 'previous/image-canary.json',
   ]);
 });

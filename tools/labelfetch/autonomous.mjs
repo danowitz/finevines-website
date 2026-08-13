@@ -28,6 +28,7 @@ const searchProfileName = opt('search-profile', 'baseline');
 const searchProvider = opt('search-provider', 'google');
 const labelModel = opt('label-model', '');
 const labelReasoningEffort = opt('label-reasoning-effort', '');
+const excludePassedReport = opt('exclude-passed-report', '');
 if (!['google', 'brave'].includes(searchProvider)) {
   console.error(`unknown image search provider: ${searchProvider}`);
   process.exit(2);
@@ -123,6 +124,7 @@ try {
     searchProvider,
     labelModel,
     labelReasoningEffort,
+    excludePassedReport,
     manifestPath: 'data/fetched-images/manifest.json',
   }, {
     preflight,
