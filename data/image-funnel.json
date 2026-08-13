@@ -14911,14 +14911,14 @@
    "labelReasoningEffort": "",
    "initialWindowCandidates": 6,
    "extensionWindowCandidates": 0,
-   "downloadHttpFailures": 1,
+   "downloadHttpFailures": 3,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 4,
+   "downloadConversionFailures": 2,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T05:17:27.983Z"
+  "updatedAt": "2026-08-13T08:46:56.473Z"
  },
  "domaine-daniel-bouland-morgon-bellevue-sable-2022": {
   "slug": "domaine-daniel-bouland-morgon-bellevue-sable-2022",
@@ -33066,7 +33066,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T05:17:30.269Z"
+  "updatedAt": "2026-08-13T08:46:57.880Z"
  },
  "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020": {
   "slug": "groffier-domaine-robert-groffier-bonnes-mares-grand-cru-2020",
@@ -33840,7 +33840,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T05:17:32.252Z"
+  "updatedAt": "2026-08-13T08:46:59.281Z"
  },
  "kraft-domaine-kraft-vouvray-demi-sec-2016": {
   "slug": "kraft-domaine-kraft-vouvray-demi-sec-2016",
@@ -34976,7 +34976,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T05:17:34.394Z"
+  "updatedAt": "2026-08-13T08:47:01.000Z"
  },
  "peyros-chateau-peyros-madiran-vielles-vignes-2019": {
   "slug": "peyros-chateau-peyros-madiran-vielles-vignes-2019",
@@ -47674,14 +47674,14 @@
    "labelReasoningEffort": "",
    "initialWindowCandidates": 9,
    "extensionWindowCandidates": 0,
-   "downloadHttpFailures": 5,
+   "downloadHttpFailures": 8,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
-   "downloadConversionFailures": 3,
+   "downloadConversionFailures": 0,
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T05:17:27.984Z"
+  "updatedAt": "2026-08-13T08:46:56.474Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2023",
@@ -47724,7 +47724,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T05:17:30.269Z"
+  "updatedAt": "2026-08-13T08:46:57.880Z"
  },
  "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025": {
   "slug": "domaine-nicolas-millet-sancerre-blanc-les-grand-champs-2025",
@@ -57807,7 +57807,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T05:17:32.252Z"
+  "updatedAt": "2026-08-13T08:46:59.281Z"
  },
  "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023": {
   "slug": "paul-lato-wines-pinot-noir-seabiscuit-zotovich-vineyard-santa-rita-hills-2023",
@@ -58782,7 +58782,7 @@
    "downloadTransportFailures": 0
   },
   "evidence": [],
-  "updatedAt": "2026-08-13T05:17:34.394Z"
+  "updatedAt": "2026-08-13T08:47:01.000Z"
  },
  "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019": {
   "slug": "rapet-domaine-rapet-savigny-les-beaune-1er-cru-aux-fournaux-2019",
