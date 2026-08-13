@@ -40,10 +40,15 @@ export function createLocalBottleAdapters({ verifier, python = 'python', runImpl
     },
 
     async compare(candidates) {
-      const { stdout } = await runImpl(python, [
-        'tools/labelfetch/visual-similarity.py', ...candidates.map((candidate) => candidate.file),
-      ]);
-      return JSON.parse(stdout).pairs || [];
+      try {
+        const { stdout } = await runImpl(python, [
+          'tools/labelfetch/visual-similarity.py', ...candidates.map((candidate) => candidate.file),
+        ]);
+        return JSON.parse(stdout).pairs || [];
+      } catch (error) {
+        const detail = String(error?.stderr || '').trim().split(/\r?\n/).filter(Boolean).at(-1);
+        throw new Error(`visual similarity failed: ${detail || String(error?.message || error).split('\n')[0]}`);
+      }
     },
 
     async verifyIdentity(wine, candidate, labelText) {

@@ -1,7 +1,9 @@
 import importlib.util
+import tempfile
 import unittest
 from pathlib import Path
 
+import cv2
 import numpy as np
 
 
@@ -21,6 +23,15 @@ class RatioMatchesTest(unittest.TestCase):
 
     def test_missing_descriptors_are_not_matches(self):
         self.assertEqual(MODULE.ratio_matches(None, None), [])
+
+    def test_features_accept_a_16_bit_png(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sixteen-bit.png"
+            image = np.zeros((640, 320, 3), dtype=np.uint16)
+            cv2.rectangle(image, (90, 50), (230, 590), (65535, 65535, 65535), -1)
+            self.assertTrue(cv2.imwrite(str(path), image))
+            result = MODULE.features(path)
+            self.assertEqual(result["gray"].dtype, np.uint8)
 
 
 if __name__ == "__main__":

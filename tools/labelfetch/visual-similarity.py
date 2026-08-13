@@ -12,6 +12,16 @@ import cv2
 import numpy as np
 
 
+def image_uint8(image):
+    if image.dtype == np.uint8:
+        return image
+    if np.issubdtype(image.dtype, np.integer):
+        maximum = np.iinfo(image.dtype).max
+        return np.rint(image.astype(np.float32) * (255.0 / maximum)).astype(np.uint8)
+    normalized = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX)
+    return normalized.astype(np.uint8)
+
+
 def structural_similarity(left, right):
     """Windowed SSIM without the large scikit-image/scipy runtime dependency."""
     left = left.astype(np.float32)
@@ -72,6 +82,7 @@ def features(path):
     image = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
     if image is None:
         raise ValueError(f"cannot decode {path}")
+    image = image_uint8(image)
     if image.ndim == 2:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGRA)
     full_bgr = image[:, :, :3]

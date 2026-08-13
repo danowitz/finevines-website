@@ -1,8 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createBoundedLabelReader, ReaderUnavailableError } from '../../tools/labelfetch/bottle-selector-runtime.mjs';
+import {
+  createBoundedLabelReader,
+  createLocalBottleAdapters,
+  ReaderUnavailableError,
+} from '../../tools/labelfetch/bottle-selector-runtime.mjs';
 
 const candidates = Array.from({ length: 5 }, (_, index) => ({ id: String(index), file: `${index}.png` }));
+
+test('visual comparison failures preserve the useful stderr detail', async () => {
+  const local = createLocalBottleAdapters({
+    verifier: 'imgcheck',
+    runImpl: async () => { throw Object.assign(new Error('command failed'), {
+      stderr: 'Traceback\ncv2.error: image has incorrect depth',
+    }); },
+  });
+  await assert.rejects(
+    () => local.compare(candidates.slice(0, 2)),
+    /visual similarity failed: cv2\.error: image has incorrect depth/,
+  );
+});
 
 test('bounded reader sends one nano request containing at most three images', async () => {
   let body;
