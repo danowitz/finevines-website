@@ -74,6 +74,10 @@ def features(path):
         raise ValueError(f"cannot decode {path}")
     if image.ndim == 2:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGRA)
+    full_bgr = image[:, :, :3]
+    full_gray = cv2.cvtColor(full_bgr, cv2.COLOR_BGR2GRAY)
+    full_sift = cv2.SIFT_create(nfeatures=1500, contrastThreshold=0.02)
+    full_keypoints, full_descriptors = full_sift.detectAndCompute(full_gray, None)
     crop = letterbox(foreground_crop(image))
     label = crop[220:560, 35:285]
     gray = cv2.cvtColor(label, cv2.COLOR_BGR2GRAY)
@@ -87,6 +91,8 @@ def features(path):
         "descriptors": descriptors,
         "keypoints": len(keypoints),
         "histogram": histogram,
+        "full_keypoints": full_keypoints,
+        "full_descriptors": full_descriptors,
     }
 
 
@@ -102,12 +108,33 @@ def compare(left, right):
     histogram = float(cv2.compareHist(left["histogram"], right["histogram"], cv2.HISTCMP_CORREL))
     ssim = structural_similarity(left["gray"], right["gray"])
     score = 0.60 * min(1.0, good / 18.0) + 0.25 * max(0.0, histogram) + 0.15 * max(0.0, ssim)
+    # A clean bottle can appear as a small object inside a tasting scene or a
+    # lineup. Locate identical local artwork geometrically in the full images;
+    # backgrounds must not erase strong label-level corroboration.
+    local_matches = []
+    if left["full_descriptors"] is not None and right["full_descriptors"] is not None:
+        matcher = cv2.BFMatcher(cv2.NORM_L2)
+        for pair in matcher.knnMatch(left["full_descriptors"], right["full_descriptors"], k=2):
+            if len(pair) == 2 and pair[0].distance < 0.72 * pair[1].distance:
+                local_matches.append(pair[0])
+    local_inliers = 0
+    local_ratio = 0.0
+    if len(local_matches) >= 4:
+        source = np.float32([left["full_keypoints"][match.queryIdx].pt for match in local_matches])
+        target = np.float32([right["full_keypoints"][match.trainIdx].pt for match in local_matches])
+        _, mask = cv2.findHomography(source, target, cv2.RANSAC, 5.0)
+        if mask is not None:
+            local_inliers = int(mask.sum())
+            local_ratio = local_inliers / len(local_matches)
     return {
         "sift_matches": good,
         "sift_ratio": round(sift_ratio, 4),
         "histogram": round(histogram, 4),
         "ssim": round(ssim, 4),
         "score": round(score, 4),
+        "local_matches": len(local_matches),
+        "local_inliers": local_inliers,
+        "local_ratio": round(local_ratio, 4),
     }
 
 

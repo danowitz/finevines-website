@@ -54,6 +54,30 @@ test('two independent exact result titles let a clean bottle corroborate a match
   assert.equal(result.pick.id, 'official');
 });
 
+test('a clean product shot can be the center of scene and lineup corroboration', async () => {
+  const result = await selector({
+    pairs: [
+      { a: 0, b: 1, score: 0.72, local_inliers: 8, local_ratio: 0.80 },
+      { a: 0, b: 2, score: 0.68, local_inliers: 7, local_ratio: 0.80 },
+      // The two scenes need not resemble one another globally.
+      { a: 1, b: 2, score: 0.30, local_inliers: 2, local_ratio: 0.20 },
+    ],
+    evidence: [
+      { id: 'clean', anchor: true },
+      { id: 'scene', anchor: false },
+      { id: 'lineup', anchor: false, explicitConflict: true },
+    ],
+  }).select({ name: 'Arrow & Branch Red Wine Napa Valley', vintage: '2012' }, [
+    candidate('clean', { cleanBackground: true, width: 90, height: 335 }),
+    candidate('scene', { shapeOk: false, width: 768, height: 1024 }),
+    candidate('lineup', { shapeOk: false, width: 300, height: 200 }),
+  ]);
+
+  assert.equal(result.pick.id, 'clean');
+  assert.equal(result.matchingImages, 3);
+  assert.deepEqual(result.trace.groups[0], ['clean', 'scene', 'lineup']);
+});
+
 test('exact titles cannot merge visually dissimilar sibling bottles', async () => {
   let reads = 0;
   const subject = createBottleSelector({

@@ -49,9 +49,30 @@ function groupsFromPairs(candidates, pairs, threshold) {
   const maximal = cliques.filter((clique) => !cliques.some((other) =>
     other.indexes.length > clique.indexes.length &&
     clique.indexes.every((index) => other.indexes.includes(index))));
-  return maximal.sort((a, b) =>
+  const groups = maximal.sort((a, b) =>
     b.indexes.length - a.indexes.length || b.mean - a.mean)
     .map((clique) => clique.indexes.map((index) => candidates[index]));
+
+  // Scene photos often match the clean product shot but not one another because
+  // their crops, glasses, and backgrounds differ. Add a star group only around
+  // a clean, publishable center with at least two independently matching
+  // neighbors. This avoids the unsafe A~B~C transitive-chain behavior.
+  for (let center = 0; center < candidates.length; center++) {
+    if (!candidates[center].shapeOk || !candidates[center].cleanBackground) continue;
+    const neighbors = [];
+    for (let other = 0; other < candidates.length; other++) {
+      if (other === center) continue;
+      const score = edge.get(`${Math.min(center, other)}:${Math.max(center, other)}`) || 0;
+      if (score >= threshold) neighbors.push(other);
+    }
+    if (neighbors.length < 2) continue;
+    const star = [center, ...neighbors].map((index) => candidates[index]);
+    const ids = new Set(star.map((candidate) => candidate.id));
+    if (!groups.some((group) => group.length === ids.size && group.every((candidate) => ids.has(candidate.id)))) {
+      groups.push(star);
+    }
+  }
+  return groups.sort((left, right) => right.length - left.length);
 }
 
 function corroboratesTitle(wine, candidate) {
@@ -88,7 +109,8 @@ function corroboratedVisualPairs(wine, candidates, pairs, threshold) {
     const titleSupport = pair.score >= 0.60 &&
       host(left) !== host(right) &&
       corroboratesTitle(wine, left) && corroboratesTitle(wine, right);
-    return titleSupport ? { ...pair, score: Math.max(pair.score, threshold) } : pair;
+    const sameArtwork = pair.local_inliers >= 5 && pair.local_ratio >= 0.75;
+    return titleSupport || sameArtwork ? { ...pair, score: Math.max(pair.score, threshold) } : pair;
   });
 }
 

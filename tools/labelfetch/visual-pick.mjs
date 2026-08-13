@@ -15,10 +15,9 @@ export function evaluateVisualPick(candidates) {
   diagnostics.identityAnchors = anchors.length;
   if (!anchors.length) return { pick: null, diagnostics };
 
-  // This group is already a strict all-pairs visual clique. A readable exact
-  // member establishes its identity; then choose the best non-conflicting
-  // product shot in that same group, just as a person uses a readable label to
-  // recognize a cleaner copy whose small print is not legible.
+  // A readable exact member establishes identity inside a locally corroborated
+  // label group; then choose the best non-conflicting product shot, just as a
+  // person recognizes a clean small cutout from larger tasting-scene evidence.
   const usable = candidates.filter((candidate) => !candidate.explicitConflict).filter((candidate) => {
     const width = candidate.width || 0;
     const height = candidate.height || 0;
@@ -27,7 +26,7 @@ export function evaluateVisualPick(candidates) {
     // but admit a 180x650 clean bottle rather than discarding exact official
     // artwork such as Jean Royer's 188x700 Prestige image.
     const normalResolution = width >= 300 && height >= 500;
-    const narrowCleanCutout = candidate.cleanBackground && width >= 180 && height >= 650;
+    const narrowCleanCutout = candidate.cleanBackground && width >= 80 && height >= 300;
     if (!candidate.shapeOk) diagnostics.anchorShapeFailures++;
     else if (!(normalResolution || narrowCleanCutout)) diagnostics.anchorResolutionFailures++;
     return candidate.shapeOk && (normalResolution || narrowCleanCutout);

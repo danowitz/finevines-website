@@ -468,3 +468,23 @@ test('an appellation misplaced into producer_brand is not a false producer confl
   assert.equal(evidence.anchor, true);
   assert.equal(evidence.explicitConflict, false);
 });
+
+test('a fuzzy cuvee token misplaced into producer_brand is not a producer conflict', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test', readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      single_bottle: true, producer_brand: 'Concellette', product_cuvee: '',
+      appellation: 'Morgon Vieilles Vignes', vintage: '2018', wine_style: 'red',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true }),
+  });
+  const [evidence] = await reader(
+    {
+      name: 'Bouland Domaine Daniel Bouland Morgon Vieilles Vignes Corcelette',
+      producer: 'Bouland', vintage: '2018',
+    },
+    candidates.slice(0, 1),
+  );
+  assert.equal(evidence.anchor, true);
+  assert.equal(evidence.explicitConflict, false);
+});

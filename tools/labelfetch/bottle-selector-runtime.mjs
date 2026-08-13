@@ -107,7 +107,25 @@ const PRODUCER_NOISE = new Set(['domaine', 'chateau', 'maison', 'weingut', 'esta
 
 function containsToken(text, wanted) {
   return normalize(text).split(' ').some((seen) =>
-    seen === wanted || (seen.length >= 4 && (seen.startsWith(wanted) || wanted.startsWith(seen))));
+    seen === wanted ||
+    (seen.length >= 4 && (seen.startsWith(wanted) || wanted.startsWith(seen))) ||
+    (seen.length >= 6 && wanted.length >= 6 && editDistance(seen, wanted) <= 2));
+}
+
+function editDistance(left, right) {
+  const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let row = 1; row <= left.length; row++) {
+    const current = [row];
+    for (let column = 1; column <= right.length; column++) {
+      current[column] = Math.min(
+        current[column - 1] + 1,
+        previous[column] + 1,
+        previous[column - 1] + Number(left[row - 1] !== right[column - 1]),
+      );
+    }
+    previous.splice(0, previous.length, ...current);
+  }
+  return previous[right.length];
 }
 
 // The reader is deliberately blind to the requested name, so this comparison
@@ -124,7 +142,10 @@ function identityConflict(wine, candidate, identity) {
   // product/place words as missing producer evidence, not as a contradictory
   // producer. A genuinely different name remains an explicit conflict.
   const seenProducer = tokens(identity.producerBrand || '').filter((token) =>
-    !requestedProduct.has(token));
+    ![...requestedProduct].some((product) =>
+      token === product ||
+      (token.length >= 4 && (token.startsWith(product) || product.startsWith(token))) ||
+      (token.length >= 6 && product.length >= 6 && editDistance(token, product) <= 2)));
   const producerTokenSeen = (wanted) => seenProducer.some((seen) =>
     seen === wanted || seen.startsWith(wanted) || wanted.startsWith(seen));
   // Hyphenated estates are compound identities: F.X. Pichler is not
