@@ -9,8 +9,9 @@ function permitted(url) {
 
 // Deep module: callers provide verified or provisional visual seeds and
 // receive bounded related-image candidates. Only full matches of verified
-// seeds inherit identity; partial and visually-similar results remain
-// provisional. Authentication, response association, source policy,
+// seeds inherit identity; partial results remain provisional. Unpaired
+// visually-similar results are deliberately excluded as generic/noisy.
+// Authentication, response association, source policy,
 // deduplication and spend bounds stay inside.
 export function createWebMatchExpander({
   apiKey,
@@ -120,10 +121,6 @@ export function createWebMatchExpander({
           addMatch({ match, context, title: page.pageTitle || '', kind: 'partial' });
         }
         if (items.length >= maxCandidates) break;
-      }
-      for (const match of web.visuallySimilarImages || []) {
-        if (items.length >= maxCandidates) break;
-        addMatch({ match, kind: 'similar' });
       }
       if (items.length >= maxCandidates) break;
     }

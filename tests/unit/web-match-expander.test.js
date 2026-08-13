@@ -102,7 +102,7 @@ test('a full match from a provisional seed does not inherit verified identity', 
   assert.equal(result.items[0].webMatchKind, 'full');
 });
 
-test('partial and visually similar results remain provisional candidates', async () => {
+test('partial results remain provisional and unpaired similar images are excluded', async () => {
   const expand = createWebMatchExpander({
     apiKey: 'vision-key',
     readFileImpl: async () => Buffer.from('anchor'),
@@ -110,12 +110,12 @@ test('partial and visually similar results remain provisional candidates', async
       pagesWithMatchingImages: [{
         url: 'https://merchant.test/wine',
         pageTitle: 'Requested Wine 2022',
-        partialMatchingImages: [{ url: 'https://merchant.test/partial.jpg' }],
+        partialMatchingImages: [
+          { url: 'https://merchant.test/partial.jpg' },
+          { url: 'https://vivino.com/blocked.jpg' },
+        ],
       }],
-      visuallySimilarImages: [
-        { url: 'https://images.test/similar.jpg' },
-        { url: 'https://vivino.com/blocked.jpg' },
-      ],
+      visuallySimilarImages: [{ url: 'https://images.test/similar.jpg' }],
     } }] }) }),
   });
   const result = await expand([{
@@ -126,7 +126,6 @@ test('partial and visually similar results remain provisional candidates', async
     webMatchKind, trustedFullMatch, context,
   })), [
     { webMatchKind: 'partial', trustedFullMatch: false, context: 'https://merchant.test/wine' },
-    { webMatchKind: 'similar', trustedFullMatch: false, context: '' },
   ]);
   assert.equal(result.blocked, 1);
 });
