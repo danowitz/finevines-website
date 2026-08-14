@@ -19,6 +19,7 @@ import (
 	"math"
 	"strings"
 
+	"github.com/gritautomation/finevines-website/internal/catalog"
 	"github.com/gritautomation/finevines-website/internal/model"
 	"github.com/gritautomation/finevines-website/internal/queue"
 )
@@ -44,6 +45,7 @@ type WineRef struct {
 // was sourced rather than inferred.
 type Coverage struct {
 	Wines        int
+	Bottlings    int
 	RealImages   int
 	RealImagePct int
 	MeanMetadata int
@@ -147,19 +149,25 @@ func isPhoto(w model.Wine) bool {
 }
 
 func coverageOf(wines []model.Wine) Coverage {
-	c := Coverage{Wines: len(wines)}
-	if len(wines) == 0 {
+	active := make([]model.Wine, 0, len(wines))
+	for _, w := range wines {
+		if w.Status != model.StatusUnavailable {
+			active = append(active, w)
+		}
+	}
+	c := Coverage{Wines: len(catalog.Build(active)), Bottlings: len(active)}
+	if len(active) == 0 {
 		return c
 	}
 	sum := 0
-	for _, w := range wines {
+	for _, w := range active {
 		sum += w.MetadataScore
 		if isPhoto(w) {
 			c.RealImages++
 		}
 	}
-	c.RealImagePct = int(math.Round(100 * float64(c.RealImages) / float64(len(wines))))
-	c.MeanMetadata = int(math.Round(float64(sum) / float64(len(wines))))
+	c.RealImagePct = int(math.Round(100 * float64(c.RealImages) / float64(len(active))))
+	c.MeanMetadata = int(math.Round(float64(sum) / float64(len(active))))
 	return c
 }
 

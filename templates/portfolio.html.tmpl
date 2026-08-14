@@ -44,6 +44,7 @@
         <h1>Browse the catalog</h1>
         <p class="lede">Every bottle currently in stock. Filter by producer, region, varietal, country, or vintage,
           or search the portfolio directly. What's listed reflects current wholesale availability.</p>
+        <p class="portfolio-scope">{{comma .Bottlings}} available bottlings across vintages and formats, presented as {{comma .Total}} distinct wines.</p>
         {{/* The other way in. The sidebar filters this page; these open the
              standing landing pages for each dimension — the ones a search
              engine can actually index, and the ones worth sending someone

@@ -611,6 +611,23 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .wine-card .producer { display: block; font-family: var(--sans); font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--brass-700); margin: 0; }
 .wine-card h3 { font-family: var(--serif-text); font-size: 17px; font-weight: 500; line-height: 1.3; margin: 0; color: var(--text-strong); }
 .wine-card h3 .vintage { color: var(--text-muted); font-weight: 400; }
+.wine-card .vintage-badge {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: .12em;
+  padding: 2px 6px;
+  border: 1px solid var(--brass-300);
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: 9.5px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--bordeaux-700);
+  background: var(--parchment-100);
+}
 .wine-card .meta { font-family: var(--sans); font-size: 12.5px; letter-spacing: .02em; color: var(--text-muted); line-height: 1.4; }
 .wine-card .avail { margin-top: auto; padding-top: 4px; font-family: var(--sans); font-size: 11.5px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
 
@@ -1260,6 +1277,7 @@ h1, h2, .eyebrow, .lede { overflow-wrap: break-word; }
 
 /* The portfolio's route out to the standing landing pages. */
 .browse-by { margin-top: 14px; font-family: var(--sans); font-size: 14px; color: var(--brass-100); }
+.portfolio-scope { margin-top: 14px; font-family: var(--sans); font-size: 14px; color: var(--brass-100); }
 .browse-by a { color: #fff; text-decoration: none; border-bottom: 1px solid var(--brass-300); }
 .browse-by a:hover { border-bottom-color: #fff; }
 

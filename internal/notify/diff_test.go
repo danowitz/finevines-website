@@ -134,7 +134,7 @@ func TestDiff_ASwappedPhotographCountsAsANewImage(t *testing.T) {
 	}
 }
 
-func TestDiff_CoverageIsComputedOverTheFinalCatalog(t *testing.T) {
+func TestDiff_CoverageUsesActiveBottlingsAndDistinctPortfolioWines(t *testing.T) {
 	after := []model.Wine{
 		wine("A", "a", func(w *model.Wine) {
 			w.ImagePath, w.ImageSource, w.MetadataScore = "assets/img/wines/a.jpg", model.ImageScrapedWeb, 80
@@ -143,17 +143,21 @@ func TestDiff_CoverageIsComputedOverTheFinalCatalog(t *testing.T) {
 		wine("C", "c", func(w *model.Wine) { w.MetadataScore = 30 }),
 		wine("D", "d", func(w *model.Wine) {
 			w.ImagePath, w.ImageSource, w.MetadataScore = "assets/img/wines/d.jpg", model.ImageOldSite, 90
+			w.Status = model.StatusUnavailable
 		}),
 	}
 	d := Diff(nil, after, nil, base)
-	if d.Coverage.Wines != 4 {
-		t.Errorf("Coverage.Wines = %d, want 4", d.Coverage.Wines)
+	if d.Coverage.Wines != 1 {
+		t.Errorf("Coverage.Wines = %d, want 1 distinct grouped wine", d.Coverage.Wines)
 	}
-	if d.Coverage.RealImages != 2 || d.Coverage.RealImagePct != 50 {
-		t.Errorf("Coverage images = %d (%d%%), want 2 (50%%)", d.Coverage.RealImages, d.Coverage.RealImagePct)
+	if d.Coverage.Bottlings != 3 {
+		t.Errorf("Coverage.Bottlings = %d, want 3 active rows", d.Coverage.Bottlings)
 	}
-	if d.Coverage.MeanMetadata != 60 { // (80+40+30+90)/4
-		t.Errorf("Coverage.MeanMetadata = %d, want 60", d.Coverage.MeanMetadata)
+	if d.Coverage.RealImages != 1 || d.Coverage.RealImagePct != 33 {
+		t.Errorf("Coverage images = %d (%d%%), want 1 (33%%)", d.Coverage.RealImages, d.Coverage.RealImagePct)
+	}
+	if d.Coverage.MeanMetadata != 50 { // (80+40+30)/3; unavailable D is excluded
+		t.Errorf("Coverage.MeanMetadata = %d, want 50", d.Coverage.MeanMetadata)
 	}
 }
 

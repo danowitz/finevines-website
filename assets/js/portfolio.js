@@ -369,6 +369,13 @@
       vint.textContent = vintLabel;
       h3.appendChild(vint);
     }
+    if (w.vints && w.vints.length > 1) {
+      h3.appendChild(document.createTextNode(' '));
+      var vintageBadge = document.createElement('span');
+      vintageBadge.className = 'vintage-badge';
+      vintageBadge.textContent = w.vints.length + ' vintages';
+      h3.appendChild(vintageBadge);
+    }
     body.appendChild(h3);
     if (w.region || w.varietal) {
       var meta = document.createElement('span');

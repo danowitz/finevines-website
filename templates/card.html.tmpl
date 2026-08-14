@@ -24,7 +24,7 @@
               </div>
               <div class="body">
                 {{if .Producer}}<span class="producer">{{.Producer}}</span>{{end}}
-                <h3>{{.Name}}{{if .VintLabel}} <span class="vintage">{{.VintLabel}}</span>{{end}}</h3>
+                <h3>{{.Name}}{{if .VintLabel}} <span class="vintage">{{.VintLabel}}</span>{{end}}{{with .VintageBadge}} <span class="vintage-badge">{{.}}</span>{{end}}</h3>
                 {{if or .Region .Varietal}}<span class="meta">{{.Region}}{{if and .Region .Varietal}} &middot; {{end}}{{.Varietal}}</span>{{end}}
                 {{with .Avail}}<span class="avail">{{.}}</span>{{end}}
               </div>

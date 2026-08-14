@@ -27,7 +27,7 @@ func sampleDiff() RunDiff {
 			{ID: "a2", SKU: "MB5110", Kind: queue.ActionTextFeedback, Reviewer: "george",
 				Outcome: "text regenerated with the reviewer's note"},
 		},
-		Coverage: Coverage{Wines: 2210, RealImages: 574, RealImagePct: 26, MeanMetadata: 61},
+		Coverage: Coverage{Wines: 1883, Bottlings: 2619, RealImages: 574, RealImagePct: 22, MeanMetadata: 61},
 	}
 }
 
@@ -66,7 +66,9 @@ func TestRender_BothBodiesCarryEverySectionAndItsLinks(t *testing.T) {
 			"https://example-producer.ar/vinos/",
 			"george",
 			"574",
-			"26%",
+			"22%",
+			"1,883 wines currently in the portfolio",
+			"2,619 available bottlings across vintages and formats",
 			"Descriptive detail — grape, region, and tasting notes — is sourced automatically and deepens with every run.",
 		} {
 			if !strings.Contains(body, want) {

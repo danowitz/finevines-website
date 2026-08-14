@@ -62,7 +62,7 @@ func subject(d RunDiff) string {
 // digestTmpl is the HTML body. Deliberately table-free, inline-styled and
 // image-optional: it has to survive Outlook, and a reader on a phone must be
 // able to tap through to a wine page.
-var digestTmpl = template.Must(template.New("digest").Parse(`
+var digestTmpl = template.Must(template.New("digest").Funcs(template.FuncMap{"comma": commaInt}).Parse(`
 <div style="font-family:Georgia,'Times New Roman',serif;color:#2b2b2b;max-width:640px">
 <p style="font-size:15px;line-height:1.6">Last night's catalog run has finished. Here is what changed on the website, and what is worth a look.</p>
 {{if .D.NewWines}}
@@ -100,7 +100,7 @@ var digestTmpl = template.Must(template.New("digest").Parse(`
 </ul>
 {{end}}
 <h2 style="font-size:17px;font-weight:normal;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid #d8d0c4;padding-bottom:6px">The portfolio today</h2>
-<p style="font-size:15px;line-height:1.7">{{.D.Coverage.Wines}} wines published. {{.D.Coverage.RealImages}} of them ({{.D.Coverage.RealImagePct}}%) show a real bottle photograph; the rest show a printed label until a photograph is found. Descriptive detail — grape, region, and tasting notes — is sourced automatically and deepens with every run.</p>
+<p style="font-size:15px;line-height:1.7">{{comma .D.Coverage.Wines}} wines currently in the portfolio, representing {{comma .D.Coverage.Bottlings}} available bottlings across vintages and formats. {{comma .D.Coverage.RealImages}} of those bottlings ({{.D.Coverage.RealImagePct}}%) show a real bottle photograph; the rest show a printed label until a photograph is found. Descriptive detail — grape, region, and tasting notes — is sourced automatically and deepens with every run.</p>
 <p style="font-size:13px;color:#7a7168;line-height:1.6">Sent automatically after a catalog run that changed something. <a href="{{.Root}}/portfolio/" style="color:#6b1f2a">Browse the portfolio</a></p>
 </div>
 `))
@@ -114,6 +114,14 @@ func renderHTML(d RunDiff, root string) string {
 		Root string
 	}{D: d, Root: root})
 	return buf.String()
+}
+
+func commaInt(n int) string {
+	s := fmt.Sprintf("%d", n)
+	for i := len(s) - 3; i > 0; i -= 3 {
+		s = s[:i] + "," + s[i:]
+	}
+	return s
 }
 
 // renderText is the plain-text alternative. Written by hand rather than stripped
@@ -152,10 +160,11 @@ func renderText(d RunDiff, root string) string {
 	}
 
 	fmt.Fprintf(&b, "\nTHE PORTFOLIO TODAY\n-------------------\n"+
-		"  %d wines published.\n"+
-		"  %d (%d%%) show a real bottle photograph; the rest show a printed label.\n"+
+		"  %s wines currently in the portfolio.\n"+
+		"  %s available bottlings across vintages and formats.\n"+
+		"  %s of those bottlings (%d%%) show a real bottle photograph; the rest show a printed label.\n"+
 		"  Descriptive detail — grape, region, and tasting notes — is sourced automatically and deepens with every run.\n",
-		d.Coverage.Wines, d.Coverage.RealImages, d.Coverage.RealImagePct)
+		commaInt(d.Coverage.Wines), commaInt(d.Coverage.Bottlings), commaInt(d.Coverage.RealImages), d.Coverage.RealImagePct)
 	fmt.Fprintf(&b, "\nSent automatically after a catalog run that changed something.\n%s/portfolio/\n", root)
 	return b.String()
 }
