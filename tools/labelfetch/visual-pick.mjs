@@ -21,11 +21,12 @@ export function evaluateVisualPick(candidates) {
   const usable = anchors.filter((candidate) => {
     const width = candidate.width || 0;
     const height = candidate.height || 0;
-    // A tall, clean importer cutout can be narrow in pixels and still render
-    // well in the normalized catalog card. Keep the ordinary 300x500 floor,
-    // but admit a 180x650 clean bottle rather than discarding exact official
-    // artwork such as Jean Royer's 188x700 Prestige image.
-    const normalResolution = width >= 300 && height >= 500;
+    // The catalog card displays a contained bottle rather than a full-bleed
+    // photograph, so 200x300 is sufficient source detail for an ordinary
+    // portrait image. A tall, clean importer cutout can be narrower still;
+    // retain that exception for exact official artwork such as Jean Royer's
+    // 188x700 Prestige image.
+    const normalResolution = width >= 200 && height >= 300;
     const narrowCleanCutout = candidate.cleanBackground && width >= 80 && height >= 300;
     if (!candidate.shapeOk) diagnostics.anchorShapeFailures++;
     else if (!(normalResolution || narrowCleanCutout)) diagnostics.anchorResolutionFailures++;

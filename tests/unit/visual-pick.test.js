@@ -61,6 +61,21 @@ test('a tall clean importer cutout is publishable despite a narrow source width'
   assert.equal(pick.id, 'importer');
 });
 
+test('a 200x300 ordinary portrait is publishable at the reduced catalog-card floor', () => {
+  const pick = selectVisualPick([
+    { id: 'reduced-floor', anchor: true, shapeOk: true, cleanBackground: false, width: 200, height: 300 },
+    { id: 'corroborator', shapeOk: true, cleanBackground: false, width: 900, height: 1200 },
+  ]);
+  assert.equal(pick.id, 'reduced-floor');
+});
+
+test('an ordinary image below both reduced dimensions remains too small', () => {
+  assert.equal(selectVisualPick([
+    { id: 'too-small', anchor: true, shapeOk: true, cleanBackground: false, width: 199, height: 299 },
+    { id: 'corroborator', shapeOk: true, cleanBackground: false, width: 900, height: 1200 },
+  ]), null);
+});
+
 test('publishability diagnostics distinguish identity, shape, and resolution failures', () => {
   const result = evaluateVisualPick([
     { id: 'conflict', anchor: true, explicitConflict: true, shapeOk: true, cleanBackground: true, width: 800, height: 1200 },

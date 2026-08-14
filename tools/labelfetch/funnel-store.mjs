@@ -48,8 +48,19 @@ export function recoverableCandidateSlugs(store) {
   return new Set(Object.values(store || {})
     .filter((entry) => entry?.ok === false &&
       entry.failureStage === 'identity-anchor' &&
+      entry.funnel?.recoveryScope !== 'quality' &&
       Number(entry.funnel?.downloaded || 0) >= 2 &&
       Number(entry.funnel?.repeatedGroups || 0) >= 1)
+    .map((entry) => entry.slug)
+    .filter(Boolean));
+}
+
+export function recoverableQualitySlugs(store) {
+  return new Set(Object.values(store || {})
+    .filter((entry) => entry?.ok === false &&
+      ((entry.failureStage === 'publication-quality' &&
+        Number(entry.funnel?.identityAnchors || 0) >= 1) ||
+       entry.funnel?.recoveryScope === 'quality'))
     .map((entry) => entry.slug)
     .filter(Boolean));
 }

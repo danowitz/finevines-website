@@ -56,6 +56,8 @@ export async function runAutonomousImageWorkflow(config, adapters) {
     '--missing',
     ...(config.retryMisses ? ['--retry-misses'] : ['--due-only']),
     ...(config.candidateRecovery ? ['--candidate-recovery'] : []),
+    ...(config.qualityRecovery ? ['--quality-recovery'] : []),
+    ...(config.omitQueryVintage ? ['--omit-query-vintage'] : []),
     ...(config.canary ? ['--canary'] : []),
     ...(config.slug ? ['--slug', config.slug] : []),
     ...(config.trace ? ['--trace'] : []),

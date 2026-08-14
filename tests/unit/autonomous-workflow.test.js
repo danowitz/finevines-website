@@ -118,6 +118,38 @@ test('candidate recovery is a scoped retry that keeps every import gate', async 
   ]);
 });
 
+test('quality recovery retries only the prior publication-quality scope', async () => {
+  const h = harness();
+  await runAutonomousImageWorkflow({
+    ...config,
+    retryMisses: true,
+    qualityRecovery: true,
+    labelModel: 'gpt-4.1-mini',
+  }, h.adapters);
+  assert.deepEqual(h.calls[1], ['pipeline', [
+    '--n', '25', '--budget-minutes', '30', '--missing', '--retry-misses',
+    '--quality-recovery', '--label-model', 'gpt-4.1-mini',
+  ]]);
+  assert.deepEqual(h.calls.slice(2).map(([name]) => name), [
+    'auto-approve', 'watermark-sweep', 'import', 'review',
+  ]);
+});
+
+test('quality recovery can omit vintage from discovery without weakening catalog identity', async () => {
+  const h = harness();
+  await runAutonomousImageWorkflow({
+    ...config,
+    retryMisses: true,
+    qualityRecovery: true,
+    omitQueryVintage: true,
+    labelModel: 'gpt-4.1-mini',
+  }, h.adapters);
+  assert.deepEqual(h.calls[1], ['pipeline', [
+    '--n', '25', '--budget-minutes', '30', '--missing', '--retry-misses',
+    '--quality-recovery', '--omit-query-vintage', '--label-model', 'gpt-4.1-mini',
+  ]]);
+});
+
 test('targeted canary can retain a full trace while bypassing catalog reuse', async () => {
   const h = harness();
   await runAutonomousImageWorkflow({

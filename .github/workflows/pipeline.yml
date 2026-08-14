@@ -40,6 +40,11 @@ on:
         required: true
         default: false
         type: boolean
+      quality_recovery:
+        description: Retry prior publication-quality misses under the current size floor
+        required: true
+        default: false
+        type: boolean
   # Fired by the review console's Edge Script the moment a reviewer submits a
   # change, so their fix is live in minutes rather than at the next nightly run.
   repository_dispatch:
@@ -190,7 +195,10 @@ jobs:
       #    timeout and lose the ledger writes that make it converge.
       - name: Source images
         run: |
-          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.candidate_recovery }}" = "true" ]; then
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.quality_recovery }}" = "true" ]; then
+            node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --quality-recovery --label-model gpt-4.1-mini --budget-minutes 60 --n "${{ inputs.image_limit }}"
+            node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --quality-recovery --omit-query-vintage --label-model gpt-4.1-mini --budget-minutes 60 --n "${{ inputs.image_limit }}"
+          elif [ "${{ github.event_name == 'workflow_dispatch' && inputs.candidate_recovery }}" = "true" ]; then
             node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --candidate-recovery --label-model gpt-4.1-mini --budget-minutes 180 --n "${{ inputs.image_limit }}"
           elif [ "${{ github.event_name == 'workflow_dispatch' && inputs.retry_image_misses }}" = "true" ]; then
             node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --n "${{ inputs.image_limit }}"

@@ -16,7 +16,7 @@ import { buildProducerLookup, expectedProducer } from './catalog-producer.mjs';
 import { deriveProducer } from './producerguess.mjs';
 import { createGoogleImageDiscovery, googleImageSearchProfile } from './google-images.mjs';
 import { createBraveImageDiscovery } from './brave-images.mjs';
-import { imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
+import { catalogImageName, imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
 import { downloadCandidates } from './candidate-downloads.mjs';
 import { candidateWindow } from './candidate-window.mjs';
 import { passedSlugs, unresolvedSlugs, withoutPassed } from './comparison-progress.mjs';
@@ -28,6 +28,7 @@ import {
   loadFunnelStore,
   recordFunnel,
   recoverableCandidateSlugs,
+  recoverableQualitySlugs,
   saveFunnelStore,
 } from './funnel-store.mjs';
 import {
@@ -54,6 +55,8 @@ const DUE_ONLY = has('due-only');
 const CANARY = has('canary');
 const RETRY_MISSES = has('retry-misses');
 const CANDIDATE_RECOVERY = has('candidate-recovery');
+const QUALITY_RECOVERY = has('quality-recovery');
+const OMIT_QUERY_VINTAGE = has('omit-query-vintage');
 const CATALOG_REUSE = !has('no-catalog-reuse');
 const TRACE = has('trace');
 const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
@@ -64,6 +67,10 @@ const EXCLUDE_PASSED_REPORT = opt('exclude-passed-report', '');
 const SUPPORTED_LABEL_MODELS = new Set(['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-5.6-sol']);
 const REASONING_EFFORTS = new Set(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
 const LABEL_REASONING_EFFORT = MODEL === 'gpt-5.6-sol' ? opt('label-reasoning-effort', 'medium') : '';
+if (OMIT_QUERY_VINTAGE && !QUALITY_RECOVERY && !CANDIDATE_RECOVERY) {
+  console.error('--omit-query-vintage is recovery-only');
+  process.exit(2);
+}
 if (!['google', 'brave'].includes(SEARCH_PROVIDER)) {
   console.error(`unknown image search provider: ${SEARCH_PROVIDER}`);
   process.exit(2);
@@ -89,13 +96,6 @@ async function exists(file) {
   try { await access(file); return true; } catch { return false; }
 }
 
-function catalogName(wine) {
-  const name = String(wine.name || '').replace(/\*+/g, '').replace(/\b\d+\/\d+\b/g, '').trim();
-  return wine.producer && !name.toLowerCase().startsWith(wine.producer.toLowerCase())
-    ? `${wine.producer} ${name}`
-    : name;
-}
-
 function needsImage(wine) {
   return !wine.imagePath ||
     wine.imagePath.endsWith('.svg') ||
@@ -119,6 +119,10 @@ function selectWines(catalog, attempts, funnelStore) {
   }
   if (CANDIDATE_RECOVERY) {
     const recoverable = recoverableCandidateSlugs(funnelStore);
+    wines = wines.filter((wine) => recoverable.has(wine.slug));
+  }
+  if (QUALITY_RECOVERY) {
+    const recoverable = recoverableQualitySlugs(funnelStore);
     wines = wines.filter((wine) => recoverable.has(wine.slug));
   }
   wines.sort((left, right) => left.slug.localeCompare(right.slug));
@@ -195,6 +199,9 @@ const wines = EXCLUDE_PASSED_REPORT
   : withoutPassed(selectWines(catalog, attempts, funnelStore), inheritedPassed);
 if (CANDIDATE_RECOVERY) {
   console.log(`candidate recovery: ${wines.length} prior identity-anchor misses selected`);
+}
+if (QUALITY_RECOVERY) {
+  console.log(`quality recovery: ${wines.length} prior publication-quality misses selected`);
 }
 if (!wines.length) {
   if (opt('slug')) {
@@ -298,7 +305,7 @@ async function processWine(wine) {
     };
   }
 
-  const name = catalogName(wine);
+  const name = catalogImageName(wine);
   const producer = expectedProducer(wine, producerLookup) || deriveProducer(name, catalogNames);
   const identity = { ...wine, name, producer };
   const rec = {
@@ -308,7 +315,10 @@ async function processWine(wine) {
     name,
     ok: false,
     tried: [],
-    query: imageSearchQuery(identity),
+    query: imageSearchQuery({
+      ...identity,
+      vintage: OMIT_QUERY_VINTAGE ? '' : identity.vintage,
+    }),
     funnel: {
       googleSearched: false,
       searchResults: 0,
@@ -331,6 +341,8 @@ async function processWine(wine) {
       webExpansionBlocked: 0,
       webExpansionDownloaded: 0,
       outcome: 'pending',
+      recoveryScope: QUALITY_RECOVERY ? 'quality' : CANDIDATE_RECOVERY ? 'candidate' : '',
+      queryVintageOmitted: OMIT_QUERY_VINTAGE,
     },
   };
   const donor = CATALOG_REUSE ? reusableCatalogImage(catalogImageDonors, wine) : null;

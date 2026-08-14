@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { recordFunnel, recoverableCandidateSlugs } from '../../tools/labelfetch/funnel-store.mjs';
+import {
+  recordFunnel,
+  recoverableCandidateSlugs,
+  recoverableQualitySlugs,
+} from '../../tools/labelfetch/funnel-store.mjs';
 
 test('stores a compact durable rule funnel without candidate file paths', () => {
   const store = {};
@@ -31,7 +35,7 @@ test('candidate recovery selects only repeated designs stopped at identity ancho
     },
     badQuality: {
       slug: 'bad-quality', ok: false, failureStage: 'publication-quality',
-      funnel: { downloaded: 7, repeatedGroups: 1 },
+      funnel: { downloaded: 7, repeatedGroups: 1, identityAnchors: 1 },
     },
     watermark: {
       slug: 'watermark', ok: false, failureStage: 'import-watermark',
@@ -41,6 +45,11 @@ test('candidate recovery selects only repeated designs stopped at identity ancho
       slug: 'accepted', ok: true, failureStage: '',
       funnel: { downloaded: 7, repeatedGroups: 1 },
     },
+    qualityRetryStillMissing: {
+      slug: 'quality-retry-still-missing', ok: false, failureStage: 'identity-anchor',
+      funnel: { downloaded: 7, repeatedGroups: 1, recoveryScope: 'quality' },
+    },
   };
   assert.deepEqual([...recoverableCandidateSlugs(store)], ['recoverable']);
+  assert.deepEqual([...recoverableQualitySlugs(store)], ['bad-quality', 'quality-retry-still-missing']);
 });

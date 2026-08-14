@@ -22,6 +22,8 @@ const apply = has('apply');
 const canary = has('canary');
 const retryMisses = has('retry-misses');
 const candidateRecovery = has('candidate-recovery');
+const qualityRecovery = has('quality-recovery');
+const omitQueryVintage = has('omit-query-vintage');
 const slug = opt('slug', '');
 const trace = has('trace');
 const noCatalogReuse = has('no-catalog-reuse');
@@ -30,8 +32,16 @@ const searchProvider = opt('search-provider', 'google');
 const labelModel = opt('label-model', '');
 const labelReasoningEffort = opt('label-reasoning-effort', '');
 const excludePassedReport = opt('exclude-passed-report', '');
-if (candidateRecovery && !retryMisses) {
-  console.error('--candidate-recovery requires --retry-misses');
+if ((candidateRecovery || qualityRecovery) && !retryMisses) {
+  console.error('recovery scopes require --retry-misses');
+  process.exit(2);
+}
+if (candidateRecovery && qualityRecovery) {
+  console.error('choose only one recovery scope');
+  process.exit(2);
+}
+if (omitQueryVintage && !candidateRecovery && !qualityRecovery) {
+  console.error('--omit-query-vintage is recovery-only');
   process.exit(2);
 }
 if (!['google', 'brave'].includes(searchProvider)) {
@@ -123,6 +133,8 @@ try {
     budgetMinutes,
     retryMisses,
     candidateRecovery,
+    qualityRecovery,
+    omitQueryVintage,
     slug,
     trace,
     noCatalogReuse,
