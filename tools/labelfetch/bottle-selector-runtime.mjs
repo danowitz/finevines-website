@@ -220,6 +220,20 @@ function sourceVintageConflict(wine, candidate) {
   return '';
 }
 
+function hasProducerEvidence(wine, identity) {
+  const expected = tokens(wine.producer || '').filter((token) =>
+    token.length > 2 && !PRODUCER_NOISE.has(token));
+  if (!expected.length) return true;
+  // Field placement is not trustworthy on tiny labels. Search every blind
+  // transcription field, but require the requested producer's distinctive
+  // name rather than accepting matching appellation/cuvee text alone.
+  const seen = tokens(identity.text);
+  const tokenSeen = (wanted) => seen.some((token) =>
+    token === wanted || token.startsWith(wanted) || wanted.startsWith(token));
+  const compoundProducer = /[-â€-â€•]/.test(String(wine.producer || ''));
+  return compoundProducer ? expected.every(tokenSeen) : expected.some(tokenSeen);
+}
+
 function varietalConflict(wine, candidate, identity) {
   const wanted = namedVarieties([wine.name, wine.varietal].filter(Boolean).join(' '));
   if (!wanted.length) return '';
@@ -333,8 +347,9 @@ export function createBoundedLabelReader({
         styleConflict(wine, candidate, identity) ||
         identityProblem ||
         (siblingConflict ? verdict.conflict : '');
-      const confirmed = verdict.accept === true ||
-        (!identityProblem && hasProductEvidence(verifierWine, identity.text));
+      const producerProven = hasProducerEvidence(wine, identity);
+      const confirmed = producerProven && (verdict.accept === true ||
+        (!identityProblem && hasProductEvidence(verifierWine, identity.text)));
       evidence.push({
         id: candidate.id,
         anchor: confirmed && !conflict,

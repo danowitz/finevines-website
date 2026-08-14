@@ -20,3 +20,9 @@ export function unresolvedSlugs(report = {}) {
       : [];
   return new Set(slugs);
 }
+
+export function reportSlugs(report = {}) {
+  return new Set(Array.isArray(report.rows)
+    ? report.rows.filter((row) => row?.slug).map((row) => row.slug)
+    : []);
+}

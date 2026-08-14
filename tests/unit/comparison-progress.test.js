@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { passedSlugs, unresolvedSlugs, withoutPassed } from '../../tools/labelfetch/comparison-progress.mjs';
+import { passedSlugs, reportSlugs, unresolvedSlugs, withoutPassed } from '../../tools/labelfetch/comparison-progress.mjs';
 
 test('carries prior passes forward and adds passes from the latest round', () => {
   const passed = passedSlugs({
@@ -27,4 +27,11 @@ test('continues the exact unresolved scope, including wines unreached by a prior
 test('removes passed wines without changing the surviving order', () => {
   const wines = [{ slug: 'a' }, { slug: 'b' }, { slug: 'c' }];
   assert.deepEqual(withoutPassed(wines, new Set(['b'])), [wines[0], wines[2]]);
+});
+
+test('replays the exact prior comparison scope regardless of outcome', () => {
+  assert.deepEqual(
+    [...reportSlugs({ rows: [{ slug: 'pass', ok: true }, { slug: 'miss', ok: false }] })],
+    ['pass', 'miss'],
+  );
 });

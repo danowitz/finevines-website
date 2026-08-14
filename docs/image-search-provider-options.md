@@ -4,50 +4,48 @@ Date: 2026-08-13
 
 ## Recommendation
 
-Keep **Brave Image Search as the primary provider** and evaluate **Serper Google Images as a miss-only secondary provider**. Serper currently offers 2,500 signup queries without a credit card, which is enough to run an exact and yearless Google pass across FineVines' 482-image backlog. Do not route CI through residential proxies or scrape Google directly.
+Use **Brave Image Search and Serper Google Images as a bounded combined provider**. Serper currently offers 2,500 signup queries without a credit card, which is enough to run an exact and yearless Google pass across FineVines' 482-image backlog. Do not route CI through residential proxies or scrape Google directly.
 
 This combination supplies two genuinely different indexes:
 
 1. Brave returns results from its own independent image index.
 2. Serper returns structured Google Images results, including the original image URL, indexed dimensions, and source page.
 
-Before production integration, run the same frozen 30 difficult wines through both providers and measure accepted photographs per request. Preserve every query, raw response, source-page URL, original-image URL, download outcome, and rejection reason. The TOR miss is exactly the kind of case this comparison must include.
+The 2026-08-14 frozen comparison queried 30 difficult wines. Both providers
+remained healthy; four visually verified winners came from Serper. A fifth
+automatic acceptance from Brave exposed a separate producer-proof defect and
+was rejected during human audit. That trace is now a regression test: matching
+appellation/cuvee text cannot anchor a bottle when the requested producer is
+absent.
 
 ## FineVines evidence from the current production ledger
 
-The existing Google Cloud Vision Web Detection rescue is enabled in CI; it is
-not a missing-secret problem. In the current `origin/master` funnel ledger,
+The Google Cloud Vision Web Detection rescue was enabled in CI; it was not a
+missing-secret problem. In the earlier `origin/master` funnel ledger,
 334 records invoked it (343 requests). Only nine records obtained any
 downloadable expansion image, for 37 downloaded images total. Three of those
 nine records are now resolved, but the durable ledger does not prove that Web
-Detection caused those later resolutions. Therefore this stage is useful as a
-bounded extra signal, but it is not the main coverage lever.
+Detection caused those later resolutions. The 2026-08-14 frozen run then made
+46 Web Detection requests, returned 230 candidates, downloaded 206 of them,
+and recovered zero wines. Scheduled workflows now leave the optional adapter
+disabled until another frozen replay demonstrates incremental value.
 
 The dominant opportunity is earlier: supply the selector with candidates from
-two genuinely different text-to-image indexes. Brave should remain the first
-request. Serper's browser-like Google Images service should run only when Brave is
-empty, produces fewer than two downloadable permitted candidates, or reaches
-the selector without a usable repeated-design group.
+two genuinely different text-to-image indexes. Brave and Serper now run
+concurrently, and their permitted results are interleaved into one bounded
+15-candidate window so neither provider can crowd out the other.
 
 ## Recommended autonomous cascade
 
-1. Query Brave once with the full catalog string, including vintage.
-2. Download and locally inspect Brave's bounded candidate window.
-3. Stop immediately if the existing selector accepts a safe candidate.
-4. Otherwise query Serper Google Images with the same exact string. Keep
-   the provider result sets distinct in diagnostics, then deduplicate the
-   permitted downloads by canonical URL and perceptual hash before selection.
-5. Re-run the selector on the combined evidence. Independent hosts displaying
+1. Query Brave and Serper once with the full catalog string, including vintage.
+2. Keep provider result sets distinct in diagnostics, interleave them fairly,
+   and deduplicate the permitted downloads by canonical URL before selection.
+3. Run the selector on the combined evidence. Independent hosts displaying
    the same bottle strengthen consensus; provider agreement alone does not.
-6. If unresolved, repeat the two-provider sequence without the vintage. A
+4. If unresolved, repeat the two-provider sequence without the vintage. A
    visible conflicting vintage remains a veto; an image with no visible year
    may still qualify under the existing identity rules.
-7. If the selector has a credible seed but weak corroboration, run reverse
-   image search. Repair the existing Cloud Vision implementation so it tests
-   both the full bottle and identifying label crop and records all usable Web
-   Detection result classes. Only exact/full copies inherit a
-   verified seed's identity; merely similar images must prove identity again.
-8. Send only the unresolved tail to the protected human review page.
+5. Send only the unresolved tail to the protected human review page.
 
 Every provider call must end in one of four durable states: `ok`, `empty`,
 `unavailable`, or `misconfigured`. Cache only an `ok` result as search evidence;
@@ -74,12 +72,10 @@ Google Cloud Vision **Web Detection** accepts an image rather than a text query.
 
 That makes it a sensible later-stage *seed expansion* tool: take one high-confidence bottle image, find other copies, and use those copies to strengthen identity consensus or locate a cleaner source. It cannot replace the initial text-to-image search because it requires an input image.
 
-The current Cloud Vision adapter should be improved before buying a second
-reverse-image service. It currently sends only the label crop and consumes only
-provenance-paired matches nested beneath `pagesWithMatchingImages`. A bounded
-test should submit both the whole bottle and label crop, retain top-level exact
-matches as provisional when no source page can be paired, and keep merely
-similar images untrusted until they independently pass identity checks.
+The Cloud Vision adapter now submits both the whole bottle and label crop,
+retains top-level exact matches as provisional when no source page can be
+paired, and keeps merely similar images untrusted. The zero-yield frozen test
+shows that this corrected adapter still does not justify scheduled spend.
 
 ## Why this is preferable to a proxy
 

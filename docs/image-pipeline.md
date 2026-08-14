@@ -12,7 +12,10 @@ artwork.
    bounded 15-candidate window so neither index can crowd out the other, then
    groups bottle/label designs locally. One readable anchor validates a repeated
    design; the cleanest highest-resolution member wins. At most three images are
-   transcribed in one `gpt-4.1-nano` request, with no escalation.
+   transcribed in one `gpt-4.1-nano` request, with no escalation. A blind
+   transcription cannot become an identity anchor unless it contains the
+   requested producer's distinctive name; matching appellation or cuvee text
+   alone is insufficient.
 2. The selector records an explicit identity-success bit only after its blind
    transcription and deterministic conflict gates accept the repeated design.
 3. `tools/labelfetch/watermarksweep.mjs --apply` is a separate hard gate.
@@ -50,11 +53,16 @@ to `.run/image-workflow.json` before and after every stage. A missing credential
 disabled API, partial provider outage, failed perceptual hash, failed child process, or missing verdict
 stops publication rather than being converted to â€œnothing found.â€
 
-When the selector has a credible seed but lacks corroboration, the bounded Web
-Detection rescue searches both the complete bottle and an identifying label
-crop. Exact full-image copies of a verified seed may inherit its identity;
-partial and visually similar results remain provisional and must independently
-pass the identity gates.
+The optional Web Detection adapter can search both a complete bottle and its
+label crop, but it is not injected into scheduled workflows. A 2026-08-14
+30-wine comparison spent 46 Web Detection requests, downloaded 206 expansion
+images, and recovered zero wines. Keep it disabled until a frozen replay proves
+incremental value.
+
+Comparison runs can replay the exact wine scope of an earlier artifact with
+`--replay-report path/to/image-canary.json`. This is distinct from
+`--exclude-passed-report`, which intentionally carries successes forward and
+processes only unresolved wines.
 
 `tools/labelfetch/cistage.sh` remains only as a compatibility entrypoint and
 delegates to that command. For a non-publishing probe, use

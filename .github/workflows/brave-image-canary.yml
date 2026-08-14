@@ -32,6 +32,11 @@ on:
         required: false
         default: ''
         type: string
+      replay_run_id:
+        description: Prior comparison run whose exact wine scope should be replayed
+        required: false
+        default: ''
+        type: string
       wine_slug:
         description: Optional exact catalog slug for a one-wine diagnostic dossier
         required: false
@@ -50,7 +55,6 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       FINEVINES_BRAVE_SEARCH_KEY: ${{ secrets.FINEVINES_BRAVE_SEARCH_KEY }}
       FINEVINES_SERPER_KEY: ${{ secrets.FINEVINES_SERPER_KEY }}
-      FINEVINES_GOOGLE_VISION_KEY: ${{ secrets.FINEVINES_GOOGLE_VISION_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -80,11 +84,12 @@ jobs:
           go build -o imgnorm ./tools/imgnorm
       - name: Load passes from previous comparison
         id: previous
-        if: inputs.previous_run_id != ''
+        if: inputs.previous_run_id != '' || inputs.replay_run_id != ''
         env:
           GH_TOKEN: ${{ github.token }}
+          PRIOR_RUN_ID: ${{ inputs.replay_run_id != '' && inputs.replay_run_id || inputs.previous_run_id }}
         run: |
-          gh run download "${{ inputs.previous_run_id }}" --dir previous-comparison
+          gh run download "$PRIOR_RUN_ID" --dir previous-comparison
           report="$(find previous-comparison -name image-canary.json -print -quit)"
           test -n "$report"
           echo "report=$report" >> "$GITHUB_OUTPUT"
@@ -92,6 +97,7 @@ jobs:
         env:
           WINE_SLUG: ${{ inputs.wine_slug }}
           PREVIOUS_REPORT: ${{ steps.previous.outputs.report }}
+          REPLAY_RUN_ID: ${{ inputs.replay_run_id }}
         run: |
           args=(
             --canary --retry-misses --no-catalog-reuse --trace
@@ -102,7 +108,11 @@ jobs:
             --budget-minutes "${{ inputs.budget_minutes }}"
           )
           if [ -n "$WINE_SLUG" ]; then args+=(--slug "$WINE_SLUG"); fi
-          if [ -n "$PREVIOUS_REPORT" ]; then args+=(--exclude-passed-report "$PREVIOUS_REPORT"); fi
+          if [ -n "$PREVIOUS_REPORT" ]; then
+            if [ -n "$REPLAY_RUN_ID" ]; then args+=(--replay-report "$PREVIOUS_REPORT")
+            else args+=(--exclude-passed-report "$PREVIOUS_REPORT")
+            fi
+          fi
           node tools/labelfetch/autonomous.mjs "${args[@]}"
       - name: Capture the rendered Google Images comparison page
         if: always() && inputs.wine_slug != ''

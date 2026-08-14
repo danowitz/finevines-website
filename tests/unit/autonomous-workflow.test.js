@@ -180,3 +180,15 @@ test('a canary can select a stronger label model without changing production def
     '--exclude-passed-report', 'previous/image-canary.json',
   ]);
 });
+
+test('a canary can replay the exact scope of a prior report', async () => {
+  const h = harness();
+  await runAutonomousImageWorkflow({
+    ...config,
+    canary: true,
+    replayReport: 'previous/image-canary.json',
+  }, h.adapters);
+  assert.deepEqual(h.calls[1][1].slice(-2), [
+    '--replay-report', 'previous/image-canary.json',
+  ]);
+});

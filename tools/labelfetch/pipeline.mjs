@@ -19,7 +19,7 @@ import { createImageDiscovery, IMAGE_DISCOVERY_PROVIDERS, validateImageDiscovery
 import { catalogImageName, imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
 import { downloadCandidates } from './candidate-downloads.mjs';
 import { candidateWindow } from './candidate-window.mjs';
-import { passedSlugs, unresolvedSlugs, withoutPassed } from './comparison-progress.mjs';
+import { passedSlugs, reportSlugs, unresolvedSlugs, withoutPassed } from './comparison-progress.mjs';
 import { createBottleSelector } from './bottle-selector.mjs';
 import { createWebMatchExpander } from './web-match-expander.mjs';
 import { reusableStagedRecord } from './staged-record.mjs';
@@ -64,6 +64,11 @@ const SEARCH_PROFILE_NAME = opt('search-profile', 'baseline');
 const SEARCH_PROVIDER = opt('search-provider', 'google');
 const MODEL = opt('label-model', process.env.FINEVINES_LABEL_MODEL || 'gpt-4.1-nano');
 const EXCLUDE_PASSED_REPORT = opt('exclude-passed-report', '');
+const REPLAY_REPORT = opt('replay-report', '');
+if (EXCLUDE_PASSED_REPORT && REPLAY_REPORT) {
+  console.error('choose only one prior report mode');
+  process.exit(2);
+}
 const SUPPORTED_LABEL_MODELS = new Set(['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-5.6-sol']);
 const REASONING_EFFORTS = new Set(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
 const LABEL_REASONING_EFFORT = MODEL === 'gpt-5.6-sol' ? opt('label-reasoning-effort', 'medium') : '';
@@ -179,21 +184,29 @@ const attempts = await loadAttempts();
 const funnelStore = await loadFunnelStore();
 let inheritedPassed = new Set();
 let continuationSlugs = new Set();
-if (EXCLUDE_PASSED_REPORT) {
+let replaySlugs = new Set();
+if (EXCLUDE_PASSED_REPORT || REPLAY_REPORT) {
   if (!CANARY) {
-    console.error('--exclude-passed-report is comparison-only');
+    console.error('prior comparison reports are comparison-only');
     process.exit(2);
   }
   try {
-    const priorReport = JSON.parse(await readFile(EXCLUDE_PASSED_REPORT, 'utf8'));
-    inheritedPassed = passedSlugs(priorReport);
-    continuationSlugs = unresolvedSlugs(priorReport);
+    const reportPath = EXCLUDE_PASSED_REPORT || REPLAY_REPORT;
+    const priorReport = JSON.parse(await readFile(reportPath, 'utf8'));
+    if (REPLAY_REPORT) replaySlugs = reportSlugs(priorReport);
+    else {
+      inheritedPassed = passedSlugs(priorReport);
+      continuationSlugs = unresolvedSlugs(priorReport);
+    }
   } catch (error) {
     console.error(`could not read prior comparison report: ${String(error?.message || error).split('\n')[0]}`);
     process.exit(2);
   }
 }
-const wines = EXCLUDE_PASSED_REPORT
+const wines = REPLAY_REPORT
+  ? uniqueImageTargets(catalog.filter((wine) => replaySlugs.has(wine.slug)))
+      .sort((left, right) => left.slug.localeCompare(right.slug))
+  : EXCLUDE_PASSED_REPORT
   ? uniqueImageTargets(catalog.filter((wine) => continuationSlugs.has(wine.slug)))
       .sort((left, right) => left.slug.localeCompare(right.slug))
   : withoutPassed(selectWines(catalog, attempts, funnelStore), inheritedPassed);

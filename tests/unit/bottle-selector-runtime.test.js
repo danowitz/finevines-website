@@ -551,7 +551,7 @@ test('an appellation misplaced into producer_brand is not a false producer confl
     { name: 'Domaine Philippe Jouan Chambolle Musigny', producer: 'Domaine Philippe Jouan', vintage: '2023' },
     [{ ...candidates[0], title: '2023 Domaine Henri & Philippe Jouan Chambolle Musigny' }],
   );
-  assert.equal(evidence.anchor, true);
+  assert.equal(evidence.anchor, false);
   assert.equal(evidence.explicitConflict, false);
 });
 
@@ -571,6 +571,33 @@ test('a fuzzy cuvee token misplaced into producer_brand is not a producer confli
     },
     candidates.slice(0, 1),
   );
-  assert.equal(evidence.anchor, true);
+  assert.equal(evidence.anchor, false);
+  assert.equal(evidence.explicitConflict, false);
+});
+
+test('matching appellation and cuvee cannot anchor a bottle when the requested producer is absent', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test', readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      single_bottle: true,
+      producer_brand: 'Volnay-Fremiets',
+      product_cuvee: 'Premier Cru',
+      appellation: 'Bourgogne-Chambertin',
+      vintage: '',
+      wine_style: 'red',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true }),
+  });
+
+  const [evidence] = await reader(
+    {
+      name: 'Domaine des Epeneaux Volnay 1ER Cru les Fremiets',
+      producer: 'Domaine des Epeneaux',
+      vintage: '2018',
+    },
+    candidates.slice(0, 1),
+  );
+
+  assert.equal(evidence.anchor, false);
   assert.equal(evidence.explicitConflict, false);
 });

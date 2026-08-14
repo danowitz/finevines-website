@@ -32,6 +32,11 @@ const searchProvider = opt('search-provider', 'google');
 const labelModel = opt('label-model', '');
 const labelReasoningEffort = opt('label-reasoning-effort', '');
 const excludePassedReport = opt('exclude-passed-report', '');
+const replayReport = opt('replay-report', '');
+if (excludePassedReport && replayReport) {
+  console.error('choose only one prior report mode');
+  process.exit(2);
+}
 if ((candidateRecovery || qualityRecovery) && !retryMisses) {
   console.error('recovery scopes require --retry-misses');
   process.exit(2);
@@ -150,6 +155,7 @@ try {
     labelModel,
     labelReasoningEffort,
     excludePassedReport,
+    replayReport,
     manifestPath: 'data/fetched-images/manifest.json',
   }, {
     preflight,
