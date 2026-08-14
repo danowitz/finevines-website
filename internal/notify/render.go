@@ -100,7 +100,7 @@ var digestTmpl = template.Must(template.New("digest").Funcs(template.FuncMap{"co
 </ul>
 {{end}}
 <h2 style="font-size:17px;font-weight:normal;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid #d8d0c4;padding-bottom:6px">The portfolio today</h2>
-<p style="font-size:15px;line-height:1.7">{{comma .D.Coverage.Wines}} wines currently in the portfolio, representing {{comma .D.Coverage.Bottlings}} available bottlings across vintages and formats. {{comma .D.Coverage.RealImages}} of those bottlings ({{.D.Coverage.RealImagePct}}%) show a real bottle photograph; the rest show a printed label until a photograph is found. Descriptive detail — grape, region, and tasting notes — is sourced automatically and deepens with every run.</p>
+<p style="font-size:15px;line-height:1.7">{{comma .D.Coverage.Wines}} wines published. {{comma .D.Coverage.RealImages}} of them ({{.D.Coverage.RealImagePct}}%) show a real bottle photograph; the rest show a printed label until a photograph is found. Descriptive detail — grape, region, and tasting notes — is sourced automatically and deepens with every run.</p>
 <p style="font-size:13px;color:#7a7168;line-height:1.6">Sent automatically after a catalog run that changed something. <a href="{{.Root}}/portfolio/" style="color:#6b1f2a">Browse the portfolio</a></p>
 </div>
 `))
@@ -160,11 +160,10 @@ func renderText(d RunDiff, root string) string {
 	}
 
 	fmt.Fprintf(&b, "\nTHE PORTFOLIO TODAY\n-------------------\n"+
-		"  %s wines currently in the portfolio.\n"+
-		"  %s available bottlings across vintages and formats.\n"+
-		"  %s of those bottlings (%d%%) show a real bottle photograph; the rest show a printed label.\n"+
+		"  %s wines published.\n"+
+		"  %s of them (%d%%) show a real bottle photograph; the rest show a printed label.\n"+
 		"  Descriptive detail — grape, region, and tasting notes — is sourced automatically and deepens with every run.\n",
-		commaInt(d.Coverage.Wines), commaInt(d.Coverage.Bottlings), commaInt(d.Coverage.RealImages), d.Coverage.RealImagePct)
+		commaInt(d.Coverage.Wines), commaInt(d.Coverage.RealImages), d.Coverage.RealImagePct)
 	fmt.Fprintf(&b, "\nSent automatically after a catalog run that changed something.\n%s/portfolio/\n", root)
 	return b.String()
 }

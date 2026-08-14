@@ -225,6 +225,7 @@
   // Config from the grid's data-attributes (server ↔ client single source).
   var BASE = '/portfolio/'; // the client always operates against this path
   var PAGE_SIZE = parseInt(grid.dataset.pageSize, 10) || 48;
+  var WINE_TOTAL = parseInt(grid.dataset.wineTotal, 10) || 0;
   var indexURL = grid.dataset.indexUrl;
   if (!indexURL) return;
 
@@ -368,13 +369,6 @@
       vint.className = 'vintage';
       vint.textContent = vintLabel;
       h3.appendChild(vint);
-    }
-    if (w.vints && w.vints.length > 1) {
-      h3.appendChild(document.createTextNode(' '));
-      var vintageBadge = document.createElement('span');
-      vintageBadge.className = 'vintage-badge';
-      vintageBadge.textContent = w.vints.length + ' vintages';
-      h3.appendChild(vintageBadge);
     }
     body.appendChild(h3);
     if (w.region || w.varietal) {
@@ -677,10 +671,18 @@
     for (var i = 0; i < result.items.length; i++) frag.appendChild(createCard(result.items[i]));
     grid.replaceChildren(frag);
 
+    var hasFilters = state.q.trim() !== '';
+    for (var fi = 0; fi < FACET_KEYS.length; fi++) {
+      if ((state.facets[FACET_KEYS[fi]] || new Set()).size > 0) hasFilters = true;
+    }
+    // At rest, keep the customer-facing count aligned with the homepage and
+    // email even though the browse cards are grouped. Once someone filters,
+    // show the number of matching cards so the controls remain useful.
+    var displayTotal = !hasFilters && WINE_TOTAL > 0 ? WINE_TOTAL : result.total;
     if (emptyEl) emptyEl.hidden = result.total !== 0;
-    if (countEl) countEl.textContent = result.total.toLocaleString() + ' wines';
-    if (railCountEl) railCountEl.textContent = result.total.toLocaleString() + ' wines';
-    renderRail(result.facetCounts, result.total);
+    if (countEl) countEl.textContent = displayTotal.toLocaleString() + ' wines';
+    if (railCountEl) railCountEl.textContent = displayTotal.toLocaleString() + ' wines';
+    renderRail(result.facetCounts, displayTotal);
     renderPagination(result.page, result.pageCount);
   }
 

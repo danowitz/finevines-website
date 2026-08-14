@@ -134,7 +134,7 @@ func TestDiff_ASwappedPhotographCountsAsANewImage(t *testing.T) {
 	}
 }
 
-func TestDiff_CoverageUsesActiveBottlingsAndDistinctPortfolioWines(t *testing.T) {
+func TestDiff_CoverageUsesActivePublishedWines(t *testing.T) {
 	after := []model.Wine{
 		wine("A", "a", func(w *model.Wine) {
 			w.ImagePath, w.ImageSource, w.MetadataScore = "assets/img/wines/a.jpg", model.ImageScrapedWeb, 80
@@ -147,11 +147,8 @@ func TestDiff_CoverageUsesActiveBottlingsAndDistinctPortfolioWines(t *testing.T)
 		}),
 	}
 	d := Diff(nil, after, nil, base)
-	if d.Coverage.Wines != 1 {
-		t.Errorf("Coverage.Wines = %d, want 1 distinct grouped wine", d.Coverage.Wines)
-	}
-	if d.Coverage.Bottlings != 3 {
-		t.Errorf("Coverage.Bottlings = %d, want 3 active rows", d.Coverage.Bottlings)
+	if d.Coverage.Wines != 3 {
+		t.Errorf("Coverage.Wines = %d, want 3 active published rows", d.Coverage.Wines)
 	}
 	if d.Coverage.RealImages != 1 || d.Coverage.RealImagePct != 33 {
 		t.Errorf("Coverage images = %d (%d%%), want 1 (33%%)", d.Coverage.RealImages, d.Coverage.RealImagePct)
