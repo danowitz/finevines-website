@@ -91,8 +91,8 @@ function corroboratesTitle(wine, candidate) {
   return sourceIdentityEvidence(wine, candidate).corroboratesTitle;
 }
 
-function exactVintageSourceAnchor(wine, candidate) {
-  return sourceIdentityEvidence(wine, candidate).exactVintageAnchor;
+function exactVintageSourceSignal(wine, candidate) {
+  return sourceIdentityEvidence(wine, candidate).exactVintageSignal;
 }
 
 // Titles may corroborate a moderately similar visual pair, but they can never
@@ -117,7 +117,7 @@ function rankGroups(wine, groups) {
     .map((group, index) => ({
       group,
       index,
-      exactSources: group.filter((candidate) => exactVintageSourceAnchor(wine, candidate)).length,
+      exactSources: group.filter((candidate) => exactVintageSourceSignal(wine, candidate)).length,
       corroboratingSources: group.filter((candidate) => corroboratesTitle(wine, candidate)).length,
     }))
     .sort((left, right) =>
@@ -233,14 +233,29 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         reviewCandidates: reviewCandidates(inspected),
       };
 
-      // One bounded label request still covers the wine. The reading plan
-      // reserves one slot for a target-relevant bottle, then preserves visual
-      // group and source diversity instead of spending every slot on siblings.
-      const representativesToRead = planIdentityReading(wine, groups);
+      // The primary request remains three images. Only a primary miss spends a
+      // second request on three distinct candidates from the same safe groups.
+      const readingPlan = planIdentityReading(wine, groups, 6);
+      const readerTraces = [];
+      const firstEvidence = await read(wine, readingPlan.slice(0, 3));
+      if (firstEvidence.readerTrace) readerTraces.push(firstEvidence.readerTrace);
+      let evidence = [...firstEvidence];
+      if (!evidence.some((item) => item.anchor === true) && readingPlan.length > 3) {
+        const secondEvidence = await read(wine, readingPlan.slice(3, 6));
+        if (secondEvidence.readerTrace) readerTraces.push(secondEvidence.readerTrace);
+        evidence = [...evidence, ...secondEvidence];
+      }
+      const representativesToRead = readingPlan.slice(0, evidence.length);
       trace.representatives = representativesToRead.map((candidate) => candidate.id);
       diagnostics.labelImagesRead = representativesToRead.length;
-      const evidence = await read(wine, representativesToRead);
-      trace.reader = evidence.readerTrace || null;
+      trace.reader = readerTraces.length <= 1
+        ? readerTraces[0] || null
+        : {
+            model: readerTraces[0].model,
+            reasoningEffort: readerTraces[0].reasoningEffort,
+            candidateIds: readerTraces.flatMap((item) => item.candidateIds || []),
+            batches: readerTraces,
+          };
       const byID = new Map(evidence.map((item) => [item.id, item]));
       let selectedGroup = groups[0];
       let bestEvaluated = null;
@@ -251,16 +266,17 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       for (const group of groups) {
         const judged = group.map((candidate) => {
           const explicitConflict = byID.get(candidate.id)?.explicitConflict === true;
-          const sourceAnchor = exactVintageSourceAnchor(wine, candidate);
+          const sourceAnchor = exactVintageSourceSignal(wine, candidate);
           const identityAnchor = byID.get(candidate.id)?.anchor === true;
           const inheritedFullMatch = candidate.trustedFullMatch === true;
           return {
             ...candidate,
             explicitConflict,
             sourceAnchor,
-            // A conflict vetoes every route to anchor status, including an
-            // otherwise trusted full-match relationship from Web Detection.
-            anchor: !explicitConflict && (identityAnchor || sourceAnchor || inheritedFullMatch),
+            // Source metadata chooses what to read but never proves the pixels.
+            // Publication requires blind pixel evidence or a verified full-copy
+            // relationship to pixels that already earned that evidence.
+            anchor: !explicitConflict && (identityAnchor || inheritedFullMatch),
           };
         });
         for (const candidate of judged) {

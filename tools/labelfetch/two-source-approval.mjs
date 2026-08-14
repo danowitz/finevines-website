@@ -41,9 +41,10 @@ function sourceVintage(url) {
 // `pairs` uses indexes into `candidates` and comes from the local perceptual
 // hash helper. Agreement is deliberately narrower than the review-page badge:
 // both images must be in the selector's strongest group, come from different
-// permitted hosts, carry no explicit conflict, and have source URLs that name
-// this product. This prevents a generic sibling-label pair from becoming an
-// identity verdict merely because the bottles look alike.
+// permitted hosts, carry no explicit conflict, have source URLs that name this
+// product, and include a blind pixel identity anchor. This prevents stale
+// search metadata or a generic sibling-label pair from becoming an identity
+// verdict merely because two bottles look alike.
 export function chooseTwoSourceApproval(record, candidates, pairs, {
   maxDistance = 14,
   minSourceIdentity = 0.70,
@@ -53,7 +54,9 @@ export function chooseTwoSourceApproval(record, candidates, pairs, {
     const right = candidates[pair.b];
     const leftHost = sourceHost(left?.page);
     const rightHost = sourceHost(right?.page);
-    return pair.distance <= maxDistance && leftHost && rightHost && leftHost !== rightHost &&
+    const hasPixelAnchor = left?.anchor === true || right?.anchor === true;
+    return pair.distance <= maxDistance && hasPixelAnchor &&
+      leftHost && rightHost && leftHost !== rightHost &&
       eligibleTwoSourceCandidate(left) && eligibleTwoSourceCandidate(right) &&
       sourceIdentityScore(record.name, left) >= minSourceIdentity &&
       sourceIdentityScore(record.name, right) >= minSourceIdentity;
@@ -62,8 +65,9 @@ export function chooseTwoSourceApproval(record, candidates, pairs, {
 
   const memberIndexes = [...new Set(agreeing.flatMap((pair) => [pair.a, pair.b]))];
   const expectedVintage = String(record.query || record.slug || '').match(/\b(19|20)\d\d\b/)?.[0] || '';
-  const identityMembers = candidates.filter((candidate) =>
-    eligibleTwoSourceCandidate(candidate) &&
+  const trustedIndexes = new Set(agreeing.flatMap((pair) => [pair.a, pair.b]));
+  const identityMembers = candidates.filter((candidate, index) =>
+    trustedIndexes.has(index) && eligibleTwoSourceCandidate(candidate) &&
     sourceIdentityScore(record.name, candidate) >= minSourceIdentity);
   // The agreeing pair proves the design. Selection may use a cleaner member of
   // that already-established strongest group, but a vintage-specific catalog

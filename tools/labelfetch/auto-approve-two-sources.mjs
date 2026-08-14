@@ -1,5 +1,6 @@
 // Promote unresolved candidates only when two independent permitted sources
-// show the same bottle and both source URLs identify the requested product.
+// show the same bottle, both source URLs identify the requested product, and
+// at least one member already earned identity from its pixels.
 // Dry-run by default; pass --apply to update the staging manifest.
 import { copyFile, readFile, writeFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
@@ -55,7 +56,7 @@ if (apply) for (const { record, approval } of approvals) {
   record.image = pick.image;
   record.size = pick.size;
   record.label = pick.label || '';
-  record.verifiedBy = 'two-source visual consensus + source identity rules';
+  record.verifiedBy = 'pixel identity anchor + independent exact-source visual copy';
   record.selectionIdentityVerified = true;
   record.matchingImages = approval.matchingImages;
   record.sourceConsensusHosts = approval.hosts;

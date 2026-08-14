@@ -110,7 +110,7 @@ test('a wrong-vintage title cannot promote a weak visual pair', async () => {
   assert.equal(result.reason, 'no repeated bottle design');
 });
 
-test('an exact-vintage source anchors a repeated vintage-neutral bottle when the reader returns nothing', async () => {
+test('an exact-vintage source prioritizes a bottle but cannot publish unread pixels', async () => {
   const subject = createBottleSelector({
     inspect: async (item) => ({ visualOk: true, shapeOk: item.shapeOk, cleanBackground: item.cleanBackground }),
     compare: async () => [{ a: 0, b: 1, score: 0.99 }],
@@ -126,9 +126,8 @@ test('an exact-vintage source anchors a repeated vintage-neutral bottle when the
       candidate('older', { title: 'Domaine Henri & Philippe Jouan Chambolle Musigny 2022' }),
     ],
   );
-  assert.equal(result.pick.id, 'current');
-  assert.deepEqual(result.sourceAnchorIds, ['current']);
-  assert.equal(result.diagnostics.sourceIdentityAnchors, 1);
+  assert.equal(result.pick, null);
+  assert.equal(result.diagnostics.publishableAnchors, 0);
 });
 
 test('an exact source title cannot override a readable identity conflict', async () => {
@@ -357,6 +356,86 @@ test('target-relevant reader priority cannot override a wrong-producer conflict'
   assert.equal(result.diagnostics.publishableAnchors, 0);
 });
 
+test('reads a second distinct batch only when the first batch has no pixel anchor', async () => {
+  const reads = [];
+  const candidates = Array.from({ length: 6 }, (_, index) => candidate(`candidate-${index + 1}`, {
+    cleanBackground: true,
+    width: 400 + index,
+    height: 800 + index,
+  }));
+  const pairs = [];
+  for (let left = 0; left < candidates.length; left++) {
+    for (let right = left + 1; right < candidates.length; right++) {
+      pairs.push({ a: left, b: right, score: 0.96 });
+    }
+  }
+  const subject = createBottleSelector({
+    inspect: async (item) => ({ visualOk: true, shapeOk: item.shapeOk, cleanBackground: item.cleanBackground }),
+    compare: async () => pairs,
+    read: async (_wine, batch) => {
+      reads.push(batch.map(({ id }) => id));
+      return batch.map(({ id }) => ({
+        id,
+        anchor: reads.length === 2 && id === reads[1][0],
+        explicitConflict: false,
+      }));
+    },
+  });
+
+  const result = await subject.select({ name: 'Target Wine' }, candidates);
+  assert.equal(reads.length, 2);
+  assert.equal(reads[0].length, 3);
+  assert.equal(reads[1].length, 3);
+  assert.equal(new Set(reads.flat()).size, 6);
+  assert.equal(result.pick.id, reads[1][0]);
+  assert.equal(result.diagnostics.labelImagesRead, 6);
+});
+
+test('does not spend a second label batch after the first batch proves identity', async () => {
+  const reads = [];
+  const candidates = Array.from({ length: 6 }, (_, index) => candidate(`candidate-${index + 1}`, {
+    cleanBackground: true,
+    width: 400 + index,
+    height: 800 + index,
+  }));
+  const subject = createBottleSelector({
+    inspect: async (item) => ({ visualOk: true, shapeOk: item.shapeOk, cleanBackground: item.cleanBackground }),
+    compare: async () => candidates.slice(1).map((_, index) => ({ a: 0, b: index + 1, score: 0.96 })),
+    read: async (_wine, batch) => {
+      reads.push(batch.map(({ id }) => id));
+      return batch.map(({ id }, index) => ({ id, anchor: index === 0, explicitConflict: false }));
+    },
+  });
+
+  const result = await subject.select({ name: 'Target Wine' }, candidates);
+  assert.equal(reads.length, 1);
+  assert.equal(reads[0].length, 3);
+  assert.equal(result.diagnostics.labelImagesRead, 3);
+});
+
+test('a perfect source title cannot publish a visually repeated stale image', async () => {
+  const result = await selector({
+    pairs: [{ a: 0, b: 1, score: 0.98 }],
+    evidence: [
+      { id: 'stale-image', anchor: false, explicitConflict: false },
+      { id: 'lookalike', anchor: false, explicitConflict: false },
+    ],
+  }).select(
+    { name: 'Paul Lato Wines Pinot Noir Matinee Santa Barbara County', vintage: '2024' },
+    [
+      candidate('stale-image', {
+        title: "Paul Lato Pinot Noir 'Matinee' Santa Barbara County 2024",
+        url: 'https://example.test/melvillepinotsrh23.jpg',
+        cleanBackground: true,
+      }),
+      candidate('lookalike'),
+    ],
+  );
+
+  assert.equal(result.pick, null);
+  assert.equal(result.diagnostics.publishableAnchors, 0);
+});
+
 test('a Web Detection full match inherits identity from its verified seed', async () => {
   const result = await selector({
     pairs: [{ a: 0, b: 1, score: 0.99 }],
@@ -388,7 +467,7 @@ test('a provisional Web Detection copy must earn identity from its own evidence'
   assert.equal(result.diagnostics.identityAnchors, 0);
 });
 
-test('an exact product title can promote a provisional Web Detection copy', async () => {
+test('an exact product title cannot promote an unverified Web Detection copy', async () => {
   const subject = selector({
     pairs: [{ a: 0, b: 1, score: 0.99 }],
     evidence: [{ id: 'seed' }, { id: 'web-copy' }],
@@ -404,6 +483,5 @@ test('an exact product title can promote a provisional Web Detection copy', asyn
     }),
   ]);
 
-  assert.equal(result.pick.id, 'web-copy');
-  assert.deepEqual(result.sourceAnchorIds, ['web-copy']);
+  assert.equal(result.pick, null);
 });

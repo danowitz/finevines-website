@@ -298,7 +298,7 @@ const manifest = (await exists(MANIFEST)) ? JSON.parse(await readFile(MANIFEST, 
 
 console.log(`${SEARCH_PROVIDER} image discovery: ready`);
 if (SEARCH_PROVIDER === 'google') console.log(`google image search profile: ${SEARCH_PROFILE_NAME}`);
-console.log(`identity reader: ${visionKey ? `${MODEL}${LABEL_REASONING_EFFORT ? ` (${LABEL_REASONING_EFFORT} effort)` : ''}, one request of at most three images per grouped wine` : 'unavailable - grouped wines will stay due'}`);
+console.log(`identity reader: ${visionKey ? `${MODEL}${LABEL_REASONING_EFFORT ? ` (${LABEL_REASONING_EFFORT} effort)` : ''}, three images plus one miss-only batch of three` : 'unavailable - grouped wines will stay due'}`);
 console.log(`label reverse-search expansion: ${googleVisionKey ? 'Google Cloud Vision Web Detection ready (whole bottle + label crop)' : 'disabled - FINEVINES_GOOGLE_VISION_KEY is missing'}`);
 console.log(`processing up to ${WINE_CONCURRENCY} wines concurrently`);
 
@@ -541,13 +541,13 @@ async function processWine(wine) {
   rec.image = result.pick.url;
   rec.size = `${result.pick.width || 0}x${result.pick.height || 0}`;
   rec.label = result.anchorLabels?.[0] || '';
-  rec.verifiedBy = result.sourceAnchorIds?.length
-    ? 'exact-vintage source title + repeated visual design + local conflict rules'
+  rec.verifiedBy = result.pick.trustedFullMatch
+    ? 'verified pixel anchor + exact visual copy'
     : `${MODEL} transcription + local identity rules`;
   // Import requires this explicit machine-readable verdict. The selector only
-  // returns a pick after either a blind label transcription or an exact-vintage
-  // source title anchors a repeated bottle design, and every readable identity
-  // conflict has been vetoed.
+  // returns a pick after either blind label transcription or an exact visual
+  // copy of already-verified pixels anchors a repeated bottle design. Source
+  // titles rank candidates but never prove the image itself.
   rec.selectionIdentityVerified = true;
   rec.matchingImages = result.matchingImages;
   rec.anchorImages = result.pick.anchorIds;

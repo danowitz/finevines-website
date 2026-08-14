@@ -109,11 +109,15 @@ const REQUIRED_TIERS = ['reserve', 'reserva', 'riserva', 'smaragd'];
 const CUE_NOISE = new Set(['ried', 'valley', 'proprietary', 'rose']);
 const CUVEE_NOISE = new Set(['dessus', 'dessous']);
 const PRODUCER_NOISE = new Set(['domaine', 'chateau', 'maison', 'weingut', 'estate', 'winery', 'vineyards']);
+const PRODUCER_BRAND_ALIASES = new Map([
+  ['vine hill ranch', new Set(['baker hamilton'])],
+]);
 
 function containsToken(text, wanted) {
   return normalize(text).split(' ').some((seen) =>
     seen === wanted ||
     (seen.length >= 4 && (seen.startsWith(wanted) || wanted.startsWith(seen))) ||
+    (seen.length >= 5 && wanted.length >= 5 && editDistance(seen, wanted) <= 1) ||
     (seen.length >= 6 && wanted.length >= 6 && editDistance(seen, wanted) <= 2));
 }
 
@@ -231,7 +235,16 @@ function hasProducerEvidence(wine, identity) {
   const tokenSeen = (wanted) => seen.some((token) =>
     token === wanted || token.startsWith(wanted) || wanted.startsWith(token));
   const compoundProducer = /[-â€-â€•]/.test(String(wine.producer || ''));
-  return compoundProducer ? expected.every(tokenSeen) : expected.some(tokenSeen);
+  const direct = compoundProducer ? expected.every(tokenSeen) : expected.some(tokenSeen);
+  if (direct) return true;
+  // Some Salesforce producers own a differently named bottle brand. These
+  // relationships are explicit: inferring them from catalog-name overlap made
+  // appellations such as Chambolle-Musigny look like producer aliases.
+  const producerKey = normalize(wine.producer || '');
+  const bottleBrand = tokens(identity.producerBrand || '')
+    .filter((token) => token.length > 2 && !PRODUCER_NOISE.has(token))
+    .join(' ');
+  return PRODUCER_BRAND_ALIASES.get(producerKey)?.has(bottleBrand) === true;
 }
 
 function varietalConflict(wine, candidate, identity) {

@@ -21,9 +21,9 @@ function sourceText(candidate) {
   return [candidate.title, candidate.url, candidate.context].filter(Boolean).join(' ');
 }
 
-// Source evidence has two deliberately separate uses. exactVintageAnchor is a
-// strict identity verdict; relevance only decides which pixels are worth the
-// bounded label-reader slots and can never make a candidate publishable.
+// Source evidence only ranks discovery results and reading slots. It can never
+// make pixels publishable; identity must still come from the blind reader or a
+// verified exact visual copy of reader-proven pixels.
 export function sourceIdentityEvidence(wine, candidate) {
   const wanted = uniqueTokens(wine.name);
   const title = normalize(candidate.title || '');
@@ -39,7 +39,7 @@ export function sourceIdentityEvidence(wine, candidate) {
   );
   return {
     corroboratesTitle: wanted.length >= 2 && !conflictingTitleVintage && titleMatches / wanted.length >= 0.75,
-    exactVintageAnchor: wanted.length >= 2 && wanted.every((token) => titleTokens.has(token)) &&
+    exactVintageSignal: wanted.length >= 2 && wanted.every((token) => titleTokens.has(token)) &&
       Boolean(wantedVintage) && titleVintages.length > 0 &&
       titleVintages.every((vintage) => vintage === wantedVintage),
     relevance: wanted.length ? combinedMatches / wanted.length : 0,
@@ -69,16 +69,17 @@ function diverseRepresentatives(group) {
   return picked;
 }
 
-// Plan one bounded identity-reading request. A target-relevant bottle gets one
-// reserved slot even when ornate sibling labels form larger or tighter groups.
-// Remaining slots preserve the existing group and host diversity behavior.
+// Plan bounded identity reading. A target-relevant bottle gets one reserved
+// primary slot even when ornate sibling labels form larger or tighter groups.
+// Remaining slots preserve group and host diversity; callers may spend the
+// entries after the first three only when the primary batch has no pixel anchor.
 export function planIdentityReading(wine, groups, limit = 3) {
   const all = [...new Map(groups.flat().map((candidate) => [candidate.id, candidate])).values()];
   const baseline = [];
   for (const group of groups) {
     const ranked = diverseRepresentatives(group).sort((left, right) =>
-      Number(sourceIdentityEvidence(wine, right).exactVintageAnchor) -
-      Number(sourceIdentityEvidence(wine, left).exactVintageAnchor));
+      Number(sourceIdentityEvidence(wine, right).exactVintageSignal) -
+      Number(sourceIdentityEvidence(wine, left).exactVintageSignal));
     for (const candidate of ranked) {
       if (!baseline.some(({ id }) => id === candidate.id)) baseline.push(candidate);
       if (baseline.length === limit) break;
@@ -90,12 +91,29 @@ export function planIdentityReading(wine, groups, limit = 3) {
     .sort((left, right) => {
       const leftEvidence = sourceIdentityEvidence(wine, left);
       const rightEvidence = sourceIdentityEvidence(wine, right);
-      return Number(rightEvidence.exactVintageAnchor) - Number(leftEvidence.exactVintageAnchor) ||
+      return Number(rightEvidence.exactVintageSignal) - Number(leftEvidence.exactVintageSignal) ||
         Number(rightEvidence.requestedVintageInSource) - Number(leftEvidence.requestedVintageInSource) ||
         rightEvidence.relevance - leftEvidence.relevance ||
         Number(right.cleanBackground) - Number(left.cleanBackground) ||
         area(right) - area(left);
     });
-  if (!targeted.length || baseline.some(({ id }) => id === targeted[0].id)) return baseline;
-  return [targeted[0], ...baseline].slice(0, limit);
+  const planned = !targeted.length || baseline.some(({ id }) => id === targeted[0].id)
+    ? [...baseline]
+    : [targeted[0], ...baseline].slice(0, limit);
+  // The first three preserve the bounded primary request. Additional entries
+  // exist only for the miss-only second batch and never displace that order.
+  const remaining = [...all].sort((left, right) => {
+    const leftEvidence = sourceIdentityEvidence(wine, left);
+    const rightEvidence = sourceIdentityEvidence(wine, right);
+    return Number(rightEvidence.requestedVintageInSource) - Number(leftEvidence.requestedVintageInSource) ||
+      rightEvidence.relevance - leftEvidence.relevance ||
+      Number(right.shapeOk) - Number(left.shapeOk) ||
+      Number(right.cleanBackground) - Number(left.cleanBackground) ||
+      area(right) - area(left);
+  });
+  for (const candidate of remaining) {
+    if (!planned.some(({ id }) => id === candidate.id)) planned.push(candidate);
+    if (planned.length === limit) break;
+  }
+  return planned.slice(0, limit);
 }

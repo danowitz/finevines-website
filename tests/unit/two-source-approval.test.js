@@ -11,6 +11,7 @@ const candidate = (overrides = {}) => ({
   subjectOk: true,
   displayOk: true,
   explicitConflict: false,
+  anchor: true,
   why: 'identity not proven automatically',
   ...overrides,
 });
@@ -24,6 +25,15 @@ test('approves the best publishable copy when two exact independent sources agre
   const result = chooseTwoSourceApproval(record, candidates, [{ a: 0, b: 1, distance: 5 }]);
   assert.equal(result.pick.file, 'large.png');
   assert.deepEqual(result.hosts, ['one.example', 'two.example']);
+});
+
+test('refuses two exact independent sources when neither image has pixel identity proof', () => {
+  const record = { name: 'Domaine Rapet Corton Charlemagne Grand Cru' };
+  const candidates = [
+    candidate({ anchor: false }),
+    candidate({ anchor: false, file: 'peer.png', page: 'https://two.example/domaine-rapet-corton-charlemagne-grand-cru' }),
+  ];
+  assert.equal(chooseTwoSourceApproval(record, candidates, [{ a: 0, b: 1, distance: 2 }]), null);
 });
 
 test('refuses same-host duplicates and explicit identity conflicts', () => {
@@ -59,6 +69,9 @@ test('uses an exact-vintage strongest-group image instead of a larger older bott
     candidate({ file: 'peer.png', page: 'https://two.example/domaine-rapet-corton-charlemagne-grand-cru-2021' }),
     candidate({ file: 'exact.png', page: 'https://three.example/domaine-rapet-corton-charlemagne-grand-cru-2023', size: '300x600' }),
   ];
-  const result = chooseTwoSourceApproval(record, candidates, [{ a: 0, b: 1, distance: 4 }]);
+  const result = chooseTwoSourceApproval(record, candidates, [
+    { a: 0, b: 1, distance: 4 },
+    { a: 0, b: 2, distance: 5 },
+  ]);
   assert.equal(result.pick.file, 'exact.png');
 });

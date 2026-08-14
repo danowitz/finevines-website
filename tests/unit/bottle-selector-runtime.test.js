@@ -601,3 +601,55 @@ test('matching appellation and cuvee cannot anchor a bottle when the requested p
   assert.equal(evidence.anchor, false);
   assert.equal(evidence.explicitConflict, false);
 });
+
+test('a one-letter OCR omission in a distinctive cuvee does not create a false conflict', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test', readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      single_bottle: true,
+      producer_brand: 'Domaine Chicotot',
+      product_cuvee: 'Nuits-Saint-Georges 1er Cru',
+      appellation: 'Aux Torey',
+      vintage: '2019',
+      wine_style: 'red',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true, localLabel: '' }),
+  });
+  const [evidence] = await reader(
+    {
+      name: 'Chicotot Domaine Georges Chicotot Nuits Saint Georges 1er Cru aux Thorey',
+      producer: 'Domaine Georges Chicotot',
+      vintage: '2019',
+    },
+    [{ ...candidates[0], title: 'Nuits-Saint-Georges 1er Cru Aux Thorey 2019' }],
+  );
+
+  assert.equal(evidence.anchor, true);
+  assert.equal(evidence.explicitConflict, false);
+});
+
+test('a two-word bottle brand present in the catalog name can prove its parent producer', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test', readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      single_bottle: true,
+      producer_brand: 'Baker & Hamilton',
+      product_cuvee: 'Cabernet Sauvignon',
+      appellation: 'Oakville, Napa Valley',
+      vintage: '2022',
+      wine_style: 'red',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true, localLabel: '' }),
+  });
+  const [evidence] = await reader(
+    {
+      name: 'Vine Hill Ranch Baker & Hamilton Cabernet Sauvignon Napa Valley',
+      producer: 'Vine Hill Ranch',
+      vintage: '2022',
+    },
+    candidates.slice(0, 1),
+  );
+
+  assert.equal(evidence.anchor, true);
+  assert.equal(evidence.explicitConflict, false);
+});
