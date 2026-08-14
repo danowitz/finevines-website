@@ -249,7 +249,32 @@ export function createBottleSelector({
       };
 
       const proof = await identityProof.prove(wine, { candidates: inspected, groups });
-      const evidence = proof.evidence;
+      const evidence = [...proof.evidence];
+      // Search metadata never proves pixels, but an explicit wrong grape is a
+      // safe veto even when that candidate was not one of the bounded images
+      // sent to the reader. Without this, a read Grenache could donate identity
+      // to an unread Syrah merely because the producer's label layout matched.
+      const evidenceIndex = new Map(evidence.map((item, index) => [item.id, index]));
+      for (const candidate of inspected) {
+        const sourceConflict = sourceIdentityEvidence(wine, candidate).sourceVarietalConflict;
+        if (!sourceConflict) continue;
+        const index = evidenceIndex.get(candidate.id);
+        const previous = index === undefined ? { id: candidate.id } : evidence[index];
+        const veto = {
+          ...previous,
+          anchor: false,
+          productAnchor: false,
+          explicitConflict: true,
+          reasonCode: 'VARIETAL_CONFLICT',
+          conflict: sourceConflict,
+        };
+        if (index === undefined) {
+          evidenceIndex.set(candidate.id, evidence.length);
+          evidence.push(veto);
+        } else {
+          evidence[index] = veto;
+        }
+      }
       trace.representatives = proof.representatives;
       trace.reader = proof.readerTrace;
       trace.identityProof = {
@@ -299,7 +324,8 @@ export function createBottleSelector({
       for (const group of groups) {
         const base = group.map((candidate) => {
           const explicitConflict = byID.get(candidate.id)?.explicitConflict === true;
-          const sourceAnchor = exactVintageSourceSignal(wine, candidate);
+          const sourceEvidence = sourceIdentityEvidence(wine, candidate);
+          const sourceAnchor = sourceEvidence.exactVintageSignal;
           const identityAnchor = byID.get(candidate.id)?.anchor === true;
           const inheritedFullMatch = candidate.trustedFullMatch === true;
           return {
@@ -311,13 +337,19 @@ export function createBottleSelector({
             // relationship to pixels that already earned that evidence.
             identityAnchor,
             inheritedFullMatch,
+            // A directly read vintage-neutral bottle may survive stale source
+            // metadata. An unread candidate may not inherit identity through a
+            // source that explicitly names another vintage or grape.
+            inheritanceBlocked: Boolean(
+              sourceEvidence.conflictingTitleVintage || sourceEvidence.sourceVarietalConflict),
+            sourceVintageMismatch: sourceEvidence.sourceVintageMismatch,
           };
         });
         const readableAnchors = base.filter((candidate) =>
           !candidate.explicitConflict && (candidate.identityAnchor || candidate.inheritedFullMatch));
         const judged = base.map((candidate) => {
           const inheritedFrom = !candidate.identityAnchor && !candidate.inheritedFullMatch &&
-            !candidate.explicitConflict
+            !candidate.explicitConflict && !candidate.inheritanceBlocked
             ? readableAnchors.find((anchor) => directMatch(candidate.id, anchor.id))
             : null;
           return {
@@ -355,6 +387,9 @@ export function createBottleSelector({
           if (!traceEvidence.some(({ id }) => id === candidate.id)) traceEvidence.push({
             ...(byID.get(candidate.id) || { id: candidate.id, anchor: false, explicitConflict: false }),
             sourceAnchor: candidate.sourceAnchor,
+            sourceVintageMismatch: byID.get(candidate.id)?.sourceVintageMismatch ||
+              candidate.sourceVintageMismatch || undefined,
+            inheritanceBlocked: candidate.inheritanceBlocked,
             effectiveAnchor: candidate.anchor,
           });
         }

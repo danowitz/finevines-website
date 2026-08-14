@@ -4,6 +4,7 @@ import { promisify } from 'node:util';
 import { parseVisionFields } from './vision-label.mjs';
 import { vintageConflict } from './vintage.mjs';
 import { normalize, tokens } from './match.mjs';
+import { namedVarieties, sourceIdentityEvidence } from './identity-reading-plan.mjs';
 
 const run = promisify(execFile);
 
@@ -258,30 +259,6 @@ function identityConflict(wine, candidate, identity) {
   return '';
 }
 
-const VARIETIES = [
-  'gruner veltliner', 'riesling', 'chardonnay', 'pinot noir', 'pinot grigio',
-  'pinot gris', 'malbec', 'cabernet sauvignon', 'sauvignon blanc', 'merlot',
-  'syrah', 'shiraz', 'gamay', 'nebbiolo', 'sangiovese', 'tempranillo',
-  'grenache', 'viognier', 'aligote', 'vermentino', 'gewurztraminer', 'chenin blanc',
-];
-
-function namedVarieties(text) {
-  const normalized = ` ${normalize(text)} `;
-  return VARIETIES.filter((variety) => normalized.includes(` ${variety} `));
-}
-
-function sourceVintageConflict(wine, candidate) {
-  const wanted = String(wine.vintage || '').match(/\b(?:19|20)\d{2}\b/)?.[0] || '';
-  if (!wanted) return '';
-  // Product titles are explicit evidence. Do not mine arbitrary page URLs or
-  // article dates: those can describe publication time rather than vintage.
-  const visible = String(candidate.title || '').match(/\b(?:19|20)\d{2}\b/g) || [];
-  if (visible.length && !visible.includes(wanted)) {
-    return `candidate source title says ${[...new Set(visible)].join('/')}; request is ${wanted}`;
-  }
-  return '';
-}
-
 function hasProducerEvidence(wine, identity) {
   const expected = tokens(wine.producer || '').filter((token) =>
     token.length > 2 && !PRODUCER_NOISE.has(token));
@@ -321,10 +298,8 @@ function conflictReasonCode(conflict) {
 function varietalConflict(wine, candidate, identity) {
   const wanted = namedVarieties([wine.name, wine.varietal].filter(Boolean).join(' '));
   if (!wanted.length) return '';
-  const sourceSeen = namedVarieties([candidate.title, candidate.context, candidate.url].filter(Boolean).join(' '));
-  if (sourceSeen.length && !sourceSeen.some((variety) => wanted.includes(variety))) {
-    return `candidate source says ${sourceSeen.join('/')}; request is ${wanted.join('/')}`;
-  }
+  const sourceConflict = sourceIdentityEvidence(wine, candidate).sourceVarietalConflict;
+  if (sourceConflict) return sourceConflict;
   const labelSeen = namedVarieties(identity.text);
   if (labelSeen.length && !labelSeen.some((variety) => wanted.includes(variety))) {
     return `candidate label says ${labelSeen.join('/')}; request is ${wanted.join('/')}`;
@@ -473,7 +448,7 @@ export function createBoundedLabelReader({
       const identityProblem = identityConflict(verifierWine, candidate, identity);
       const visibleVintageConflict = vintageConflict(wine.vintage, identity.vintage) ||
         vintageConflict(wine.vintage, localVintage);
-      const sourceVintageMismatch = sourceVintageConflict(wine, candidate);
+      const sourceVintageMismatch = sourceIdentityEvidence(wine, candidate).sourceVintageMismatch;
       const incompleteIdentity = /lacks requested|lacks requested estate/i.test(identityProblem);
       const hardIdentityProblem = incompleteIdentity ? '' : identityProblem;
       const productConflict = varietalConflict(wine, candidate, identity) ||

@@ -39,6 +39,58 @@ test('one readable anchor transfers identity only to a directly matching conflic
   assert.equal(result.pick.inheritedIdentity, true);
 });
 
+test('an unread lookalike with a contradictory source variety cannot inherit identity', async () => {
+  const result = await selector({
+    pairs: [{ a: 0, b: 1, score: 0.97 }],
+    evidence: [{ id: 'grenache', anchor: true, label: "TERRE ROUGE L'AUTRE SIERRA FOOTHILLS" }],
+  }).select(
+    {
+      name: "Domaine de la Terre Rouge Grenache L'autre Sierra Foothills",
+      producer: 'Domaine de la Terre Rouge',
+      vintage: '2015',
+    },
+    [
+      candidate('grenache', { title: "Terre Rouge Grenache L'autre Sierra Foothills 2015" }),
+      candidate('syrah', {
+        title: "2017 Terre Rouge Les Cotes de l'Ouest Syrah Sierra Foothills",
+        cleanBackground: true,
+        width: 1200,
+        height: 1800,
+      }),
+    ],
+  );
+
+  assert.equal(result.pick.id, 'grenache');
+  assert.equal(result.diagnostics.explicitConflicts, 1);
+  assert.equal(result.trace.evidence.find(({ id }) => id === 'syrah').reasonCode, 'VARIETAL_CONFLICT');
+});
+
+test('an unread wrong-vintage source cannot inherit from a vintage-neutral anchor', async () => {
+  const result = await selector({
+    pairs: [{ a: 0, b: 1, score: 0.97 }],
+    evidence: [{ id: 'neutral', anchor: true, label: 'LIGNIER MICHELOT LES CHENEVERY' }],
+  }).select(
+    {
+      name: 'Domaine Lignier-Michelot Morey Saint Denis 1er Cru les Cheneverey',
+      producer: 'Domaine Lignier-Michelot',
+      vintage: '2020',
+    },
+    [
+      candidate('neutral', { title: 'Lignier-Michelot Morey Saint Denis Les Cheneverey' }),
+      candidate('old', {
+        title: '2015 Lignier-Michelot Morey Saint Denis Les Cheneverey',
+        cleanBackground: true,
+        width: 1200,
+        height: 1800,
+      }),
+    ],
+  );
+
+  assert.equal(result.pick.id, 'neutral');
+  assert.equal(result.pick.inheritedIdentity, false);
+  assert.equal(result.diagnostics.identityAnchors, 1);
+});
+
 test('two independent exact result titles let a clean bottle corroborate a matching scene', async () => {
   const subject = createBottleSelector({
     inspect: async (item) => ({ visualOk: true, shapeOk: item.shapeOk, cleanBackground: item.cleanBackground }),
