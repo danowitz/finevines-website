@@ -6,8 +6,8 @@ import { access, mkdir, rename, writeFile } from 'node:fs/promises';
 import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { dirname } from 'node:path';
-import { createGoogleImageDiscovery, googleImageSearchProfile } from './google-images.mjs';
-import { createBraveImageDiscovery } from './brave-images.mjs';
+import { googleImageSearchProfile } from './google-images.mjs';
+import { createImageDiscovery, IMAGE_DISCOVERY_PROVIDERS, validateImageDiscoveryCredentials } from './image-discovery.mjs';
 import { binPath, envOrFile, openaiKey } from './env.mjs';
 import { runAutonomousImageWorkflow } from './autonomous-workflow.mjs';
 
@@ -44,7 +44,7 @@ if (omitQueryVintage && !candidateRecovery && !qualityRecovery) {
   console.error('--omit-query-vintage is recovery-only');
   process.exit(2);
 }
-if (!['google', 'brave'].includes(searchProvider)) {
+if (!IMAGE_DISCOVERY_PROVIDERS.has(searchProvider)) {
   console.error(`unknown image search provider: ${searchProvider}`);
   process.exit(2);
 }
@@ -92,14 +92,14 @@ async function runNodeStage(name, stageArgs) {
 }
 
 async function preflight() {
-  const [googleKey, googleCx, braveKey, visionKey] = await Promise.all([
+  const [googleKey, googleCx, braveKey, serperKey, visionKey] = await Promise.all([
     envOrFile('FINEVINES_GOOGLE_CSE_KEY'),
     envOrFile('FINEVINES_GOOGLE_CSE_CX'),
     envOrFile('FINEVINES_BRAVE_SEARCH_KEY'),
+    envOrFile('FINEVINES_SERPER_KEY'),
     openaiKey(),
   ]);
-  if (searchProvider === 'google' && (!googleKey || !googleCx)) throw new Error('Google image credentials are missing');
-  if (searchProvider === 'brave' && !braveKey) throw new Error('Brave image credentials are missing');
+  validateImageDiscoveryCredentials(searchProvider, { googleKey, googleCx, braveKey, serperKey });
   if (!visionKey) throw new Error('OPENAI_API_KEY is missing');
   for (const binary of ['imgcheck', 'imghash', 'imgnorm']) {
     try { await access(binPath(binary)); }
@@ -109,13 +109,20 @@ async function preflight() {
 
   // An actual image-mode request catches a disabled API, invalid CX, quota,
   // and key-restriction errors before any wine can receive a cached verdict.
-  const discover = searchProvider === 'brave'
-    ? createBraveImageDiscovery({ token: braveKey })
-    : createGoogleImageDiscovery({ key: googleKey, cx: googleCx, searchParams: searchProfile });
+  const discover = createImageDiscovery({
+    name: searchProvider,
+    googleKey,
+    googleCx,
+    braveKey,
+    serperKey,
+    googleSearchParams: searchProfile,
+  });
   const health = await discover(
     'Fine Vines wine bottle image workflow health check',
   );
-  if (!health.searched) throw new Error(`${searchProvider} image discovery unavailable: ${health.error}`);
+  if (!health.searched || health.complete === false) {
+    throw new Error(`${searchProvider} image discovery unavailable: ${health.error || 'provider health check incomplete'}`);
+  }
   console.log(`preflight passed: ${searchProvider} image endpoint returned ${health.returned} result(s)`);
 }
 

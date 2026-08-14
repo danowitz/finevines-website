@@ -247,6 +247,11 @@ Actions). The repo is public, so the pipeline workflow deliberately has no
 | `FINEVINES_SF_CLIENT_ID` | Connected App consumer key |
 | `FINEVINES_SF_CLIENT_SECRET` | Connected App consumer secret |
 | `OPENAI_API_KEY` | Enrichment, vision label reading, watermark sweep |
+| `FINEVINES_BRAVE_SEARCH_KEY` | Brave Image Search discovery |
+| `FINEVINES_SERPER_KEY` | Serper Google Images discovery |
+| `FINEVINES_GOOGLE_CSE_KEY` | Temporary Google Custom Search image API key |
+| `FINEVINES_GOOGLE_CSE_CX` | Temporary Google Custom Search engine ID |
+| `FINEVINES_GOOGLE_VISION_KEY` | Bounded reverse-image Web Detection |
 | `FINEVINES_BUNNY_STORAGE_ZONE` | Storage zone name |
 | `FINEVINES_BUNNY_STORAGE_KEY` | Storage zone password |
 | `FINEVINES_BUNNY_STORAGE_ENDPOINT` | Regional storage host |
@@ -263,10 +268,9 @@ Actions). The repo is public, so the pipeline workflow deliberately has no
 | `FINEVINES_NOTIFY_FROM` | Address the digest is sent from (relay-authorised, monitored) |
 | `FINEVINES_REVIEW_HMAC_SECRET` | Magic-link signing key (used by the review console) |
 
-The first eighteen are read directly out of `pipeline.yml`'s `env:` block.
-`FINEVINES_REVIEW_HMAC_SECRET` is the nineteenth: nothing in this workflow reads
-it yet — it is set up now because it belongs to the same secret inventory and
-the review console (a separate, not-yet-built piece) will need it.
+Secrets used by the nightly workflow are read through `pipeline.yml`'s `env:`
+block. `FINEVINES_REVIEW_HMAC_SECRET` is not read by that workflow; it is
+reserved for the separate review console.
 
 Also required once: **Settings → Actions → General → Workflow permissions** set
 to **Read and write**, so the bot commit can push.

@@ -45,7 +45,8 @@ values below.
 a wine's notes when a reviewer sends a correction), and for the image stage (reads bottle labels and sweeps for
 watermarks). One key covers all three:
 - `OPENAI_API_KEY` — an API key from OpenAI's platform console. GRIT can help set up the account.
-- `FINEVINES_GOOGLE_VISION_KEY` — optional Google Cloud key restricted to the Cloud Vision API. It enables bounded Web Detection expansion from verified or repeated-design label crops; when absent, only this rescue stage is disabled.
+- `FINEVINES_GOOGLE_VISION_KEY` — optional Google Cloud key restricted to the Cloud Vision API. It enables bounded Web Detection expansion from the complete bottle and identifying label crop; when absent, only this rescue stage is disabled.
+- `FINEVINES_SERPER_KEY` — Serper Google Images API key. The comparison workflow combines its browser-like Google results with Brave before local consensus; keep it in GitHub Actions secrets, never `.env` in source control.
 - `FINEVINES_OPENAI_MODEL` — optional; leave blank and the tool picks a sensible default.
 
 **Mail relay (SMTP)** — needed only for `notify`, the nightly digest email. Not used by anything you run by

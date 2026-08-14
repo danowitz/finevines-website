@@ -53,25 +53,57 @@ test('returns provenance-paired permitted full matches and preserves anchor trus
   }]);
 });
 
-test('uses the injected label-crop preparation seam', async () => {
-  let prepared;
-  let content;
+test('searches both injected whole-bottle and label-crop seed representations', async () => {
+  const prepared = [];
+  const contents = [];
   const expand = createWebMatchExpander({
     apiKey: 'vision-key',
-    prepareSeed: async (seed) => {
-      prepared = seed;
-      return Buffer.from('cropped-label');
+    prepareSeedVariants: async (seed) => {
+      prepared.push(seed);
+      return [
+        { kind: 'whole-bottle', bytes: Buffer.from('whole-bottle') },
+        { kind: 'label-crop', bytes: Buffer.from('cropped-label') },
+      ];
     },
     fetchImpl: async (_url, options) => {
-      content = JSON.parse(options.body).requests[0].image.content;
+      contents.push(JSON.parse(options.body).requests[0].image.content);
       return { ok: true, json: async () => ({ responses: [{}] }) };
     },
   });
   const seed = { id: 'seed', file: 'bottle.png' };
-  await expand([seed]);
+  const result = await expand([seed]);
 
-  assert.equal(prepared, seed);
-  assert.equal(content, Buffer.from('cropped-label').toString('base64'));
+  assert.deepEqual(prepared, [seed]);
+  assert.deepEqual(contents, [
+    Buffer.from('whole-bottle').toString('base64'),
+    Buffer.from('cropped-label').toString('base64'),
+  ]);
+  assert.equal(result.requests, 2);
+});
+
+test('retains an unpaired top-level exact match with direct-image provenance', async () => {
+  const expand = createWebMatchExpander({
+    apiKey: 'vision-key',
+    readFileImpl: async () => Buffer.from('anchor'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ responses: [{ webDetection: {
+      fullMatchingImages: [
+        { url: 'https://seed.test/a.jpg', score: 1 },
+        { url: 'https://producer.test/exact-copy.jpg', score: 0.99 },
+      ],
+    } }] }) }),
+  });
+  const result = await expand([{
+    id: 'verified-seed', file: 'seed.png', url: 'https://seed.test/a.jpg', verifiedIdentity: true,
+  }]);
+
+  assert.deepEqual(result.items.map(({ url, context, trustedFullMatch, webMatchKind }) => ({
+    url, context, trustedFullMatch, webMatchKind,
+  })), [{
+    url: 'https://producer.test/exact-copy.jpg',
+    context: '',
+    trustedFullMatch: true,
+    webMatchKind: 'full',
+  }]);
 });
 
 test('missing credentials disable expansion without turning a wine into a miss', async () => {
@@ -102,7 +134,7 @@ test('a full match from a provisional seed does not inherit verified identity', 
   assert.equal(result.items[0].webMatchKind, 'full');
 });
 
-test('partial results remain provisional and unpaired similar images are excluded', async () => {
+test('partial and unpaired similar results remain provisional', async () => {
   const expand = createWebMatchExpander({
     apiKey: 'vision-key',
     readFileImpl: async () => Buffer.from('anchor'),
@@ -126,6 +158,7 @@ test('partial results remain provisional and unpaired similar images are exclude
     webMatchKind, trustedFullMatch, context,
   })), [
     { webMatchKind: 'partial', trustedFullMatch: false, context: 'https://merchant.test/wine' },
+    { webMatchKind: 'similar', trustedFullMatch: false, context: '' },
   ]);
   assert.equal(result.blocked, 1);
 });

@@ -14,8 +14,8 @@ import { binPath, envOrFile, openaiKey } from './env.mjs';
 import { loadAttempts, isDue, recordAttempt, saveAttempts, shouldRecordAttempt } from './attempts.mjs';
 import { buildProducerLookup, expectedProducer } from './catalog-producer.mjs';
 import { deriveProducer } from './producerguess.mjs';
-import { createGoogleImageDiscovery, googleImageSearchProfile } from './google-images.mjs';
-import { createBraveImageDiscovery } from './brave-images.mjs';
+import { googleImageSearchProfile } from './google-images.mjs';
+import { createImageDiscovery, IMAGE_DISCOVERY_PROVIDERS, validateImageDiscoveryCredentials } from './image-discovery.mjs';
 import { catalogImageName, imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
 import { downloadCandidates } from './candidate-downloads.mjs';
 import { candidateWindow } from './candidate-window.mjs';
@@ -71,7 +71,7 @@ if (OMIT_QUERY_VINTAGE && !QUALITY_RECOVERY && !CANDIDATE_RECOVERY) {
   console.error('--omit-query-vintage is recovery-only');
   process.exit(2);
 }
-if (!['google', 'brave'].includes(SEARCH_PROVIDER)) {
+if (!IMAGE_DISCOVERY_PROVIDERS.has(SEARCH_PROVIDER)) {
   console.error(`unknown image search provider: ${SEARCH_PROVIDER}`);
   process.exit(2);
 }
@@ -235,18 +235,22 @@ if (!wines.length) {
 const googleKey = await envOrFile('FINEVINES_GOOGLE_CSE_KEY');
 const googleCx = await envOrFile('FINEVINES_GOOGLE_CSE_CX');
 const braveKey = await envOrFile('FINEVINES_BRAVE_SEARCH_KEY');
+const serperKey = await envOrFile('FINEVINES_SERPER_KEY');
 const googleVisionKey = await envOrFile('FINEVINES_GOOGLE_VISION_KEY');
-if (SEARCH_PROVIDER === 'google' && (!googleKey || !googleCx)) {
-  console.error('Google image discovery credentials are missing; no wine was searched and no miss was recorded');
+try {
+  validateImageDiscoveryCredentials(SEARCH_PROVIDER, { googleKey, googleCx, braveKey, serperKey });
+} catch (error) {
+  console.error(`${error.message}; no wine was searched and no miss was recorded`);
   process.exit(2);
 }
-if (SEARCH_PROVIDER === 'brave' && !braveKey) {
-  console.error('Brave image discovery credentials are missing; no wine was searched and no miss was recorded');
-  process.exit(2);
-}
-const imageDiscover = SEARCH_PROVIDER === 'brave'
-  ? createBraveImageDiscovery({ token: braveKey })
-  : createGoogleImageDiscovery({ key: googleKey, cx: googleCx, searchParams: searchProfile });
+const imageDiscover = createImageDiscovery({
+  name: SEARCH_PROVIDER,
+  googleKey,
+  googleCx,
+  braveKey,
+  serperKey,
+  googleSearchParams: searchProfile,
+});
 const visionKey = await openaiKey();
 const producerLookup = buildProducerLookup(catalog);
 const catalogNames = catalog.map((wine) => wine.name);
@@ -269,7 +273,10 @@ const selector = createBottleSelector({
 });
 const expandWebMatches = createWebMatchExpander({
   apiKey: googleVisionKey,
-  prepareSeed: local.prepareForReading,
+  prepareSeedVariants: async (seed) => [
+    { kind: 'whole-bottle', bytes: await readFile(seed.file) },
+    { kind: 'label-crop', bytes: await local.prepareForReading(seed) },
+  ],
 });
 
 await mkdir(OUT_DIR, { recursive: true });
@@ -279,7 +286,7 @@ const manifest = (await exists(MANIFEST)) ? JSON.parse(await readFile(MANIFEST, 
 console.log(`${SEARCH_PROVIDER} image discovery: ready`);
 if (SEARCH_PROVIDER === 'google') console.log(`google image search profile: ${SEARCH_PROFILE_NAME}`);
 console.log(`identity reader: ${visionKey ? `${MODEL}${LABEL_REASONING_EFFORT ? ` (${LABEL_REASONING_EFFORT} effort)` : ''}, one request of at most three images per grouped wine` : 'unavailable - grouped wines will stay due'}`);
-console.log(`label reverse-search expansion: ${googleVisionKey ? 'Google Cloud Vision Web Detection ready' : 'disabled - FINEVINES_GOOGLE_VISION_KEY is missing'}`);
+console.log(`label reverse-search expansion: ${googleVisionKey ? 'Google Cloud Vision Web Detection ready (whole bottle + label crop)' : 'disabled - FINEVINES_GOOGLE_VISION_KEY is missing'}`);
 console.log(`processing up to ${WINE_CONCURRENCY} wines concurrently`);
 
 function fail(rec, stage, reason) {
@@ -374,7 +381,7 @@ async function processWine(wine) {
       rec.review = [];
       return { wine, rec, evaluated: 0, unevaluated: 0, discoveryComplete: true };
     } catch (error) {
-      console.warn(`catalog image reuse failed for ${wine.slug}: ${String(error?.message || error).split('\n')[0]}; falling back to Google Images`);
+      console.warn(`catalog image reuse failed for ${wine.slug}: ${String(error?.message || error).split('\n')[0]}; falling back to configured image discovery`);
     }
   }
   const trace = TRACE ? {
@@ -388,6 +395,7 @@ async function processWine(wine) {
   } : null;
   if (trace) rec.debugTrace = trace;
   const discovery = await imageDiscover(rec.query);
+  const discoveryComplete = discovery.complete !== false;
   if (trace) trace.discovery = {
     provider: SEARCH_PROVIDER,
     status: discovery.status,
@@ -396,6 +404,7 @@ async function processWine(wine) {
     blocked: discovery.blocked || 0,
     error: discovery.error || '',
     correctedQuery: discovery.correctedQuery || '',
+    providers: discovery.providers || [],
     results: discovery.trace || [],
     permittedCandidates: discovery.items,
   };
@@ -407,7 +416,9 @@ async function processWine(wine) {
     searchResults: discovery.returned || 0,
     sourcePolicyBlocked: discovery.blocked || 0,
     permittedCandidates: discovery.items.length,
+    providerResults: discovery.providers || [],
   });
+  if (discovery.status === 'partial') rec.discoveryWarning = discovery.error;
   if (!discovery.searched) {
     rec.discoveryError = `${SEARCH_PROVIDER}: ${discovery.error}`;
     fail(rec, `${SEARCH_PROVIDER}-unavailable`, rec.discoveryError);
@@ -418,7 +429,7 @@ async function processWine(wine) {
       ? 'source-policy'
       : `${SEARCH_PROVIDER}-empty`;
     fail(rec, stage, `${SEARCH_PROVIDER} Images returned no permitted candidates`);
-    return { wine, rec, evaluated: 0, unevaluated: 0, discoveryComplete: true };
+    return { wine, rec, evaluated: 0, unevaluated: 0, discoveryComplete };
   }
 
   const window = candidateWindow(discovery.items);
@@ -434,7 +445,7 @@ async function processWine(wine) {
   const downloadFailures = window.candidates.length - candidates.length;
   if (candidates.length < 2) {
     fail(rec, 'download', `only ${candidates.length} of ${window.candidates.length} candidates downloaded`);
-    return { wine, rec, evaluated: 0, unevaluated: Math.max(1, downloadFailures), discoveryComplete: true };
+    return { wine, rec, evaluated: 0, unevaluated: Math.max(1, downloadFailures), discoveryComplete };
   }
 
   let result;
@@ -444,10 +455,10 @@ async function processWine(wine) {
   } catch (error) {
     if (error instanceof ReaderUnavailableError) {
       fail(rec, 'identity-reader-unavailable', `identity reader unavailable: ${error.message}`);
-      return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
+      return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete };
     }
     fail(rec, 'selector-error', `selector failed: ${String(error?.message || error).split('\n')[0]}`);
-    return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
+    return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete };
   }
 
   // Reverse-image expansion is a bounded rescue for a verified anchor or a
@@ -481,10 +492,10 @@ async function processWine(wine) {
         } catch (error) {
           if (error instanceof ReaderUnavailableError) {
             fail(rec, 'identity-reader-unavailable', `identity reader unavailable after Web Detection: ${error.message}`);
-            return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
+            return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete };
           }
           fail(rec, 'selector-error', `selector failed after Web Detection: ${String(error?.message || error).split('\n')[0]}`);
-          return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
+          return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete };
         }
       }
     }
@@ -500,7 +511,7 @@ async function processWine(wine) {
       : rec.funnel.publishableAnchors === 0 ? 'publication-quality'
       : 'selector';
     fail(rec, stage, result.reason);
-    return { wine, rec, evaluated: candidates.length, unevaluated: downloadFailures, discoveryComplete: true };
+    return { wine, rec, evaluated: candidates.length, unevaluated: downloadFailures, discoveryComplete };
   }
 
   const dest = join(OUT_DIR, `${wine.slug}.png`);
@@ -508,7 +519,7 @@ async function processWine(wine) {
     await copyFile(result.pick.file, dest);
   } catch (error) {
     fail(rec, 'staging', `could not stage selected image: ${String(error?.message || error).split('\n')[0]}`);
-    return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete: true };
+    return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete };
   }
   rec.ok = true;
   rec.funnel.outcome = 'accepted';
@@ -577,7 +588,9 @@ for (let offset = 0; offset < wines.length; offset += WINE_CONCURRENCY) {
     runRows.push(rec);
     manifest[wine.slug] = rec;
     if (!CANARY) recordFunnel(funnelStore, rec);
-    if (!discoveryComplete) fatalDiscoveryError ||= rec.discoveryError || 'Google image discovery unavailable';
+    if (!discoveryComplete && !rec.ok) {
+      fatalDiscoveryError ||= rec.discoveryError || rec.discoveryWarning || `${SEARCH_PROVIDER} image discovery incomplete`;
+    }
     if (rec.ok) accepted++;
     if (!reused && RECORD_ATTEMPTS && rec.skus.length && shouldRecordAttempt({ accepted: rec.ok, evaluated, unevaluated, discoveryComplete })) {
       for (const sku of rec.skus) {

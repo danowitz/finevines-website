@@ -1,4 +1,4 @@
-name: Brave image comparison
+name: Image discovery comparison
 
 on:
   workflow_dispatch:
@@ -49,6 +49,7 @@ jobs:
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       FINEVINES_BRAVE_SEARCH_KEY: ${{ secrets.FINEVINES_BRAVE_SEARCH_KEY }}
+      FINEVINES_SERPER_KEY: ${{ secrets.FINEVINES_SERPER_KEY }}
       FINEVINES_GOOGLE_VISION_KEY: ${{ secrets.FINEVINES_GOOGLE_VISION_KEY }}
     steps:
       - uses: actions/checkout@v4
@@ -71,7 +72,7 @@ jobs:
           npm ci --ignore-scripts
       - name: Verify and build image tools
         run: |
-          node --test tests/unit/brave-images.test.js tests/unit/autonomous-workflow.test.js
+          node --test tests/unit/brave-images.test.js tests/unit/serper-images.test.js tests/unit/combined-image-discovery.test.js tests/unit/image-discovery.test.js tests/unit/web-match-expander.test.js tests/unit/autonomous-workflow.test.js
           python -m unittest discover -s tests/python
           go test ./tools/...
           go build -o imgcheck ./tools/imgcheck
@@ -87,14 +88,14 @@ jobs:
           report="$(find previous-comparison -name image-canary.json -print -quit)"
           test -n "$report"
           echo "report=$report" >> "$GITHUB_OUTPUT"
-      - name: Test Brave image search
+      - name: Test combined Brave and Google Images discovery
         env:
           WINE_SLUG: ${{ inputs.wine_slug }}
           PREVIOUS_REPORT: ${{ steps.previous.outputs.report }}
         run: |
           args=(
             --canary --retry-misses --no-catalog-reuse --trace
-            --search-provider brave
+            --search-provider brave-serper
             --label-model "${{ inputs.label_model }}"
             --label-reasoning-effort "${{ inputs.label_reasoning_effort }}"
             --n "${{ inputs.sample_size }}"

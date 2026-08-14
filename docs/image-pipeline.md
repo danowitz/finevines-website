@@ -7,8 +7,9 @@ artwork.
 
 ## Publication path
 
-1. `tools/labelfetch/pipeline.mjs` sends the exact catalog identity to Google's
-   image endpoint, downloads only the first ten permitted direct images, and
+1. `tools/labelfetch/pipeline.mjs` sends the exact catalog identity to Brave
+   and Serper's Google Images endpoint. It interleaves and URL-deduplicates one
+   bounded 15-candidate window so neither index can crowd out the other, then
    groups bottle/label designs locally. One readable anchor validates a repeated
    design; the cleanest highest-resolution member wins. At most three images are
    transcribed in one `gpt-4.1-nano` request, with no escalation.
@@ -39,15 +40,21 @@ node tools/labelfetch/import.mjs --apply --clean-only
 The unattended entrypoint is:
 
 ```sh
-node tools/labelfetch/autonomous.mjs --apply --search-provider brave
+node tools/labelfetch/autonomous.mjs --apply --search-provider brave-serper
 ```
 
 It performs a live configured image-endpoint health check before touching a wine,
 then owns the fixed order: fetch/verify â†’ two-source auto-approval â†’ watermark
 gate â†’ clean-only import â†’ exception review. It writes an atomic run receipt
 to `.run/image-workflow.json` before and after every stage. A missing credential,
-disabled API, failed perceptual hash, failed child process, or missing verdict
+disabled API, partial provider outage, failed perceptual hash, failed child process, or missing verdict
 stops publication rather than being converted to â€œnothing found.â€
+
+When the selector has a credible seed but lacks corroboration, the bounded Web
+Detection rescue searches both the complete bottle and an identifying label
+crop. Exact full-image copies of a verified seed may inherit its identity;
+partial and visually similar results remain provisional and must independently
+pass the identity gates.
 
 `tools/labelfetch/cistage.sh` remains only as a compatibility entrypoint and
 delegates to that command. For a non-publishing probe, use
