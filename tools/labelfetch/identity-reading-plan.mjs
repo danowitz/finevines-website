@@ -73,8 +73,8 @@ function diverseRepresentatives(group) {
 // primary slot even when ornate sibling labels form larger or tighter groups.
 // Remaining slots preserve group and host diversity; callers may spend the
 // entries after the first three only when the primary batch has no pixel anchor.
-export function planIdentityReading(wine, groups, limit = 3) {
-  const all = [...new Map(groups.flat().map((candidate) => [candidate.id, candidate])).values()];
+export function planIdentityReading(wine, groups, limit = 3, candidates = groups.flat()) {
+  const all = [...new Map(candidates.map((candidate) => [candidate.id, candidate])).values()];
   const baseline = [];
   for (const group of groups) {
     const ranked = diverseRepresentatives(group).sort((left, right) =>

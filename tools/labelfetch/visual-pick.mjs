@@ -15,9 +15,9 @@ export function evaluateVisualPick(candidates) {
   diagnostics.identityAnchors = anchors.length;
   if (!anchors.length) return { pick: null, diagnostics };
 
-  // Similarity corroborates an identity decision; it does not transfer identity
-  // to an arbitrary sibling label. The published pixels must be an anchor in
-  // their own right (including a verified full-match copy of an anchor).
+  // The selector marks only direct, conflict-free visual copies of a readable
+  // anchor as inherited anchors. At this point the human rule applies: choose
+  // the cleanest, highest-resolution publishable member of that proven group.
   const usable = anchors.filter((candidate) => {
     const width = candidate.width || 0;
     const height = candidate.height || 0;

@@ -1,8 +1,9 @@
 """Build one model image containing a readable label and the full product shot.
 
 The API still receives one image per candidate. This replaces whitespace and
-capsule pixels with a locally enlarged label band, then adds a small inset of
-the complete frame so multi-bottle shots remain visible. It adds no model call.
+capsule pixels with a locally enlarged, edge-selected label band, then adds a
+small inset of the complete frame so multi-bottle shots remain visible. It adds
+no model call and keeps the output dimensions fixed.
 """
 import sys
 from pathlib import Path
@@ -37,6 +38,27 @@ def letterbox(image, width=400, height=800):
     return canvas
 
 
+def label_band(bottle):
+    """Choose the most text-dense vertical band instead of assuming one label position."""
+    gray = cv2.cvtColor(bottle, cv2.COLOR_BGR2GRAY)
+    gray = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(gray)
+    x_gradient = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+    y_gradient = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+    energy = cv2.magnitude(x_gradient, y_gradient)[:, 25:375].mean(axis=1)
+    # Product identity is normally on the body, not the capsule. A mild lower
+    # bias keeps embossed shoulders eligible without letting the neck dominate.
+    first, last, window = 130, 760, 240
+    scores = np.convolve(energy, np.ones(window, dtype=np.float32), mode="valid")
+    starts = np.arange(scores.shape[0])
+    eligible = (starts >= first) & (starts + window <= last)
+    weighted = scores * np.linspace(0.85, 1.15, scores.shape[0])
+    weighted[~eligible] = -1
+    start = int(np.argmax(weighted)) if np.any(eligible) else 260
+    start = max(80, start - 35)
+    end = min(790, start + window + 70)
+    return bottle[start:end, 25:375]
+
+
 def main():
     if len(sys.argv) != 3:
         raise SystemExit("usage: label-crop.py INPUT OUTPUT")
@@ -46,9 +68,7 @@ def main():
     if image.ndim == 2:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGRA)
     bottle = letterbox(foreground(image))
-    # Most front labels occupy the lower-middle 55% of a normalized bottle.
-    # Keep enough glass above it for color/style while discarding empty sweep.
-    crop = bottle[260:750, 25:375]
+    crop = label_band(bottle)
     crop = cv2.resize(crop, (700, 980), interpolation=cv2.INTER_CUBIC)
     inset = letterbox(foreground(image), width=170, height=330)
     # The inset occupies a bounded corner of the same image. A white keyline
