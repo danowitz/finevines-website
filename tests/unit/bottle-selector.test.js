@@ -283,6 +283,80 @@ test('an exact smaller group beats a larger sibling group without donating ident
   assert.deepEqual(result.pick.anchorIds, ['target-readable']);
 });
 
+test('reserves a reader slot for a target-relevant bottle outside a tighter sibling cluster', async () => {
+  const reads = [];
+  const subject = createBottleSelector({
+    inspect: async (item) => ({ visualOk: true, shapeOk: item.shapeOk, cleanBackground: item.cleanBackground }),
+    compare: async () => [
+      { a: 0, b: 1, score: 0.99 },
+      { a: 0, b: 2, score: 0.98 },
+      { a: 1, b: 2, score: 0.97 },
+      { a: 2, b: 3, score: 0.90 },
+    ],
+    read: async (_wine, candidates) => {
+      reads.push(candidates.map(({ id }) => id));
+      return candidates.map(({ id }) => id === 'aux-thorey-2019'
+        ? { id, anchor: true, label: 'Domaine Chicotot Aux Thorey 2019' }
+        : { id, anchor: false, explicitConflict: false });
+    },
+  });
+  const result = await subject.select(
+    {
+      name: 'Chicotot Domaine Georges Chicotot Nuits Saint Georges 1er Cru aux Thorey',
+      vintage: '2019',
+    },
+    [
+      candidate('sibling-one', { title: 'Nuits Saint Georges Les Pruliers' }),
+      candidate('sibling-two', { title: 'Nuits Saint Georges Les Saint Georges' }),
+      candidate('flat-label-2020', {
+        title: 'Domaine Georges Chicotot Nuits-Saint-Georges 1er Cru Aux Thorey',
+        shapeOk: false,
+      }),
+      candidate('aux-thorey-2019', {
+        title: 'Nuits-Saint-Georges 1er Cru Aux Thorey',
+        url: 'https://tiger.example/images/aux-thorey-2019.png',
+        cleanBackground: true,
+        width: 1800,
+        height: 2400,
+      }),
+    ],
+  );
+
+  assert.equal(reads.length, 1);
+  assert.equal(reads[0].length, 3);
+  assert.equal(reads[0][0], 'aux-thorey-2019');
+  assert.equal(result.pick.id, 'aux-thorey-2019');
+  assert.equal(result.matchingImages, 2);
+});
+
+test('target-relevant reader priority cannot override a wrong-producer conflict', async () => {
+  const subject = createBottleSelector({
+    inspect: async (item) => ({ visualOk: true, shapeOk: item.shapeOk, cleanBackground: item.cleanBackground }),
+    compare: async () => [{ a: 0, b: 1, score: 0.96 }],
+    read: async (_wine, candidates) => candidates.map(({ id }) => ({
+      id,
+      anchor: false,
+      explicitConflict: id === 'wrong-producer',
+      conflict: id === 'wrong-producer' ? 'candidate producer is not Domaine des Epeneaux' : undefined,
+    })),
+  });
+  const result = await subject.select(
+    { name: 'Domaine des Epeneaux Volnay 1er Cru les Fremiets', vintage: '2018' },
+    [
+      candidate('wrong-producer', {
+        title: 'Volnay 1er Cru Les Fremiets 2018',
+        url: 'https://wrong.example/domaine-des-epeneaux-volnay-les-fremiets-2018.jpg',
+        cleanBackground: true,
+      }),
+      candidate('lookalike', { title: 'Volnay 1er Cru Les Fremiets' }),
+    ],
+  );
+
+  assert.equal(result.trace.representatives[0], 'wrong-producer');
+  assert.equal(result.pick, null);
+  assert.equal(result.diagnostics.publishableAnchors, 0);
+});
+
 test('a Web Detection full match inherits identity from its verified seed', async () => {
   const result = await selector({
     pairs: [{ a: 0, b: 1, score: 0.99 }],

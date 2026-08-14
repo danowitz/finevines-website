@@ -1,13 +1,13 @@
 import { evaluateVisualPick } from './visual-pick.mjs';
-import { normalize, tokens } from './match.mjs';
+import {
+  bestVisualRepresentative,
+  planIdentityReading,
+  sourceIdentityEvidence,
+} from './identity-reading-plan.mjs';
 
 function host(candidate) {
   if (candidate.host) return String(candidate.host).replace(/^www\./, '');
   try { return new URL(candidate.url).host.replace(/^www\./, ''); } catch { return ''; }
-}
-
-function area(candidate) {
-  return (candidate.width || 0) * (candidate.height || 0);
 }
 
 async function mapLimit(items, limit, work) {
@@ -88,25 +88,11 @@ function groupsFromPairs(candidates, pairs, threshold) {
 }
 
 function corroboratesTitle(wine, candidate) {
-  const wanted = [...new Set(tokens(wine.name || ''))];
-  if (wanted.length < 2) return false;
-  const title = normalize(candidate.title || '');
-  const wantedVintage = String(wine.vintage || '').match(/\b(?:19|20)\d{2}\b/)?.[0] || '';
-  const visibleVintages = String(candidate.title || '').match(/\b(?:19|20)\d{2}\b/g) || [];
-  if (wantedVintage && visibleVintages.length && !visibleVintages.includes(wantedVintage)) return false;
-  const found = wanted.filter((token) => title.includes(token));
-  return found.length / wanted.length >= 0.75;
+  return sourceIdentityEvidence(wine, candidate).corroboratesTitle;
 }
 
 function exactVintageSourceAnchor(wine, candidate) {
-  const wanted = [...new Set(tokens(wine.name || ''))];
-  if (wanted.length < 2) return false;
-  const titleTokens = new Set(tokens(candidate.title || ''));
-  if (!wanted.every((token) => titleTokens.has(token))) return false;
-  const wantedVintage = String(wine.vintage || '').match(/\b(?:19|20)\d{2}\b/)?.[0] || '';
-  if (!wantedVintage) return false;
-  const titleVintages = String(candidate.title || '').match(/\b(?:19|20)\d{2}\b/g) || [];
-  return titleVintages.length > 0 && titleVintages.every((vintage) => vintage === wantedVintage);
+  return sourceIdentityEvidence(wine, candidate).exactVintageAnchor;
 }
 
 // Titles may corroborate a moderately similar visual pair, but they can never
@@ -124,19 +110,6 @@ function corroboratedVisualPairs(wine, candidates, pairs, threshold) {
     const sameArtwork = pair.local_inliers >= 5 && pair.local_ratio >= 0.75;
     return titleSupport || sameArtwork ? { ...pair, score: Math.max(pair.score, threshold) } : pair;
   });
-}
-
-function representatives(group) {
-  const ranked = [...group].sort((a, b) =>
-    Number(b.shapeOk) - Number(a.shapeOk) ||
-    Number(b.cleanBackground) - Number(a.cleanBackground) || area(b) - area(a));
-  const picked = [ranked[0]];
-  const second = ranked.find((candidate) =>
-    candidate !== picked[0] && host(candidate) !== host(picked[0]));
-  if (second) picked.push(second);
-  const third = ranked.find((candidate) => !picked.includes(candidate));
-  if (third) picked.push(third);
-  return picked;
 }
 
 function rankGroups(wine, groups) {
@@ -260,19 +233,10 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         reviewCandidates: reviewCandidates(inspected),
       };
 
-      // One bounded label request still covers the wine, but it samples across
-      // credible groups instead of blindly spending all three slots on the
-      // largest sibling-wine cluster. Exact-vintage result titles go first.
-      const representativesToRead = [];
-      for (const group of groups) {
-        const ranked = [...representatives(group)].sort((left, right) =>
-          Number(exactVintageSourceAnchor(wine, right)) - Number(exactVintageSourceAnchor(wine, left)));
-        for (const candidate of ranked) {
-          if (!representativesToRead.some(({ id }) => id === candidate.id)) representativesToRead.push(candidate);
-          if (representativesToRead.length === 3) break;
-        }
-        if (representativesToRead.length === 3) break;
-      }
+      // One bounded label request still covers the wine. The reading plan
+      // reserves one slot for a target-relevant bottle, then preserves visual
+      // group and source diversity instead of spending every slot on siblings.
+      const representativesToRead = planIdentityReading(wine, groups);
       trace.representatives = representativesToRead.map((candidate) => candidate.id);
       diagnostics.labelImagesRead = representativesToRead.length;
       const evidence = await read(wine, representativesToRead);
@@ -310,7 +274,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         // explicitly provisional: neither it nor its Web Detection copies may
         // inherit anchor status from visual similarity alone.
         if (!judged.some((candidate) => candidate.explicitConflict)) {
-          const seed = representatives(judged)[0];
+          const seed = bestVisualRepresentative(judged);
           if (seed && !provisionalSeeds.some(({ id }) => id === seed.id)) {
             provisionalSeeds.push({ ...seed, verifiedIdentity: false });
           }
