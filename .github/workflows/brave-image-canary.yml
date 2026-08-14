@@ -32,6 +32,11 @@ on:
         required: false
         default: ''
         type: string
+      wine_slug:
+        description: Optional exact catalog slug for a one-wine diagnostic dossier
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -83,15 +88,27 @@ jobs:
           test -n "$report"
           echo "report=$report" >> "$GITHUB_OUTPUT"
       - name: Test Brave image search
-        run: >-
-          node tools/labelfetch/autonomous.mjs
-          --canary --retry-misses --no-catalog-reuse --trace
-          --search-provider brave
-          --label-model "${{ inputs.label_model }}"
-          --label-reasoning-effort "${{ inputs.label_reasoning_effort }}"
-          --exclude-passed-report "${{ steps.previous.outputs.report }}"
-          --n "${{ inputs.sample_size }}"
-          --budget-minutes "${{ inputs.budget_minutes }}"
+        env:
+          WINE_SLUG: ${{ inputs.wine_slug }}
+          PREVIOUS_REPORT: ${{ steps.previous.outputs.report }}
+        run: |
+          args=(
+            --canary --retry-misses --no-catalog-reuse --trace
+            --search-provider brave
+            --label-model "${{ inputs.label_model }}"
+            --label-reasoning-effort "${{ inputs.label_reasoning_effort }}"
+            --n "${{ inputs.sample_size }}"
+            --budget-minutes "${{ inputs.budget_minutes }}"
+          )
+          if [ -n "$WINE_SLUG" ]; then args+=(--slug "$WINE_SLUG"); fi
+          if [ -n "$PREVIOUS_REPORT" ]; then args+=(--exclude-passed-report "$PREVIOUS_REPORT"); fi
+          node tools/labelfetch/autonomous.mjs "${args[@]}"
+      - name: Capture the rendered Google Images comparison page
+        if: always() && inputs.wine_slug != ''
+        run: node tools/labelfetch/google-images-capture.mjs out-bottle/image-traces
+      - name: Render diagnostic dossiers
+        if: always()
+        run: node tools/labelfetch/image-diagnostic-report.mjs out-bottle/image-traces out-bottle/image-diagnostics
       - name: Upload result
         if: always()
         uses: actions/upload-artifact@v4
@@ -105,3 +122,4 @@ jobs:
             out-bottle/image-canary.html
             out-bottle/image-canary-assets/
             out-bottle/image-traces/
+            out-bottle/image-diagnostics/

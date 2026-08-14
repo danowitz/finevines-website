@@ -276,6 +276,7 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       trace.representatives = representativesToRead.map((candidate) => candidate.id);
       diagnostics.labelImagesRead = representativesToRead.length;
       const evidence = await read(wine, representativesToRead);
+      trace.reader = evidence.readerTrace || null;
       const byID = new Map(evidence.map((item) => [item.id, item]));
       let selectedGroup = groups[0];
       let bestEvaluated = null;

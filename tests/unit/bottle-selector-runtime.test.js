@@ -49,6 +49,38 @@ test('bounded reader sends one nano request containing at most three images', as
   assert.equal(evidence[1].explicitConflict, true);
 });
 
+test('bounded reader exposes a sanitized diagnostic transcript beside its evidence', async () => {
+  const rawResponse = JSON.stringify([{
+    single_bottle: true,
+    producer_brand: 'TOR',
+    product_cuvee: 'Cabernet Sauvignon',
+    appellation: 'Oakville',
+    vintage: '',
+    wine_style: 'red',
+  }]);
+  const reader = createBoundedLabelReader({
+    apiKey: 'secret-that-must-not-appear',
+    model: 'gpt-4.1-mini',
+    readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: rawResponse } }] }),
+    }),
+    verifyIdentity: async () => ({ accept: true, localLabel: '' }),
+  });
+
+  const evidence = await reader(
+    { name: 'TOR Kenward Family Wines Cabernet Sauvignon Oakville', producer: 'TOR', vintage: '2022' },
+    [{ id: 'candidate-1', file: 'one.png' }],
+  );
+
+  assert.deepEqual(evidence.readerTrace.candidateIds, ['candidate-1']);
+  assert.equal(evidence.readerTrace.model, 'gpt-4.1-mini');
+  assert.equal(evidence.readerTrace.response, rawResponse);
+  assert.match(evidence.readerTrace.prompt, /transcribe the product identity/i);
+  assert.doesNotMatch(JSON.stringify(evidence.readerTrace), /secret-that-must-not-appear/);
+});
+
 test('bounded reader sends an explicit reasoning effort only for a configured reasoning model', async () => {
   let body;
   const reader = createBoundedLabelReader({

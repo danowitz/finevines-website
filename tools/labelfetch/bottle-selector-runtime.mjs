@@ -267,15 +267,16 @@ export function createBoundedLabelReader({
   return async function readLabels(wine, candidates) {
     if (!apiKey) throw new ReaderUnavailableError('OPENAI_API_KEY is missing');
     const bounded = candidates.slice(0, 3);
+    const prompt =
+      'Independently transcribe the product identity printed on each bottle. ' +
+      'A small inset shows the complete product shot; use it to decide whether exactly one bottle is present. ' +
+      'Report only words you can actually read in the image. Do not infer missing words from visual similarity or surrounding context. ' +
+      'Return only a JSON array in the same order. Each item must be ' +
+      '{"single_bottle":true|false,"producer_brand":"","product_cuvee":"","appellation":"","vintage":"","wine_style":"red|white|rose|unknown"}. ' +
+      'Include every legible cuvee designation. Use empty strings for unreadable fields.';
     const content = [{
       type: 'text',
-      text:
-        'Independently transcribe the product identity printed on each bottle. ' +
-        'A small inset shows the complete product shot; use it to decide whether exactly one bottle is present. ' +
-        'Report only words you can actually read in the image. Do not infer missing words from visual similarity or surrounding context. ' +
-        'Return only a JSON array in the same order. Each item must be ' +
-        '{"single_bottle":true|false,"producer_brand":"","product_cuvee":"","appellation":"","vintage":"","wine_style":"red|white|rose|unknown"}. ' +
-        'Include every legible cuvee designation. Use empty strings for unreadable fields.',
+      text: prompt,
     }];
     for (const candidate of bounded) {
       const bytes = prepareImage
@@ -307,7 +308,8 @@ export function createBoundedLabelReader({
 
     let payload;
     try { payload = await response.json(); } catch { throw new ReaderUnavailableError('unreadable response body'); }
-    const readings = parseArray(payload.choices?.[0]?.message?.content);
+    const responseText = String(payload.choices?.[0]?.message?.content || '');
+    const readings = parseArray(responseText);
     const evidence = [];
     for (let index = 0; index < bounded.length; index++) {
       const candidate = bounded[index];
@@ -347,6 +349,19 @@ export function createBoundedLabelReader({
         conflict: conflict || undefined,
       });
     }
+    // Diagnostic metadata rides beside the array so existing callers keep the
+    // small evidence interface. The selector copies it into trace.json only
+    // when tracing is enabled; API credentials and image bytes are excluded.
+    evidence.readerTrace = {
+      model,
+      reasoningEffort,
+      candidateIds: bounded.map((candidate) => candidate.id),
+      prompt,
+      response: responseText,
+      parsed: readings,
+      responseId: String(payload.id || ''),
+      usage: payload.usage || null,
+    };
     return evidence;
   };
 }
