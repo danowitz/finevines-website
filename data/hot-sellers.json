@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-13T22:39:55Z",
+  "updated": "2026-08-14T02:59:30Z",
   "windowDays": 30,
   "wines": [
     {
@@ -20,11 +20,11 @@
     },
     {
       "slug": "domaine-dezat-cellier-des-marnes-sancerre-blanc-2025",
-      "cases": 49.25
+      "cases": 50.25
     },
     {
-      "slug": "domaine-de-la-villaudiere-sauvignon-blanc-igp-val-de-loire-2025",
-      "cases": 48
+      "slug": "filare-italia-prosecco-doc-extra-dry",
+      "cases": 48.083330000000004
     }
   ]
 }
