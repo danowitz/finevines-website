@@ -504,6 +504,52 @@ test('an exact source may supply a tiny discriminator when no competing cuvee is
   assert.equal(evidence.explicitConflict, false);
 });
 
+test('a numbered bottling stays unresolved unless its designation is visible or named by the source', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test',
+    readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      single_bottle: true,
+      producer_brand: 'Domaine Aegerter',
+      product_cuvee: '',
+      appellation: 'Nuits-Saint-Georges',
+      vintage: '',
+      wine_style: 'red',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true }),
+  });
+  const [evidence] = await reader(
+    { name: 'Paul Aegerter Nuits Saint Georges #4', producer: 'Paul Aegerter', vintage: '2020' },
+    [{ ...candidates[0], title: '2020 Jean Luc et Paul Aegerter Nuits-Saint-Georges Les Plateaux' }],
+  );
+  assert.equal(evidence.anchor, false);
+  assert.equal(evidence.explicitConflict, false);
+  assert.equal(evidence.reasonCode, 'NUMERIC_DESIGNATION_UNREADABLE');
+  assert.match(evidence.conflict || '', /^$/);
+});
+
+test('a source title may prove a numbered designation too small to read from the bottle', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test',
+    readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      single_bottle: true,
+      producer_brand: 'Domaine Aegerter',
+      product_cuvee: '',
+      appellation: 'Nuits-Saint-Georges',
+      vintage: '2020',
+      wine_style: 'red',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true }),
+  });
+  const [evidence] = await reader(
+    { name: 'Paul Aegerter Nuits Saint Georges #4', producer: 'Paul Aegerter', vintage: '2020' },
+    [{ ...candidates[0], title: 'Paul Aegerter Nuits-Saint-Georges #4 2020' }],
+  );
+  assert.equal(evidence.anchor, true);
+  assert.equal(evidence.explicitConflict, false);
+});
+
 test('an exact source cannot override a different readable cuvee', async () => {
   const reader = createBoundedLabelReader({
     apiKey: 'test',

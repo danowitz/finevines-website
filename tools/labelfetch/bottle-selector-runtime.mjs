@@ -152,6 +152,13 @@ function containsToken(text, wanted) {
     (seen.length >= 6 && wanted.length >= 6 && editDistance(seen, wanted) <= 2));
 }
 
+function numberedDesignations(text) {
+  const matches = String(text || '').matchAll(
+    /(?:#|n(?:o|\u00b0|\u00ba)\.?|number|num(?:e|\u00e9)ro)\s*([0-9]{1,3})\b/giu,
+  );
+  return [...new Set([...matches].map((match) => match[1]))];
+}
+
 function editDistance(left, right) {
   const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
   for (let row = 1; row <= left.length; row++) {
@@ -204,6 +211,25 @@ function identityConflict(wine, candidate, identity) {
   const namedCuvee = tokens(identity.productCuvee || '').filter((token) => !CUVEE_NOISE.has(token));
   if (namedCuvee.length && !namedCuvee.some((token) => containsToken(wine.name || '', token))) {
     return `candidate label names a different cuvee: ${namedCuvee.join(' ')}`;
+  }
+
+  // Salesforce occasionally distinguishes a bottling with a printed number
+  // (for example Aegerter #4). Normal token matching deliberately discards
+  // one-character numbers, so require this small but decisive facet explicitly.
+  // A readable label or an exact product title may supply it; a generic bottle
+  // from a differently named vineyard may not inherit it from visual similarity.
+  const requestedNumber = numberedDesignations(wine.name || '')[0] || '';
+  if (requestedNumber) {
+    const seenNumbers = numberedDesignations([
+      identity.text,
+      candidate.title,
+    ].filter(Boolean).join(' '));
+    if (seenNumbers.length && !seenNumbers.includes(requestedNumber)) {
+      return `candidate names numeric designation #${seenNumbers.join('/#')}; request is #${requestedNumber}`;
+    }
+    if (!seenNumbers.includes(requestedNumber)) {
+      return `candidate lacks requested numeric designation #${requestedNumber}`;
+    }
   }
 
   const producerSet = new Set(expectedProducer);
@@ -278,6 +304,7 @@ function hasProducerEvidence(wine, identity) {
 function conflictReasonCode(conflict) {
   const text = String(conflict || '').toLowerCase();
   if (!text) return '';
+  if (text.includes('numeric designation')) return 'NUMERIC_DESIGNATION_CONFLICT';
   if (text.includes('producer')) return 'PRODUCER_CONFLICT';
   if (text.includes('cuvee') || text.includes('tell this apart')) return 'SIBLING_CUVEE_CONFLICT';
   if (text.includes('variety') || text.includes('grape') || text.includes('riesling') || text.includes('chardonnay')) {
@@ -465,7 +492,9 @@ export function createBoundedLabelReader({
       const reasonCode = visibleVintageConflict
         ? 'VISIBLE_WRONG_VINTAGE'
         : conflictReasonCode(productConflict) ||
-          (incompleteIdentity ? 'PRODUCT_FACET_UNREADABLE' : '') ||
+          (incompleteIdentity && /numeric designation/i.test(identityProblem)
+            ? 'NUMERIC_DESIGNATION_UNREADABLE'
+            : incompleteIdentity ? 'PRODUCT_FACET_UNREADABLE' : '') ||
           (!producerProven ? 'BOTTLE_BRAND_ALIAS_UNKNOWN' : '') ||
           (!confirmed ? 'PRODUCT_TEXT_UNREADABLE' : '');
       evidence.push({
