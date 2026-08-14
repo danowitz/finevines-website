@@ -2511,6 +2511,12 @@
   "attempts": 4,
   "matcherVersion": "google-image-consensus-v1"
  },
+ "432745": {
+  "lastAttempted": "2026-08-14T19:23:16.032Z",
+  "outcome": "miss",
+  "attempts": 1,
+  "matcherVersion": "google-image-consensus-v1"
+ },
  "432747": {
   "lastAttempted": "2026-08-13T22:53:18.340Z",
   "outcome": "miss",

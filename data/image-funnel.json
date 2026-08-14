@@ -83981,5 +83981,117 @@
    }
   ],
   "updatedAt": "2026-08-14T04:24:06.149Z"
+ },
+ "domaine-des-auibuisieres-vouvray-cuvee-silex-2023": {
+  "slug": "domaine-des-auibuisieres-vouvray-cuvee-silex-2023",
+  "sku": "432745",
+  "name": "Domaine des Auibuisieres Vouvray Cuvee Silex",
+  "ok": false,
+  "failureStage": "identity-anchor",
+  "reason": "repeated designs lacked an exact readable anchor",
+  "funnel": {
+   "googleSearched": false,
+   "searchResults": 30,
+   "sourcePolicyBlocked": 0,
+   "permittedCandidates": 15,
+   "downloadAttempted": 15,
+   "downloaded": 14,
+   "decodedImages": 14,
+   "bottleShapePassed": 10,
+   "cleanBackgrounds": 13,
+   "similarPairs": 18,
+   "repeatedGroups": 14,
+   "strongestGroupImages": 7,
+   "labelImagesRead": 6,
+   "identityAnchors": 0,
+   "explicitConflicts": 5,
+   "publishableAnchors": 0,
+   "webExpansionRequests": 0,
+   "webExpansionCandidates": 0,
+   "webExpansionBlocked": 0,
+   "webExpansionDownloaded": 0,
+   "outcome": "failed",
+   "recoveryScope": "",
+   "queryVintageOmitted": false,
+   "searchProvider": "brave-serper",
+   "labelModel": "gpt-4.1-nano",
+   "labelReasoningEffort": "",
+   "providerResults": [
+    {
+     "name": "brave",
+     "status": "ok",
+     "searched": true,
+     "complete": true,
+     "returned": 15,
+     "blocked": 0,
+     "permitted": 15,
+     "error": "",
+     "correctedQuery": "domaine des aubuisieres vouvray cuvee silex 2023"
+    },
+    {
+     "name": "serper",
+     "status": "ok",
+     "searched": true,
+     "complete": true,
+     "returned": 15,
+     "blocked": 0,
+     "permitted": 15,
+     "error": "",
+     "correctedQuery": ""
+    }
+   ],
+   "initialWindowCandidates": 10,
+   "extensionWindowCandidates": 5,
+   "downloadHttpFailures": 1,
+   "downloadTooSmall": 0,
+   "downloadUnsupported": 0,
+   "downloadConversionFailures": 0,
+   "downloadTransportFailures": 0,
+   "selectorReceived": 14,
+   "decodeFailures": 0,
+   "comparedPairs": 91,
+   "sourceIdentityAnchors": 0,
+   "provisionalExpansionSeeds": 1,
+   "anchorShapeFailures": 0,
+   "anchorResolutionFailures": 0
+  },
+  "evidence": [
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate producer is Domaine des Aubusières; request is Domaine des Auibuisieres"
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate producer is Domaine des Aubusières; request is Domaine des Auibuisieres"
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate producer is Bernard Foucault; request is Domaine des Auibuisieres"
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate producer is Domaine des Aubuisieres; request is Domaine des Auibuisieres"
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "explicitConflict": true,
+    "conflict": "candidate producer is Domaine des Aubuisieres; request is Domaine des Auibuisieres"
+   },
+   {
+    "id": "candidate-12",
+    "anchor": false,
+    "explicitConflict": false
+   }
+  ],
+  "updatedAt": "2026-08-14T19:23:16.031Z"
  }
 }
