@@ -72,6 +72,27 @@
     </div>
   </section>
 
+  {{with .Editorial}}
+  <section class="wrap region-editorial" aria-labelledby="region-editorial-title">
+    <div class="region-editorial-copy">
+      <span class="eyebrow">{{.Eyebrow}}</span>
+      <h2 id="region-editorial-title">{{.Heading}}</h2>
+      {{range .Paragraphs}}<p>{{.}}</p>{{end}}
+    </div>
+    {{with .Images}}<div class="region-editorial-gallery">
+      {{range .}}<figure>
+        <img src="/{{.Path}}" alt="{{.Alt}}" loading="lazy">
+        <figcaption>{{.Caption}} <a href="{{.SourceURL}}" rel="external">{{.Credit}}, {{.License}}</a></figcaption>
+      </figure>{{end}}
+    </div>{{end}}
+    {{with $.RelatedRegions}}<nav class="region-neighbours" aria-labelledby="region-neighbours-title">
+      <h3 id="region-neighbours-title">Explore related regions</h3>
+      <ul>{{range .}}<li><a href="{{.URL}}">{{.Name}}</a></li>{{end}}</ul>
+    </nav>{{end}}
+    {{with .Sources}}<p class="region-editorial-sources">Sources: {{range $i, $source := .}}{{if $i}} · {{end}}<a href="{{$source.URL}}" rel="external">{{$source.Label}}</a>{{end}}</p>{{end}}
+  </section>
+  {{end}}
+
   <section class="wrap">
     <div class="collection-toolbar">
       <p class="collection-count">{{comma .Total}} {{if eq .Total 1}}wine{{else}}wines{{end}}{{if gt .PageCount 1}} &middot; page {{.PageNum}} of {{.PageCount}}{{end}}</p>

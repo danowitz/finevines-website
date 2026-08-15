@@ -176,6 +176,28 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 	}
 }
 
+func TestRunEnrichesRegionPageWithEditorialAndPublishedNeighbours(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	html, err := os.ReadFile(filepath.Join(dist, "regions", "burgundy", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		`class="wrap region-editorial"`,
+		`Burgundy is a map of differences`,
+		`src="/assets/img/regions/burgundy-clos-vougeot.jpg"`,
+		`href="/regions/napa-valley/"`,
+		`Test photographer, Public domain`,
+	} {
+		if !bytes.Contains(html, []byte(want)) {
+			t.Errorf("Burgundy page missing %q", want)
+		}
+	}
+}
+
 func TestRunGeneratesContactFromSiteContent(t *testing.T) {
 	dist := t.TempDir()
 	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {

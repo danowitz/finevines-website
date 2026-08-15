@@ -214,6 +214,10 @@ type collectionPage struct {
 	// realistic page (Pinot Noir) still lands well inside what a crawler
 	// happily walks.
 	Related []collectionRelated
+	// Editorial enriches selected region pages with sourced prose and images.
+	// It renders on page one only so pagination never duplicates the article.
+	Editorial      *model.RegionEditorial
+	RelatedRegions []collectionLink
 	// IndexURL is this kind's own index (/producers/), so a collection is
 	// never a dead end even for a visitor who arrived on it cold from search.
 	IndexURL string
@@ -303,6 +307,22 @@ func relatedFor(kind collectionKind, cards []cardWine, valuesByKind map[string][
 		out = append(out, collectionRelated{Label: other.Plural, Links: links})
 	}
 	return out
+}
+
+func resolveRelatedRegions(requested []model.RegionLink, regions []collection) []collectionLink {
+	bySlug := make(map[string]collection, len(regions))
+	for _, region := range regions {
+		bySlug[region.Slug] = region
+	}
+	links := make([]collectionLink, 0, len(requested))
+	for _, related := range requested {
+		if region, ok := bySlug[related.Slug]; ok {
+			links = append(links, collectionLink{
+				Name: related.Label, URL: collectionURL(collectionKindByKey("region"), related.Slug, 1), Count: len(region.Cards),
+			})
+		}
+	}
+	return links
 }
 
 // indexGroups buckets values by first letter for the index page. Anything not
@@ -432,26 +452,47 @@ func renderCollections(tmpl *template.Template, distDir string, s *site, valuesB
 					nextURL = collectionURL(kind, v.Slug, n+1)
 				}
 
+				var editorial *model.RegionEditorial
+				var relatedRegions []collectionLink
+				if n == 1 && kind.Key == "region" {
+					if value, ok := s.Regions[v.Slug]; ok {
+						valueCopy := value
+						editorial = &valueCopy
+						relatedRegions = resolveRelatedRegions(value.RelatedRegions, valuesByKind["region"])
+					}
+				}
+				description := fmt.Sprintf("%s %s from %s in the FineVines portfolio. Browse current availability by vintage, region, and varietal.",
+					comma(total), wineWord(total), v.Name)
+				ogImage := ""
+				if editorial != nil && len(editorial.Paragraphs) > 0 {
+					description = editorial.Paragraphs[0]
+				}
+				if editorial != nil && len(editorial.Images) > 0 {
+					ogImage = editorial.Images[0].Path
+				}
+
 				data := collectionPage{
 					page: page{
-						site:  s,
-						Title: title,
-						Description: fmt.Sprintf("%s %s from %s in the FineVines portfolio. Browse current availability by vintage, region, and varietal.",
-							comma(total), wineWord(total), v.Name),
-						Path: collectionURL(kind, v.Slug, n),
+						site:        s,
+						Title:       title,
+						Description: description,
+						Path:        collectionURL(kind, v.Slug, n),
+						OGImage:     ogImage,
 					},
-					Kind:      kind,
-					Name:      v.Name,
-					Lede:      kind.lede(v.Name, total),
-					Total:     total,
-					Cards:     v.Cards[start:end],
-					PageNum:   n,
-					PageCount: pageCount,
-					PrevURL:   prevURL,
-					NextURL:   nextURL,
-					Related:   related,
-					IndexURL:  collectionIndexURL(kind),
-					FilterURL: portfolioFilterURL(kind, v.Name),
+					Kind:           kind,
+					Name:           v.Name,
+					Lede:           kind.lede(v.Name, total),
+					Total:          total,
+					Cards:          v.Cards[start:end],
+					PageNum:        n,
+					PageCount:      pageCount,
+					PrevURL:        prevURL,
+					NextURL:        nextURL,
+					Related:        related,
+					Editorial:      editorial,
+					RelatedRegions: relatedRegions,
+					IndexURL:       collectionIndexURL(kind),
+					FilterURL:      portfolioFilterURL(kind, v.Name),
 				}
 				if err := renderPage(tmpl, distDir, rel, "collection", data); err != nil {
 					return nil, err

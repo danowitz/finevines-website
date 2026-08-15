@@ -52,6 +52,7 @@ type site struct {
 	News     []model.NewsPost
 	Team     []model.TeamMember
 	Content  model.SiteContent
+	Regions  map[string]model.RegionEditorial
 	BaseURL  string
 	// NoIndex is true whenever BaseURL is NOT the production host (see
 	// isProductionHost in sitemap.go) — i.e. for every staging/CDN hostname
@@ -759,6 +760,13 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	}
 	if err := copyTree(assetsDir, filepath.Join(distDir, "assets")); err != nil {
 		return err
+	}
+	for slug, editorial := range s.Regions {
+		for _, image := range editorial.Images {
+			if _, err := os.Stat(filepath.Join(distDir, filepath.FromSlash(image.Path))); err != nil {
+				return fmt.Errorf("region %q editorial image %q: %w", slug, image.Path, err)
+			}
+		}
 	}
 	// Fingerprint the fixed CSS/JS AFTER the tree copy (it renames the copies
 	// in dist/, never touches assetsDir) and BEFORE any page renders, so every
@@ -1927,6 +1935,10 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load site content: %w", err)
 	}
+	regions, err := model.LoadRegionEditorials(filepath.Join(dataDir, "regions.json"))
+	if err != nil {
+		return nil, fmt.Errorf("load region editorial: %w", err)
+	}
 	cleaned := usableWines(wines)
 	// Unavailable wines keep a published detail page (their search ranking
 	// survives the stock-out) but appear on NO browse surface: s.Wines is
@@ -1940,7 +1952,7 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 		}
 		active = append(active, w)
 	}
-	s := &site{Wines: active, Delisted: delisted, Content: content, BaseURL: baseURL, GAID: gaID, NoIndex: !isProductionHost(baseURL)}
+	s := &site{Wines: active, Delisted: delisted, Content: content, Regions: regions, BaseURL: baseURL, GAID: gaID, NoIndex: !isProductionHost(baseURL)}
 	// hot-sellers.json is optional: written by `finevines enrich` against a
 	// live org (mock/dev runs don't have it), and the homepage simply omits
 	// its sales-driven section when it's absent.
