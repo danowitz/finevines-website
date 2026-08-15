@@ -451,7 +451,7 @@ func TestPortfolioPage(t *testing.T) {
 		`class="facets-close"`,
 		`class="facets-backdrop"`,
 		`src="/assets/js/filters.`,
-		`3 available bottlings across vintages and formats, presented as 3 distinct wines.`,
+		`data-wine-total="3"`,
 		// New paginated-catalog hooks portfolio.js depends on: the content-
 		// hashed index URL + pageSize/page metadata on the grid, the sort
 		// select, the country facet (replaced style), the per-value count span,
@@ -483,9 +483,6 @@ func TestPortfolioPage(t *testing.T) {
 		if !strings.Contains(html, want) {
 			t.Errorf("portfolio missing hook %q", want)
 		}
-	}
-	if strings.Contains(html, `class="vintage-badge"`) {
-		t.Error("single-vintage cards must not render a multi-vintage badge")
 	}
 	// style was dropped as a facet — its checkbox must be gone.
 	if strings.Contains(html, `data-facet="style"`) {
@@ -753,7 +750,7 @@ func TestLedgerStats(t *testing.T) {
 	}
 	got := ledgerStats(wines, 504)
 	want := []ledgerStat{
-		{"1,200+", "Available Bottlings"},
+		{"1,200+", "Wines in Portfolio"},
 		{"2", "Producers Represented"},
 		{"2", "Regions of Origin"},
 		{"500+", "Accounts Served"},
@@ -1728,8 +1725,8 @@ func TestBuild_VintagesCollapseToOnePortfolioCard(t *testing.T) {
 	if !strings.Contains(portfolio, `<span class="vintage">2019 · 2018</span>`) {
 		t.Error("card must list both vintages newest-first")
 	}
-	if !strings.Contains(portfolio, `<span class="vintage-badge">2 vintages</span>`) {
-		t.Error("a multi-vintage card must identify itself explicitly")
+	if strings.Contains(portfolio, `vintage-badge`) {
+		t.Error("portfolio cards must not explain their internal vintage grouping")
 	}
 	// html/template escapes "+" to &#43; (same as every prior build).
 	if !strings.Contains(portfolio, "691 bottles · 57 cases &#43; 7") {
@@ -2871,7 +2868,7 @@ func oldSiteProseTestdata(t *testing.T, data string) []model.OldSiteProse {
 				"yield": "36hL/ha",
 			},
 			TastingNote: []string{
-				"This cuvée built its trade reputation on consistency.",     // standalone "trade" — must be dropped
+				"This cuvée built its trade reputation on consistency.",    // standalone "trade" — must be dropped
 				"A generous blend showing garrigue and dark cherry fruit.", // must survive
 			},
 			ProducerCopy: []string{

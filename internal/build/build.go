@@ -268,7 +268,7 @@ func ledgerStats(wines []model.Wine, accounts int) []ledgerStat {
 			regions[r] = struct{}{}
 		}
 	}
-	stats := []ledgerStat{{Value: comma(len(wines)/100*100) + "+", Label: "Available Bottlings"}}
+	stats := []ledgerStat{{Value: comma(len(wines)/100*100) + "+", Label: "Wines in Portfolio"}}
 	if len(producers) > 0 {
 		stats = append(stats, ledgerStat{Value: comma(len(producers)), Label: "Producers Represented"})
 	}
@@ -683,10 +683,10 @@ type portfolioPage struct {
 	PageNum   int
 	PageCount int
 	Total     int
-	// Bottlings is the active inventory-row count before customer-facing
-	// grouping. It reconciles the homepage's "Available Bottlings" metric with
-	// the distinct-wine result count without exposing accounting SKUs.
-	Bottlings int
+	// WineTotal is the published inventory-row count shown to customers. The
+	// browse grid remains grouped for usability, but its unfiltered headline
+	// uses the same wine count as the homepage and catalog email.
+	WineTotal int
 	PrevURL   string
 	NextURL   string
 }
@@ -1184,15 +1184,6 @@ type cardWine struct {
 // middot ("2019 · 2018"); a single-vintage card reads exactly as before.
 func (c cardWine) VintLabel() string { return strings.Join(c.Vints, " · ") }
 
-// VintageBadge makes a collapsed multi-vintage card explicit at a glance.
-// A single-vintage wine returns empty so the template renders no badge.
-func (c cardWine) VintageBadge() string {
-	if len(c.Vints) > 1 {
-		return fmt.Sprintf("%d vintages", len(c.Vints))
-	}
-	return ""
-}
-
 // otherVintagesBySlug maps every wine detail page's slug to the OTHER
 // vintages of the same wine, newest first.
 //
@@ -1636,7 +1627,7 @@ func renderPortfolio(tmpl *template.Template, distDir string, s *site, cards []c
 			PageNum:   n,
 			PageCount: pageCount,
 			Total:     total,
-			Bottlings: len(s.Wines),
+			WineTotal: len(s.Wines),
 			PrevURL:   prevURL,
 			NextURL:   nextURL,
 		}

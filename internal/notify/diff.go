@@ -19,7 +19,6 @@ import (
 	"math"
 	"strings"
 
-	"github.com/gritautomation/finevines-website/internal/catalog"
 	"github.com/gritautomation/finevines-website/internal/model"
 	"github.com/gritautomation/finevines-website/internal/queue"
 )
@@ -45,7 +44,6 @@ type WineRef struct {
 // was sourced rather than inferred.
 type Coverage struct {
 	Wines        int
-	Bottlings    int
 	RealImages   int
 	RealImagePct int
 	MeanMetadata int
@@ -155,7 +153,7 @@ func coverageOf(wines []model.Wine) Coverage {
 			active = append(active, w)
 		}
 	}
-	c := Coverage{Wines: len(catalog.Build(active)), Bottlings: len(active)}
+	c := Coverage{Wines: len(active)}
 	if len(active) == 0 {
 		return c
 	}

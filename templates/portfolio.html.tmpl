@@ -44,7 +44,6 @@
         <h1>Browse the catalog</h1>
         <p class="lede">Every bottle currently in stock. Filter by producer, region, varietal, country, or vintage,
           or search the portfolio directly. What's listed reflects current wholesale availability.</p>
-        <p class="portfolio-scope">{{comma .Bottlings}} available bottlings across vintages and formats, presented as {{comma .Total}} distinct wines.</p>
         {{/* The other way in. The sidebar filters this page; these open the
              standing landing pages for each dimension — the ones a search
              engine can actually index, and the ones worth sending someone
@@ -73,7 +72,7 @@
              hidden; as a mobile drawer the count hides and the ✕ shows. */}}
         <div class="facets-head">
           <span class="facets-title">Refine</span>
-          <span class="facets-count">{{comma .Total}} wines</span>
+          <span class="facets-count">{{comma .WineTotal}} wines</span>
           <button type="button" class="facets-close" aria-label="Close filters">&times;</button>
         </div>
 
@@ -159,13 +158,13 @@
              filtering on a phone legible: you see what you are about to get
              before you dismiss the panel. */}}
         <div class="facets-drawer-foot">
-          <button type="button" class="facets-apply">Show <span class="facets-apply-count">{{comma .Total}}</span> wines</button>
+          <button type="button" class="facets-apply">Show <span class="facets-apply-count">{{comma .WineTotal}}</span> wines</button>
         </div>
       </aside>
 
       <div>
         <div class="portfolio-toolbar">
-          <p id="portfolio-count">{{comma .Total}} wines</p>
+          <p id="portfolio-count">{{comma .WineTotal}} wines</p>
           <div class="portfolio-toolbar-actions">
             {{/* Opens the .facets panel as an off-canvas drawer on ≤1024px;
                  display:none on desktop where the sidebar is always visible. */}}
@@ -194,7 +193,7 @@
         </div>
 
         <ul class="wine-grid view-cards" style="list-style:none;margin:0;padding:0;"
-            data-index-url="{{.IndexURL}}" data-page-size="{{.PageSize}}"
+            data-index-url="{{.IndexURL}}" data-page-size="{{.PageSize}}" data-wine-total="{{.WineTotal}}"
             data-page="{{.PageNum}}" data-page-count="{{.PageCount}}">
           {{/* One real <li><a> card per wine on THIS page, from the shared
                "winecard" definition in card.html.tmpl — the same one the collection
