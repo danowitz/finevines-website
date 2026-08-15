@@ -9,7 +9,7 @@ Status: confirmed for build. Scope: **Full build, Core** ($12,000) **+ News & Ev
 2. Wine enrichment (text & imagery) — one AI pass per wine: tasting description + sommelier notes (Claude API), plus a generated bottle image.
 3. Sync program & deploy — Go binary: reads Salesforce, applies eligibility rules, incremental (roster-diff) runs, deploys to Bunny.net with cache purge.
 4. Redirects from the current site — every existing finevines.com URL 301s to its new location; Google footprint carries over.
-5. About-page team skill — Claude skill (marketplace plugin) to add/remove team members (name, role, email).
+5. About-page team sync — active Salesforce users in the Executive, Sales Rep, or Back Office roles; Claude skill retained only for local photo metadata.
 6. News & Events skill — Claude skill (marketplace plugin) to post tastings/arrivals/events; generates a landing page **and** an individual indexable page per post.
 7. Launch — initial 5,000–10,000-wine enrichment run, QA, go-live on the finevines.com domain.
 
@@ -58,7 +58,7 @@ finevines-website/
   data/
     wines.json                         machine-generated cache + build input (git-tracked)
     news/<slug>.json                   one file per post, human-authored via skill
-    team.json                          team roster, human-authored via skill
+    team.json                          team roster, machine-generated from Salesforce roles
   assets/
     img/wines/<sku>.webp               generated or sourced bottle images
     fonts/, css/                       self-hosted brand fonts + design system
@@ -94,7 +94,7 @@ finevines-website/
 
 `data/news/<slug>.json` — one file per post: `{ title, date, category, body, image?, slug }`.
 
-`data/team.json` — array of: `{ name, role, email, photoPath?, note? }`.
+`data/team.json` — array of: `{ name, role, email, photoPath?, note? }`. Name, role, email, addition, and removal are Salesforce-owned; local photo/note metadata survives matching syncs.
 
 These three JSON shapes are the seam between the Claude skills / enrich pipeline (producers) and `build` (consumer). `build` never talks to Salesforce or Claude directly — it only reads these files.
 
@@ -156,9 +156,9 @@ Both live in this repo under `plugins/`, installable via `.claude-plugin/marketp
 
 **`finevines-news`**: interviews for title/date/location/category/body/optional image → writes `data/news/<slug>.json` in the Fine Vines voice → offers to run `build && deploy`.
 
-**`finevines-team`**: add/remove a team member (name, role, email, optional photo/note) → edits `data/team.json` → offers to run `build && deploy`.
+**`finevines-team`**: edits only local `photoPath`/`note` metadata for a person already selected from Salesforce → offers to run `build && deploy`.
 
-Neither skill touches Salesforce or the enrich pipeline — they only write their own JSON file. This keeps the machine-generated (wines) and human-authored (news, team) halves of the site fully decoupled.
+`finevines-news` stays independent of Salesforce. The team skill never edits Salesforce-owned identity fields; `enrich` regenerates those fields from active users in the `Executive`, `Sales Rep`, or `Back Office` roles.
 
 ## 10. Testing / QA
 

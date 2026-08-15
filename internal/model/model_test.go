@@ -61,7 +61,6 @@ func TestLoadSiteContentRequiresCompleteContact(t *testing.T) {
 			"email": "info@finevines.com"
 		},
 		"contactConfirmed": false,
-		"teamEmailsConfirmed": false,
 		"featuredWineSlugs": ["featured-wine"]
 	}`
 	if err := os.WriteFile(path, []byte(valid), 0o644); err != nil {

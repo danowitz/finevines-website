@@ -36,6 +36,16 @@ type WineRaw struct {
 	ReadyToSell bool
 }
 
+// TeamUser is the small, public-safe projection of a Salesforce User used to
+// build the About-page roster. The selection rule lives in Client.TeamRoster;
+// callers never need the rest of the User record.
+type TeamUser struct {
+	ID    string
+	Name  string
+	Email string
+	Role  string
+}
+
 type Source interface {
 	// Roster returns raw rows for every candidate wine (eligibility is
 	// applied by the caller via enrich.Eligible).

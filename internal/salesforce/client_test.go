@@ -293,5 +293,78 @@ func TestSalesTotalsSumsNetCasesAcrossPages(t *testing.T) {
 	}
 }
 
+func TestTeamRosterUsesApprovedActiveRolesAndStableDisplayOrder(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/services/oauth2/token", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"access_token": "tok123"})
+	})
+	mux.HandleFunc("/services/data/v61.0/query", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query().Get("q")
+		for _, want := range []string{"FROM User", "IsActive = true", "'Sales Rep'", "'Executive'", "'Back Office'"} {
+			if !strings.Contains(q, want) {
+				t.Errorf("team SOQL %q missing %q", q, want)
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"done": true,
+			"records": []map[string]any{
+				{"Id": "3", "Name": "Barb Fultz", "Email": "barb@finevines.com", "UserRole": map[string]any{"Name": "Back Office"}},
+				{"Id": "2", "Name": "Trish Earley", "Email": "trish@finevines.com", "UserRole": map[string]any{"Name": "Sales Rep"}},
+				{"Id": "1", "Name": "Connie Molitor", "Email": "connie@finevines.com", "UserRole": map[string]any{"Name": "Executive"}},
+				// Defense in depth: an unexpected row is not passed through.
+				{"Id": "4", "Name": "Integration", "Email": "bot@example.com", "UserRole": nil},
+			},
+		})
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	client := NewClient(Config{BaseURL: server.URL, ClientID: "id", ClientSecret: "secret", APIVersion: "v61.0"}, server.Client())
+	got, err := client.TeamRoster(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []TeamUser{
+		{ID: "1", Name: "Connie Molitor", Email: "connie@finevines.com", Role: "Executive"},
+		{ID: "2", Name: "Trish Earley", Email: "trish@finevines.com", Role: "Sales Rep"},
+		{ID: "3", Name: "Barb Fultz", Email: "barb@finevines.com", Role: "Back Office"},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("TeamRoster() = %#v, want %#v", got, want)
+	}
+}
+
+func TestTeamRosterUsesGeorgeConfirmedPublicEmail(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/services/oauth2/token", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"access_token": "tok123"})
+	})
+	mux.HandleFunc("/services/data/v61.0/query", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"done": true,
+			"records": []map[string]any{{
+				"Id": "005F0000002EQ4YIAW", "Name": "George Molitor",
+				"Email":    "george.molitor@finevines.com",
+				"UserRole": map[string]any{"Name": "Executive"},
+			}},
+		})
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	client := NewClient(Config{BaseURL: server.URL, ClientID: "id", ClientSecret: "secret", APIVersion: "v61.0"}, server.Client())
+	got, err := client.TeamRoster(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].Email != "george@finevines.com" {
+		t.Fatalf("TeamRoster() = %#v, want George's confirmed public email", got)
+	}
+}
+
 // compile-time check kept alongside the tests: Client must satisfy Source.
 var _ Source = (*Client)(nil)

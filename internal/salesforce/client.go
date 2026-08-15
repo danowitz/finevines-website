@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -88,6 +89,26 @@ const rosterSOQL = `SELECT Id, Name, Description, FV_Brand__c, FV_Vintage_Year__
  FV_Varietal__c, FV_Region__c, FV_Country__c, FV_OnHand_Qty__c, FV_Bottles_Per_Case__c,
  FV_Ready_To_Sell__c FROM Product2`
 
+// teamRosterSOQL is the client-approved provisional About-page rule
+// (2026-08-15): active Salesforce users in one of these three business roles.
+// No website-specific checkbox or hand-maintained allowlist is involved.
+const teamRosterSOQL = `SELECT Id, Name, Email, UserRole.Name FROM User
+ WHERE IsActive = true
+ AND UserRole.Name IN ('Sales Rep', 'Executive', 'Back Office')`
+
+var teamRoleOrder = map[string]int{
+	"Executive":   0,
+	"Sales Rep":   1,
+	"Back Office": 2,
+}
+
+// teamPublicEmailOverrides contains client-confirmed public addresses that
+// intentionally differ from Salesforce User.Email. Key by immutable org User
+// ID so a name change cannot move the exception to the wrong person.
+var teamPublicEmailOverrides = map[string]string{
+	"005F0000002EQ4YIAW": "george@finevines.com", // George Molitor, confirmed 2026-08-15
+}
+
 // Roster authenticates and runs rosterSOQL, following nextRecordsUrl until
 // Salesforce reports done:true, mapping every record into a WineRaw in API
 // order. Eligibility (stock/SKU filtering) is applied by the caller.
@@ -147,6 +168,43 @@ func (c *Client) Roster(ctx context.Context) ([]WineRaw, error) {
 		}
 	}
 	return out, nil
+}
+
+// TeamRoster returns the active Salesforce users selected for the public
+// About page. A second role check in Go is deliberate defense in depth: if a
+// mock, proxy, or future query edit returns a record outside the approved
+// roles, that record still cannot leak onto the public site.
+func (c *Client) TeamRoster(ctx context.Context) ([]TeamUser, error) {
+	rows, err := c.Query(ctx, strings.Join(strings.Fields(teamRosterSOQL), " "))
+	if err != nil {
+		return nil, fmt.Errorf("salesforce team roster: %w", err)
+	}
+
+	users := make([]TeamUser, 0, len(rows))
+	for _, row := range rows {
+		role := relationshipString(row, "UserRole", "Name")
+		if _, allowed := teamRoleOrder[role]; !allowed {
+			continue
+		}
+		id := str(row["Id"])
+		email := str(row["Email"])
+		if publicEmail, ok := teamPublicEmailOverrides[id]; ok {
+			email = publicEmail
+		}
+		users = append(users, TeamUser{
+			ID:    id,
+			Name:  str(row["Name"]),
+			Email: email,
+			Role:  role,
+		})
+	}
+	sort.Slice(users, func(i, j int) bool {
+		if teamRoleOrder[users[i].Role] != teamRoleOrder[users[j].Role] {
+			return teamRoleOrder[users[i].Role] < teamRoleOrder[users[j].Role]
+		}
+		return strings.ToLower(users[i].Name) < strings.ToLower(users[j].Name)
+	})
+	return users, nil
 }
 
 // Query runs an arbitrary SOQL string and returns the raw records, following
@@ -312,6 +370,11 @@ func (c *Client) getJSON(ctx context.Context, path string, v any) error {
 func str(v any) string {
 	s, _ := v.(string)
 	return s
+}
+
+func relationshipString(row map[string]any, relationship, field string) string {
+	nested, _ := row[relationship].(map[string]any)
+	return str(nested[field])
 }
 
 func intval(v any) int {

@@ -1952,6 +1952,11 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 		if err := jsonUnmarshal(data, &s.Team); err != nil {
 			return nil, err
 		}
+		if len(s.Team) > 0 {
+			if err := model.ValidateTeamMembers(s.Team); err != nil {
+				return nil, fmt.Errorf("load team roster: %w", err)
+			}
+		}
 	}
 	newsDir := filepath.Join(dataDir, "news")
 	entries, _ := os.ReadDir(newsDir)

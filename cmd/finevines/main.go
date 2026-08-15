@@ -98,6 +98,7 @@ func runBuild(cfg config.Config) error {
 // consider adding a temporary "LIMIT 25" to that query to eyeball output
 // before running against the full catalog.
 func runEnrich(cfg config.Config) error {
+	ctx := context.Background()
 	// The text-enrichment API is always required; the Salesforce
 	// credentials are required only for a live roster pull. In mock mode
 	// (FINEVINES_SF_MOCK) the roster comes from the embedded sample instead,
@@ -132,6 +133,7 @@ func runEnrich(cfg config.Config) error {
 	}
 
 	var src salesforce.Source
+	var nextTeam []model.TeamMember
 	if cfg.SFMock {
 		mock, err := salesforce.NewMockSource()
 		if err != nil {
@@ -140,12 +142,31 @@ func runEnrich(cfg config.Config) error {
 		log.Printf("enrich: FINEVINES_SF_MOCK set — using the embedded sample roster instead of a live Salesforce org")
 		src = mock
 	} else {
-		src = salesforce.NewClient(salesforce.Config{
+		client := salesforce.NewClient(salesforce.Config{
 			BaseURL:      cfg.SFBaseURL,
 			ClientID:     cfg.SFClientID,
 			ClientSecret: cfg.SFClientSecret,
 			APIVersion:   cfg.SFAPIVersion,
 		}, http.DefaultClient)
+		src = client
+
+		// Pull and validate the public team roster before beginning the costly
+		// wine enrichment pass, but do not replace team.json until that pass
+		// succeeds. A bad/empty roster therefore stops the pipeline without
+		// publishing or persisting a destructive team-page change.
+		users, err := client.TeamRoster(ctx)
+		if err != nil {
+			return fmt.Errorf("enrich: %w", err)
+		}
+		existing, err := model.LoadTeamMembers("data/team.json")
+		if err != nil {
+			return fmt.Errorf("enrich: load existing team roster: %w", err)
+		}
+		nextTeam = mergeSalesforceTeam(users, existing)
+		if err := model.ValidateTeamMembers(nextTeam); err != nil {
+			return fmt.Errorf("enrich: invalid Salesforce team roster: %w", err)
+		}
+		log.Printf("enrich: Salesforce selected %d active team members in Executive, Sales Rep, or Back Office roles", len(nextTeam))
 	}
 	var enr enrich.Enricher
 	var imgs enrich.ImageProvider
@@ -171,9 +192,15 @@ func runEnrich(cfg config.Config) error {
 		log.Printf("enrich: %d old-site image matches loaded", len(oldImages))
 	}
 
-	if err := enrich.Run(context.Background(), src, enr, imgs, oldImages,
+	if err := enrich.Run(ctx, src, enr, imgs, oldImages,
 		"data/wines.json", "assets/img/wines", log.Printf); err != nil {
 		return err
+	}
+	if nextTeam != nil {
+		if err := model.SaveTeamMembers("data/team.json", nextTeam); err != nil {
+			return fmt.Errorf("enrich: save Salesforce team roster: %w", err)
+		}
+		log.Printf("enrich: wrote data/team.json from Salesforce — %d team members", len(nextTeam))
 	}
 
 	// Emit the editor-facing coverage report from the freshly-written catalog.
@@ -202,6 +229,35 @@ func runEnrich(cfg config.Config) error {
 		log.Printf("enrich: mock roster has no sales ledger — data/hot-sellers.json and data/accounts.json left as-is")
 	}
 	return nil
+}
+
+// mergeSalesforceTeam converts the authoritative Salesforce roster into the
+// website contract. PhotoPath and Note remain local presentation metadata and
+// survive a sync when either email or name still identifies the same person.
+func mergeSalesforceTeam(users []salesforce.TeamUser, existing []model.TeamMember) []model.TeamMember {
+	byEmail := make(map[string]model.TeamMember, len(existing))
+	byName := make(map[string]model.TeamMember, len(existing))
+	for _, member := range existing {
+		byEmail[strings.ToLower(strings.TrimSpace(member.Email))] = member
+		byName[strings.ToLower(strings.TrimSpace(member.Name))] = member
+	}
+
+	team := make([]model.TeamMember, 0, len(users))
+	for _, user := range users {
+		member := model.TeamMember{
+			Name:  strings.TrimSpace(user.Name),
+			Role:  strings.TrimSpace(user.Role),
+			Email: strings.TrimSpace(user.Email),
+		}
+		previous, ok := byEmail[strings.ToLower(member.Email)]
+		if !ok {
+			previous = byName[strings.ToLower(member.Name)]
+		}
+		member.PhotoPath = previous.PhotoPath
+		member.Note = previous.Note
+		team = append(team, member)
+	}
+	return team
 }
 
 // hotSellerWindowDays is the sales window the homepage ranking looks back
@@ -465,9 +521,11 @@ func runDeploy(cfg config.Config) error {
 	return deploy.Run(context.Background(), client, "dist", ".bunny-manifest.json", deployWorkers, log.Printf)
 }
 
-// validateClientContentForDeploy prevents candidate contact details or team
-// emails from reaching the production domain before the client has explicitly
-// approved them. A staging build/deploy remains available by setting an
+// validateClientContentForDeploy prevents candidate organization-wide contact
+// details from reaching the production domain before the client has explicitly
+// approved them. Team identity and email now come from the live Salesforce
+// role roster and are validated during enrich, so they need no parallel manual
+// confirmation flag. A staging build/deploy remains available by setting an
 // explicit non-production FINEVINES_SITE_BASE_URL.
 func validateClientContentForDeploy(baseURL string, content model.SiteContent) error {
 	parsed, err := url.Parse(baseURL)
@@ -478,17 +536,9 @@ func validateClientContentForDeploy(baseURL string, content model.SiteContent) e
 	if host != "finevines.com" && host != "www.finevines.com" {
 		return nil
 	}
-	var pending []string
 	if !content.ContactConfirmed {
-		pending = append(pending, "contact details")
-	}
-	if !content.TeamEmailsConfirmed {
-		pending = append(pending, "team email addresses")
-	}
-	if len(pending) > 0 {
 		return fmt.Errorf(
-			"deploy: production blocked until client confirms %s; then set the corresponding confirmation flags in data/site.json",
-			strings.Join(pending, " and "),
+			"deploy: production blocked until client confirms contact details; then set contactConfirmed in data/site.json",
 		)
 	}
 	return nil

@@ -8,10 +8,11 @@ import (
 
 	"github.com/gritautomation/finevines-website/internal/config"
 	"github.com/gritautomation/finevines-website/internal/model"
+	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
 
 func TestValidateClientContentForDeploy(t *testing.T) {
-	confirmed := model.SiteContent{ContactConfirmed: true, TeamEmailsConfirmed: true}
+	confirmed := model.SiteContent{ContactConfirmed: true}
 	pending := model.SiteContent{}
 
 	for _, baseURL := range []string{"https://finevines.com", "https://www.finevines.com/"} {
@@ -22,7 +23,7 @@ func TestValidateClientContentForDeploy(t *testing.T) {
 		if err == nil {
 			t.Errorf("unconfirmed production content accepted for %s", baseURL)
 		} else {
-			for _, want := range []string{"contact details", "team email addresses", "data/site.json"} {
+			for _, want := range []string{"contact details", "contactConfirmed", "data/site.json"} {
 				if !strings.Contains(err.Error(), want) {
 					t.Errorf("production gate error missing %q: %v", want, err)
 				}
@@ -35,6 +36,28 @@ func TestValidateClientContentForDeploy(t *testing.T) {
 	}
 	if err := validateClientContentForDeploy("finevines.com", confirmed); err == nil {
 		t.Error("relative site base URL should be rejected")
+	}
+}
+
+func TestMergeSalesforceTeamUsesRoleAndPreservesLocalPhotoMetadata(t *testing.T) {
+	users := []salesforce.TeamUser{
+		{ID: "1", Name: "George Molitor", Email: "george@finevines.com", Role: "Executive"},
+		{ID: "2", Name: "Daniel Pilkey", Email: "dan@finevines.com", Role: "Sales Rep"},
+	}
+	existing := []model.TeamMember{
+		{Name: "George Molitor", Email: "george@finevines.com", Role: "Founder & President", PhotoPath: "assets/img/team/george.jpg"},
+		{Name: "Dan Pilkey", Email: "dan@finevines.com", Role: "Sales", Note: "portrait requested"},
+	}
+
+	got := mergeSalesforceTeam(users, existing)
+	if len(got) != 2 {
+		t.Fatalf("len(team) = %d, want 2", len(got))
+	}
+	if got[0].Role != "Executive" || got[0].PhotoPath != "assets/img/team/george.jpg" {
+		t.Fatalf("George = %#v", got[0])
+	}
+	if got[1].Name != "Daniel Pilkey" || got[1].Role != "Sales Rep" || got[1].Note != "portrait requested" {
+		t.Fatalf("Daniel = %#v", got[1])
 	}
 }
 

@@ -212,15 +212,13 @@ type ContactInfo struct {
 }
 
 // SiteContent holds the small amount of hand-curated, site-wide content that
-// is neither Salesforce-owned wine data nor office-managed news/team data.
-// The confirmation flags are deployment evidence: production deploys remain
-// blocked until the client has explicitly approved the candidate contact and
-// team-email values.
+// is neither Salesforce-owned wine/team data nor office-managed news data.
+// ContactConfirmed is deployment evidence: production remains blocked until
+// the client has explicitly approved the organization-wide contact values.
 type SiteContent struct {
-	Contact             ContactInfo `json:"contact"`
-	ContactConfirmed    bool        `json:"contactConfirmed"`
-	TeamEmailsConfirmed bool        `json:"teamEmailsConfirmed"`
-	FeaturedWineSlugs   []string    `json:"featuredWineSlugs"`
+	Contact           ContactInfo `json:"contact"`
+	ContactConfirmed  bool        `json:"contactConfirmed"`
+	FeaturedWineSlugs []string    `json:"featuredWineSlugs"`
 	// BookProducers optionally overrides the homepage Book band's producer
 	// roll with the client's own shortlist (matched case-insensitively
 	// against the catalog; unknown names are skipped). Empty ⇒ the roll

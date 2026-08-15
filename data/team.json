@@ -1,52 +1,47 @@
 [
   {
-    "name": "George Molitor",
-    "role": "Founder & President",
-    "email": "george@finevines.com"
-  },
-  {
     "name": "Connie Molitor",
-    "role": "Operations",
+    "role": "Executive",
     "email": "connie@finevines.com"
   },
   {
-    "name": "Jeff Barbour",
-    "role": "Sales",
-    "email": "jeff@finevines.com"
+    "name": "George Molitor",
+    "role": "Executive",
+    "email": "george@finevines.com"
   },
   {
-    "name": "Trish Earley",
-    "role": "Sales",
-    "email": "trish@finevines.com"
+    "name": "Daniel Pilkey",
+    "role": "Sales Rep",
+    "email": "dan@finevines.com"
   },
   {
-    "name": "Tim Freehan",
-    "role": "Sales",
-    "email": "tim@finevines.com"
+    "name": "Frank Hofmann",
+    "role": "Sales Rep",
+    "email": "frank@finevines.com"
   },
   {
     "name": "Heather Malpass",
-    "role": "Sales",
+    "role": "Sales Rep",
     "email": "heather@finevines.com"
   },
   {
     "name": "Richie Ribando",
-    "role": "Sales",
+    "role": "Sales Rep",
     "email": "richie@finevines.com"
   },
   {
-    "name": "Dan Pilkey",
-    "role": "Sales",
-    "email": "dan@finevines.com"
+    "name": "Tim Freehan",
+    "role": "Sales Rep",
+    "email": "tim@finevines.com"
   },
   {
-    "name": "Steven Fladung",
-    "role": "Sales",
-    "email": "steven@finevines.com"
+    "name": "Trish Earley",
+    "role": "Sales Rep",
+    "email": "trish@finevines.com"
   },
   {
-    "name": "Barbara Fultz",
-    "role": "Office Manager",
-    "email": "barb@finevines.com"
+    "name": "Barb Fultz",
+    "role": "Back Office",
+    "email": "barb.fultz@finevines.com"
   }
 ]

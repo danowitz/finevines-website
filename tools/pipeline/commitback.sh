@@ -119,7 +119,7 @@ resolve_conflicts() {
 # enrich failing — long after the deploy that used it.
 validate_json() {
   local f
-  for f in data/wines.json data/hot-sellers.json .bunny-manifest.json; do
+  for f in data/wines.json data/team.json data/hot-sellers.json .bunny-manifest.json; do
     [ -f "$f" ] || continue
     node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" \
       || { echo "$f is not valid JSON after the merge — refusing to push"; exit 1; }

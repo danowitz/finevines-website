@@ -14,7 +14,7 @@ you read it, and for the rare occasion GRIT asks you to run something by hand.
 
 | Command | Plain-language description |
 |---|---|
-| `enrich` | Pulls the current wine list from Salesforce, writes AI-generated tasting notes and a bottle photo for anything new or changed, and drops any wine that's out of stock or not meant for the web. Saves everything to `data\wines.json`. This is the only step that talks to Salesforce. |
+| `enrich` | Pulls the current wine list and public team roster from Salesforce, writes wine enrichment for anything new or changed, and refreshes `data\wines.json` plus `data\team.json`. This is the only step that talks to Salesforce. |
 | `build` | Turns the wine list, the news posts, and the team roster into the actual website pages (HTML files) in a folder called `dist`. This step never goes out to the internet — it just reads the JSON files and writes pages. |
 | `deploy` | Uploads the freshly built pages to FineVines' hosting account (Bunny.net) and tells the CDN to clear its cache so visitors see the new version right away. Only files that actually changed get re-uploaded, so this is fast on a normal day. |
 | `redirects` | A separate, occasional command (not part of the nightly run) that maps every old finevines.com web address to its new location, so old links and Google search results keep working after the rebuild. This is mainly a one-time launch-day tool — GRIT will run this as part of go-live, not something you need to run regularly. |
@@ -75,9 +75,9 @@ of these come from the Bunny.net account dashboard once FineVines has a Bunny.ne
 - `FINEVINES_SITE_BASE_URL` — optional; the site's public URL (`https://finevines.com`). Leave blank and the
   tool defaults to that address. Set this explicitly to the staging URL for a staging deployment.
 
-Before the first production deploy, George must confirm the public contact details and all team email addresses.
-After that approval, set `contactConfirmed` and `teamEmailsConfirmed` to `true` in `data\site.json`. Until both
-flags are true, `finevines deploy` refuses to publish to `finevines.com`; staging deploys remain available.
+Before the first production deploy, George must confirm the public organization-wide contact details.
+After that approval, set `contactConfirmed` to `true` in `data\site.json`. Until then,
+`finevines deploy` refuses to publish to `finevines.com`; staging deploys remain available.
 
 If any required value for a given command is missing, that command stops immediately and prints exactly which
 one is missing — it won't run half-configured.
@@ -190,20 +190,20 @@ or publishes anything half-finished.
 
 ## Who owns which files
 
-- **`data\news\` and `data\team.json`** — these are Barbara's (or whoever's) to manage, and normally you'll
-  never open them directly — you'll use the two Claude skills described below, which edit them for you through
+- **`data\news\`** — this is Barbara's (or whoever's) to manage, and normally you'll
+  never open it directly — you'll use the Claude news skill described below, which edits it through
   a conversation.
-- **`data\site.json`** — GRIT owns the public contact details, client-confirmation flags, and curated homepage
-  wine list. Change the confirmation flags only after explicit client approval.
-- **`data\wines.json`** — this file is entirely machine-owned by `enrich`. Never hand-edit it — any manual
-  change will simply be overwritten (or fought with) on the next `enrich` run, since it works by comparing
-  what's in Salesforce to what's already in this file.
+- **`data\site.json`** — GRIT owns the public contact details, client-confirmation flag, and curated homepage
+  wine list. Change the confirmation flag only after explicit client approval.
+- **`data\wines.json` and `data\team.json`** — these files are machine-owned by `enrich`. Never hand-edit their
+  Salesforce-owned fields: the next run will overwrite them from Salesforce. The team skill may still maintain
+  `photoPath` and `note`, which the sync deliberately preserves.
 
 ---
 
 ## The two Claude skills
 
-Two Claude Code skills let office staff update news/events and the team roster through a conversation, without
+Claude Code lets office staff update news/events and team photographs through a conversation, without
 touching any files directly.
 
 ### One-time install
@@ -215,7 +215,7 @@ In Claude Code, run:
 ```
 
 (GRIT will give you the exact path or URL to use the first time this is set up.) Then install the two plugins
-from that marketplace: `finevines-news` and `finevines-team`.
+from that marketplace: `finevines-news` and, if team-photo maintenance is needed, `finevines-team`.
 
 ### Posting news, arrivals, or events
 
@@ -227,8 +227,11 @@ happened.
 
 ### Updating the team page
 
-Same idea — say something like "Add Jane to the About page" or "Take George's old photo down," and Claude will
-walk you through it, then offer to publish the change the same way.
+Names, email addresses, roles, additions, and removals come from Salesforce automatically. An active Salesforce
+user appears when their role is `Executive`, `Sales Rep`, or `Back Office`; other users do not. Use the
+`finevines-team` skill only for a selected person's local photograph or internal photo reminder. Salesforce-owned
+fields are refreshed on the next nightly run. George's public address is the confirmed exception:
+`george@finevines.com` is used instead of his Salesforce User email.
 
 If you say "not now" to publishing in either skill, the change is saved and will simply go live on the next
 nightly run.

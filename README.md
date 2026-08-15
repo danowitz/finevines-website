@@ -87,9 +87,9 @@ a Bunny file operation fails during deployment, the manifest is not advanced and
 next run can safely retry; some files may already have reached the storage origin before that retry. If only
 the final cache purge fails, the files are uploaded but visitors may temporarily receive cached content.
 
-Production deploys also require `contactConfirmed` and `teamEmailsConfirmed` to be `true` in `data/site.json`.
-This prevents candidate contact or roster details from reaching `finevines.com` before client approval. A staging
-deploy remains available by setting `FINEVINES_SITE_BASE_URL` to the staging URL.
+Production deploys also require `contactConfirmed` to be `true` in `data/site.json`.
+This prevents candidate organization-wide contact details from reaching `finevines.com` before client approval.
+A staging deploy remains available by setting `FINEVINES_SITE_BASE_URL` to the staging URL.
 
 Old-site URL preservation is a separate launch concern. `finevines redirects` creates `redirects.json`, and
 `finevines redirects --publish` publishes the large redirect map through Bunny.net Edge Scripting so legacy
@@ -169,8 +169,10 @@ Only after all three stages complete does the public website reflect the latest 
 that becomes eligible appears after the next successful cycle; a wine that becomes ineligible is omitted from
 the rebuilt catalog and its obsolete page is deleted from Bunny.net during deployment.
 
-`data/wines.json` is machine-owned by `enrich`. `data/news/` and `data/team.json` are human-owned through the
-two Claude Code skills in `plugins/finevines-news` and `plugins/finevines-team`. `data/site.json` owns shared
+`data/wines.json` and `data/team.json` are machine-owned by `enrich`. The team roster is selected from active
+Salesforce users whose role is `Executive`, `Sales Rep`, or `Back Office`; local photo/reminder metadata is
+preserved across syncs. George Molitor's client-confirmed public address is overridden to `george@finevines.com`.
+`data/news/` is human-owned through `plugins/finevines-news`. `data/site.json` owns shared
 contact details, their client-confirmation state, and homepage wine curation. All four feed the same build and
 deploy path, but the website build itself never talks to Salesforce or an AI service.
 

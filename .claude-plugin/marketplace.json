@@ -19,7 +19,7 @@
     {
       "name": "finevines-team",
       "source": "./plugins/finevines-team",
-      "description": "Manage the FineVines About-page team roster",
+      "description": "Manage photographs for Salesforce-selected FineVines team members",
       "category": "content",
       "tags": ["team", "roster", "website"]
     }

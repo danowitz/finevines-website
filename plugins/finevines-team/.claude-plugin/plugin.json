@@ -1,7 +1,7 @@
 {
   "name": "finevines-team",
-  "version": "1.0.0",
-  "description": "Manage the FineVines About-page team roster",
+  "version": "2.0.0",
+  "description": "Manage photographs for Salesforce-selected FineVines team members",
   "author": {
     "name": "FineVines",
     "email": "barbara@finevines.com"

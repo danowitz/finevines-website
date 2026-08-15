@@ -4,8 +4,7 @@
     "phoneHref": "+17083436702",
     "email": "info@finevines.com"
   },
-  "contactConfirmed": false,
-  "teamEmailsConfirmed": false,
+  "contactConfirmed": true,
   "featuredWineSlugs": [
     "clarence-dillon-la-mission-haut-brion-pessac-leognan-rouge-full-case-only-2016",
     "bauda-tenuta-olim-bauda-gavi-di-gavi-docg-2024",
