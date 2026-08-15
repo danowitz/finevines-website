@@ -100,7 +100,7 @@ test('bounded reader sends an explicit reasoning effort only for a configured re
   assert.equal(body.max_completion_tokens, 4000);
 });
 
-test('an explicit wrong vintage in the source title vetoes a vintage-neutral label', async () => {
+test('a wrong source-title vintage does not veto an exact vintage-neutral bottle', async () => {
   const reader = createBoundedLabelReader({
     apiKey: 'test',
     readFileImpl: async () => Buffer.from('image'),
@@ -113,9 +113,41 @@ test('an explicit wrong vintage in the source title vetoes a vintage-neutral lab
     { name: 'Exact Wine', vintage: '2012' },
     [{ id: 'wrong-source', file: 'wine.png', title: 'Exact Wine 2018' }],
   );
-  assert.equal(evidence.anchor, false);
-  assert.equal(evidence.explicitConflict, true);
-  assert.match(evidence.conflict, /source title says 2018/);
+  assert.equal(evidence.anchor, true);
+  assert.equal(evidence.productAnchor, true);
+  assert.equal(evidence.vintageStatus, 'neutral');
+  assert.equal(evidence.explicitConflict, false);
+  assert.equal(evidence.sourceVintageMismatch, 'candidate source title says 2018; request is 2012');
+});
+
+test('marks anonymous wrong-cardinality output invalid so the proof engine can retry it', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test',
+    readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      single_bottle: true,
+      producer_brand: 'Exact',
+      product_cuvee: 'Wine',
+      appellation: '',
+      vintage: '2022',
+      wine_style: 'red',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true, localLabel: '' }),
+  });
+
+  const evidence = await reader(
+    { name: 'Exact Wine', producer: 'Exact', vintage: '2022' },
+    candidates.slice(0, 3),
+  );
+
+  assert.equal(evidence.length, 3);
+  assert.deepEqual(evidence.map(({ readStatus }) => readStatus), ['invalid', 'invalid', 'invalid']);
+  assert.deepEqual(evidence.map(({ reasonCode }) => reasonCode), [
+    'READER_RESPONSE_INVALID',
+    'READER_RESPONSE_INVALID',
+    'READER_RESPONSE_INVALID',
+  ]);
+  assert.equal(evidence.readerTrace.responseCardinalityValid, false);
 });
 
 test('bounded reader can replace each full shot with one local label crop', async () => {
@@ -136,7 +168,8 @@ test('bounded reader can replace each full shot with one local label crop', asyn
   await reader({ name: 'Wine' }, candidates);
   assert.deepEqual(prepared, ['0', '1', '2']);
   assert.equal(body.messages[0].content.filter((item) => item.type === 'image_url').length, 3);
-  assert.match(body.messages[0].content[1].image_url.url, /Y3JvcC0w$/);
+  const images = body.messages[0].content.filter((item) => item.type === 'image_url');
+  assert.match(images[0].image_url.url, /Y3JvcC0w$/);
 });
 
 test('a broad local producer guess is not promoted to an explicit conflict', async () => {
@@ -162,7 +195,7 @@ test('a broad local producer guess is not promoted to an explicit conflict', asy
   assert.equal(evidence.identityMatch, null);
 });
 
-test('a model confirmation without the requested discriminator is an explicit conflict', async () => {
+test('missing requested product text is unresolved evidence, not a contradiction', async () => {
   const reader = createBoundedLabelReader({
     apiKey: 'test',
     readFileImpl: async () => Buffer.from('image'),
@@ -185,7 +218,9 @@ test('a model confirmation without the requested discriminator is an explicit co
     vintage: '2023',
   }, candidates.slice(0, 1));
   assert.equal(evidence.anchor, false);
-  assert.equal(evidence.explicitConflict, true);
+  assert.equal(evidence.productAnchor, false);
+  assert.equal(evidence.explicitConflict, false);
+  assert.equal(evidence.reasonCode, 'PRODUCT_FACET_UNREADABLE');
 });
 
 test('local pixel OCR vetoes a model-biased wrong vintage', async () => {
@@ -381,7 +416,7 @@ test('a compound producer requires every distinctive producer word', async () =>
   assert.match(evidence[0].conflict, /producer/i);
 });
 
-test('an Estate bottling cannot be replaced by a differently named source wine', async () => {
+test('an Estate bottling remains unresolved when the Estate designation is missing', async () => {
   const read = createBoundedLabelReader({
     apiKey: 'test',
     fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
@@ -400,7 +435,8 @@ test('an Estate bottling cannot be replaced by a differently named source wine',
     [{ id: 'candidate-1', file: 'one.png', title: 'Eden Rift Valliant Central Coast Pinot Noir 2022' }]
   );
   assert.equal(evidence[0].anchor, false);
-  assert.match(evidence[0].conflict, /Estate/i);
+  assert.equal(evidence[0].explicitConflict, false);
+  assert.equal(evidence[0].reasonCode, 'PRODUCT_FACET_UNREADABLE');
 });
 
 test('a sibling vineyard is rejected when the requested discriminator is absent', async () => {
@@ -422,6 +458,7 @@ test('a sibling vineyard is rejected when the requested discriminator is absent'
   );
   assert.equal(evidence.anchor, false);
   assert.equal(evidence.explicitConflict, true);
+  assert.equal(evidence.reasonCode, 'SIBLING_CUVEE_CONFLICT');
 });
 
 test('a requested reserve tier must be visible in the blind transcription', async () => {
@@ -442,7 +479,8 @@ test('a requested reserve tier must be visible in the blind transcription', asyn
     candidates.slice(0, 1),
   );
   assert.equal(evidence.anchor, false);
-  assert.equal(evidence.explicitConflict, true);
+  assert.equal(evidence.explicitConflict, false);
+  assert.equal(evidence.reasonCode, 'PRODUCT_FACET_UNREADABLE');
 });
 
 test('an exact source may supply a tiny discriminator when no competing cuvee is readable', async () => {
@@ -461,6 +499,52 @@ test('an exact source may supply a tiny discriminator when no competing cuvee is
   const [evidence] = await reader(
     { name: 'Domaine Chofflet Valdenaire Givry 1er Cru en Choue', producer: 'Domaine Chofflet Valdenaire', vintage: '2022' },
     [{ ...candidates[0], title: 'Domaine Chofflet Givry 1er Cru En Choue 2022' }],
+  );
+  assert.equal(evidence.anchor, true);
+  assert.equal(evidence.explicitConflict, false);
+});
+
+test('a numbered bottling stays unresolved unless its designation is visible or named by the source', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test',
+    readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      single_bottle: true,
+      producer_brand: 'Domaine Aegerter',
+      product_cuvee: '',
+      appellation: 'Nuits-Saint-Georges',
+      vintage: '',
+      wine_style: 'red',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true }),
+  });
+  const [evidence] = await reader(
+    { name: 'Paul Aegerter Nuits Saint Georges #4', producer: 'Paul Aegerter', vintage: '2020' },
+    [{ ...candidates[0], title: '2020 Jean Luc et Paul Aegerter Nuits-Saint-Georges Les Plateaux' }],
+  );
+  assert.equal(evidence.anchor, false);
+  assert.equal(evidence.explicitConflict, false);
+  assert.equal(evidence.reasonCode, 'NUMERIC_DESIGNATION_UNREADABLE');
+  assert.match(evidence.conflict || '', /^$/);
+});
+
+test('a source title may prove a numbered designation too small to read from the bottle', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test',
+    readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      single_bottle: true,
+      producer_brand: 'Domaine Aegerter',
+      product_cuvee: '',
+      appellation: 'Nuits-Saint-Georges',
+      vintage: '2020',
+      wine_style: 'red',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true }),
+  });
+  const [evidence] = await reader(
+    { name: 'Paul Aegerter Nuits Saint Georges #4', producer: 'Paul Aegerter', vintage: '2020' },
+    [{ ...candidates[0], title: 'Paul Aegerter Nuits-Saint-Georges #4 2020' }],
   );
   assert.equal(evidence.anchor, true);
   assert.equal(evidence.explicitConflict, false);
@@ -652,4 +736,58 @@ test('a two-word bottle brand present in the catalog name can prove its parent p
 
   assert.equal(evidence.anchor, true);
   assert.equal(evidence.explicitConflict, false);
+});
+
+test('an explicit bottle-facing brand alias can prove its commercial producer', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test', readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      candidate_id: '0',
+      single_bottle: true,
+      producer_brand: 'Laetitia Ducroux',
+      product_cuvee: 'Sancerre',
+      appellation: 'Sancerre',
+      vintage: '',
+      wine_style: 'white',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true, localLabel: '' }),
+  });
+  const [evidence] = await reader(
+    {
+      name: 'Huteau Boulanger Sancerre Laetitia Ducroux',
+      producer: 'Huteau Boulanger',
+      bottleBrands: ['Laetitia Ducroux'],
+      vintage: '2024',
+    },
+    candidates.slice(0, 1),
+  );
+
+  assert.equal(evidence.anchor, true);
+  assert.equal(evidence.productAnchor, true);
+  assert.equal(evidence.explicitConflict, false);
+});
+
+test('a visibly wrong vintage preserves product proof but blocks publication', async () => {
+  const reader = createBoundedLabelReader({
+    apiKey: 'test', readFileImpl: async () => Buffer.from('image'),
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+      candidate_id: '0',
+      single_bottle: true,
+      producer_brand: 'Exact',
+      product_cuvee: 'Wine',
+      appellation: '',
+      vintage: '2021',
+      wine_style: 'red',
+    }]) } }] }) }),
+    verifyIdentity: async () => ({ accept: true, localLabel: '' }),
+  });
+  const [evidence] = await reader(
+    { name: 'Exact Wine', producer: 'Exact', vintage: '2022' },
+    candidates.slice(0, 1),
+  );
+
+  assert.equal(evidence.productAnchor, true);
+  assert.equal(evidence.anchor, false);
+  assert.equal(evidence.vintageStatus, 'wrong-visible');
+  assert.equal(evidence.reasonCode, 'VISIBLE_WRONG_VINTAGE');
 });

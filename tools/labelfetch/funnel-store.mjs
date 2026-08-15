@@ -18,13 +18,32 @@ export function funnelEntry(record, now = new Date()) {
     name: record.name || '',
     ok: record.ok === true,
     failureStage: record.failureStage || '',
+    failureCode: record.failureCode || '',
     reason: record.tried?.[0]?.why || record.discoveryError || '',
     funnel: { ...(record.funnel || {}) },
     evidence: (record.evidence || []).map((item) => ({
       id: item.id,
       anchor: item.anchor === true,
+      productAnchor: item.productAnchor === true,
       explicitConflict: item.explicitConflict === true,
+      readStatus: item.readStatus || '',
+      vintageStatus: item.vintageStatus || '',
+      reasonCode: item.reasonCode || '',
       conflict: item.conflict,
+      sourceVintageMismatch: item.sourceVintageMismatch,
+      label: item.label || '',
+      visibleVintage: item.visibleVintage || '',
+      localVisibleVintage: item.localVisibleVintage || '',
+    })),
+    candidates: (record.alternates || []).map((item) => ({
+      image: item.image || '',
+      page: item.page || '',
+      size: item.size || '',
+      why: item.why || '',
+      label: item.label || '',
+      strongestGroup: item.strongestGroup === true,
+      anchor: item.anchor === true,
+      explicitConflict: item.explicitConflict === true,
     })),
     updatedAt: now.toISOString(),
   };
@@ -47,7 +66,7 @@ export async function saveFunnelStore(store, path = FUNNEL_PATH) {
 export function recoverableCandidateSlugs(store) {
   return new Set(Object.values(store || {})
     .filter((entry) => entry?.ok === false &&
-      entry.failureStage === 'identity-anchor' &&
+      ['identity-anchor', 'reader-response', 'publication-vintage'].includes(entry.failureStage) &&
       entry.funnel?.recoveryScope !== 'quality' &&
       Number(entry.funnel?.downloaded || 0) >= 2 &&
       Number(entry.funnel?.repeatedGroups || 0) >= 1)

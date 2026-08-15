@@ -1,9 +1,9 @@
 import { evaluateVisualPick } from './visual-pick.mjs';
 import {
   bestVisualRepresentative,
-  planIdentityReading,
   sourceIdentityEvidence,
 } from './identity-reading-plan.mjs';
+import { createIdentityProofEngine } from './identity-proof.mjs';
 
 function host(candidate) {
   if (candidate.host) return String(candidate.host).replace(/^www\./, '');
@@ -165,7 +165,15 @@ function reviewCandidates(inspected, strongestGroup = [], evidence = []) {
 
 // The interface is intentionally one method. Adapters hide local image
 // inspection, similarity computation, and the bounded label reader.
-export function createBottleSelector({ inspect, compare, read, similarityThreshold = 0.90, inspectConcurrency = 3 }) {
+export function createBottleSelector({
+  inspect,
+  compare,
+  read,
+  similarityThreshold = 0.90,
+  inspectConcurrency = 3,
+  maxIdentityCandidates = 10,
+}) {
+  const identityProof = createIdentityProofEngine({ read, maxCandidates: maxIdentityCandidates });
   return {
     async select(wine, candidates) {
       const inspectedAll = await mapLimit(candidates, inspectConcurrency, async (candidate) => ({
@@ -204,10 +212,16 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         strongestGroupImages: 0,
         labelImagesRead: 0,
         identityAnchors: 0,
+        productIdentityAnchors: 0,
+        wrongVisibleVintages: 0,
         explicitConflicts: 0,
         publishableAnchors: 0,
         sourceIdentityAnchors: 0,
         provisionalExpansionSeeds: 0,
+        plannedIdentityCandidates: 0,
+        readerCalls: 0,
+        readerRetries: 0,
+        invalidReaderResults: 0,
       };
       if (inspected.length < 2) return {
         pick: null,
@@ -217,7 +231,8 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         reviewCandidates: reviewCandidates(inspected),
       };
 
-      const pairs = corroboratedVisualPairs(wine, inspected, await compare(inspected), similarityThreshold);
+      const comparedPairs = await compare(inspected);
+      const pairs = corroboratedVisualPairs(wine, inspected, comparedPairs, similarityThreshold);
       trace.pairs = pairs;
       diagnostics.comparedPairs = pairs.length;
       diagnostics.similarPairs = pairs.filter((pair) => pair.score >= similarityThreshold).length;
@@ -233,29 +248,44 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
         reviewCandidates: reviewCandidates(inspected),
       };
 
-      // The primary request remains three images. Only a primary miss spends a
-      // second request on three distinct candidates from the same safe groups.
-      const readingPlan = planIdentityReading(wine, groups, 6);
-      const readerTraces = [];
-      const firstEvidence = await read(wine, readingPlan.slice(0, 3));
-      if (firstEvidence.readerTrace) readerTraces.push(firstEvidence.readerTrace);
-      let evidence = [...firstEvidence];
-      if (!evidence.some((item) => item.anchor === true) && readingPlan.length > 3) {
-        const secondEvidence = await read(wine, readingPlan.slice(3, 6));
-        if (secondEvidence.readerTrace) readerTraces.push(secondEvidence.readerTrace);
-        evidence = [...evidence, ...secondEvidence];
+      const proof = await identityProof.prove(wine, { candidates: inspected, groups });
+      const evidence = [...proof.evidence];
+      // Search metadata never proves pixels, but an explicit wrong grape is a
+      // safe veto even when that candidate was not one of the bounded images
+      // sent to the reader. Without this, a read Grenache could donate identity
+      // to an unread Syrah merely because the producer's label layout matched.
+      const evidenceIndex = new Map(evidence.map((item, index) => [item.id, index]));
+      for (const candidate of inspected) {
+        const sourceConflict = sourceIdentityEvidence(wine, candidate).sourceVarietalConflict;
+        if (!sourceConflict) continue;
+        const index = evidenceIndex.get(candidate.id);
+        const previous = index === undefined ? { id: candidate.id } : evidence[index];
+        const veto = {
+          ...previous,
+          anchor: false,
+          productAnchor: false,
+          explicitConflict: true,
+          reasonCode: 'VARIETAL_CONFLICT',
+          conflict: sourceConflict,
+        };
+        if (index === undefined) {
+          evidenceIndex.set(candidate.id, evidence.length);
+          evidence.push(veto);
+        } else {
+          evidence[index] = veto;
+        }
       }
-      const representativesToRead = readingPlan.slice(0, evidence.length);
-      trace.representatives = representativesToRead.map((candidate) => candidate.id);
-      diagnostics.labelImagesRead = representativesToRead.length;
-      trace.reader = readerTraces.length <= 1
-        ? readerTraces[0] || null
-        : {
-            model: readerTraces[0].model,
-            reasoningEffort: readerTraces[0].reasoningEffort,
-            candidateIds: readerTraces.flatMap((item) => item.candidateIds || []),
-            batches: readerTraces,
-          };
+      trace.representatives = proof.representatives;
+      trace.reader = proof.readerTrace;
+      trace.identityProof = {
+        stopReason: proof.stopReason,
+        diagnostics: proof.diagnostics,
+      };
+      diagnostics.labelImagesRead = proof.diagnostics.candidatesRead;
+      diagnostics.plannedIdentityCandidates = proof.diagnostics.plannedCandidates;
+      diagnostics.readerCalls = proof.diagnostics.readerCalls;
+      diagnostics.readerRetries = proof.diagnostics.readerRetries;
+      diagnostics.invalidReaderResults = proof.diagnostics.invalidReaderResults;
       const byID = new Map(evidence.map((item) => [item.id, item]));
       let selectedGroup = groups[0];
       let bestEvaluated = null;
@@ -263,10 +293,39 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       const expansionSeeds = [];
       const provisionalSeeds = [];
       const traceEvidence = [];
+      const candidateIndex = new Map(inspected.map((candidate, index) => [candidate.id, index]));
+      // Title corroboration may admit a moderate pair into a review group, but
+      // it must never transfer pixel identity. Identity can move only across a
+      // pair that was independently strong before metadata boosted grouping,
+      // or whose local artwork features establish a direct copy relationship.
+      const directIdentityPairs = new Set(comparedPairs
+        .filter((pair) => pair.score >= similarityThreshold ||
+          (pair.local_inliers >= 5 && pair.local_ratio >= 0.75))
+        .map((pair) => {
+          const left = inspected[pair.a]?.id;
+          const right = inspected[pair.b]?.id;
+          return `${left}:${right}`;
+        }));
+      const directPairScore = new Map(pairs.map((pair) => {
+        const left = inspected[pair.a]?.id;
+        const right = inspected[pair.b]?.id;
+        return [`${left}:${right}`, pair.score];
+      }));
+      const directMatch = (left, right) => {
+        if (left === right) return true;
+        const leftIndex = candidateIndex.get(left);
+        const rightIndex = candidateIndex.get(right);
+        if (leftIndex === undefined || rightIndex === undefined) return false;
+        const a = inspected[Math.min(leftIndex, rightIndex)].id;
+        const b = inspected[Math.max(leftIndex, rightIndex)].id;
+        return directIdentityPairs.has(`${a}:${b}`) &&
+          (directPairScore.get(`${a}:${b}`) || 0) >= similarityThreshold;
+      };
       for (const group of groups) {
-        const judged = group.map((candidate) => {
+        const base = group.map((candidate) => {
           const explicitConflict = byID.get(candidate.id)?.explicitConflict === true;
-          const sourceAnchor = exactVintageSourceSignal(wine, candidate);
+          const sourceEvidence = sourceIdentityEvidence(wine, candidate);
+          const sourceAnchor = sourceEvidence.exactVintageSignal;
           const identityAnchor = byID.get(candidate.id)?.anchor === true;
           const inheritedFullMatch = candidate.trustedFullMatch === true;
           return {
@@ -276,7 +335,29 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
             // Source metadata chooses what to read but never proves the pixels.
             // Publication requires blind pixel evidence or a verified full-copy
             // relationship to pixels that already earned that evidence.
-            anchor: !explicitConflict && (identityAnchor || inheritedFullMatch),
+            identityAnchor,
+            inheritedFullMatch,
+            // A directly read vintage-neutral bottle may survive stale source
+            // metadata. An unread candidate may not inherit identity through a
+            // source that explicitly names another vintage or grape.
+            inheritanceBlocked: Boolean(
+              sourceEvidence.conflictingTitleVintage || sourceEvidence.sourceVarietalConflict),
+            sourceVintageMismatch: sourceEvidence.sourceVintageMismatch,
+          };
+        });
+        const readableAnchors = base.filter((candidate) =>
+          !candidate.explicitConflict && (candidate.identityAnchor || candidate.inheritedFullMatch));
+        const judged = base.map((candidate) => {
+          const inheritedFrom = !candidate.identityAnchor && !candidate.inheritedFullMatch &&
+            !candidate.explicitConflict && !candidate.inheritanceBlocked
+            ? readableAnchors.find((anchor) => directMatch(candidate.id, anchor.id))
+            : null;
+          return {
+            ...candidate,
+            anchor: !candidate.explicitConflict && Boolean(
+              candidate.identityAnchor || candidate.inheritedFullMatch || inheritedFrom),
+            inheritedIdentity: Boolean(inheritedFrom),
+            inheritedFrom: inheritedFrom?.id || '',
           };
         });
         for (const candidate of judged) {
@@ -306,6 +387,9 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
           if (!traceEvidence.some(({ id }) => id === candidate.id)) traceEvidence.push({
             ...(byID.get(candidate.id) || { id: candidate.id, anchor: false, explicitConflict: false }),
             sourceAnchor: candidate.sourceAnchor,
+            sourceVintageMismatch: byID.get(candidate.id)?.sourceVintageMismatch ||
+              candidate.sourceVintageMismatch || undefined,
+            inheritanceBlocked: candidate.inheritanceBlocked,
             effectiveAnchor: candidate.anchor,
           });
         }
@@ -325,6 +409,8 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
       }
       Object.assign(diagnostics, {
         identityAnchors: bestEvaluated?.diagnostics.identityAnchors || 0,
+        productIdentityAnchors: evidence.filter((item) => item.productAnchor === true).length,
+        wrongVisibleVintages: evidence.filter((item) => item.vintageStatus === 'wrong-visible').length,
         explicitConflicts: evidence.filter((item) => item.explicitConflict).length,
         anchorShapeFailures: bestEvaluated?.diagnostics.anchorShapeFailures || 0,
         anchorResolutionFailures: bestEvaluated?.diagnostics.anchorResolutionFailures || 0,
@@ -348,12 +434,25 @@ export function createBottleSelector({ inspect, compare, read, similarityThresho
           expansionSeeds,
         };
       }
-      const reason = diagnostics.identityAnchors === 0
-        ? 'repeated designs lacked an exact readable anchor'
-        : 'exact anchors failed bottle-shape or resolution publication rules';
+      const unresolvedCodes = [...new Set(evidence.map(({ reasonCode }) => reasonCode).filter(Boolean))];
+      const failureCode = diagnostics.invalidReaderResults > 0 && diagnostics.productIdentityAnchors === 0
+        ? 'READER_RESPONSE_INVALID'
+        : diagnostics.productIdentityAnchors > 0 && diagnostics.wrongVisibleVintages > 0
+          ? 'NO_EXACT_OR_VINTAGE_NEUTRAL_COPY'
+          : diagnostics.identityAnchors === 0
+            ? unresolvedCodes[0] || 'PRODUCT_TEXT_UNREADABLE'
+            : 'PUBLICATION_QUALITY_FAILED';
+      const reason = failureCode === 'READER_RESPONSE_INVALID'
+        ? `identity reader returned invalid results for ${diagnostics.invalidReaderResults} candidate(s)`
+        : failureCode === 'NO_EXACT_OR_VINTAGE_NEUTRAL_COPY'
+          ? 'product identity was proven, but no correct-year or vintage-neutral copy was publishable'
+          : diagnostics.identityAnchors === 0
+            ? `identity unresolved: ${unresolvedCodes.join(', ') || 'no readable product anchor'}`
+            : 'exact anchors failed bottle-shape or resolution publication rules';
       return {
         pick: null,
         reason,
+        failureCode,
         trace: { ...trace, reason },
         evidence,
         sourceAnchorIds: selectedSourceAnchorIds,

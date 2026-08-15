@@ -15,7 +15,7 @@ function selector({ pairs = [], evidence = [] } = {}) {
   });
 }
 
-test('one readable anchor cannot transfer identity to an unverified group member', async () => {
+test('one readable anchor transfers identity only to a directly matching conflict-free copy', async () => {
   const result = await selector({
     pairs: [{ a: 0, b: 1, score: 0.96 }, { a: 0, b: 2, score: 0.94 }],
     evidence: [
@@ -28,14 +28,67 @@ test('one readable anchor cannot transfer identity to an unverified group member
     candidate('clean', { cleanBackground: true, width: 700, height: 1200 }),
     candidate('wrong', { cleanBackground: true, width: 2000, height: 3000 }),
   ]);
-  assert.equal(result.pick.id, 'readable');
+  assert.equal(result.pick.id, 'clean');
   assert.equal(result.matchingImages, 2);
   assert.equal(result.inspectedImages, 3);
   assert.equal(result.diagnostics.selectorReceived, 3);
   assert.equal(result.diagnostics.strongestGroupImages, 2);
-  assert.equal(result.diagnostics.identityAnchors, 1);
+  assert.equal(result.diagnostics.identityAnchors, 2);
   assert.equal(result.diagnostics.explicitConflicts, 1);
-  assert.equal(result.diagnostics.publishableAnchors, 1);
+  assert.equal(result.diagnostics.publishableAnchors, 2);
+  assert.equal(result.pick.inheritedIdentity, true);
+});
+
+test('an unread lookalike with a contradictory source variety cannot inherit identity', async () => {
+  const result = await selector({
+    pairs: [{ a: 0, b: 1, score: 0.97 }],
+    evidence: [{ id: 'grenache', anchor: true, label: "TERRE ROUGE L'AUTRE SIERRA FOOTHILLS" }],
+  }).select(
+    {
+      name: "Domaine de la Terre Rouge Grenache L'autre Sierra Foothills",
+      producer: 'Domaine de la Terre Rouge',
+      vintage: '2015',
+    },
+    [
+      candidate('grenache', { title: "Terre Rouge Grenache L'autre Sierra Foothills 2015" }),
+      candidate('syrah', {
+        title: "2017 Terre Rouge Les Cotes de l'Ouest Syrah Sierra Foothills",
+        cleanBackground: true,
+        width: 1200,
+        height: 1800,
+      }),
+    ],
+  );
+
+  assert.equal(result.pick.id, 'grenache');
+  assert.equal(result.diagnostics.explicitConflicts, 1);
+  assert.equal(result.trace.evidence.find(({ id }) => id === 'syrah').reasonCode, 'VARIETAL_CONFLICT');
+});
+
+test('an unread wrong-vintage source cannot inherit from a vintage-neutral anchor', async () => {
+  const result = await selector({
+    pairs: [{ a: 0, b: 1, score: 0.97 }],
+    evidence: [{ id: 'neutral', anchor: true, label: 'LIGNIER MICHELOT LES CHENEVERY' }],
+  }).select(
+    {
+      name: 'Domaine Lignier-Michelot Morey Saint Denis 1er Cru les Cheneverey',
+      producer: 'Domaine Lignier-Michelot',
+      vintage: '2020',
+    },
+    [
+      candidate('neutral', { title: 'Lignier-Michelot Morey Saint Denis Les Cheneverey' }),
+      candidate('old', {
+        title: '2015 Lignier-Michelot Morey Saint Denis Les Cheneverey',
+        cleanBackground: true,
+        width: 1200,
+        height: 1800,
+      }),
+    ],
+  );
+
+  assert.equal(result.pick.id, 'neutral');
+  assert.equal(result.pick.inheritedIdentity, false);
+  assert.equal(result.diagnostics.identityAnchors, 1);
 });
 
 test('two independent exact result titles let a clean bottle corroborate a matching scene', async () => {
@@ -52,6 +105,32 @@ test('two independent exact result titles let a clean bottle corroborate a match
     candidate('scene', { title: 'The Cider Farm - Oak Aged Cider', shapeOk: false }),
   ]);
   assert.equal(result.pick.id, 'official');
+});
+
+test('title-only grouping cannot transfer identity to a prettier unread bottle', async () => {
+  const result = await selector({
+    pairs: [{ a: 0, b: 1, score: 0.65 }],
+    evidence: [
+      { id: 'readable', anchor: true, label: 'Domaine Example Target Cuvee' },
+      { id: 'pretty', anchor: false },
+    ],
+  }).select({ name: 'Domaine Example Target Cuvee', vintage: '2022' }, [
+    candidate('readable', {
+      title: 'Domaine Example Target Cuvee 2022',
+      width: 400,
+      height: 700,
+    }),
+    candidate('pretty', {
+      title: 'Domaine Example Target Cuvee 2022',
+      cleanBackground: true,
+      width: 1200,
+      height: 1800,
+    }),
+  ]);
+
+  assert.equal(result.pick.id, 'readable');
+  assert.equal(result.pick.inheritedIdentity, false);
+  assert.equal(result.diagnostics.identityAnchors, 1);
 });
 
 test('a clean product shot can be the center of scene and lineup corroboration', async () => {
@@ -168,7 +247,7 @@ test('similar siblings without an exact anchor remain a no-pick', async () => {
     evidence: [{ id: 'one' }, { id: 'two', explicitConflict: true }],
   }).select({ name: 'Target' }, [candidate('one'), candidate('two')]);
   assert.equal(result.pick, null);
-  assert.equal(result.reason, 'repeated designs lacked an exact readable anchor');
+  assert.equal(result.reason, 'identity unresolved: no readable product anchor');
   assert.equal(result.diagnostics.strongestGroupImages, 2);
   assert.equal(result.diagnostics.identityAnchors, 0);
   assert.equal(result.diagnostics.explicitConflicts, 1);
@@ -277,9 +356,9 @@ test('an exact smaller group beats a larger sibling group without donating ident
   );
 
   assert.deepEqual(reads, [['target-readable', 'target-clean', 'sibling-1']]);
-  assert.equal(result.pick.id, 'target-readable');
+  assert.equal(result.pick.id, 'target-clean');
   assert.equal(result.matchingImages, 2);
-  assert.deepEqual(result.pick.anchorIds, ['target-readable']);
+  assert.deepEqual(result.pick.anchorIds, ['target-readable', 'target-clean']);
 });
 
 test('reserves a reader slot for a target-relevant bottle outside a tighter sibling cluster', async () => {
@@ -356,7 +435,7 @@ test('target-relevant reader priority cannot override a wrong-producer conflict'
   assert.equal(result.diagnostics.publishableAnchors, 0);
 });
 
-test('reads a second distinct batch only when the first batch has no pixel anchor', async () => {
+test('reads one targeted candidate at a time after the primary batch misses', async () => {
   const reads = [];
   const candidates = Array.from({ length: 6 }, (_, index) => candidate(`candidate-${index + 1}`, {
     cleanBackground: true,
@@ -385,10 +464,11 @@ test('reads a second distinct batch only when the first batch has no pixel ancho
   const result = await subject.select({ name: 'Target Wine' }, candidates);
   assert.equal(reads.length, 2);
   assert.equal(reads[0].length, 3);
-  assert.equal(reads[1].length, 3);
-  assert.equal(new Set(reads.flat()).size, 6);
-  assert.equal(result.pick.id, reads[1][0]);
-  assert.equal(result.diagnostics.labelImagesRead, 6);
+  assert.equal(reads[1].length, 1);
+  assert.equal(new Set(reads.flat()).size, 4);
+  assert.equal(result.pick.anchorIds.includes(reads[1][0]), true);
+  assert.equal(result.pick.inheritedFrom, reads[1][0]);
+  assert.equal(result.diagnostics.labelImagesRead, 4);
 });
 
 test('does not spend a second label batch after the first batch proves identity', async () => {

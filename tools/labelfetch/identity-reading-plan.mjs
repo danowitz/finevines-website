@@ -21,6 +21,28 @@ function sourceText(candidate) {
   return [candidate.title, candidate.url, candidate.context].filter(Boolean).join(' ');
 }
 
+const VARIETIES = [
+  'gruner veltliner', 'riesling', 'chardonnay', 'pinot noir', 'pinot grigio',
+  'pinot gris', 'malbec', 'cabernet sauvignon', 'sauvignon blanc', 'merlot',
+  'syrah', 'shiraz', 'gamay', 'nebbiolo', 'sangiovese', 'tempranillo',
+  'grenache', 'viognier', 'aligote', 'vermentino', 'gewurztraminer', 'chenin blanc',
+];
+
+export function namedVarieties(text) {
+  const normalized = ` ${normalize(text)} `;
+  return VARIETIES.filter((variety) => normalized.includes(` ${variety} `));
+}
+
+export function sourceVarietalConflict(wine, candidate) {
+  const wanted = namedVarieties([wine.name, wine.varietal].filter(Boolean).join(' '));
+  if (!wanted.length) return '';
+  const seen = namedVarieties(sourceText(candidate));
+  if (seen.length && !seen.some((variety) => wanted.includes(variety))) {
+    return `candidate source says ${seen.join('/')}; request is ${wanted.join('/')}`;
+  }
+  return '';
+}
+
 // Source evidence only ranks discovery results and reading slots. It can never
 // make pixels publishable; identity must still come from the blind reader or a
 // verified exact visual copy of reader-proven pixels.
@@ -37,6 +59,9 @@ export function sourceIdentityEvidence(wine, candidate) {
   const conflictingTitleVintage = Boolean(
     wantedVintage && titleVintages.length && !titleVintages.includes(wantedVintage),
   );
+  const sourceVintageMismatch = conflictingTitleVintage
+    ? `candidate source title says ${[...new Set(titleVintages)].join('/')}; request is ${wantedVintage}`
+    : '';
   return {
     corroboratesTitle: wanted.length >= 2 && !conflictingTitleVintage && titleMatches / wanted.length >= 0.75,
     exactVintageSignal: wanted.length >= 2 && wanted.every((token) => titleTokens.has(token)) &&
@@ -44,6 +69,9 @@ export function sourceIdentityEvidence(wine, candidate) {
       titleVintages.every((vintage) => vintage === wantedVintage),
     relevance: wanted.length ? combinedMatches / wanted.length : 0,
     requestedVintageInSource: Boolean(wantedVintage && combinedVintages.includes(wantedVintage)),
+    conflictingTitleVintage,
+    sourceVintageMismatch,
+    sourceVarietalConflict: sourceVarietalConflict(wine, candidate),
   };
 }
 
@@ -73,8 +101,8 @@ function diverseRepresentatives(group) {
 // primary slot even when ornate sibling labels form larger or tighter groups.
 // Remaining slots preserve group and host diversity; callers may spend the
 // entries after the first three only when the primary batch has no pixel anchor.
-export function planIdentityReading(wine, groups, limit = 3) {
-  const all = [...new Map(groups.flat().map((candidate) => [candidate.id, candidate])).values()];
+export function planIdentityReading(wine, groups, limit = 3, candidates = groups.flat()) {
+  const all = [...new Map(candidates.map((candidate) => [candidate.id, candidate])).values()];
   const baseline = [];
   for (const group of groups) {
     const ranked = diverseRepresentatives(group).sort((left, right) =>

@@ -12,13 +12,34 @@ test('stores a compact durable rule funnel without candidate file paths', () => 
     slug: 'wine-2022', sku: '1', name: 'Wine', ok: false,
     failureStage: 'identity-anchor', tried: [{ why: 'no anchor' }],
     funnel: { searchResults: 10, identityAnchors: 0 },
-    evidence: [{ id: 'candidate-1', explicitConflict: true, conflict: { expected: '2022', visible: '2021' }, file: 'ignored.png' }],
+    failureCode: 'VISIBLE_WRONG_VINTAGE',
+    evidence: [{
+      id: 'candidate-1', productAnchor: true, explicitConflict: true,
+      readStatus: 'ok', vintageStatus: 'wrong-visible', reasonCode: 'VISIBLE_WRONG_VINTAGE',
+      conflict: { expected: '2022', visible: '2021' }, label: 'Exact Wine 2021',
+      visibleVintage: '2021', localVisibleVintage: '', file: 'ignored.png',
+    }],
+    alternates: [{
+      image: 'https://images.example/wine.png', page: 'https://example/wine',
+      size: '400x800', why: 'visible wrong vintage', label: 'Exact Wine 2021',
+      strongestGroup: true, anchor: false, explicitConflict: true, file: 'ignored.png',
+    }],
   }, new Date('2026-08-11T00:00:00Z'));
   assert.deepEqual(store['wine-2022'], {
     slug: 'wine-2022', sku: '1', name: 'Wine', ok: false,
-    failureStage: 'identity-anchor', reason: 'no anchor',
+    failureStage: 'identity-anchor', failureCode: 'VISIBLE_WRONG_VINTAGE', reason: 'no anchor',
     funnel: { searchResults: 10, identityAnchors: 0 },
-    evidence: [{ id: 'candidate-1', anchor: false, explicitConflict: true, conflict: { expected: '2022', visible: '2021' } }],
+    evidence: [{
+      id: 'candidate-1', anchor: false, productAnchor: true, explicitConflict: true,
+      readStatus: 'ok', vintageStatus: 'wrong-visible', reasonCode: 'VISIBLE_WRONG_VINTAGE',
+      conflict: { expected: '2022', visible: '2021' }, sourceVintageMismatch: undefined,
+      label: 'Exact Wine 2021', visibleVintage: '2021', localVisibleVintage: '',
+    }],
+    candidates: [{
+      image: 'https://images.example/wine.png', page: 'https://example/wine',
+      size: '400x800', why: 'visible wrong vintage', label: 'Exact Wine 2021',
+      strongestGroup: true, anchor: false, explicitConflict: true,
+    }],
     updatedAt: '2026-08-11T00:00:00.000Z',
   });
 });
@@ -49,7 +70,17 @@ test('candidate recovery selects only repeated designs stopped at identity ancho
       slug: 'quality-retry-still-missing', ok: false, failureStage: 'identity-anchor',
       funnel: { downloaded: 7, repeatedGroups: 1, recoveryScope: 'quality' },
     },
+    readerResponse: {
+      slug: 'reader-response', ok: false, failureStage: 'reader-response',
+      funnel: { downloaded: 7, repeatedGroups: 1 },
+    },
+    wrongVisibleVintage: {
+      slug: 'wrong-visible-vintage', ok: false, failureStage: 'publication-vintage',
+      funnel: { downloaded: 7, repeatedGroups: 1 },
+    },
   };
-  assert.deepEqual([...recoverableCandidateSlugs(store)], ['recoverable']);
+  assert.deepEqual([...recoverableCandidateSlugs(store)], [
+    'recoverable', 'reader-response', 'wrong-visible-vintage',
+  ]);
   assert.deepEqual([...recoverableQualitySlugs(store)], ['bad-quality', 'quality-retry-still-missing']);
 });

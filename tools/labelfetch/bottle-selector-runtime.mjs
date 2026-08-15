@@ -4,6 +4,7 @@ import { promisify } from 'node:util';
 import { parseVisionFields } from './vision-label.mjs';
 import { vintageConflict } from './vintage.mjs';
 import { normalize, tokens } from './match.mjs';
+import { namedVarieties, sourceIdentityEvidence } from './identity-reading-plan.mjs';
 
 const run = promisify(execFile);
 
@@ -88,13 +89,24 @@ export class ReaderUnavailableError extends Error {
   }
 }
 
-function parseArray(content) {
+function parseRows(content) {
   try {
     const parsed = JSON.parse(String(content || '').replace(/^```(?:json)?|```$/gm, '').trim());
-    return Array.isArray(parsed) ? parsed : [];
+    if (Array.isArray(parsed)) return parsed;
+    return Array.isArray(parsed?.readings) ? parsed.readings : [];
   } catch {
     return [];
   }
+}
+
+function readingsByCandidate(candidates, readings) {
+  const keyed = new Map(readings
+    .filter((reading) => reading && typeof reading.candidate_id === 'string')
+    .map((reading) => [reading.candidate_id, reading]));
+  if (keyed.size) return candidates.map(({ id }) => keyed.get(id) || null);
+  // Backward-compatible only when the old positional contract is complete.
+  // A short or long anonymous array is ambiguous and must be retried by ID.
+  return readings.length === candidates.length ? readings : candidates.map(() => null);
 }
 
 function hasProductEvidence(wine, labelText) {
@@ -106,12 +118,32 @@ function hasProductEvidence(wine, labelText) {
 }
 
 const REQUIRED_TIERS = ['reserve', 'reserva', 'riserva', 'smaragd'];
-const CUE_NOISE = new Set(['ried', 'valley', 'proprietary', 'rose']);
+const CUE_NOISE = new Set([
+  'ried', 'valley', 'proprietary', 'rose', 'rouge', 'blanc', 'noir',
+  'brut', 'doc', 'docg', 'igt', 'aoc', 'wine', 'wines', 'vino', 'cider',
+  'whisky', 'whiskey', 'gin', 'vodka', 'rum',
+]);
 const CUVEE_NOISE = new Set(['dessus', 'dessous']);
 const PRODUCER_NOISE = new Set(['domaine', 'chateau', 'maison', 'weingut', 'estate', 'winery', 'vineyards']);
 const PRODUCER_BRAND_ALIASES = new Map([
   ['vine hill ranch', new Set(['baker hamilton'])],
+  ['huteau boulanger', new Set(['laetitia ducroux'])],
 ]);
+
+function bottleBrandAliases(wine) {
+  const configured = Array.isArray(wine.bottleBrands) ? wine.bottleBrands : [];
+  return new Set([
+    ...(PRODUCER_BRAND_ALIASES.get(normalize(wine.producer || '')) || []),
+    ...configured.map((brand) => normalize(brand)),
+  ]);
+}
+
+function isBottleBrandAlias(wine, producerBrand) {
+  const seen = tokens(producerBrand || '')
+    .filter((token) => token.length > 2 && !PRODUCER_NOISE.has(token))
+    .join(' ');
+  return Boolean(seen) && bottleBrandAliases(wine).has(seen);
+}
 
 function containsToken(text, wanted) {
   return normalize(text).split(' ').some((seen) =>
@@ -119,6 +151,13 @@ function containsToken(text, wanted) {
     (seen.length >= 4 && (seen.startsWith(wanted) || wanted.startsWith(seen))) ||
     (seen.length >= 5 && wanted.length >= 5 && editDistance(seen, wanted) <= 1) ||
     (seen.length >= 6 && wanted.length >= 6 && editDistance(seen, wanted) <= 2));
+}
+
+function numberedDesignations(text) {
+  const matches = String(text || '').matchAll(
+    /(?:#|n(?:o|\u00b0|\u00ba)\.?|number|num(?:e|\u00e9)ro)\s*([0-9]{1,3})\b/giu,
+  );
+  return [...new Set([...matches].map((match) => match[1]))];
 }
 
 function editDistance(left, right) {
@@ -161,17 +200,37 @@ function identityConflict(wine, candidate, identity) {
   // Pichler-Krutzler. Non-hyphenated catalog names often include a historical
   // suffix absent from the front label (Chofflet Valdenaire -> Chofflet), so
   // one distinctive matching name remains sufficient there.
-  const compoundProducer = /[-‐-―]/.test(String(wine.producer || ''));
+  const compoundProducer = /[-\u2010-\u2015]/u.test(String(wine.producer || ''));
   const producerMatches = compoundProducer
     ? expectedProducer.every(producerTokenSeen)
     : expectedProducer.some(producerTokenSeen);
-  if (expectedProducer.length && seenProducer.length && !producerMatches) {
+  if (expectedProducer.length && seenProducer.length && !producerMatches &&
+      !isBottleBrandAlias(wine, identity.producerBrand)) {
     return `candidate producer is ${identity.producerBrand}; request is ${wine.producer}`;
   }
 
   const namedCuvee = tokens(identity.productCuvee || '').filter((token) => !CUVEE_NOISE.has(token));
   if (namedCuvee.length && !namedCuvee.some((token) => containsToken(wine.name || '', token))) {
     return `candidate label names a different cuvee: ${namedCuvee.join(' ')}`;
+  }
+
+  // Salesforce occasionally distinguishes a bottling with a printed number
+  // (for example Aegerter #4). Normal token matching deliberately discards
+  // one-character numbers, so require this small but decisive facet explicitly.
+  // A readable label or an exact product title may supply it; a generic bottle
+  // from a differently named vineyard may not inherit it from visual similarity.
+  const requestedNumber = numberedDesignations(wine.name || '')[0] || '';
+  if (requestedNumber) {
+    const seenNumbers = numberedDesignations([
+      identity.text,
+      candidate.title,
+    ].filter(Boolean).join(' '));
+    if (seenNumbers.length && !seenNumbers.includes(requestedNumber)) {
+      return `candidate names numeric designation #${seenNumbers.join('/#')}; request is #${requestedNumber}`;
+    }
+    if (!seenNumbers.includes(requestedNumber)) {
+      return `candidate lacks requested numeric designation #${requestedNumber}`;
+    }
   }
 
   const producerSet = new Set(expectedProducer);
@@ -200,30 +259,6 @@ function identityConflict(wine, candidate, identity) {
   return '';
 }
 
-const VARIETIES = [
-  'gruner veltliner', 'riesling', 'chardonnay', 'pinot noir', 'pinot grigio',
-  'pinot gris', 'malbec', 'cabernet sauvignon', 'sauvignon blanc', 'merlot',
-  'syrah', 'shiraz', 'gamay', 'nebbiolo', 'sangiovese', 'tempranillo',
-  'grenache', 'viognier', 'aligote', 'vermentino', 'gewurztraminer', 'chenin blanc',
-];
-
-function namedVarieties(text) {
-  const normalized = ` ${normalize(text)} `;
-  return VARIETIES.filter((variety) => normalized.includes(` ${variety} `));
-}
-
-function sourceVintageConflict(wine, candidate) {
-  const wanted = String(wine.vintage || '').match(/\b(?:19|20)\d{2}\b/)?.[0] || '';
-  if (!wanted) return '';
-  // Product titles are explicit evidence. Do not mine arbitrary page URLs or
-  // article dates: those can describe publication time rather than vintage.
-  const visible = String(candidate.title || '').match(/\b(?:19|20)\d{2}\b/g) || [];
-  if (visible.length && !visible.includes(wanted)) {
-    return `candidate source title says ${[...new Set(visible)].join('/')}; request is ${wanted}`;
-  }
-  return '';
-}
-
 function hasProducerEvidence(wine, identity) {
   const expected = tokens(wine.producer || '').filter((token) =>
     token.length > 2 && !PRODUCER_NOISE.has(token));
@@ -234,26 +269,37 @@ function hasProducerEvidence(wine, identity) {
   const seen = tokens(identity.text);
   const tokenSeen = (wanted) => seen.some((token) =>
     token === wanted || token.startsWith(wanted) || wanted.startsWith(token));
-  const compoundProducer = /[-â€-â€•]/.test(String(wine.producer || ''));
+  const compoundProducer = /[-\u2010-\u2015]/u.test(String(wine.producer || ''));
   const direct = compoundProducer ? expected.every(tokenSeen) : expected.some(tokenSeen);
   if (direct) return true;
   // Some Salesforce producers own a differently named bottle brand. These
   // relationships are explicit: inferring them from catalog-name overlap made
   // appellations such as Chambolle-Musigny look like producer aliases.
-  const producerKey = normalize(wine.producer || '');
-  const bottleBrand = tokens(identity.producerBrand || '')
-    .filter((token) => token.length > 2 && !PRODUCER_NOISE.has(token))
-    .join(' ');
-  return PRODUCER_BRAND_ALIASES.get(producerKey)?.has(bottleBrand) === true;
+  return isBottleBrandAlias(wine, identity.producerBrand);
+}
+
+function conflictReasonCode(conflict) {
+  const text = String(conflict || '').toLowerCase();
+  if (!text) return '';
+  if (text.includes('numeric designation')) return 'NUMERIC_DESIGNATION_CONFLICT';
+  if (text.includes('producer')) return 'PRODUCER_CONFLICT';
+  if (text.includes('cuvee') || text.includes('tell this apart')) return 'SIBLING_CUVEE_CONFLICT';
+  if (text.includes('variety') || text.includes('grape') || text.includes('riesling') || text.includes('chardonnay')) {
+    return 'VARIETAL_CONFLICT';
+  }
+  if (text.includes('premier') || text.includes('tier') || text.includes('estate')) return 'TIER_CONFLICT';
+  if (text.includes('style') || text.includes('rose') || text.includes('red') || text.includes('white')) {
+    return 'STYLE_CONFLICT';
+  }
+  if (text.includes('lacks requested')) return 'PRODUCT_FACET_UNREADABLE';
+  return 'PRODUCT_IDENTITY_CONFLICT';
 }
 
 function varietalConflict(wine, candidate, identity) {
   const wanted = namedVarieties([wine.name, wine.varietal].filter(Boolean).join(' '));
   if (!wanted.length) return '';
-  const sourceSeen = namedVarieties([candidate.title, candidate.context, candidate.url].filter(Boolean).join(' '));
-  if (sourceSeen.length && !sourceSeen.some((variety) => wanted.includes(variety))) {
-    return `candidate source says ${sourceSeen.join('/')}; request is ${wanted.join('/')}`;
-  }
+  const sourceConflict = sourceIdentityEvidence(wine, candidate).sourceVarietalConflict;
+  if (sourceConflict) return sourceConflict;
   const labelSeen = namedVarieties(identity.text);
   if (labelSeen.length && !labelSeen.some((variety) => wanted.includes(variety))) {
     return `candidate label says ${labelSeen.join('/')}; request is ${wanted.join('/')}`;
@@ -298,8 +344,9 @@ export function createBoundedLabelReader({
       'Independently transcribe the product identity printed on each bottle. ' +
       'A small inset shows the complete product shot; use it to decide whether exactly one bottle is present. ' +
       'Report only words you can actually read in the image. Do not infer missing words from visual similarity or surrounding context. ' +
-      'Return only a JSON array in the same order. Each item must be ' +
-      '{"single_bottle":true|false,"producer_brand":"","product_cuvee":"","appellation":"","vintage":"","wine_style":"red|white|rose|unknown"}. ' +
+      'Each image is preceded by its candidate ID. Return exactly one item for every candidate ID. ' +
+      'Return only a JSON object with a readings array. Each item must be ' +
+      '{"candidate_id":"the supplied ID","single_bottle":true|false,"producer_brand":"","product_cuvee":"","appellation":"","vintage":"","wine_style":"red|white|rose|unknown"}. ' +
       'Include every legible cuvee designation. Use empty strings for unreadable fields.';
     const content = [{
       type: 'text',
@@ -309,6 +356,7 @@ export function createBoundedLabelReader({
       const bytes = prepareImage
         ? await prepareImage(candidate)
         : await readFileImpl(candidate.file);
+      content.push({ type: 'text', text: `Candidate ID: ${candidate.id}` });
       content.push({
         type: 'image_url',
         image_url: { url: `data:image/png;base64,${bytes.toString('base64')}`, detail: 'high' },
@@ -325,6 +373,42 @@ export function createBoundedLabelReader({
           model,
           messages: [{ role: 'user', content }],
           max_completion_tokens: reasoningEffort ? 4000 : 1200,
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'bottle_identity_readings',
+              strict: true,
+              schema: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['readings'],
+                properties: {
+                  readings: {
+                    type: 'array',
+                    minItems: bounded.length,
+                    maxItems: bounded.length,
+                    items: {
+                      type: 'object',
+                      additionalProperties: false,
+                      required: [
+                        'candidate_id', 'single_bottle', 'producer_brand', 'product_cuvee',
+                        'appellation', 'vintage', 'wine_style',
+                      ],
+                      properties: {
+                        candidate_id: { type: 'string' },
+                        single_bottle: { type: 'boolean' },
+                        producer_brand: { type: 'string' },
+                        product_cuvee: { type: 'string' },
+                        appellation: { type: 'string' },
+                        vintage: { type: 'string' },
+                        wine_style: { type: 'string', enum: ['red', 'white', 'rose', 'unknown'] },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
           ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
         }),
       });
@@ -336,13 +420,22 @@ export function createBoundedLabelReader({
     let payload;
     try { payload = await response.json(); } catch { throw new ReaderUnavailableError('unreadable response body'); }
     const responseText = String(payload.choices?.[0]?.message?.content || '');
-    const readings = parseArray(responseText);
+    const readings = parseRows(responseText);
+    const mappedReadings = readingsByCandidate(bounded, readings);
+    const responseCardinalityValid = mappedReadings.every(Boolean);
     const evidence = [];
     for (let index = 0; index < bounded.length; index++) {
       const candidate = bounded[index];
-      const identity = parseVisionFields(JSON.stringify(readings[index] || {}));
+      const identity = parseVisionFields(JSON.stringify(mappedReadings[index] || {}));
       if (!identity) {
-        evidence.push({ id: candidate.id, anchor: false, explicitConflict: false });
+        evidence.push({
+          id: candidate.id,
+          anchor: false,
+          productAnchor: false,
+          explicitConflict: false,
+          readStatus: 'invalid',
+          reasonCode: 'READER_RESPONSE_INVALID',
+        });
         continue;
       }
       const verifierWine = {
@@ -353,27 +446,48 @@ export function createBoundedLabelReader({
       const localVintage = String(verdict.localLabel || '').match(/\b(?:19|20)\d{2}\b/)?.[0] || '';
       const siblingConflict = String(verdict.conflict || '').startsWith('label does not tell this apart');
       const identityProblem = identityConflict(verifierWine, candidate, identity);
-      const conflict = vintageConflict(wine.vintage, identity.vintage) ||
-        vintageConflict(wine.vintage, localVintage) ||
-        sourceVintageConflict(wine, candidate) ||
-        varietalConflict(wine, candidate, identity) ||
+      const visibleVintageConflict = vintageConflict(wine.vintage, identity.vintage) ||
+        vintageConflict(wine.vintage, localVintage);
+      const sourceVintageMismatch = sourceIdentityEvidence(wine, candidate).sourceVintageMismatch;
+      const incompleteIdentity = /lacks requested|lacks requested estate/i.test(identityProblem);
+      const hardIdentityProblem = incompleteIdentity ? '' : identityProblem;
+      const productConflict = varietalConflict(wine, candidate, identity) ||
         styleConflict(wine, candidate, identity) ||
-        identityProblem ||
-        (siblingConflict ? verdict.conflict : '');
+        hardIdentityProblem ||
+        (siblingConflict ? verdict.conflict : '') ||
+        (identity.identityMatch === false ? 'reader identified a different product' : '');
       const producerProven = hasProducerEvidence(wine, identity);
       const confirmed = producerProven && (verdict.accept === true ||
         (!identityProblem && hasProductEvidence(verifierWine, identity.text)));
+      const productAnchor = confirmed && !productConflict && !incompleteIdentity;
+      const vintageStatus = visibleVintageConflict
+        ? 'wrong-visible'
+        : identity.vintage || localVintage ? 'exact' : 'neutral';
+      const conflict = productConflict || visibleVintageConflict;
+      const reasonCode = visibleVintageConflict
+        ? 'VISIBLE_WRONG_VINTAGE'
+        : conflictReasonCode(productConflict) ||
+          (incompleteIdentity && /numeric designation/i.test(identityProblem)
+            ? 'NUMERIC_DESIGNATION_UNREADABLE'
+            : incompleteIdentity ? 'PRODUCT_FACET_UNREADABLE' : '') ||
+          (!producerProven ? 'BOTTLE_BRAND_ALIAS_UNKNOWN' : '') ||
+          (!confirmed ? 'PRODUCT_TEXT_UNREADABLE' : '');
       evidence.push({
         id: candidate.id,
-        anchor: confirmed && !conflict,
+        anchor: productAnchor && !visibleVintageConflict,
+        productAnchor,
+        vintageStatus,
+        readStatus: 'ok',
         // A verifier failure means only "not proven." It is not evidence that
         // a different wine is printed on the bottle. Explicit contradiction
         // comes from a readable wrong identity or wrong vintage.
-        explicitConflict: Boolean(conflict || identity.identityMatch === false),
+        explicitConflict: Boolean(conflict),
         label: identity.text,
         visibleVintage: identity.vintage,
         localVisibleVintage: localVintage,
         identityMatch: identity.identityMatch,
+        sourceVintageMismatch: sourceVintageMismatch || undefined,
+        reasonCode: reasonCode || undefined,
         conflict: conflict || undefined,
       });
     }
@@ -387,6 +501,7 @@ export function createBoundedLabelReader({
       prompt,
       response: responseText,
       parsed: readings,
+      responseCardinalityValid,
       responseId: String(payload.id || ''),
       usage: payload.usage || null,
     };

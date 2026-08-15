@@ -298,7 +298,7 @@ const manifest = (await exists(MANIFEST)) ? JSON.parse(await readFile(MANIFEST, 
 
 console.log(`${SEARCH_PROVIDER} image discovery: ready`);
 if (SEARCH_PROVIDER === 'google') console.log(`google image search profile: ${SEARCH_PROFILE_NAME}`);
-console.log(`identity reader: ${visionKey ? `${MODEL}${LABEL_REASONING_EFFORT ? ` (${LABEL_REASONING_EFFORT} effort)` : ''}, three images plus one miss-only batch of three` : 'unavailable - grouped wines will stay due'}`);
+console.log(`identity reader: ${visionKey ? `${MODEL}${LABEL_REASONING_EFFORT ? ` (${LABEL_REASONING_EFFORT} effort)` : ''}, three-image primary batch plus targeted miss-only reads (ten-image ceiling)` : 'unavailable - grouped wines will stay due'}`);
 console.log(`label reverse-search expansion: ${googleVisionKey ? 'Google Cloud Vision Web Detection ready (whole bottle + label crop)' : 'disabled - FINEVINES_GOOGLE_VISION_KEY is missing'}`);
 console.log(`processing up to ${WINE_CONCURRENCY} wines concurrently`);
 
@@ -518,8 +518,11 @@ async function processWine(wine) {
   if (result.reviewCandidates?.length) rec.alternates = result.reviewCandidates;
   if (!result.pick) {
     if (result.evidence?.length) rec.evidence = result.evidence;
+    rec.failureCode = result.failureCode || '';
     const stage = rec.funnel.decodedImages < 2 ? 'decode'
       : rec.funnel.repeatedGroups === 0 ? 'visual-consensus'
+      : result.failureCode === 'READER_RESPONSE_INVALID' ? 'reader-response'
+      : result.failureCode === 'NO_EXACT_OR_VINTAGE_NEUTRAL_COPY' ? 'publication-vintage'
       : rec.funnel.identityAnchors === 0 ? 'identity-anchor'
       : rec.funnel.publishableAnchors === 0 ? 'publication-quality'
       : 'selector';
