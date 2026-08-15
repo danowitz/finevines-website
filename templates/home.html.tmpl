@@ -120,7 +120,7 @@
 
   {{/* The Book: the house judged by its portfolio — a roll of the catalog's
        deepest holdings (or site.json's bookProducers, the client's own
-       shortlist), each name deep-linking to its filtered portfolio view.
+       shortlist), each name deep-linking to its permanent producer page.
        Replaced the Featured Producers cards AND the Featured Regions links
        (2026-07-29): one band, one question ("who are your relationships?"),
        answered once. */}}
@@ -135,6 +135,50 @@
       <a class="text-link book-link" href="/portfolio/">Browse the full portfolio &rarr;</a>
     </div>
   </section>{{end}}
+
+  {{/* Permanent, crawlable catalog routes. These are deliberately prominent
+       on the homepage as well as present in the global footer: a sitemap can
+       advertise a URL, but these links tell people and search engines how the
+       catalog is organized. Individual collection pages provide the deeper
+       producer <-> region <-> varietal cross-link graph. */}}
+  <section class="wrap home-browse" aria-labelledby="home-browse-title">
+    <div class="home-section-heading">
+      <div>
+        <span class="eyebrow">Explore the Portfolio</span>
+        <h2 id="home-browse-title">Find a bottle from any angle.</h2>
+      </div>
+      <a class="text-link" href="/portfolio/">Search and filter &rarr;</a>
+    </div>
+    <div class="home-browse-grid">
+      <article class="home-browse-card">
+        <span class="home-browse-label">The Estates</span>
+        <h3><a href="/producers/">Producers</a></h3>
+        <p>Meet the growers, domaines, and houses represented in the FineVines book.</p>
+        {{with .BrowseProducers}}<ul class="home-browse-links" aria-label="Prominent producers">
+          {{range .}}<li><a href="{{.URL}}">{{.Name}}</a></li>{{end}}
+        </ul>{{end}}
+        <a class="text-link" href="/producers/">Browse all producers &rarr;</a>
+      </article>
+      <article class="home-browse-card">
+        <span class="home-browse-label">The Places</span>
+        <h3><a href="/regions/">Regions</a></h3>
+        <p>Travel the portfolio by the vineyards and winegrowing regions behind each bottle.</p>
+        {{with .BrowseRegions}}<ul class="home-browse-links" aria-label="Prominent regions">
+          {{range .}}<li><a href="{{.URL}}">{{.Name}}</a></li>{{end}}
+        </ul>{{end}}
+        <a class="text-link" href="/regions/">Browse all regions &rarr;</a>
+      </article>
+      <article class="home-browse-card">
+        <span class="home-browse-label">The Grapes</span>
+        <h3><a href="/varietals/">Varietals</a></h3>
+        <p>Explore current selections through the grape varieties that give them their voice.</p>
+        {{with .BrowseVarietals}}<ul class="home-browse-links" aria-label="Prominent varietals">
+          {{range .}}<li><a href="{{.URL}}">{{.Name}}</a></li>{{end}}
+        </ul>{{end}}
+        <a class="text-link" href="/varietals/">Browse all varietals &rarr;</a>
+      </article>
+    </div>
+  </section>
 
   <section class="wrap">
     <span class="eyebrow">News &amp; Events</span>

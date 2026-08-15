@@ -12,7 +12,6 @@ import (
 	"html/template"
 	"io/fs"
 	"log"
-	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -190,6 +189,12 @@ type homePage struct {
 	page
 	LatestNews    []model.NewsPost
 	FeaturedWines []model.Wine
+	// Browse* are the most substantial standing collections in each catalog
+	// dimension. They give important individual landing pages direct homepage
+	// links instead of making every collection equally distant behind an index.
+	BrowseProducers []collectionLink
+	BrowseRegions   []collectionLink
+	BrowseVarietals []collectionLink
 	// Book is "The Book" band: the house judged by its portfolio (see
 	// bookProducers). No Producers ⇒ no band.
 	Book bookBand
@@ -203,9 +208,9 @@ type homePage struct {
 	HotSellers []model.Wine
 }
 
-// bookProducer is one name in the Book band's roll, linking to its filtered
-// portfolio view. It deliberately uses catalog facts only; the site does not
-// invent producer biographies before FineVines supplies them.
+// bookProducer is one name in the Book band's roll, linking to its standing,
+// indexable producer collection. It deliberately uses catalog facts only; the
+// site does not invent producer biographies before FineVines supplies them.
 type bookProducer struct {
 	Name string
 	URL  string
@@ -797,6 +802,11 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	// row; the ranking file's extra entries are sold-out slack (see
 	// selectHotSellers).
 	hotSellers := selectHotSellers(s.Wines, s.HotSellerSlugs, 3, 4)
+	// Compute the catalog cuts before the homepage so its browse section can
+	// link directly to the most substantial published collections. The same
+	// values are rendered below; no homepage URL is derived independently.
+	cards := portfolioCards(s.Wines)
+	collections := collectionsByKind(cards)
 
 	pages := []struct {
 		rel, tmpl string
@@ -813,9 +823,18 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 			},
 			LatestNews:    latestNews,
 			FeaturedWines: featuredWines,
-			Book:          bookBandOf(s.Wines, s.Content.BookProducers),
-			HotSellers:    hotSellers,
-			Ledger:        ledgerStats(s.Wines, s.AccountsServed),
+			BrowseProducers: prominentCollectionLinks(
+				collectionKindByKey("producer"), collections["producer"], 3,
+			),
+			BrowseRegions: prominentCollectionLinks(
+				collectionKindByKey("region"), collections["region"], 3,
+			),
+			BrowseVarietals: prominentCollectionLinks(
+				collectionKindByKey("varietal"), collections["varietal"], 3,
+			),
+			Book:       bookBandOf(s.Wines, s.Content.BookProducers),
+			HotSellers: hotSellers,
+			Ledger:     ledgerStats(s.Wines, s.AccountsServed),
 		}},
 		{"contact", "contact", page{
 			site:  s,
@@ -884,7 +903,6 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	// contributes every /portfolio/ + /portfolio/page/N/ path to the sitemap.
 	// Both browse surfaces render from the same grouped card list: one card
 	// per wine (vintages collapsed), while the detail pages below stay per-row.
-	cards := portfolioCards(s.Wines)
 	indexURL, err := writeCatalogIndex(distDir, cards)
 	if err != nil {
 		return err
@@ -899,7 +917,6 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	// cards the portfolio shows. They render after the portfolio because they
 	// are the same catalog cut a different way — and before the detail pages,
 	// which link up into them.
-	collections := collectionsByKind(cards)
 	collectionPaths, err := renderCollections(tmpl, distDir, s, collections)
 	if err != nil {
 		return err
@@ -2106,31 +2123,55 @@ func bookProducers(wines []model.Wine, picks []string, limit int) []bookProducer
 	if limit <= 0 {
 		return nil
 	}
-	counts := make(map[string]int)
-	canonical := make(map[string]string) // lower-cased -> as written in the catalog
+	type producerCount struct {
+		total     int
+		spellings map[string]int
+	}
+	bySlug := make(map[string]*producerCount)
 	for _, w := range wines {
 		p := strings.TrimSpace(w.Producer)
 		if p == "" {
 			continue
 		}
-		counts[p]++
-		canonical[strings.ToLower(p)] = p
+		slug := model.Slugify(p)
+		if slug == "" {
+			continue
+		}
+		entry := bySlug[slug]
+		if entry == nil {
+			entry = &producerCount{spellings: make(map[string]int)}
+			bySlug[slug] = entry
+		}
+		entry.total++
+		entry.spellings[p]++
 	}
 
-	link := func(name string) bookProducer {
-		return bookProducer{Name: name, URL: "/portfolio/?producer=" + url.QueryEscape(name)}
+	canonical := make(map[string]string, len(bySlug))
+	for slug, entry := range bySlug {
+		best, bestN := "", -1
+		for spelling, n := range entry.spellings {
+			if n > bestN || (n == bestN && spelling < best) {
+				best, bestN = spelling, n
+			}
+		}
+		canonical[slug] = best
+	}
+
+	producerKind := collectionKindByKey("producer")
+	link := func(slug string) bookProducer {
+		return bookProducer{Name: canonical[slug], URL: collectionURL(producerKind, slug, 1)}
 	}
 
 	if len(picks) > 0 {
 		out := make([]bookProducer, 0, limit)
 		seen := make(map[string]bool, limit)
 		for _, pick := range picks {
-			name, ok := canonical[strings.ToLower(strings.TrimSpace(pick))]
-			if !ok || seen[name] {
+			slug := model.Slugify(strings.TrimSpace(pick))
+			if _, ok := canonical[slug]; !ok || seen[slug] {
 				continue
 			}
-			seen[name] = true
-			out = append(out, link(name))
+			seen[slug] = true
+			out = append(out, link(slug))
 			if len(out) == limit {
 				break
 			}
@@ -2138,22 +2179,22 @@ func bookProducers(wines []model.Wine, picks []string, limit int) []bookProducer
 		return out
 	}
 
-	names := make([]string, 0, len(counts))
-	for name := range counts {
-		names = append(names, name)
+	slugs := make([]string, 0, len(bySlug))
+	for slug := range bySlug {
+		slugs = append(slugs, slug)
 	}
-	sort.Slice(names, func(i, j int) bool {
-		if counts[names[i]] != counts[names[j]] {
-			return counts[names[i]] > counts[names[j]]
+	sort.Slice(slugs, func(i, j int) bool {
+		if bySlug[slugs[i]].total != bySlug[slugs[j]].total {
+			return bySlug[slugs[i]].total > bySlug[slugs[j]].total
 		}
-		return names[i] < names[j]
+		return canonical[slugs[i]] < canonical[slugs[j]]
 	})
-	if len(names) > limit {
-		names = names[:limit]
+	if len(slugs) > limit {
+		slugs = slugs[:limit]
 	}
-	out := make([]bookProducer, 0, len(names))
-	for _, name := range names {
-		out = append(out, link(name))
+	out := make([]bookProducer, 0, len(slugs))
+	for _, slug := range slugs {
+		out = append(out, link(slug))
 	}
 	return out
 }

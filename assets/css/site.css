@@ -361,8 +361,8 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 
 /* ---- The Book (home) --------------------------------------------------- */
 /* Dark bordeaux band: the house judged by its portfolio. The roll sets the
-   producer names as an italic wine-list colophon; each links to its filtered
-   portfolio view. Replaced the region row + producer cards (2026-07-29). */
+   producer names as an italic wine-list colophon; each links to its permanent
+   producer collection. Replaced the region row + producer cards (2026-07-29). */
 .home-book {
   background: var(--hero-band);
   color: var(--parchment-100);
@@ -390,6 +390,58 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 .home-book .book-roll .sep { color: var(--gold-dark); padding: 0 10px; font-style: normal; }
 .home-book .book-link { color: var(--brass-300); border-bottom-color: var(--brass-600); }
 .home-book .book-link:hover { color: #fff; border-bottom-color: var(--gold); }
+
+/* ---- Browse the portfolio (home) --------------------------------------- */
+.home-browse-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.home-browse-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 230px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--parchment-50);
+  color: var(--ink-strong);
+  transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.home-browse-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(63, 31, 26, .08);
+}
+.home-browse-label {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+}
+.home-browse-card h3 { margin: 9px 0 10px; font-size: 28px; }
+.home-browse-card h3 a { color: inherit; text-decoration: none; }
+.home-browse-card h3 a:hover { color: var(--wine); }
+.home-browse-card p { margin: 0 0 24px; color: var(--ink-soft); }
+.home-browse-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  margin: 0 0 22px;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+.home-browse-links a { color: var(--wine); font-size: 14px; }
+.home-browse-card a:focus-visible { outline: 2px solid var(--wine); outline-offset: 3px; }
+.home-browse-card .text-link { margin-top: auto; align-self: flex-start; }
+
+@media (max-width: 800px) {
+  .home-browse-grid { grid-template-columns: 1fr; }
+  .home-browse-card { min-height: 0; }
+}
 
 /* ---- Testimonial (contact) --------------------------------------------- */
 .testimonial { margin: 34px 0 8px; }

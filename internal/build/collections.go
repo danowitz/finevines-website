@@ -158,6 +158,35 @@ type collectionLink struct {
 	Count int
 }
 
+// prominentCollectionLinks selects the largest standing collections for
+// contextual links on high-authority pages such as the homepage. Size is the
+// honest signal of prominence; alphabetical ties keep output deterministic.
+func prominentCollectionLinks(kind collectionKind, values []collection, limit int) []collectionLink {
+	if limit <= 0 || len(values) == 0 {
+		return nil
+	}
+	ranked := append([]collection(nil), values...)
+	sort.Slice(ranked, func(i, j int) bool {
+		if len(ranked[i].Cards) != len(ranked[j].Cards) {
+			return len(ranked[i].Cards) > len(ranked[j].Cards)
+		}
+		if ranked[i].Name != ranked[j].Name {
+			return ranked[i].Name < ranked[j].Name
+		}
+		return ranked[i].Slug < ranked[j].Slug
+	})
+	if len(ranked) > limit {
+		ranked = ranked[:limit]
+	}
+	links := make([]collectionLink, 0, len(ranked))
+	for _, value := range ranked {
+		links = append(links, collectionLink{
+			Name: value.Name, URL: collectionURL(kind, value.Slug, 1), Count: len(value.Cards),
+		})
+	}
+	return links
+}
+
 // collectionRelated is one group of cross-links on a value's page — "Regions",
 // "Varietals" — naming the other cuts its wines belong to.
 type collectionRelated struct {

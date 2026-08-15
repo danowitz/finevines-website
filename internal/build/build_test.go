@@ -35,13 +35,13 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 		`src="/assets/opt/finevines-sommeliers-working-table-hero.jpg"`,
 		`alt="Sommeliers at work over a tasting table"`,
 		`The Heart of What We Do`,
-		// The Book band (replaced Featured Producers + Featured Regions
-		// 2026-07-29): the roll deep-links each producer to its filtered
-		// portfolio view.
+		// The Book band gives its featured producers direct links to their
+		// standing, indexable collection pages.
 		`The portfolio is the r&eacute;sum&eacute;.`,
 		`class="book-roll"`,
 		`href="/wines/hubert-lamy-saint-aubin-1er-cru-derriere-chez-edouard-2021/"`,
-		`href="/portfolio/?producer=Hubert&#43;Lamy"`,
+		`href="/producers/hubert-lamy/"`,
+		`class="wrap home-browse"`,
 		`rel="canonical" href="https://finevines.com/"`,
 		`href="/assets/css/site.`,
 		`href="/assets/img/favicon.ico"`,                            // favicon wired in base head
@@ -69,6 +69,29 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 	} {
 		if !strings.Contains(string(home), want) {
 			t.Errorf("home missing %q", want)
+		}
+	}
+	// Scope these assertions to the browse section. The directory URLs also
+	// appear in the global footer, which must not let broken homepage cards pass.
+	browseStart := bytes.Index(home, []byte(`<section class="wrap home-browse"`))
+	if browseStart < 0 {
+		t.Fatal("home missing browse section")
+	}
+	browseEnd := bytes.Index(home[browseStart:], []byte(`</section>`))
+	if browseEnd < 0 {
+		t.Fatal("home browse section is not closed")
+	}
+	browse := home[browseStart : browseStart+browseEnd]
+	for _, want := range []string{
+		`href="/producers/"`,
+		`href="/regions/"`,
+		`href="/varietals/"`,
+		`href="/producers/hubert-lamy/"`,
+		`href="/regions/burgundy/"`,
+		`href="/varietals/chardonnay/"`,
+	} {
+		if !bytes.Contains(browse, []byte(want)) {
+			t.Errorf("home browse section missing %q", want)
 		}
 	}
 
@@ -1482,13 +1505,21 @@ func TestBookProducers(t *testing.T) {
 	if len(roll) != 2 || roll[0].Name != "Alpha" || roll[1].Name != "Cellar C" {
 		t.Fatalf("default roll = %+v, want Alpha (2 wines) then Cellar C (tie, name asc), capped at 2", roll)
 	}
-	if roll[0].URL != "/portfolio/?producer=Alpha" || roll[1].URL != "/portfolio/?producer=Cellar+C" {
-		t.Errorf("roll URLs = %q, %q — want query-encoded portfolio filters", roll[0].URL, roll[1].URL)
+	if roll[0].URL != "/producers/alpha/" || roll[1].URL != "/producers/cellar-c/" {
+		t.Errorf("roll URLs = %q, %q; want indexable producer collections", roll[0].URL, roll[1].URL)
 	}
 
 	picks := bookProducers(wines, []string{"domaine d", "Nonexistent", "ALPHA", "alpha"}, 7)
 	if len(picks) != 2 || picks[0].Name != "Domaine D" || picks[1].Name != "Alpha" {
 		t.Errorf("picked roll = %+v, want [Domaine D, Alpha] (case-insensitive, unknowns skipped, deduped)", picks)
+	}
+
+	variants := bookProducers([]model.Wine{
+		{Slug: "l1", Producer: "Lignier Michelot"},
+		{Slug: "l2", Producer: "Lignier-Michelot"},
+	}, []string{"Lignier Michelot", "Lignier-Michelot"}, 7)
+	if len(variants) != 1 || variants[0].Name != "Lignier Michelot" || variants[0].URL != "/producers/lignier-michelot/" {
+		t.Errorf("variant roll = %+v, want one canonical producer collection", variants)
 	}
 }
 
