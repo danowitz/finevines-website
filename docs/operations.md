@@ -41,9 +41,9 @@ values below.
 - `FINEVINES_SF_CLIENT_SECRET` — the Connected App's Consumer Secret.
 - `FINEVINES_SF_API_VERSION` — optional; leave blank and the tool picks a sensible default.
 
-**OpenAI** — needed for `enrich` (researches each wine and writes its tasting notes), for `applyqueue` (rewrites
-a wine's notes when a reviewer sends a correction), and for the image stage (reads bottle labels and sweeps for
-watermarks). One key covers all three:
+**OpenAI** — needed for `enrich` (researches each wine and writes its tasting notes) and for the image stage
+(reads bottle labels and sweeps for watermarks). The hosted image-review click path is local and deterministic;
+it makes no AI call:
 - `OPENAI_API_KEY` — an API key from OpenAI's platform console. GRIT can help set up the account.
 - `FINEVINES_GOOGLE_VISION_KEY` — optional Google Cloud key restricted to the Cloud Vision API. The adapter remains available for bounded experiments, but scheduled workflows do not inject this key because the 2026-08-14 frozen comparison produced zero incremental recoveries from 46 requests.
 - `FINEVINES_SERPER_KEY` — Serper Google Images API key. The comparison workflow combines its browser-like Google results with Brave before local consensus; keep it in GitHub Actions secrets, never `.env` in source control.
@@ -260,6 +260,56 @@ middleware serves. No operator action is ever required.
 
 ## Runbook: the GitHub Actions pipeline
 
+### Hosted image review: automatic path
+
+There is no decision-file download. After signing in, the reviewer selects a
+candidate and the protected Edge Script writes one immutable action to Bunny.
+It immediately dispatches GitHub Actions; if dispatch is unavailable, the
+nightly pipeline sees the same pending action. Production builds, deploys,
+commits, refreshes the queue, and writes the receipt. The page polls that receipt
+and does not say "deployed" early. Test performs the same validation and build
+but writes an honest `validated` receipt without changing a live site.
+
+Create two Bunny **Standalone** Edge Scripts and attach the custom hosts:
+`review.finevines.biz` for test and `review.finevines.com` for production. Each
+script has its own values below; do not reuse passwords, signing secrets, or
+cookie names between environments.
+
+| Bunny Edge value | Test | Production |
+|---|---|---|
+| `REVIEW_ENVIRONMENT` | `test` | `production` |
+| `REVIEW_ORIGIN` | `https://review.finevines.biz` | `https://review.finevines.com` |
+| `REVIEW_COOKIE_NAME` | `fv_review_test` | `fv_review_production` |
+| `GITHUB_REPOSITORY` | `danowitz/finevines-website` | same |
+| `BUNNY_STORAGE_ENDPOINT` | dedicated review zone's regional endpoint | same |
+| `BUNNY_STORAGE_ZONE` | dedicated private review zone | same |
+
+Store these as Bunny **environment secrets**, not ordinary source variables:
+`REVIEW_PASSWORD` (12+ characters), `REVIEW_SESSION_SECRET` (32+ random
+characters), `BUNNY_STORAGE_KEY`, and `GITHUB_DISPATCH_TOKEN`. The GitHub token
+must be fine-grained, limited to this repository, with only **Contents: write**
+because that is the permission GitHub requires for repository dispatch.
+
+The review storage zone must be separate from the website storage zone and must
+have **no Pull Zone or public hostname attached**. Add
+`FINEVINES_REVIEW_STORAGE_ZONE`, `FINEVINES_REVIEW_STORAGE_KEY`, and
+`FINEVINES_REVIEW_STORAGE_ENDPOINT` as GitHub repository secrets for the two
+action processors. The Edge Script gets the same values under the shorter
+`BUNNY_STORAGE_*` names above.
+
+In GitHub, create environments `review-test` and `review-production`. Add the
+matching `FINEVINES_REVIEW_*_SCRIPT_ID` and
+`FINEVINES_REVIEW_*_DEPLOY_KEY` secrets. Run `review-console.yml` for `test`,
+complete the live security/action checks in the design spec, then run it for
+`production`. Finally set repository variable
+`FINEVINES_REVIEW_AUTO_DEPLOY=true`; later console-code pushes will deploy the
+test script automatically, while production remains an explicit protected
+environment promotion.
+
+Neither host belongs in a sitemap or public navigation. Keep the universal
+`X-Robots-Tag` and `Cache-Control: no-store` checks in the activation canary;
+the password, not the unlinked hostname, is the access control.
+
 ### Where to look
 - **Actions tab → `pipeline`** for runs. `gh run list --workflow=pipeline.yml`
   from a terminal; `gh run view <id> --log` for the full log.
@@ -275,21 +325,17 @@ gh run watch
 
 ### When a step fails
 The site is never left half-published, and the repo never records work that did
-not happen. One thing is NOT true, and it matters: a reviewer's correction can be
-applied to the catalog in step 1 and then lost, because the catalog and the
-ledger only reach the repo at the bot commit in step 6. If enrich, the image
-stage, build or deploy fails in between, the run dies with those changes in a
-discarded workspace. That is why every batch is archived before it is applied —
-see "Recovering a lost review batch" below.
+not happen. Hosted-review actions are immutable files, not a shared queue. A
+pending pointer remains in Bunny until a durable receipt proves that the exact
+catalog commit reached the site, so an interrupted run needs no manual recovery.
 
 Step by step:
-- **applyqueue failed** — the queue is not cleared and nothing was committed. The
-  next run re-reads the same actions; `data/queue-ledger.json` stops anything
-  that did apply from applying twice. Safe to just re-run.
-- **applyqueue succeeded but a LATER step failed** — the queue was cleared, and
-  the corrections it applied were never committed. They are not lost: the batch
-  was archived first. Re-run the pipeline and, if the reviewer's fix is still
-  missing from the site afterwards, restore it from the archive (below).
+- **reviewapply failed** — no receipt is written and the immutable action stays
+  pending. The next immediate or nightly run retries it.
+- **a later build/deploy/commit step failed** — the pending action still exists.
+  If the catalog commit landed but receipt publication did not, the catalog's
+  `imageReviewActionId` proves which action already landed and the retry finishes
+  the receipt without replacing the image again.
 - **enrich failed** — `data/wines.json` holds whatever the last checkpoint saved
   (every 50 wines). Wines that succeeded now hash-match and are skipped on the
   retry, so nothing is re-billed.
@@ -320,24 +366,12 @@ Step by step:
   refused. A STARTTLS complaint means the port is wrong — 587 and 465 negotiate
   TLS differently, and the send refuses to fall back to cleartext.
 
-### Recovering a lost review batch
-Before `applyqueue` applies anything, it copies the whole batch to the Bunny
-storage zone as `_review/queue-applied-<run id>.json` — the same format as
-`_review/queue.json`, so recovery is a copy rather than a repair. The run log
-names the file:
-
-```
-applyqueue: archived 3 queued action(s) to _review/queue-applied-1234567890.json before applying them (recover a lost batch by copying that file back to _review/queue.json)
-```
-
-Find that line with `gh run view <id> --log | grep archived`. To replay the
-batch, download the archive from the storage zone (Bunny dashboard → the storage
-zone → `_review/`, or the Storage API) and upload it back as
-`_review/queue.json`, then trigger a run. Re-applying is safe: the ledger skips
-every action that already landed, so only the lost ones are done again.
-
-The archives are never deleted, and `_review/` is not served by the public pull
-zone — nothing there is reachable from finevines.com.
+### Review action recovery
+Normally there is nothing to do. Check `_review/<environment>/pending/` and the
+matching workflow run. A pending file with no receipt is safe to retry by
+running `pipeline.yml`; never edit or move the action JSON. A receipt under
+`_review/<environment>/receipts/<action-id>.json` is final evidence and the
+processor will clean up a stale pending pointer automatically.
 
 ### After a bot commit lands, never use "Re-run failed jobs"
 `notify` is the last step in the pipeline, so the failure that sends an operator
@@ -369,27 +403,17 @@ are never printed in logs; a step that needs one and does not have it fails with
 Disable the workflow: `gh workflow disable pipeline.yml`. The nightly schedule
 and every trigger stop; `deploy.bat` remains available on the workstation.
 
-### Launch steps still open (repo-admin + live credentials required)
-These have not been done yet — they need someone with repository admin rights
-and the real production credentials, not just a code change:
-1. **Configure the 19 GitHub Actions repository secrets** (Settings → Secrets
-   and variables → Actions). See the table in the README's
-   [pipeline section](../README.md#6-the-automated-pipeline-github-actions) for
-   the exact names and what each one is; verify each against
-   `.github/workflows/pipeline.yml`'s `env:` block before setting it — a typo
-   here is a silent empty value at 2:15am.
-2. **Set Settings → Actions → General → Workflow permissions to Read and
-   write**, so the bot commit-back can push to `master`.
-3. **Run the first manual `workflow_dispatch`** (`gh workflow run pipeline.yml`)
-   as the acceptance run, and read its log end to end (`gh run watch`, then
-   `gh run view <id> --log`) before trusting the nightly schedule to run
-   unattended.
-4. **Point `FINEVINES_NOTIFY_FROM` at a mailbox someone actually reads.** The
+### Hosted-review activation steps still open
+The ordinary catalog pipeline credentials already exist. The hosted console
+still needs the dedicated review storage zone, the two Edge Scripts/domains,
+their environment secrets, the three `FINEVINES_REVIEW_STORAGE_*` repository
+secrets, and the two GitHub deployment environments described above. Activate
+test first and complete the design contract's live canary before enabling
+production or `FINEVINES_REVIEW_AUTO_DEPLOY`.
+
+Also **point `FINEVINES_NOTIFY_FROM` at a mailbox someone actually reads.** The
    digest tells George that if a photograph shows the wrong bottle he should
-   reply and it will be replaced — and a reply goes to this address. Until the
-   review console ships, that reply is his only channel for a correction, so an
-   unread sender address means corrections are silently discarded. An address
+   reply and it will be replaced, and a reply goes to this address. An address
    the relay is authorised to send for, on a monitored mailbox, satisfies both
    requirements at once; if the sending address has to stay unmonitored, add a
-   `Reply-To` header pointing at a mailbox that is watched (a small change in
-   `internal/notify/smtp.go`).
+   `Reply-To` header pointing at a mailbox that is watched.

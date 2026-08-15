@@ -80,6 +80,7 @@ const scripts = {
   'watermark-sweep': ['tools/labelfetch/watermarksweep.mjs'],
   import: ['tools/labelfetch/import.mjs'],
   review: ['tools/labelfetch/review.mjs'],
+  'review-package': ['tools/labelfetch/review-package-cli.mjs'],
   'canary-report': ['tools/labelfetch/canary-report.mjs'],
 };
 

@@ -139,24 +139,27 @@ for (const rec of staged) {
     const matchingWines = winesForSlug(wines, rec.slug);
     for (const matchingWine of matchingWines) {
       matchingWine.imagePath = dest.replace(/\\/g, '/');
-    // 'scraped-web' is the canonical model.ImageScrapedWeb value. It must be
-    // one the Go side classifies as a REAL image (model.ImageFieldSource ->
-    // found): enrich preserves real images across re-enrichment, and anything
-    // unrecognized would count as derived — scored wrong AND regenerated on
-    // the next enrich run.
+      // 'scraped-web' is the canonical model.ImageScrapedWeb value. It must be
+      // one the Go side classifies as a REAL image (model.ImageFieldSource ->
+      // found): enrich preserves real images across re-enrichment, and anything
+      // unrecognized would count as derived — scored wrong AND regenerated on
+      // the next enrich run.
       matchingWine.imageSource = 'scraped-web';
-    // Provenance is kept per wine, not just in the run manifest: months from
-    // now the question "where did this picture come from" has to be answerable
-    // from the catalog itself.
+      matchingWine.imageReviewStatus = '';
+      matchingWine.imageReviewedAt = '';
+      matchingWine.imageReviewActionId = '';
+      // Provenance is kept per wine, not just in the run manifest: months from
+      // now the question "where did this picture come from" has to be answerable
+      // from the catalog itself.
       matchingWine.imageSourceUrl = rec.page || rec.image || '';
       if (matchingWine.sources) {
         matchingWine.sources.image = 'found';
-      // Mirror model.MetadataScore over model.ScoredFields: share of fields
-      // whose value is real (salesforce/found) rather than inferred/absent.
-      const scored = [
-        'description', 'sommelierNotes', 'aroma', 'palate', 'finish', 'foodPairings',
-        'appellation', 'country', 'color', 'abv', 'bottleSize', 'drinkWindow', 'image',
-      ];
+        // Mirror model.MetadataScore over model.ScoredFields: share of fields
+        // whose value is real (salesforce/found) rather than inferred/absent.
+        const scored = [
+          'description', 'sommelierNotes', 'aroma', 'palate', 'finish', 'foodPairings',
+          'appellation', 'country', 'color', 'abv', 'bottleSize', 'drinkWindow', 'image',
+        ];
         const real = scored.filter((f) => matchingWine.sources[f] === 'salesforce' || matchingWine.sources[f] === 'found').length;
         matchingWine.metadataScore = Math.round((100 * real) / scored.length);
       }

@@ -90,6 +90,7 @@ export async function runAutonomousImageWorkflow(config, adapters) {
   await stage('watermark-gate', () => runStage('watermark-sweep', ['--apply']));
   await stage('import', () => runStage('import', ['--apply', '--clean-only']));
   await stage('build-exception-review', () => runStage('review', []));
+  await stage('build-hosted-review-package', () => runStage('review-package', []));
 
   report.outcome = 'completed';
   report.completedAt = now();

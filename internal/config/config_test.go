@@ -43,6 +43,20 @@ func TestEnvVarOverridesEnvFile(t *testing.T) {
 	}
 }
 
+func TestLoadKeepsProtectedReviewStorageSeparateFromPublicSiteStorage(t *testing.T) {
+	clearEnv(t, "FINEVINES_BUNNY_STORAGE_ZONE", "FINEVINES_REVIEW_STORAGE_ZONE", "FINEVINES_REVIEW_STORAGE_KEY")
+	dir := t.TempDir()
+	envPath := filepath.Join(dir, ".env")
+	os.WriteFile(envPath, []byte("FINEVINES_BUNNY_STORAGE_ZONE=public-site\nFINEVINES_REVIEW_STORAGE_ZONE=private-review\nFINEVINES_REVIEW_STORAGE_KEY=private-key\n"), 0o644)
+	cfg, err := Load(envPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.BunnyStorageZone != "public-site" || cfg.ReviewStorageZone != "private-review" || cfg.ReviewStorageKey != "private-key" {
+		t.Fatalf("storage config mixed public and protected zones: %#v", cfg)
+	}
+}
+
 // OldSiteURL exists so a staged test (new site on a test domain, old site
 // still live on the real one) can crawl the old site while SiteBaseURL
 // points at the staging host. In production the two are the same domain,

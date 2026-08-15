@@ -41,6 +41,7 @@ test('owns the complete safe production order behind one interface', async () =>
     ['watermark-sweep', ['--apply']],
     ['import', ['--apply', '--clean-only']],
     ['review', []],
+    ['review-package', []],
   ]);
   assert.equal(result.outcome, 'completed');
   assert.equal(h.reports.at(-1).outcome, 'completed');
@@ -98,6 +99,7 @@ test('production recovery retries recorded misses and keeps every import gate', 
     ['watermark-sweep', ['--apply']],
     ['import', ['--apply', '--clean-only']],
     ['review', []],
+    ['review-package', []],
   ]);
 });
 
@@ -114,7 +116,7 @@ test('candidate recovery is a scoped retry that keeps every import gate', async 
     '--candidate-recovery', '--label-model', 'gpt-4.1-mini',
   ]]);
   assert.deepEqual(h.calls.slice(2).map(([name]) => name), [
-    'auto-approve', 'watermark-sweep', 'import', 'review',
+    'auto-approve', 'watermark-sweep', 'import', 'review', 'review-package',
   ]);
 });
 
@@ -131,7 +133,7 @@ test('quality recovery retries only the prior publication-quality scope', async 
     '--quality-recovery', '--label-model', 'gpt-4.1-mini',
   ]]);
   assert.deepEqual(h.calls.slice(2).map(([name]) => name), [
-    'auto-approve', 'watermark-sweep', 'import', 'review',
+    'auto-approve', 'watermark-sweep', 'import', 'review', 'review-package',
   ]);
 });
 

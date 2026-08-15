@@ -186,10 +186,10 @@ Runs queue rather than overlap.
 
 Each run, in this order:
 
-1. **`finevines applyqueue`** drains `_review/queue.json` from the Bunny storage
-   zone: image swaps, text corrections, and flags submitted by reviewers. Every
-   applied action ID is recorded in `data/queue-ledger.json`, so a crashed or
-   re-fired run never applies the same correction twice.
+1. **`finevines reviewapply`** reads immutable pending image decisions from the
+   protected Bunny storage prefix. It accepts a click only when its package,
+   wine revision, candidate membership, byte count, and SHA-256 all match. The
+   pending pointer remains until the post-deploy receipt exists.
 2. **`finevines enrich`** pulls the live Salesforce roster. Unchanged wines are
    skipped by their `sourceHash`, so nothing is re-sent to OpenAI.
 3. **`tools/labelfetch/cistage.sh`** sources bottle photographs for wines that
@@ -226,7 +226,14 @@ Each run, in this order:
    `assets/img/wines/`, and `.bunny-manifest.json` to `master` with the message
    `pipeline: nightly run [skip ci]`. The repo remains the source of truth and
    every automated change is auditable in git history.
-7. **`finevines notify`** emails a digest through the client's SMTP relay — but
+7. **The rolling review package is published** to protected Bunny storage. On a
+   reviewer-triggered run, still-current unresolved wines are carried forward
+   and the wine just handled disappears from the console.
+8. **`finevines reviewfinalize`** writes a durable receipt naming the deployed
+   catalog commit and workflow run, then removes the action's pending pointer.
+   If any earlier step fails, no success receipt is written and the next run
+   retries automatically.
+9. **`finevines notify`** emails a digest through the client's SMTP relay — but
    only if the run changed something. It lists new wines, delistings, rewritten
    notes, newly imported photographs (with thumbnails and their source URLs),
    corrections applied, and the portfolio's coverage figures, each linking to
@@ -257,6 +264,9 @@ Actions). The repo is public, so the pipeline workflow deliberately has no
 | `FINEVINES_BUNNY_STORAGE_ZONE` | Storage zone name |
 | `FINEVINES_BUNNY_STORAGE_KEY` | Storage zone password |
 | `FINEVINES_BUNNY_STORAGE_ENDPOINT` | Regional storage host |
+| `FINEVINES_REVIEW_STORAGE_ZONE` | Dedicated private review zone (no Pull Zone) |
+| `FINEVINES_REVIEW_STORAGE_KEY` | Dedicated review-zone password |
+| `FINEVINES_REVIEW_STORAGE_ENDPOINT` | Dedicated review-zone regional host |
 | `FINEVINES_BUNNY_API_KEY` | Account API key (purge, Edge Scripting) |
 | `FINEVINES_BUNNY_PULL_ZONE_ID` | Both pull zone IDs, comma-separated |
 | `FINEVINES_BUNNY_SCRIPT_ID` | Redirect middleware's Edge Script ID |
@@ -268,11 +278,13 @@ Actions). The repo is public, so the pipeline workflow deliberately has no
 | `FINEVINES_SMTP_PASS` | Relay SMTP AUTH password |
 | `FINEVINES_NOTIFY_TO` | Comma-separated digest recipients |
 | `FINEVINES_NOTIFY_FROM` | Address the digest is sent from (relay-authorised, monitored) |
-| `FINEVINES_REVIEW_HMAC_SECRET` | Magic-link signing key (used by the review console) |
+| `FINEVINES_REVIEW_TEST_SCRIPT_ID` / `FINEVINES_REVIEW_TEST_DEPLOY_KEY` | Bunny test console deployment credentials (GitHub environment `review-test`) |
+| `FINEVINES_REVIEW_PRODUCTION_SCRIPT_ID` / `FINEVINES_REVIEW_PRODUCTION_DEPLOY_KEY` | Bunny production console deployment credentials (GitHub environment `review-production`) |
 
-Secrets used by the nightly workflow are read through `pipeline.yml`'s `env:`
-block. `FINEVINES_REVIEW_HMAC_SECRET` is not read by that workflow; it is
-reserved for the separate review console.
+The Edge Scripts themselves have separate Bunny environment secrets for the
+review password, session signing key, storage key, and narrowly scoped GitHub
+dispatch token. They are never placed in source or sent to the browser. See
+`docs/operations.md` for the exact production and test activation checklist.
 
 Also required once: **Settings → Actions → General → Workflow permissions** set
 to **Read and write**, so the bot commit can push.

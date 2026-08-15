@@ -2,7 +2,7 @@
   "name": "finevines-website-tests",
   "version": "0.0.0",
   "private": true,
-  "description": "Dev-only test harness for the FineVines static site. Nothing here ships: the site is Go-built static HTML plus hand-written IIFE scripts served directly, with no bundler and no runtime dependencies. This package exists solely so the browser-side logic can be tested.",
+  "description": "Build and test tooling for the Go-built static site and the protected Bunny Edge review console. The public site has no JavaScript runtime dependencies.",
   "type": "module",
   "scripts": {
     "pretest": "node tools/test-preflight.mjs --e2e",
@@ -10,9 +10,11 @@
     "test:unit": "node --test tests/unit/",
     "pretest:e2e": "node tools/test-preflight.mjs --e2e",
     "test:e2e": "node --test tests/e2e/",
-    "build": "go run ./cmd/finevines build"
+    "build": "go run ./cmd/finevines build",
+    "build:review-console": "esbuild edge/review-console/index.mjs --bundle --format=esm --platform=neutral --target=es2022 --external:@bunny.net/edgescript-sdk --external:node:process --outfile=.run/review-console.mjs"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "puppeteer-core": "^24.10.0"
   }
 }

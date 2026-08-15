@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/gritautomation/finevines-website/internal/model"
-	"github.com/gritautomation/finevines-website/internal/queue"
 )
 
 // WineRef is one wine as the digest names it: enough to recognise, plus the two
@@ -55,7 +54,7 @@ type RunDiff struct {
 	Delisted      []WineRef
 	TextRefreshed []WineRef
 	NewImages     []WineRef
-	QueueActions  []queue.Applied
+	QueueActions  []AppliedAction
 	Coverage      Coverage
 }
 
@@ -74,7 +73,7 @@ func (d RunDiff) Changed() bool {
 // Keyed by ID (the Salesforce record ID), not slug: a slug changes when a wine
 // is renamed or re-vintaged, and a slug-keyed diff would report one rename as a
 // delisting plus a brand-new wine.
-func Diff(before, after []model.Wine, applied []queue.Applied, siteBaseURL string) RunDiff {
+func Diff(before, after []model.Wine, applied []AppliedAction, siteBaseURL string) RunDiff {
 	root := strings.TrimRight(siteBaseURL, "/")
 
 	beforeByID := make(map[string]model.Wine, len(before))

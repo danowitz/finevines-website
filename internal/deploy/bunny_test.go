@@ -225,9 +225,8 @@ func TestBunnyClient_DefaultPurgeBaseURLIsBunnyAPI(t *testing.T) {
 	}
 }
 
-// Download is the read side of the same storage zone Upload writes to. It
-// exists for internal/queue, which fetches _review/queue.json and the
-// candidate images the console's reviewers picked.
+// Download is the read side of the same storage zone Upload writes to. The
+// hosted review processor uses it for immutable actions and package objects.
 func TestBunnyClient_DownloadReturnsBodyAndSendsAccessKey(t *testing.T) {
 	var gotPath, gotKey string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -237,23 +236,22 @@ func TestBunnyClient_DownloadReturnsBodyAndSendsAccessKey(t *testing.T) {
 	defer srv.Close()
 
 	c := NewBunnyClient(srv.URL, "finevines", "storage-key", "acct-key", "1", srv.Client())
-	got, err := c.Download(context.Background(), "_review/queue.json")
+	got, err := c.Download(context.Background(), "_review/production/actions/action.json")
 	if err != nil {
 		t.Fatalf("Download returned error: %v", err)
 	}
 	if string(got) != `[{"id":"a1"}]` {
 		t.Errorf("Download body = %q", got)
 	}
-	if gotPath != "/finevines/_review/queue.json" {
-		t.Errorf("Download path = %q, want /finevines/_review/queue.json", gotPath)
+	if gotPath != "/finevines/_review/production/actions/action.json" {
+		t.Errorf("Download path = %q, want protected action path", gotPath)
 	}
 	if gotKey != "storage-key" {
 		t.Errorf("Download AccessKey = %q, want the storage key", gotKey)
 	}
 }
 
-// A 404 is "the console has never written a queue", which is the state of the
-// zone until the first reviewer clicks something. Empty bytes, no error.
+// A 404 is an ordinary absent protected object. Return empty bytes, no error.
 func TestBunnyClient_DownloadMissingIsEmptyNotAnError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
@@ -261,11 +259,33 @@ func TestBunnyClient_DownloadMissingIsEmptyNotAnError(t *testing.T) {
 	defer srv.Close()
 
 	c := NewBunnyClient(srv.URL, "finevines", "k", "a", "1", srv.Client())
-	got, err := c.Download(context.Background(), "_review/queue.json")
+	got, err := c.Download(context.Background(), "_review/production/actions/action.json")
 	if err != nil {
 		t.Fatalf("Download returned error: %v", err)
 	}
 	if len(got) != 0 {
 		t.Errorf("Download of a missing file = %q, want empty", got)
+	}
+}
+
+func TestBunnyClient_ListReturnsOnlyDirectFiles(t *testing.T) {
+	var gotPath, gotKey string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath, gotKey = r.URL.Path, r.Header.Get("AccessKey")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`[{"ObjectName":"one.json","IsDirectory":false},{"ObjectName":"nested","IsDirectory":true},{"ObjectName":"two.json","IsDirectory":false}]`))
+	}))
+	defer srv.Close()
+
+	c := NewBunnyClient(srv.URL, "finevines", "storage-key", "acct-key", "1", srv.Client())
+	got, err := c.List(context.Background(), "_review/production/pending")
+	if err != nil {
+		t.Fatalf("List returned error: %v", err)
+	}
+	if gotPath != "/finevines/_review/production/pending/" || gotKey != "storage-key" {
+		t.Fatalf("List request = %s key %q", gotPath, gotKey)
+	}
+	if len(got) != 2 || got[0] != "one.json" || got[1] != "two.json" {
+		t.Fatalf("List = %#v", got)
 	}
 }

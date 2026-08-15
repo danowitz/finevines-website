@@ -3,11 +3,19 @@ package deploy
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 )
+
+// StorageObject is the small, stable subset of Bunny's directory-listing
+// response used by the protected review-action processor.
+type StorageObject struct {
+	ObjectName  string `json:"ObjectName"`
+	IsDirectory bool   `json:"IsDirectory"`
+}
 
 // defaultPurgeBaseURL is Bunny.net's account-level API host. Purge always
 // targets this host (it is not regional like the storage endpoint), but the
@@ -123,9 +131,9 @@ func (c *BunnyClient) Delete(ctx context.Context, relPath string) error {
 }
 
 // Download GETs relPath from the storage zone. It is the read side of the same
-// zone Upload writes to, and exists for internal/queue: the review console's
-// change queue (_review/queue.json) and the candidate images its reviewers pick
-// live in the storage zone, on a path the public pull zone does not serve.
+// zone Upload writes to. The protected review-action processor uses it for
+// immutable actions, package manifests, candidate images, and receipts under
+// _review/, a path the public pull zone does not serve.
 //
 // A 404 returns empty bytes and no error, mirroring Delete's treatment of the
 // same status: "the console has never written a queue" is the state of the zone
@@ -155,6 +163,40 @@ func (c *BunnyClient) Download(ctx context.Context, relPath string) ([]byte, err
 		return nil, fmt.Errorf("bunny download %s: reading body: %w", relPath, err)
 	}
 	return data, nil
+}
+
+// List returns the direct file names under a storage-zone prefix. Directory
+// paths end in a slash in Bunny's API; callers provide the logical prefix and
+// never need to know that transport detail.
+func (c *BunnyClient) List(ctx context.Context, relPath string) ([]string, error) {
+	relPath = strings.Trim(relPath, "/") + "/"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.storageURL(relPath), nil)
+	if err != nil {
+		return nil, fmt.Errorf("bunny list %s: building request: %w", relPath, err)
+	}
+	req.Header.Set("AccessKey", c.StorageKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("bunny list %s: %w", relPath, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("bunny list %s: status %d: %s", relPath, resp.StatusCode, readBody(resp))
+	}
+	var objects []StorageObject
+	if err := json.NewDecoder(resp.Body).Decode(&objects); err != nil {
+		return nil, fmt.Errorf("bunny list %s: decode response: %w", relPath, err)
+	}
+	files := make([]string, 0, len(objects))
+	for _, object := range objects {
+		if !object.IsDirectory && strings.TrimSpace(object.ObjectName) != "" {
+			files = append(files, object.ObjectName)
+		}
+	}
+	return files, nil
 }
 
 // Purge clears every configured Pull Zone's CDN cache (PullZoneID may be

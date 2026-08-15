@@ -163,6 +163,14 @@ type Wine struct {
 	ImagePath      string `json:"imagePath"`
 	ImageSource    string `json:"imageSource"`
 	ImageSourceURL string `json:"imageSourceUrl,omitempty"`
+	// ImageReviewStatus records an explicit human decision when none of the
+	// available candidates match. It prevents the rolling review package from
+	// presenting the same rejected set again. ImageReviewActionID is the durable
+	// idempotency key: if deployment succeeds but receipt publication fails, the
+	// next run can prove that the same action already reached the catalog.
+	ImageReviewStatus   string `json:"imageReviewStatus,omitempty"`
+	ImageReviewedAt     string `json:"imageReviewedAt,omitempty"`
+	ImageReviewActionID string `json:"imageReviewActionId,omitempty"`
 
 	// Enrichment provenance & scoring. Sources maps each ScoredFields key to
 	// where its value came from; MetadataScore is derived from it. MatchConfidence
