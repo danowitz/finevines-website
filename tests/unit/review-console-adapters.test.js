@@ -25,4 +25,9 @@ describe('review console adapters', () => {
     assert.equal(seen.url, 'https://api.github.com/repos/owner/repo/dispatches');
     assert.deepEqual(JSON.parse(seen.init.body), { event_type: 'review-console', client_payload: { actionId: 'action-id', environment: 'test' } });
   });
+
+  it('keeps nightly processing available when no scoped dispatch token is configured', async () => {
+    const dispatch = createGitHubDispatch({ token: '', repository: 'owner/repo' });
+    await assert.rejects(() => dispatch('action-id', 'test'), /not configured/);
+  });
 });

@@ -284,11 +284,14 @@ cookie names between environments.
 | `BUNNY_STORAGE_ENDPOINT` | dedicated review zone's regional endpoint | same |
 | `BUNNY_STORAGE_ZONE` | dedicated private review zone | same |
 
-Store these as Bunny **environment secrets**, not ordinary source variables:
-`REVIEW_PASSWORD` (12+ characters), `REVIEW_SESSION_SECRET` (32+ random
-characters), `BUNNY_STORAGE_KEY`, and `GITHUB_DISPATCH_TOKEN`. The GitHub token
-must be fine-grained, limited to this repository, with only **Contents: write**
-because that is the permission GitHub requires for repository dispatch.
+Store `REVIEW_PASSWORD` (12+ characters), `REVIEW_SESSION_SECRET` (32+ random
+characters), and `BUNNY_STORAGE_KEY` as Bunny **environment secrets**, not
+ordinary source variables. `GITHUB_DISPATCH_TOKEN` is optional: when present,
+it starts processing immediately; when absent, the immutable pending action is
+picked up automatically by the nightly pipeline. Never substitute a broad
+operator or desktop token. If configured, the token must be fine-grained,
+limited to this repository, with only **Contents: write** because that is the
+permission GitHub requires for repository dispatch.
 
 The review storage zone must be separate from the website storage zone and must
 have **no Pull Zone or public hostname attached**. Add

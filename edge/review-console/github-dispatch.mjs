@@ -1,5 +1,10 @@
 export function createGitHubDispatch({ token, repository, fetchImpl = fetch }) {
-  if (!token || !/^[^/]+\/[^/]+$/.test(repository || '')) throw new Error('GitHub dispatch configuration is incomplete');
+  if (!/^[^/]+\/[^/]+$/.test(repository || '')) throw new Error('GitHub dispatch repository is invalid');
+  // A repository-scoped token enables immediate processing, but it is not an
+  // availability dependency. Without one the immutable pending action remains
+  // in private storage and the scheduled pipeline processes it automatically.
+  // Never substitute an operator's broad desktop token here.
+  if (!token) return async () => { throw new Error('GitHub dispatch is not configured'); };
   return async (actionId, environment) => {
     const response = await fetchImpl(`https://api.github.com/repos/${repository}/dispatches`, {
       method: 'POST',
