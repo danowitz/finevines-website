@@ -300,6 +300,12 @@ have **no Pull Zone or public hostname attached**. Add
 action processors. The Edge Script gets the same values under the shorter
 `BUNNY_STORAGE_*` names above.
 
+The reconciler also configures both console Pull Zones as dynamic applications:
+cookies are preserved, Bunny respects the script's `Cache-Control: no-store`,
+Smart Cache excludes the HTML/JSON routes, and request coalescing, stale serving,
+and error caching remain disabled. These are authentication requirements, not
+performance preferences.
+
 In GitHub, create environments `review-test` and `review-production`. Store
 distinct review passwords and session secrets in the repository secrets named
 `FINEVINES_REVIEW_{TEST,PRODUCTION}_{PASSWORD,SESSION_SECRET}`. Run the

@@ -108,6 +108,19 @@ async function upsertSecrets(script, values) {
 
 async function ensureHostname(pullZoneId, host) {
   const pullZone = await bunny(`/pullzone/${pullZoneId}`);
+  const dynamicSettings = {
+    DisableCookies: false,
+    CacheControlMaxAgeOverride: -1,
+    CacheControlPublicMaxAgeOverride: -1,
+    EnableSmartCache: true,
+    EnableRequestCoalescing: false,
+    CacheErrorResponses: false,
+    UseStaleWhileUpdating: false,
+    UseStaleWhileOffline: false,
+  };
+  if (Object.entries(dynamicSettings).some(([name, value]) => pullZone[name] !== value)) {
+    await bunny(`/pullzone/${pullZoneId}`, { method: 'POST', body: dynamicSettings });
+  }
   if ((pullZone.Hostnames ?? []).some((item) => item.Value === host)) return;
   await bunny(`/pullzone/${pullZoneId}/addHostname`, { method: 'POST', body: { Hostname: host } });
 }

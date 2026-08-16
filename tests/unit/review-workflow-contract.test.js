@@ -38,5 +38,9 @@ describe('hosted review workflow contract', () => {
     const provisioner = await readFile('tools/review-console/provision.mjs', 'utf8');
     assert.match(provisioner, /bunny\('\/compute\/script'\)\)\.Items/);
     assert.match(provisioner, /bunny\('\/dnszone'\)\)\.Items/);
+    assert.match(provisioner, /DisableCookies: false/);
+    assert.match(provisioner, /CacheControlMaxAgeOverride: -1/);
+    assert.match(provisioner, /CacheControlPublicMaxAgeOverride: -1/);
+    assert.match(provisioner, /EnableRequestCoalescing: false/);
   });
 });
