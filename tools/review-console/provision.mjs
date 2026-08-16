@@ -59,7 +59,7 @@ function one(items, predicate, description) {
 }
 
 async function ensureScript(config) {
-  const scripts = await bunny('/compute/script');
+  const scripts = (await bunny('/compute/script')).Items ?? [];
   let matches = scripts.filter((script) => script.Name === config.scriptName && !script.Deleted);
   if (matches.length > 1) throw new Error(`duplicate Edge Scripts named ${config.scriptName}`);
   if (!matches.length) {
@@ -73,7 +73,7 @@ async function ensureScript(config) {
         LinkedPullZoneName: config.scriptName,
       },
     });
-    const refreshed = await bunny('/compute/script');
+    const refreshed = (await bunny('/compute/script')).Items ?? [];
     matches = refreshed.filter((script) => script.Name === config.scriptName && !script.Deleted);
   }
   const summary = one(matches, () => true, `Edge Script named ${config.scriptName}`);
