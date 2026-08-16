@@ -33,6 +33,27 @@ async function login(handle) {
 }
 
 describe('review console handler', () => {
+  it('serves a polished login document, stylesheet, and favicon before authentication', async () => {
+    const { handle } = fixture();
+    const page = await handle(new Request('https://review.finevines.biz/'));
+    const markup = await page.text();
+    assert.equal(page.status, 200);
+    assert.match(markup, /<link rel="stylesheet" href="\/app\.css">/);
+    assert.match(markup, /<link rel="icon" href="\/favicon\.ico"/);
+    assert.match(markup, /class="login-shell"/);
+    assert.match(markup, /Fine Vines image review/);
+
+    const stylesheet = await handle(new Request('https://review.finevines.biz/app.css'));
+    assert.equal(stylesheet.status, 200);
+    assert.match(stylesheet.headers.get('content-type'), /^text\/css/);
+    assert.match(await stylesheet.text(), /\.login-shell/);
+
+    const favicon = await handle(new Request('https://review.finevines.biz/favicon.ico'));
+    assert.equal(favicon.status, 200);
+    assert.equal(favicon.headers.get('content-type'), 'image/x-icon');
+    assert.ok((await favicon.arrayBuffer()).byteLength > 0);
+  });
+
   it('hides protected routes and candidate data before login', async () => {
     const { handle } = fixture();
     const res = await handle(new Request('https://review.finevines.biz/api/current'));

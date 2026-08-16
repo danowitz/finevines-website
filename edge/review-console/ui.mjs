@@ -4,6 +4,20 @@ export const APP_CSS = `
 body { margin: 0; }
 button, input { font: inherit; }
 button { cursor: pointer; }
+.login-page { min-height: 100vh; display: grid; place-items: center; padding: 28px 18px; background: radial-gradient(circle at 50% 0%, #fff 0, #f7f3eb 42%, #eee6da 100%); }
+.login-shell { width: min(440px, 100%); }
+.login-brand { margin-bottom: 20px; text-align: center; }
+.login-mark { display: inline-grid; place-items: center; width: 54px; height: 54px; margin-bottom: 14px; border: 1px solid #bca993; border-radius: 50%; background: #fffaf2; color: #7d263b; font: 700 20px/1 Georgia, serif; box-shadow: 0 8px 24px #3c24151a; }
+.login-brand h1 { margin: 0; font: 700 clamp(32px, 8vw, 44px)/1.02 Georgia, serif; letter-spacing: -.02em; }
+.login-brand p { margin: 10px auto 0; max-width: 34ch; color: #6e5b50; line-height: 1.5; }
+.login-card { padding: 28px; border: 1px solid #d9cfc4; border-radius: 16px; background: #fff; box-shadow: 0 18px 50px #3c24151f; }
+.login-card label { display: block; margin-bottom: 9px; color: #4c3c34; font-size: 14px; font-weight: 750; }
+.login-card input { width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid #bfae9f; border-radius: 9px; background: #fff; color: #251c18; outline: none; }
+.login-card input:focus { border-color: #7d263b; box-shadow: 0 0 0 3px #7d263b1f; }
+.login-submit { width: 100%; min-height: 48px; margin-top: 14px; border: 0; border-radius: 9px; background: #7d263b; color: #fff; font-weight: 800; box-shadow: 0 8px 18px #7d263b33; }
+.login-submit:hover { background: #681f31; }
+.login-message { margin: 0 0 16px; padding: 11px 13px; border-left: 4px solid #a12222; border-radius: 7px; background: #fff1f0; color: #8a1d1d; font-size: 14px; line-height: 1.4; }
+.login-note { margin: 18px 0 0; color: #78665a; font-size: 12px; line-height: 1.45; text-align: center; }
 .shell { width: min(1500px, 100%); margin: 0 auto; padding: 24px; }
 .mast { display: flex; gap: 24px; align-items: end; justify-content: space-between; margin-bottom: 20px; }
 .mast h1 { margin: 0; font: 700 clamp(28px, 4vw, 52px)/1.02 Georgia, serif; }
@@ -43,6 +57,9 @@ button { cursor: pointer; }
 .source { color: #f1d8a8; overflow-wrap: anywhere; }
 @media (max-width: 700px) { .shell { padding: 14px; } .mast { align-items: start; flex-direction: column; } .candidate { grid-template-rows: 210px auto; } .candidate img { height: 210px; } }
 `;
+
+const FAVICON_BASE64 = 'AAABAAEAEBAAAAEAGABoAwAAFgAAACgAAAAQAAAAIAAAAAEAGAAAAAAAAAAAABMLAAATCwAAAAAAAAAAAAD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Apdj9/P3///////////////////////////////////+n3NSx4Nn///////////+ui838+/3////////////////////////////////0+/p6yr96yr/5/fz///////+zktD///////////////////////////////////+q3dbE5+O85N+w4Nn///////+jfMfDqdrHr93Hr93Hr93Hr93Eqtvz7ff////7/f16yr/////+//54yb79/v7///+ngMnQvOLVwuXVwuXVwuXVwuXSvuP28fn///+14tus3tf///////+q3da24tz///+zktD///////////////////////////////91yLz7/v3////////6/f11yLz///+rh8v07/j39Pr39Pr39Pr39Pr38/r6+vy44tyo3NX///////////////+p3da34ty3mNOvjM6zktCzktCzktCzktCwjc7Q0+Ws3tfy+fj////////////////1+vmt39j///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAFDoAACGDQAABwMAAAAAAAAIfwAAAIAAACBIAAAeRQAAk5EAAOO+AACUDgAAAAAAAAh/AAAAgAAAAHAAAKEO';
+export const FAVICON = Uint8Array.from(atob(FAVICON_BASE64), (character) => character.charCodeAt(0));
 
 export const APP_JS = `
 const state = { package: null, selected: new Map(), modal: null };
@@ -182,10 +199,20 @@ document.addEventListener('keydown', (event) => { if (event.key === 'Escape') cl
 start();
 `;
 
-export function consolePage() {
+const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+
+function documentPage(body, { script = false, bodyClass = '' } = {}) {
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow,noarchive,noimageindex"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fine Vines image review</title><link rel="stylesheet" href="/app.css"></head>
-<body><main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><input id="reviewer" autocomplete="name" placeholder="Your name" aria-label="Your name"><input id="search" type="search" placeholder="Find a wine" aria-label="Find a wine"></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
-<div id="modal" class="modal" hidden><div class="modal-head"><strong id="modal-title"></strong><button class="modal-close" type="button" data-close>Close</button></div><div class="modal-stage"><img id="modal-image" alt=""></div><div class="modal-foot"><a id="modal-source" class="source" target="_blank" rel="noopener noreferrer"></a><button id="modal-select" class="primary" type="button">Select this image</button></div></div>
-<script src="/app.js" defer></script></body></html>`;
+<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow,noarchive,noimageindex"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fine Vines image review</title><link rel="icon" href="/favicon.ico" sizes="any"><link rel="stylesheet" href="/app.css"></head>
+<body${bodyClass ? ` class="${bodyClass}"` : ''}>${body}${script ? '<script src="/app.js" defer></script>' : ''}</body></html>`;
+}
+
+export function loginPage(message = '') {
+  const feedback = message ? `<p class="login-message" role="alert">${escapeHtml(message)}</p>` : '';
+  return documentPage(`<main class="login-shell"><header class="login-brand"><div class="login-mark" aria-hidden="true">FV</div><h1>Fine Vines</h1><p>Sign in to review and approve bottle images for the catalog.</p></header><section class="login-card">${feedback}<form method="post" action="/login"><label for="password">Review password</label><input id="password" name="password" type="password" required autocomplete="current-password" autofocus placeholder="Enter your password"><button class="login-submit" type="submit">Sign in</button></form><p class="login-note">Private review workspace · Authorized users only</p></section></main>`, { bodyClass: 'login-page' });
+}
+
+export function consolePage() {
+  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><input id="reviewer" autocomplete="name" placeholder="Your name" aria-label="Your name"><input id="search" type="search" placeholder="Find a wine" aria-label="Find a wine"></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
+<div id="modal" class="modal" hidden><div class="modal-head"><strong id="modal-title"></strong><button class="modal-close" type="button" data-close>Close</button></div><div class="modal-stage"><img id="modal-image" alt=""></div><div class="modal-foot"><a id="modal-source" class="source" target="_blank" rel="noopener noreferrer"></a><button id="modal-select" class="primary" type="button">Select this image</button></div></div>`, { script: true });
 }
