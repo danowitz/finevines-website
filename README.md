@@ -278,8 +278,8 @@ Actions). The repo is public, so the pipeline workflow deliberately has no
 | `FINEVINES_SMTP_PASS` | Relay SMTP AUTH password |
 | `FINEVINES_NOTIFY_TO` | Comma-separated digest recipients |
 | `FINEVINES_NOTIFY_FROM` | Address the digest is sent from (relay-authorised, monitored) |
-| `FINEVINES_REVIEW_TEST_SCRIPT_ID` / `FINEVINES_REVIEW_TEST_DEPLOY_KEY` | Bunny test console deployment credentials (GitHub environment `review-test`) |
-| `FINEVINES_REVIEW_PRODUCTION_SCRIPT_ID` / `FINEVINES_REVIEW_PRODUCTION_DEPLOY_KEY` | Bunny production console deployment credentials (GitHub environment `review-production`) |
+| `FINEVINES_REVIEW_TEST_PASSWORD` / `FINEVINES_REVIEW_TEST_SESSION_SECRET` | Test console login and cookie-signing secrets |
+| `FINEVINES_REVIEW_PRODUCTION_PASSWORD` / `FINEVINES_REVIEW_PRODUCTION_SESSION_SECRET` | Production console login and cookie-signing secrets |
 
 The Edge Scripts themselves have separate Bunny environment secrets for the
 review password, session signing key, storage key, and narrowly scoped GitHub

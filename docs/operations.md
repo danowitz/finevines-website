@@ -300,9 +300,14 @@ have **no Pull Zone or public hostname attached**. Add
 action processors. The Edge Script gets the same values under the shorter
 `BUNNY_STORAGE_*` names above.
 
-In GitHub, create environments `review-test` and `review-production`. Add the
-matching `FINEVINES_REVIEW_*_SCRIPT_ID` and
-`FINEVINES_REVIEW_*_DEPLOY_KEY` secrets. Run `review-console.yml` for `test`,
+In GitHub, create environments `review-test` and `review-production`. Store
+distinct review passwords and session secrets in the repository secrets named
+`FINEVINES_REVIEW_{TEST,PRODUCTION}_{PASSWORD,SESSION_SECRET}`. Run the
+idempotent `review-console-provision.yml` once to reconcile the two scripts,
+their private configuration, Pull Zones, DNS, and certificates. Deployments
+resolve the script by its unique fixed name and use the existing Bunny account
+API key, so a copied operator token or manually synchronized script ID is not
+part of the path. Run `review-console.yml` for `test`,
 complete the live security/action checks in the design spec, then run it for
 `production`. Finally set repository variable
 `FINEVINES_REVIEW_AUTO_DEPLOY=true`; later console-code pushes will deploy the

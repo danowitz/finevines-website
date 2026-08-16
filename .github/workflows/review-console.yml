@@ -51,6 +51,16 @@ jobs:
     runs-on: ubuntu-latest
     environment: review-test
     steps:
+      - name: Resolve the test Edge Script
+        id: script
+        env:
+          BUNNY_API_KEY: ${{ secrets.FINEVINES_BUNNY_API_KEY }}
+        run: |
+          script_id="$(curl --fail-with-body --silent --show-error \
+            -H "AccessKey: $BUNNY_API_KEY" \
+            https://api.bunny.net/compute/script \
+            | jq -er '[.[] | select(.Name == "finevines-review-test" and .Deleted != true)] | if length == 1 then .[0].Id else error("expected exactly one test Edge Script") end')"
+          echo "id=$script_id" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@v4
         with:
           name: review-console-${{ github.sha }}
@@ -58,8 +68,8 @@ jobs:
       # Pinned from BunnyWay/actions main on 2026-08-15.
       - uses: BunnyWay/actions/deploy-script@0cae4ba05838d2707b3d5ed779f15c6bc2b43267
         with:
-          script_id: ${{ secrets.FINEVINES_REVIEW_TEST_SCRIPT_ID }}
-          deploy_key: ${{ secrets.FINEVINES_REVIEW_TEST_DEPLOY_KEY }}
+          script_id: ${{ steps.script.outputs.id }}
+          api_key: ${{ secrets.FINEVINES_BUNNY_API_KEY }}
           file: .run/review-console.mjs
 
   deploy-production:
@@ -68,12 +78,22 @@ jobs:
     runs-on: ubuntu-latest
     environment: review-production
     steps:
+      - name: Resolve the production Edge Script
+        id: script
+        env:
+          BUNNY_API_KEY: ${{ secrets.FINEVINES_BUNNY_API_KEY }}
+        run: |
+          script_id="$(curl --fail-with-body --silent --show-error \
+            -H "AccessKey: $BUNNY_API_KEY" \
+            https://api.bunny.net/compute/script \
+            | jq -er '[.[] | select(.Name == "finevines-review-production" and .Deleted != true)] | if length == 1 then .[0].Id else error("expected exactly one production Edge Script") end')"
+          echo "id=$script_id" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@v4
         with:
           name: review-console-${{ github.sha }}
           path: .run
       - uses: BunnyWay/actions/deploy-script@0cae4ba05838d2707b3d5ed779f15c6bc2b43267
         with:
-          script_id: ${{ secrets.FINEVINES_REVIEW_PRODUCTION_SCRIPT_ID }}
-          deploy_key: ${{ secrets.FINEVINES_REVIEW_PRODUCTION_DEPLOY_KEY }}
+          script_id: ${{ steps.script.outputs.id }}
+          api_key: ${{ secrets.FINEVINES_BUNNY_API_KEY }}
           file: .run/review-console.mjs

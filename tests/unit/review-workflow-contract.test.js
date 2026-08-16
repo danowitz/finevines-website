@@ -24,8 +24,15 @@ describe('hosted review workflow contract', () => {
 
   it('keeps console deployment gated until its Bunny infrastructure is configured', async () => {
     const workflow = await readFile('.github/workflows/review-console.yml', 'utf8');
+    const provision = await readFile('.github/workflows/review-console-provision.yml', 'utf8');
     assert.match(workflow, /FINEVINES_REVIEW_AUTO_DEPLOY == 'true'/);
     assert.match(workflow, /environment: review-production/);
     assert.match(workflow, /BunnyWay\/actions\/deploy-script@0cae4ba05838d2707b3d5ed779f15c6bc2b43267/);
+    assert.match(workflow, /expected exactly one test Edge Script/);
+    assert.match(workflow, /expected exactly one production Edge Script/);
+    assert.match(workflow, /api_key: \$\{\{ secrets\.FINEVINES_BUNNY_API_KEY \}\}/);
+    assert.doesNotMatch(workflow, /deploy_key:/);
+    assert.match(provision, /node tools\/review-console\/provision\.mjs/);
+    assert.match(provision, /environment: review-production/);
   });
 });
