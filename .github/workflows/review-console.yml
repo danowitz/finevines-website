@@ -59,7 +59,7 @@ jobs:
           script_id="$(curl --fail-with-body --silent --show-error \
             -H "AccessKey: $BUNNY_API_KEY" \
             https://api.bunny.net/compute/script \
-            | jq -er '[.[] | select(.Name == "finevines-review-test" and .Deleted != true)] | if length == 1 then .[0].Id else error("expected exactly one test Edge Script") end')"
+            | jq -er '[.Items[] | select(.Name == "finevines-review-test" and .Deleted != true)] | if length == 1 then .[0].Id else error("expected exactly one test Edge Script") end')"
           echo "id=$script_id" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@v4
         with:
@@ -86,7 +86,7 @@ jobs:
           script_id="$(curl --fail-with-body --silent --show-error \
             -H "AccessKey: $BUNNY_API_KEY" \
             https://api.bunny.net/compute/script \
-            | jq -er '[.[] | select(.Name == "finevines-review-production" and .Deleted != true)] | if length == 1 then .[0].Id else error("expected exactly one production Edge Script") end')"
+            | jq -er '[.Items[] | select(.Name == "finevines-review-production" and .Deleted != true)] | if length == 1 then .[0].Id else error("expected exactly one production Edge Script") end')"
           echo "id=$script_id" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@v4
         with:
