@@ -3,8 +3,6 @@ package notify
 import (
 	"strings"
 	"testing"
-
-	"github.com/gritautomation/finevines-website/internal/queue"
 )
 
 func sampleDiff() RunDiff {
@@ -23,8 +21,8 @@ func sampleDiff() RunDiff {
 				ImageURL: "https://finevines.com/assets/img/wines/altocedro-ano-cero-malbec-2024.jpg",
 				Note:     "https://example-producer.ar/vinos/"},
 		},
-		QueueActions: []queue.Applied{
-			{ID: "a2", SKU: "MB5110", Kind: queue.ActionTextFeedback, Reviewer: "george",
+		QueueActions: []AppliedAction{
+			{ID: "a2", SKU: "MB5110", Kind: "image-select", Reviewer: "george",
 				Outcome: "text regenerated with the reviewer's note"},
 		},
 		Coverage: Coverage{Wines: 2619, RealImages: 574, RealImagePct: 22, MeanMetadata: 61},

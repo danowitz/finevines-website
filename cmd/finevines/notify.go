@@ -14,7 +14,6 @@ import (
 	"github.com/gritautomation/finevines-website/internal/config"
 	"github.com/gritautomation/finevines-website/internal/model"
 	"github.com/gritautomation/finevines-website/internal/notify"
-	"github.com/gritautomation/finevines-website/internal/queue"
 )
 
 // runNotify emails the digest for the run that just finished — and ONLY if that
@@ -24,7 +23,7 @@ import (
 // stands between a wrong bottle going live and a human noticing.
 //
 // The run's "before" state is a snapshot the workflow copies aside immediately
-// after checkout, before applyqueue touches anything. That is more reliable than
+// after checkout, before hosted review actions touch anything. That is more reliable than
 // diffing git: by the time notify runs, the commit-back has already landed, so
 // HEAD is the AFTER state and HEAD~1 may be a human's commit rather than the
 // start of this run.
@@ -35,7 +34,7 @@ func runNotify(cfg config.Config, args []string) error {
 	beforePath := flags.String("before", ".run/wines-before.json",
 		"the catalog as it stood at the start of the run (copied aside after checkout)")
 	appliedPath := flags.String("applied", ".run/queue-applied.json",
-		"this run's applied review-console actions, written by applyqueue")
+		"this run's applied review-console actions, written by reviewapply")
 	dry := flags.Bool("dry", false,
 		"print the digest instead of sending it (no relay connection, no credentials needed)")
 	if err := flags.Parse(args); err != nil {
@@ -123,10 +122,10 @@ func portValue(port int) string {
 	return strconv.Itoa(port)
 }
 
-// loadApplied reads applyqueue's run log. A missing file means applyqueue did not
+// loadApplied reads reviewapply's run log. A missing file means reviewapply did not
 // run in this workflow (a build-only re-run, or a local invocation) — not an
 // error, just no reviewer fixes to report.
-func loadApplied(path string) ([]queue.Applied, error) {
+func loadApplied(path string) ([]notify.AppliedAction, error) {
 	data, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, nil
@@ -134,7 +133,7 @@ func loadApplied(path string) ([]queue.Applied, error) {
 	if err != nil {
 		return nil, err
 	}
-	var applied []queue.Applied
+	var applied []notify.AppliedAction
 	if err := json.Unmarshal(data, &applied); err != nil {
 		return nil, err
 	}

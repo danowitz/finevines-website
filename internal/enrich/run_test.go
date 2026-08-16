@@ -262,13 +262,15 @@ func TestRun_RealImagesPreservedAcrossReEnrich(t *testing.T) {
 			ID: "SF-WEB", SourceHash: "stale-hash", SKU: "WB2222",
 			Producer: "Domaine Web", Name: "Cuvee", Vintage: "2019",
 			ImagePath: "img/domaine-web-cuvee-2019.jpg", ImageSource: model.ImageScrapedWeb,
-			ImageSourceURL: "https://producer.example/cuvee.jpg",
-			Slug:           model.Slugify("Domaine Web", "Cuvee", "2019"),
+			ImageSourceURL:  "https://producer.example/cuvee.jpg",
+			ImageReviewedAt: "2026-08-15T01:00:00Z", ImageReviewActionID: "00000000-0000-4000-8000-000000000001",
+			Slug: model.Slugify("Domaine Web", "Cuvee", "2019"),
 		},
 		{
 			ID: "SF-GEN", SourceHash: "stale-hash", SKU: "GN3333",
 			Producer: "Estate Gen", Name: "Blanc", Vintage: "2021",
 			ImagePath: "img/estate-gen-blanc-2021.svg", ImageSource: model.ImageGeneratedLabel,
+			ImageReviewStatus: "no-match", ImageReviewedAt: "2026-08-15T01:00:00Z", ImageReviewActionID: "00000000-0000-4000-8000-000000000002",
 			Slug: model.Slugify("Estate Gen", "Blanc", "2021"),
 		},
 	}
@@ -307,6 +309,9 @@ func TestRun_RealImagesPreservedAcrossReEnrich(t *testing.T) {
 		if w.Description == "" {
 			t.Errorf("%s text must still be re-enriched", id)
 		}
+		if w.ImageReviewedAt != want.ImageReviewedAt || w.ImageReviewActionID != want.ImageReviewActionID {
+			t.Errorf("%s review idempotency fields were not preserved", id)
+		}
 	}
 
 	gen, ok := byID["SF-GEN"]
@@ -315,6 +320,9 @@ func TestRun_RealImagesPreservedAcrossReEnrich(t *testing.T) {
 	}
 	if gen.ImageSource != model.ImageGeneratedLabel {
 		t.Errorf("SF-GEN must become the neutral fallback, got source=%q", gen.ImageSource)
+	}
+	if gen.ImageReviewStatus != "no-match" || gen.ImageReviewActionID != seed[2].ImageReviewActionID {
+		t.Errorf("SF-GEN explicit no-match review was not preserved: %#v", gen)
 	}
 
 	if got := images.callCount(); got != 0 {

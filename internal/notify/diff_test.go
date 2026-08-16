@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/gritautomation/finevines-website/internal/model"
-	"github.com/gritautomation/finevines-website/internal/queue"
 )
 
 const base = "https://finevines.com"
@@ -161,8 +160,8 @@ func TestDiff_CoverageUsesActivePublishedWines(t *testing.T) {
 // A run that only drained the queue still changed something.
 func TestDiff_QueueActionsAloneCountAsAChange(t *testing.T) {
 	same := []model.Wine{wine("AB1201", "bart-marsannay-la-montagne-2019")}
-	d := Diff(same, same, []queue.Applied{
-		{ID: "a3", SKU: "AB1201", Kind: queue.ActionFlag, Reviewer: "george", Outcome: "flagged"},
+	d := Diff(same, same, []AppliedAction{
+		{ID: "a3", SKU: "AB1201", Kind: "image-select", Reviewer: "george", Outcome: "selected image prepared for deployment"},
 	}, base)
 	if !d.Changed() {
 		t.Error("Changed() = false with a queue action applied")

@@ -109,10 +109,11 @@ outcome, catalog commit, deployment target, image hash, run ID, and timestamps.
 Only after that upload succeeds is the pending pointer deleted. A failure leaves
 the pointer intact, making retry safe. Existing receipts make repeats no-ops.
 
-Receipt states are `deployed`, `conflict`, and `rejected`. `conflict` and
-`rejected` are terminal only after their receipt is durable; they never mutate
-the catalog. The console renders `Queued`, `Validating`, `Deployed`, `Conflict`,
-or `Rejected` from storage evidence and never predicts success.
+Production receipt states are `deployed`, `conflict`, and `rejected`; the test
+environment uses `validated` instead of pretending that it deployed a live
+site. `conflict` and `rejected` are terminal only after their receipt is durable;
+they never mutate the catalog. The console renders its state from storage
+evidence and never predicts success.
 
 ## Publication ordering
 

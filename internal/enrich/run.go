@@ -310,6 +310,10 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 	// photo or writes the guaranteed SVG-label floor. A download failure is
 	// logged and falls through, never fatal.
 	var imagePath, imageSource, imageSourceURL string
+	var imageReviewStatus, imageReviewedAt, imageReviewActionID string
+	if prev != nil {
+		imageReviewStatus, imageReviewedAt, imageReviewActionID = prev.ImageReviewStatus, prev.ImageReviewedAt, prev.ImageReviewActionID
+	}
 	switch {
 	case hasRealImage(prev):
 		imagePath, imageSource, imageSourceURL = prev.ImagePath, prev.ImageSource, prev.ImageSourceURL
@@ -359,38 +363,41 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 	sources["image"] = model.ImageFieldSource(imageSource)
 
 	return model.Wine{
-		ID:              raw.ID,
-		SourceHash:      SourceHash(raw),
-		SKU:             raw.SKU,
-		Producer:        producer,
-		Name:            name,
-		Vintage:         vintage,
-		Varietal:        varietal,
-		Region:          region,
-		Appellation:     appellation,
-		Country:         country,
-		Color:           res.Color,
-		Style:           raw.Style,
-		StockQty:        raw.StockQty,
-		StockCases:      raw.StockCases,
-		CasePack:        raw.CasePack,
-		Description:     res.Description,
-		SommelierNotes:  res.SommelierNotes,
-		Aroma:           res.Aroma,
-		Palate:          res.Palate,
-		Finish:          res.Finish,
-		FoodPairings:    res.FoodPairings,
-		ABV:             res.ABV,
-		BottleSize:      res.BottleSize,
-		DrinkWindow:     res.DrinkWindow,
-		ImagePath:       imagePath,
-		ImageSource:     imageSource,
-		ImageSourceURL:  imageSourceURL,
-		Sources:         sources,
-		MetadataScore:   model.MetadataScore(sources),
-		MatchConfidence: res.MatchConfidence,
-		EnrichedAt:      nowUTC().Format(time.RFC3339),
-		Slug:            slug,
+		ID:                  raw.ID,
+		SourceHash:          SourceHash(raw),
+		SKU:                 raw.SKU,
+		Producer:            producer,
+		Name:                name,
+		Vintage:             vintage,
+		Varietal:            varietal,
+		Region:              region,
+		Appellation:         appellation,
+		Country:             country,
+		Color:               res.Color,
+		Style:               raw.Style,
+		StockQty:            raw.StockQty,
+		StockCases:          raw.StockCases,
+		CasePack:            raw.CasePack,
+		Description:         res.Description,
+		SommelierNotes:      res.SommelierNotes,
+		Aroma:               res.Aroma,
+		Palate:              res.Palate,
+		Finish:              res.Finish,
+		FoodPairings:        res.FoodPairings,
+		ABV:                 res.ABV,
+		BottleSize:          res.BottleSize,
+		DrinkWindow:         res.DrinkWindow,
+		ImagePath:           imagePath,
+		ImageSource:         imageSource,
+		ImageSourceURL:      imageSourceURL,
+		ImageReviewStatus:   imageReviewStatus,
+		ImageReviewedAt:     imageReviewedAt,
+		ImageReviewActionID: imageReviewActionID,
+		Sources:             sources,
+		MetadataScore:       model.MetadataScore(sources),
+		MatchConfidence:     res.MatchConfidence,
+		EnrichedAt:          nowUTC().Format(time.RFC3339),
+		Slug:                slug,
 	}, nil
 }
 

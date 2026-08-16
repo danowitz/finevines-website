@@ -16,6 +16,8 @@ type Config struct {
 	GeminiAPIKey, ImageModel                            string
 	BunnyStorageZone, BunnyStorageKey                   string
 	BunnyStorageEndpoint                                string // e.g. https://ny.storage.bunnycdn.com
+	ReviewStorageZone, ReviewStorageKey                 string // dedicated private zone; never attach a Pull Zone
+	ReviewStorageEndpoint                               string
 	BunnyAPIKey, BunnyPullZoneID                        string
 	BunnyScriptID                                       string // Edge Scripting compute script ID (redirect middleware)
 	SiteBaseURL                                         string // e.g. https://finevines.com
@@ -66,32 +68,35 @@ func Load(envPath string) (Config, error) {
 		smtpPort = p
 	}
 	return Config{
-		SFBaseURL:            get("FINEVINES_SF_BASE_URL"),
-		SFClientID:           get("FINEVINES_SF_CLIENT_ID"),
-		SFClientSecret:       get("FINEVINES_SF_CLIENT_SECRET"),
-		SFAPIVersion:         orDefault(get("FINEVINES_SF_API_VERSION"), "v61.0"),
-		OpenAIAPIKey:         get("OPENAI_API_KEY"),
-		OpenAIModel:          get("FINEVINES_OPENAI_MODEL"),
-		GeminiAPIKey:         get("FINEVINES_GEMINI_API_KEY"),
-		ImageModel:           orDefault(get("FINEVINES_IMAGE_MODEL"), "imagen-4.0-generate-001"),
-		BunnyStorageZone:     get("FINEVINES_BUNNY_STORAGE_ZONE"),
-		BunnyStorageKey:      get("FINEVINES_BUNNY_STORAGE_KEY"),
-		BunnyStorageEndpoint: orDefault(get("FINEVINES_BUNNY_STORAGE_ENDPOINT"), "https://storage.bunnycdn.com"),
-		BunnyAPIKey:          get("FINEVINES_BUNNY_API_KEY"),
-		BunnyPullZoneID:      get("FINEVINES_BUNNY_PULL_ZONE_ID"),
-		BunnyScriptID:        get("FINEVINES_BUNNY_SCRIPT_ID"),
-		SiteBaseURL:          siteBaseURL,
-		OldSiteURL:           orDefault(get("FINEVINES_OLD_SITE_URL"), siteBaseURL),
-		RedirectsMapURL:      orDefault(get("FINEVINES_REDIRECTS_MAP_URL"), strings.TrimRight(siteBaseURL, "/")+"/redirects.json"),
-		GAID:                 get("FINEVINES_GA_ID"),
-		SMTPHost:             get("FINEVINES_SMTP_HOST"),
-		SMTPPort:             smtpPort,
-		SMTPUser:             get("FINEVINES_SMTP_USER"),
-		SMTPPass:             get("FINEVINES_SMTP_PASS"),
-		NotifyTo:             get("FINEVINES_NOTIFY_TO"),
-		NotifyFrom:           get("FINEVINES_NOTIFY_FROM"),
-		SFMock:               truthy(get("FINEVINES_SF_MOCK")),
-		ManualEnrichDir:      get("FINEVINES_MANUAL_ENRICH_DIR"),
+		SFBaseURL:             get("FINEVINES_SF_BASE_URL"),
+		SFClientID:            get("FINEVINES_SF_CLIENT_ID"),
+		SFClientSecret:        get("FINEVINES_SF_CLIENT_SECRET"),
+		SFAPIVersion:          orDefault(get("FINEVINES_SF_API_VERSION"), "v61.0"),
+		OpenAIAPIKey:          get("OPENAI_API_KEY"),
+		OpenAIModel:           get("FINEVINES_OPENAI_MODEL"),
+		GeminiAPIKey:          get("FINEVINES_GEMINI_API_KEY"),
+		ImageModel:            orDefault(get("FINEVINES_IMAGE_MODEL"), "imagen-4.0-generate-001"),
+		BunnyStorageZone:      get("FINEVINES_BUNNY_STORAGE_ZONE"),
+		BunnyStorageKey:       get("FINEVINES_BUNNY_STORAGE_KEY"),
+		BunnyStorageEndpoint:  orDefault(get("FINEVINES_BUNNY_STORAGE_ENDPOINT"), "https://storage.bunnycdn.com"),
+		ReviewStorageZone:     get("FINEVINES_REVIEW_STORAGE_ZONE"),
+		ReviewStorageKey:      get("FINEVINES_REVIEW_STORAGE_KEY"),
+		ReviewStorageEndpoint: orDefault(get("FINEVINES_REVIEW_STORAGE_ENDPOINT"), "https://storage.bunnycdn.com"),
+		BunnyAPIKey:           get("FINEVINES_BUNNY_API_KEY"),
+		BunnyPullZoneID:       get("FINEVINES_BUNNY_PULL_ZONE_ID"),
+		BunnyScriptID:         get("FINEVINES_BUNNY_SCRIPT_ID"),
+		SiteBaseURL:           siteBaseURL,
+		OldSiteURL:            orDefault(get("FINEVINES_OLD_SITE_URL"), siteBaseURL),
+		RedirectsMapURL:       orDefault(get("FINEVINES_REDIRECTS_MAP_URL"), strings.TrimRight(siteBaseURL, "/")+"/redirects.json"),
+		GAID:                  get("FINEVINES_GA_ID"),
+		SMTPHost:              get("FINEVINES_SMTP_HOST"),
+		SMTPPort:              smtpPort,
+		SMTPUser:              get("FINEVINES_SMTP_USER"),
+		SMTPPass:              get("FINEVINES_SMTP_PASS"),
+		NotifyTo:              get("FINEVINES_NOTIFY_TO"),
+		NotifyFrom:            get("FINEVINES_NOTIFY_FROM"),
+		SFMock:                truthy(get("FINEVINES_SF_MOCK")),
+		ManualEnrichDir:       get("FINEVINES_MANUAL_ENRICH_DIR"),
 	}, nil
 }
 

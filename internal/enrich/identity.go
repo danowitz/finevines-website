@@ -33,7 +33,7 @@ func IdentityMatches(raw salesforce.WineRaw, w model.Wine) bool {
 
 // RawFromWine reconstructs the salesforce.WineRaw an enrichment call needs from
 // a catalog row. It exists for the one path where something OTHER than a roster
-// pull triggers enrichment: a reviewer's text-feedback note (internal/queue),
+// pull triggers enrichment: a future reviewer's text-feedback note,
 // where the only record of the wine is the one already in data/wines.json.
 //
 // ReadyToSell is set true unconditionally — the wine is IN the catalog, so it

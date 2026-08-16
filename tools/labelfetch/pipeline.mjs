@@ -102,6 +102,7 @@ async function exists(file) {
 }
 
 function needsImage(wine) {
+  if (wine.imageReviewStatus === 'no-match') return false;
   return !wine.imagePath ||
     wine.imagePath.endsWith('.svg') ||
     wine.imageSource === 'generated-photo' ||

@@ -1,7 +1,7 @@
 # The whole FineVines publish path, unattended.
 #
-#   drain the review queue -> enrich -> source images -> build -> deploy
-#   -> commit the state back -> email the digest
+#   validate immutable review actions -> enrich -> source images -> build
+#   -> deploy -> commit -> publish review receipts/package -> email the digest
 #
 # The repo stays the source of truth. Nothing here holds state between runs
 # except what it commits: data/, the imported photographs, and
@@ -76,7 +76,7 @@ jobs:
     # is close to free: SourceHash means no unchanged wine is re-sent to OpenAI,
     # the attempt ledger means no image is re-fetched, and the manifest diff
     # means nothing is re-uploaded.
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') && (github.event_name != 'repository_dispatch' || github.event.client_payload.environment == 'production') }}
     runs-on: ubuntu-latest
     timeout-minutes: 300
 
@@ -101,6 +101,12 @@ jobs:
       FINEVINES_BUNNY_API_KEY: ${{ secrets.FINEVINES_BUNNY_API_KEY }}
       FINEVINES_BUNNY_PULL_ZONE_ID: ${{ secrets.FINEVINES_BUNNY_PULL_ZONE_ID }}
       FINEVINES_BUNNY_SCRIPT_ID: ${{ secrets.FINEVINES_BUNNY_SCRIPT_ID }}
+      # Review packages/actions live in a separate storage zone with no Pull
+      # Zone; the public website CDN must never be able to fetch these paths.
+      FINEVINES_REVIEW_STORAGE_ZONE: ${{ secrets.FINEVINES_REVIEW_STORAGE_ZONE }}
+      FINEVINES_REVIEW_STORAGE_KEY: ${{ secrets.FINEVINES_REVIEW_STORAGE_KEY }}
+      FINEVINES_REVIEW_STORAGE_ENDPOINT: ${{ secrets.FINEVINES_REVIEW_STORAGE_ENDPOINT }}
+      FINEVINES_REVIEW_ENVIRONMENT: production
       # Site.
       FINEVINES_SITE_BASE_URL: ${{ secrets.FINEVINES_SITE_BASE_URL }}
       FINEVINES_GA_ID: ${{ secrets.FINEVINES_GA_ID }}
@@ -162,6 +168,15 @@ jobs:
           go build -o imghash ./tools/imghash
           go build -o imgnorm ./tools/imgnorm
 
+      - name: Validate review-console dispatch
+        if: ${{ github.event_name == 'repository_dispatch' }}
+        env:
+          REVIEW_ACTION_ID: ${{ github.event.client_payload.actionId }}
+          REVIEW_ACTION_ENVIRONMENT: ${{ github.event.client_payload.environment }}
+        run: |
+          test "$REVIEW_ACTION_ENVIRONMENT" = "production"
+          [[ "$REVIEW_ACTION_ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]]
+
       # The catalog as it stands BEFORE anything runs. `notify` diffs against
       # this at the end. Taken here rather than derived from git later, because
       # by then the commit-back has landed and HEAD is the after-state.
@@ -177,15 +192,16 @@ jobs:
           mkdir -p .run
           cp data/wines.json .run/wines-before.json
 
-      # 1. Drain the review console's change queue. First, so a reviewer's fix
-      #    is applied before enrich has a chance to overwrite the same wine, and
-      #    so a text-feedback regeneration is the version that gets built.
-      - name: Apply the review queue
-        run: ./finevines applyqueue -runlog .run/queue-applied.json
+      # 1. Validate every immutable pending action against the exact package,
+      #    candidate bytes, and catalog revision it was submitted from. Pending
+      #    objects remain until the post-deploy receipt step.
+      - name: Prepare hosted review actions
+        run: ./finevines reviewapply -environment production -decisions .run/review-decisions.json -applied .run/queue-applied.json
 
       # 2. Enrich against live Salesforce. SourceHash means unchanged wines are
       #    not re-sent to OpenAI, so this is cheap on a normal night.
       - name: Enrich
+        if: ${{ github.event_name != 'repository_dispatch' }}
         run: ./finevines enrich
 
       # 3. Source bottle photographs: fetch + verify, watermark sweep, import
@@ -194,6 +210,7 @@ jobs:
       #    its two-hour wall-clock budget so it cannot consume the whole job
       #    timeout and lose the ledger writes that make it converge.
       - name: Source images
+        if: ${{ github.event_name != 'repository_dispatch' }}
         run: |
           if [ "${{ github.event_name == 'workflow_dispatch' && inputs.quality_recovery }}" = "true" ]; then
             node tools/labelfetch/autonomous.mjs --apply --search-provider brave-serper --retry-misses --quality-recovery --label-model gpt-4.1-mini --budget-minutes 60 --n "${{ inputs.image_limit }}"
@@ -240,6 +257,27 @@ jobs:
       #    binaries to master every night.
       - name: Commit the run's state back to master
         run: bash tools/pipeline/commitback.sh
+
+      # Refresh the rolling package from the committed catalog. A focused
+      # review dispatch has no newly downloaded candidates, so its empty draft
+      # carries forward only still-current unresolved wines and drops the one
+      # just deployed. current.json moves only after every immutable byte exists.
+      - name: Publish the hosted review package
+        run: |
+          if [ ! -f .run/review-draft.json ]; then
+            printf '{"schemaVersion":1,"wines":[]}\n' > .run/review-draft.json
+          fi
+          node tools/labelfetch/publish-review-package.mjs --environment production
+
+      - name: Publish the test review package
+        if: ${{ github.event_name != 'repository_dispatch' }}
+        run: node tools/labelfetch/publish-review-package.mjs --environment test
+
+      # This is the acknowledgement boundary. The browser reports "deployed"
+      # only after the site upload, catalog commit, and rolling-package refresh
+      # all succeeded. Receipt upload precedes pending-pointer deletion.
+      - name: Finalize hosted review receipts
+        run: ./finevines reviewfinalize -environment production -decisions .run/review-decisions.json -target "$FINEVINES_SITE_BASE_URL" -run-id "$GITHUB_RUN_ID"
 
       # 7. Email the digest — only if the run changed something. Runs last so it
       #    reports what actually shipped, and is NOT `if: always()`: a failed run

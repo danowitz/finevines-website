@@ -1,0 +1,99 @@
+name: review-console
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Protected review environment to deploy
+        required: true
+        default: test
+        type: choice
+        options: [test, production]
+  push:
+    branches: [master]
+    paths:
+      - edge/review-console/**
+      - .github/workflows/review-console.yml
+      - package.json
+      - package-lock.json
+
+permissions:
+  contents: read
+
+concurrency:
+  group: review-console-${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'test' }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Verify and bundle the review console
+        run: |
+          node --test tests/unit/review-console-handler.test.js tests/unit/review-console-adapters.test.js
+          npm run build:review-console
+      - uses: actions/upload-artifact@v4
+        with:
+          name: review-console-${{ github.sha }}
+          path: .run/review-console.mjs
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy-test:
+    if: ${{ (github.event_name == 'push' && vars.FINEVINES_REVIEW_AUTO_DEPLOY == 'true') || (github.event_name == 'workflow_dispatch' && inputs.environment == 'test') }}
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: review-test
+    steps:
+      - name: Resolve the test Edge Script
+        id: script
+        env:
+          BUNNY_API_KEY: ${{ secrets.FINEVINES_BUNNY_API_KEY }}
+        run: |
+          script_id="$(curl --fail-with-body --silent --show-error \
+            -H "AccessKey: $BUNNY_API_KEY" \
+            https://api.bunny.net/compute/script \
+            | jq -er '[.[] | select(.Name == "finevines-review-test" and .Deleted != true)] | if length == 1 then .[0].Id else error("expected exactly one test Edge Script") end')"
+          echo "id=$script_id" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          name: review-console-${{ github.sha }}
+          path: .run
+      # Pinned from BunnyWay/actions main on 2026-08-15.
+      - uses: BunnyWay/actions/deploy-script@0cae4ba05838d2707b3d5ed779f15c6bc2b43267
+        with:
+          script_id: ${{ steps.script.outputs.id }}
+          api_key: ${{ secrets.FINEVINES_BUNNY_API_KEY }}
+          file: .run/review-console.mjs
+
+  deploy-production:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.environment == 'production' }}
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: review-production
+    steps:
+      - name: Resolve the production Edge Script
+        id: script
+        env:
+          BUNNY_API_KEY: ${{ secrets.FINEVINES_BUNNY_API_KEY }}
+        run: |
+          script_id="$(curl --fail-with-body --silent --show-error \
+            -H "AccessKey: $BUNNY_API_KEY" \
+            https://api.bunny.net/compute/script \
+            | jq -er '[.[] | select(.Name == "finevines-review-production" and .Deleted != true)] | if length == 1 then .[0].Id else error("expected exactly one production Edge Script") end')"
+          echo "id=$script_id" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          name: review-console-${{ github.sha }}
+          path: .run
+      - uses: BunnyWay/actions/deploy-script@0cae4ba05838d2707b3d5ed779f15c6bc2b43267
+        with:
+          script_id: ${{ steps.script.outputs.id }}
+          api_key: ${{ secrets.FINEVINES_BUNNY_API_KEY }}
+          file: .run/review-console.mjs
