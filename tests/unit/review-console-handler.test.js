@@ -11,7 +11,8 @@ function fixture({ dispatch = async () => {} } = {}) {
     ['_review/test/current.json', JSON.stringify({ packageId: 'pkg-1' })],
     ['_review/test/packages/pkg-1/manifest.json', JSON.stringify({
       schemaVersion: 1, packageId: 'pkg-1', environment: 'test', catalogCommit: 'abcdef1', createdAt: '2026-08-10T00:00:00Z', expiresAt: '2026-09-10T00:00:00Z',
-      wines: [{ sku: 'AB-1', displayIdentity: 'Producer Wine 2022', wineRevision: 'a'.repeat(64), candidates: [{ candidateId: 'c1', storageName: 'c1.png', mime: 'image/png', bytes: candidate.length, width: 400, height: 800 }] }],
+      reviewers: [{ name: 'Barb Fultz', role: 'Back Office' }, { name: 'Connie Molitor', role: 'Executive' }],
+      wines: [{ sku: '500740*', displayIdentity: 'Producer Wine 2022', wineRevision: 'a'.repeat(64), candidates: [{ candidateId: 'c1', storageName: 'c1.png', mime: 'image/png', bytes: candidate.length, width: 400, height: 800 }] }],
     })],
     ['_review/test/packages/pkg-1/images/c1.png', candidate],
   ]);
@@ -102,7 +103,14 @@ describe('review console handler', () => {
     const cookie = await login(handle);
     const page = await handle(new Request('https://review.finevines.biz/', { headers: { cookie } }));
     assert.equal(page.status, 200);
-    assert.match(await page.text(), /Compare the candidates/);
+    const markup = await page.text();
+    assert.match(markup, /Compare the candidates/);
+    assert.match(markup, /<select id="reviewer"/);
+    assert.match(markup, /class="modal-dialog"/);
+    const app = await handle(new Request('https://review.finevines.biz/app.js', { headers: { cookie } }));
+    const script = await app.text();
+    assert.match(script, /Remove from comparison/);
+    assert.match(script, /event\.target === modal/);
     const image = await handle(new Request('https://review.finevines.biz/api/packages/pkg-1/images/c1', { headers: { cookie } }));
     assert.equal(image.status, 200);
     assert.equal(image.headers.get('content-type'), 'image/png');
@@ -121,7 +129,7 @@ describe('review console handler', () => {
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
-    const action = { kind: 'image-select', reviewer: 'Barbara', sku: 'AB-1', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
+    const action = { kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const res = await handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) }));
     assert.equal(res.status, 202);
     assert.deepEqual(writes.map((p) => p.replace(/00000000-0000-4000-8000-\d{12}/, '<id>')), ['_review/test/actions/<id>.json', '_review/test/pending/<id>.json']);
@@ -132,7 +140,7 @@ describe('review console handler', () => {
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
-    const action = { kind: 'image-select', reviewer: 'Barbara', sku: 'AB-1', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
+    const action = { kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const request = () => new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) });
     const responses = await Promise.all([handle(request()), handle(request())]);
     assert.deepEqual(responses.map((response) => response.status), [202, 202]);
@@ -146,7 +154,7 @@ describe('review console handler', () => {
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
-    const action = { kind: 'image-select', reviewer: 'Barbara', sku: 'AB-1', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
+    const action = { kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const res = await handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) }));
     assert.equal(res.status, 202);
     assert.equal((await res.json()).dispatched, false);
@@ -165,7 +173,7 @@ describe('review console handler', () => {
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
-    const action = { kind: 'image-select', reviewer: 'Barbara', sku: 'AB-1', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'not-in-package' };
+    const action = { kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'not-in-package' };
     const res = await handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) }));
     assert.equal(res.status, 400);
     assert.equal(writes.length, 0);
@@ -176,10 +184,22 @@ describe('review console handler', () => {
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
-    const action = { kind: 'image-select', reviewer: 'Barbara', sku: 'AB-1', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
+    const action = { kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const queued = await handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) }));
     const { id } = await queued.json();
     const pending = await handle(new Request(`https://review.finevines.biz/api/actions/${id}`, { headers: { cookie } }));
     assert.equal((await pending.json()).status, 'queued');
+  });
+
+  it('rejects a reviewer who is not on the package roster', async () => {
+    const { handle, writes } = fixture();
+    const cookie = await login(handle);
+    const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+    const csrf = (await current.json()).csrfToken;
+    const action = { kind: 'image-select', reviewer: 'Sales Person', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
+    const res = await handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) }));
+    assert.equal(res.status, 400);
+    assert.match((await res.json()).error, /reviewer/);
+    assert.equal(writes.length, 0);
   });
 });

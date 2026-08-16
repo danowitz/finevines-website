@@ -83,6 +83,11 @@ type PackageWine struct {
 	Candidates      []Candidate `json:"candidates"`
 }
 
+type Reviewer struct {
+	Name string `json:"name"`
+	Role string `json:"role"`
+}
+
 type Manifest struct {
 	SchemaVersion int           `json:"schemaVersion"`
 	PackageID     string        `json:"packageId"`
@@ -90,6 +95,7 @@ type Manifest struct {
 	CatalogCommit string        `json:"catalogCommit"`
 	CreatedAt     string        `json:"createdAt"`
 	ExpiresAt     string        `json:"expiresAt"`
+	Reviewers     []Reviewer    `json:"reviewers"`
 	Wines         []PackageWine `json:"wines"`
 }
 
@@ -179,6 +185,18 @@ func validSegment(value string) bool {
 	return true
 }
 
+func validSKU(value string) bool {
+	if value == "" || len(value) > 80 || strings.Contains(value, "..") || strings.ContainsAny(value, `/\\`) {
+		return false
+	}
+	for _, char := range value {
+		if !(char == '.' || char == '_' || char == '-' || char == '*' || char >= '0' && char <= '9' || char >= 'a' && char <= 'z' || char >= 'A' && char <= 'Z') {
+			return false
+		}
+	}
+	return true
+}
+
 func validateAction(action Action, environment, fileID string) error {
 	if action.SchemaVersion != schemaVersion || action.Environment != environment {
 		return fmt.Errorf("wrong schema or environment")
@@ -189,7 +207,7 @@ func validateAction(action Action, environment, fileID string) error {
 	if action.Kind != "image-select" && action.Kind != "no-image" {
 		return fmt.Errorf("invalid action kind")
 	}
-	if !validSegment(action.PackageID) || len(action.PackageID) > 160 || !validSegment(action.SKU) || len(action.SKU) > 80 ||
+	if !validSegment(action.PackageID) || len(action.PackageID) > 160 || !validSKU(action.SKU) ||
 		!hashPattern.MatchString(action.WineRevision) || !commitPattern.MatchString(action.TargetCatalogCommit) ||
 		strings.TrimSpace(action.Reviewer) == "" || len(action.Reviewer) > 80 || !uuidPattern.MatchString(action.CSRFSessionID) {
 		return fmt.Errorf("missing or unsafe action identity")
@@ -209,6 +227,16 @@ func validateAction(action Action, environment, fileID string) error {
 func validateManifest(manifest Manifest, action Action) (PackageWine, Candidate, error) {
 	if manifest.SchemaVersion != schemaVersion || manifest.PackageID != action.PackageID || manifest.Environment != action.Environment || manifest.CatalogCommit != action.TargetCatalogCommit {
 		return PackageWine{}, Candidate{}, fmt.Errorf("action does not match package")
+	}
+	reviewerAllowed := len(manifest.Reviewers) == 0 // Legacy packages predate roster enforcement; Edge no longer accepts new actions for them.
+	for _, reviewer := range manifest.Reviewers {
+		if reviewer.Name == action.Reviewer && (reviewer.Role == "Executive" || reviewer.Role == "Back Office") {
+			reviewerAllowed = true
+			break
+		}
+	}
+	if !reviewerAllowed {
+		return PackageWine{}, Candidate{}, fmt.Errorf("reviewer is not authorized for package")
 	}
 	created, err := time.Parse(time.RFC3339, manifest.CreatedAt)
 	if err != nil {

@@ -81,7 +81,7 @@ export function validateAction(input, context) {
     id: context.id,
     environment: context.environment,
     reviewer: text('reviewer', 80),
-    sku: text('sku', 80, /^[A-Za-z0-9._-]+$/),
+    sku: text('sku', 80, /^[A-Za-z0-9._*-]+$/),
     kind,
     packageId: text('packageId', 160, /^[A-Za-z0-9._-]+$/),
     targetCatalogCommit: text('targetCatalogCommit', 64, /^[a-f0-9]{7,64}$/),

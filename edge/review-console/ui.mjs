@@ -2,7 +2,7 @@ export const APP_CSS = `
 :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #f4f0e8; color: #251c18; }
 * { box-sizing: border-box; }
 body { margin: 0; }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button { cursor: pointer; }
 .login-page { min-height: 100vh; display: grid; place-items: center; padding: 28px 18px; background: radial-gradient(circle at 50% 0%, #fff 0, #f7f3eb 42%, #eee6da 100%); }
 .login-shell { width: min(440px, 100%); }
@@ -23,7 +23,7 @@ button { cursor: pointer; }
 .mast h1 { margin: 0; font: 700 clamp(28px, 4vw, 52px)/1.02 Georgia, serif; }
 .mast p { margin: 8px 0 0; color: #6e5b50; }
 .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.controls input { min-width: 220px; padding: 11px 13px; border: 1px solid #c9b9aa; border-radius: 8px; background: #fff; }
+.controls input, .controls select { min-width: 220px; padding: 11px 13px; border: 1px solid #c9b9aa; border-radius: 8px; background: #fff; color: #251c18; }
 .summary { margin: 14px 0 22px; padding: 13px 16px; border-left: 5px solid #7d263b; background: #fff; border-radius: 8px; }
 .wine { margin-bottom: 18px; padding: 18px; background: #fff; border: 1px solid #d9cfc4; border-radius: 14px; box-shadow: 0 2px 8px #3c24151a; }
 .wine-head { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
@@ -49,10 +49,21 @@ button { cursor: pointer; }
 .status.bad { color: #a12222; font-weight: 700; }
 .empty { padding: 50px 20px; text-align: center; background: #fff; border-radius: 14px; }
 .modal[hidden] { display: none; }
-.modal { position: fixed; inset: 0; z-index: 20; display: grid; grid-template-rows: auto 1fr auto; background: #171310f2; color: #fff; }
-.modal-head, .modal-foot { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 14px 18px; background: #171310; }
-.modal-stage { overflow: auto; display: grid; place-items: center; padding: 20px; }
-.modal-stage img { display: block; width: auto; height: auto; max-width: min(1200px, 92vw); max-height: none; background: #fff; }
+.modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 22px; background: #171310e8; color: #fff; }
+.modal-dialog { width: min(1600px, 100%); max-height: calc(100vh - 44px); display: grid; grid-template-rows: auto 1fr; overflow: hidden; border: 1px solid #ffffff38; border-radius: 14px; background: #211b18; box-shadow: 0 24px 80px #0009; }
+.modal-head { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 14px 18px; background: #171310; }
+.modal-heading { min-width: 0; }
+.modal-heading strong, .modal-heading span { display: block; }
+.modal-heading span { margin-top: 3px; color: #cdbfb5; font-size: 13px; }
+.modal-stage { overflow: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr)); align-items: start; gap: 14px; padding: 16px; }
+.compare-card { min-width: 0; overflow: hidden; border-radius: 10px; background: #fff; color: #251c18; }
+.compare-card img { display: block; width: 100%; height: min(58vh, 620px); object-fit: contain; background: #fff; }
+.compare-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; padding: 10px; border-top: 1px solid #e4ddd5; }
+.compare-actions small { color: #69594f; flex: 1 0 100%; }
+.compare-actions a { color: #69594f; overflow-wrap: anywhere; flex: 1 0 100%; }
+.compare-actions button { flex: 1; border: 0; border-radius: 7px; padding: 9px 11px; font-weight: 750; }
+.compare-remove { background: #eee8e1; color: #493c35; }
+.compare-select { background: #7d263b; color: #fff; }
 .modal-close { border: 1px solid #fff8; color: #fff; background: transparent; border-radius: 8px; padding: 9px 13px; }
 .source { color: #f1d8a8; overflow-wrap: anywhere; }
 @media (max-width: 700px) { .shell { padding: 14px; } .mast { align-items: start; flex-direction: column; } .candidate { grid-template-rows: 210px auto; } .candidate img { height: 210px; } }
@@ -82,23 +93,46 @@ function imageUrl(candidate) {
   return '/api/packages/' + encodeURIComponent(state.package.packageId) + '/images/' + encodeURIComponent(candidate.candidateId);
 }
 
-function showModal(wine, candidate) {
-  state.modal = { wine, candidate };
-  document.querySelector('#modal-title').textContent = wine.displayIdentity;
-  const image = document.querySelector('#modal-image');
-  image.src = imageUrl(candidate);
-  image.alt = wine.displayIdentity;
-  const source = document.querySelector('#modal-source');
-  source.textContent = candidate.sourceHost || candidate.sourceUrl || 'Source unavailable';
-  source.href = candidate.sourceUrl || '#';
-  source.hidden = !candidate.sourceUrl;
+function showModal(wine) {
+  state.modal = { wine, removed: new Set() };
+  renderComparison();
   document.querySelector('#modal').hidden = false;
   document.body.style.overflow = 'hidden';
 }
 
+function renderComparison() {
+  if (!state.modal) return;
+  const { wine, removed } = state.modal;
+  const candidates = wine.candidates.filter((candidate) => !removed.has(candidate.candidateId));
+  document.querySelector('#modal-title').textContent = wine.displayIdentity;
+  document.querySelector('#modal-count').textContent = candidates.length + ' candidate' + (candidates.length === 1 ? '' : 's') + ' remaining';
+  const stage = document.querySelector('#modal-stage');
+  stage.replaceChildren();
+  for (const candidate of candidates) {
+    const image = el('img', { src: imageUrl(candidate), alt: wine.displayIdentity });
+    const remove = el('button', { class: 'compare-remove', type: 'button', text: 'Remove from comparison' });
+    remove.addEventListener('click', () => { removed.add(candidate.candidateId); renderComparison(); });
+    const select = el('button', { class: 'compare-select', type: 'button', text: 'Use this image' });
+    select.addEventListener('click', () => {
+      const wineCard = [...document.querySelectorAll('.wine')].find((card) => card.dataset.sku === wine.sku);
+      const candidateCards = [...wineCard.querySelectorAll('.candidate')];
+      const index = wine.candidates.findIndex((item) => item.candidateId === candidate.candidateId);
+      choose(wine, candidate, candidateCards[index]);
+      closeModal();
+    });
+    const details = (candidate.width || '?') + '×' + (candidate.height || '?') + (candidate.sourceHost ? ' · ' + candidate.sourceHost : '');
+    const source = candidate.sourceUrl
+      ? el('a', { href: candidate.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: details })
+      : el('small', { text: details });
+    const actions = el('div', { class: 'compare-actions' }, [source, remove, select]);
+    stage.append(el('article', { class: 'compare-card' }, [image, actions]));
+  }
+  if (!candidates.length) stage.append(el('div', { class: 'empty', text: 'All candidates were removed. Close this comparison and choose “None of these,” or reopen it to start over.' }));
+}
+
 function closeModal() {
   document.querySelector('#modal').hidden = true;
-  document.querySelector('#modal-image').removeAttribute('src');
+  document.querySelector('#modal-stage').replaceChildren();
   document.body.style.overflow = '';
   state.modal = null;
 }
@@ -149,7 +183,7 @@ function renderWine(wine) {
   const grid = el('div', { class: 'candidates' });
   wine.candidates.forEach((candidate, index) => {
     const image = el('img', { src: imageUrl(candidate), alt: wine.displayIdentity, loading: 'lazy' });
-    image.addEventListener('click', (event) => { event.stopPropagation(); showModal(wine, candidate); });
+    image.addEventListener('click', (event) => { event.stopPropagation(); showModal(wine); });
     const info = el('div', { class: 'candidate-info' }, [
       el('strong', { text: 'Candidate ' + (index + 1) }),
       el('small', { text: (candidate.width || '?') + '×' + (candidate.height || '?') + (candidate.sourceHost ? ' · ' + candidate.sourceHost : '') }),
@@ -164,7 +198,7 @@ function renderWine(wine) {
   const pick = el('button', { class: 'primary', type: 'button', disabled: 'disabled', text: 'Use selected image' });
   const none = el('button', { class: 'secondary', type: 'button', text: 'None of these' });
   const output = el('span', { class: 'status', text: '' });
-  const card = el('article', { class: 'wine', 'data-search': wine.displayIdentity.toLowerCase() }, [head, grid, el('div', { class: 'actions' }, [pick, none, output])]);
+  const card = el('article', { class: 'wine', 'data-sku': wine.sku, 'data-search': wine.displayIdentity.toLowerCase() }, [head, grid, el('div', { class: 'actions' }, [pick, none, output])]);
   pick.addEventListener('click', () => submit(wine, state.selected.get(wine.sku), card));
   none.addEventListener('click', () => submit(wine, '', card));
   return card;
@@ -179,6 +213,9 @@ async function start() {
   const res = await fetch('/api/current', { credentials: 'same-origin' });
   if (!res.ok) { status.textContent = 'The review package is not available. Please try again later.'; return; }
   state.package = await res.json();
+  for (const person of state.package.reviewers || []) reviewer.append(el('option', { value: person.name, text: person.name }));
+  reviewer.disabled = reviewer.options.length === 1;
+  if (reviewer.disabled) reviewer.options[0].textContent = 'Reviewer list unavailable';
   const wines = state.package.wines || [];
   status.textContent = wines.length + ' wines need a decision · package expires ' + new Date(state.package.expiresAt).toLocaleDateString();
   if (!wines.length) list.append(el('div', { class: 'empty', text: 'Nothing needs review right now.' }));
@@ -187,14 +224,8 @@ async function start() {
 
 search.addEventListener('input', applyFilter);
 document.querySelectorAll('[data-close]').forEach((node) => node.addEventListener('click', closeModal));
-document.querySelector('#modal-select').addEventListener('click', () => {
-  if (!state.modal) return;
-  const card = [...document.querySelectorAll('.wine')].find((node) => node.querySelector('.wine-meta').textContent.startsWith('SKU ' + state.modal.wine.sku));
-  const candidateCards = [...card.querySelectorAll('.candidate')];
-  const index = state.modal.wine.candidates.findIndex((candidate) => candidate.candidateId === state.modal.candidate.candidateId);
-  choose(state.modal.wine, state.modal.candidate, candidateCards[index]);
-  closeModal();
-});
+const modal = document.querySelector('#modal');
+modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
 start();
 `;
@@ -213,6 +244,6 @@ export function loginPage(message = '') {
 }
 
 export function consolePage() {
-  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><input id="reviewer" autocomplete="name" placeholder="Your name" aria-label="Your name"><input id="search" type="search" placeholder="Find a wine" aria-label="Find a wine"></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
-<div id="modal" class="modal" hidden><div class="modal-head"><strong id="modal-title"></strong><button class="modal-close" type="button" data-close>Close</button></div><div class="modal-stage"><img id="modal-image" alt=""></div><div class="modal-foot"><a id="modal-source" class="source" target="_blank" rel="noopener noreferrer"></a><button id="modal-select" class="primary" type="button">Select this image</button></div></div>`, { script: true });
+  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><select id="reviewer" required aria-label="Your name"><option value="">Select your name</option></select><input id="search" type="search" placeholder="Find a wine" aria-label="Find a wine"></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
+<div id="modal" class="modal" hidden><section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div class="modal-heading"><strong id="modal-title"></strong><span id="modal-count"></span></div><button class="modal-close" type="button" data-close>Close</button></div><div id="modal-stage" class="modal-stage"></div></section></div>`, { script: true });
 }

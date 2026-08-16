@@ -34,6 +34,14 @@ describe('protected review console', () => {
     assert.equal(action.csrfSessionId, 'session-1');
   });
 
+  it('accepts catalog SKUs with inventory suffix asterisks', () => {
+    const action = validateAction({
+      kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg',
+      targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1',
+    }, { id: '00000000-0000-4000-8000-000000000001', environment: 'test', sessionId: 'session-1', now: new Date() });
+    assert.equal(action.sku, '500740*');
+  });
+
   it('rejects extra fields, unsafe identifiers, and inconsistent kinds', () => {
     const base = { kind: 'image-select', reviewer: 'Barbara', sku: 'AB-123', packageId: 'pkg', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const context = { id: 'id', environment: 'test', sessionId: 's', now: new Date() };

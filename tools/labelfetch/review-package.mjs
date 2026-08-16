@@ -2,9 +2,20 @@ import { createHash } from 'node:crypto';
 
 const SUBJECT_REFUSAL = /no clean background|multiple subjects|too wide|too narrow|no subject|fills the frame/i;
 const REVIEWABLE_SOURCES = new Set(['generated-label', 'generated-photo', 'label-scan', '']);
+const REVIEWER_ROLES = new Set(['Executive', 'Back Office']);
 
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const clean = (value) => String(value || '').trim();
+
+export function buildReviewerRoster(team) {
+  const byName = new Map();
+  for (const person of Array.isArray(team) ? team : []) {
+    const name = clean(person?.name);
+    const role = clean(person?.role);
+    if (name && REVIEWER_ROLES.has(role) && !byName.has(name)) byName.set(name, { name, role });
+  }
+  return [...byName.values()].sort((left, right) => left.name.localeCompare(right.name));
+}
 
 export function wineRevision(wine) {
   return hash(JSON.stringify([
@@ -105,9 +116,11 @@ async function optionalJSON(storage, path) {
   }
 }
 
-export async function publishReviewPackage({ environment, catalogCommit, catalog, draft, storage, readBytes, now = () => new Date() }) {
+export async function publishReviewPackage({ environment, catalogCommit, catalog, draft, reviewers, storage, readBytes, now = () => new Date() }) {
   if (!['test', 'production'].includes(environment)) throw new Error('review package environment must be test or production');
   if (!/^[a-f0-9]{7,64}$/.test(catalogCommit)) throw new Error('review package requires a catalog commit');
+  const reviewerRoster = buildReviewerRoster(reviewers);
+  if (!reviewerRoster.length) throw new Error('review package requires an eligible reviewer roster');
   const prefix = `_review/${environment}`;
   const current = await optionalJSON(storage, `${prefix}/current.json`);
   const previous = current?.packageId ? await optionalJSON(storage, `${prefix}/packages/${current.packageId}/manifest.json`) : null;
@@ -131,7 +144,7 @@ export async function publishReviewPackage({ environment, catalogCommit, catalog
   const created = now();
   const base = {
     schemaVersion: 1, environment, catalogCommit,
-    createdAt: created.toISOString(), expiresAt: new Date(created.getTime() + 30 * 86400_000).toISOString(),
+    createdAt: created.toISOString(), expiresAt: new Date(created.getTime() + 30 * 86400_000).toISOString(), reviewers: reviewerRoster,
     wines: wines.map((wine) => ({ ...wine, candidates: wine.candidates.map(publicCandidate) })),
   };
   const digest = hash(JSON.stringify(base));

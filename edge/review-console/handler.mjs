@@ -17,6 +17,8 @@ async function loadPackage(storage, prefix, packageId) {
 
 function actionTarget(manifest, action) {
   if (manifest.environment !== action.environment || manifest.catalogCommit !== action.targetCatalogCommit) throw new Error('action does not match package');
+  const eligibleReviewer = manifest.reviewers?.some(({ name, role }) => name === action.reviewer && (role === 'Executive' || role === 'Back Office'));
+  if (!eligibleReviewer) throw new Error('reviewer is not authorized for this package');
   const created = Date.parse(manifest.createdAt);
   const expires = Date.parse(manifest.expiresAt);
   const submitted = Date.parse(action.submittedAt);

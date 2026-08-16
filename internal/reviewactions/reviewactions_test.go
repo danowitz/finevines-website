@@ -63,12 +63,12 @@ func (failingNormalizer) Normalize(context.Context, string, string) error { retu
 
 func fixture(t *testing.T) (*memoryStore, []model.Wine, string) {
 	t.Helper()
-	wines := []model.Wine{{ID: "wine-1", SKU: "AB-1", Slug: "producer-wine-2022", Producer: "Producer", Name: "Wine", Vintage: "2022", ImagePath: "assets/img/wines/producer-wine-2022.svg", ImageSource: model.ImageGeneratedLabel, SourceHash: "source"}}
+	wines := []model.Wine{{ID: "wine-1", SKU: "500740*", Slug: "producer-wine-2022", Producer: "Producer", Name: "Wine", Vintage: "2022", ImagePath: "assets/img/wines/producer-wine-2022.svg", ImageSource: model.ImageGeneratedLabel, SourceHash: "source"}}
 	id := "00000000-0000-4000-8000-000000000001"
 	bytes := []byte("candidate-image")
 	sum := sha256.Sum256(bytes)
-	action := Action{SchemaVersion: 1, ID: id, Environment: "test", Reviewer: "Barbara", SKU: "AB-1", Kind: "image-select", PackageID: "pkg-1", TargetCatalogCommit: "abcdef1", WineRevision: WineRevision(wines[0]), CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", CSRFSessionID: "00000000-0000-4000-8000-000000000099"}
-	manifest := Manifest{SchemaVersion: 1, PackageID: "pkg-1", Environment: "test", CatalogCommit: "abcdef1", CreatedAt: "2026-08-15T00:00:00Z", ExpiresAt: "2026-09-14T00:00:00Z", Wines: []PackageWine{{SKU: "AB-1", WineRevision: action.WineRevision, Candidates: []Candidate{{CandidateID: "candidate-1", StorageName: "candidate-1.png", SHA256: hex.EncodeToString(sum[:]), Bytes: len(bytes), MIME: "image/png", SourceURL: "https://producer.example/wine"}}}}}
+	action := Action{SchemaVersion: 1, ID: id, Environment: "test", Reviewer: "Barb Fultz", SKU: "500740*", Kind: "image-select", PackageID: "pkg-1", TargetCatalogCommit: "abcdef1", WineRevision: WineRevision(wines[0]), CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", CSRFSessionID: "00000000-0000-4000-8000-000000000099"}
+	manifest := Manifest{SchemaVersion: 1, PackageID: "pkg-1", Environment: "test", CatalogCommit: "abcdef1", CreatedAt: "2026-08-15T00:00:00Z", ExpiresAt: "2026-09-14T00:00:00Z", Reviewers: []Reviewer{{Name: "Barb Fultz", Role: "Back Office"}}, Wines: []PackageWine{{SKU: "500740*", WineRevision: action.WineRevision, Candidates: []Candidate{{CandidateID: "candidate-1", StorageName: "candidate-1.png", SHA256: hex.EncodeToString(sum[:]), Bytes: len(bytes), MIME: "image/png", SourceURL: "https://producer.example/wine"}}}}}
 	encode := func(value any) []byte {
 		data, err := json.Marshal(value)
 		if err != nil {
@@ -120,6 +120,42 @@ func TestPrepareConflictsWhenWineRevisionChanged(t *testing.T) {
 	}
 	if result.Wines[0].ImageSource != model.ImageGeneratedLabel {
 		t.Fatal("conflict mutated the catalog")
+	}
+}
+
+func TestPrepareRejectsReviewerOutsidePackageRoster(t *testing.T) {
+	store, wines, id := fixture(t)
+	var action Action
+	if err := json.Unmarshal(store.files["_review/test/actions/"+id+".json"], &action); err != nil {
+		t.Fatal(err)
+	}
+	action.Reviewer = "Sales Person"
+	data, _ := json.Marshal(action)
+	store.files["_review/test/actions/"+id+".json"], store.files["_review/test/pending/"+id+".json"] = data, data
+	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Now()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Decisions[0].Status != "rejected" || !strings.Contains(result.Decisions[0].Reason, "reviewer") {
+		t.Fatalf("decision = %#v", result.Decisions[0])
+	}
+}
+
+func TestPrepareFinishesExistingActionFromLegacyPackageWithoutRoster(t *testing.T) {
+	store, wines, id := fixture(t)
+	var manifest Manifest
+	if err := json.Unmarshal(store.files["_review/test/packages/pkg-1/manifest.json"], &manifest); err != nil {
+		t.Fatal(err)
+	}
+	manifest.Reviewers = nil
+	data, _ := json.Marshal(manifest)
+	store.files["_review/test/packages/pkg-1/manifest.json"] = data
+	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Now()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Decisions[0].ID != id || result.Decisions[0].Status != "prepared" {
+		t.Fatalf("decision = %#v", result.Decisions[0])
 	}
 }
 

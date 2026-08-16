@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildReviewDraft, publishReviewPackage, wineRevision } from '../../tools/labelfetch/review-package.mjs';
+import { buildReviewerRoster, buildReviewDraft, publishReviewPackage, wineRevision } from '../../tools/labelfetch/review-package.mjs';
 
 const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
 const wine = { id: 'wine-1', sku: 'AB-1', slug: 'producer-wine-2022', producer: 'Producer', name: 'Wine', vintage: '2022', imagePath: 'assets/img/wines/producer-wine-2022.svg', imageSource: 'generated-label', sourceHash: 'source' };
+const reviewers = [{ name: 'Barb Fultz', role: 'Back Office' }];
 
 function memoryStorage(initial = {}) {
   const files = new Map(Object.entries(initial));
@@ -20,6 +21,17 @@ function memoryStorage(initial = {}) {
 }
 
 describe('hosted review package', () => {
+  it('limits the reviewer roster to current executives and back office users', () => {
+    assert.deepEqual(buildReviewerRoster([
+      { name: 'Connie Molitor', role: 'Executive' },
+      { name: 'Daniel Pilkey', role: 'Sales Rep' },
+      { name: 'Barb Fultz', role: 'Back Office' },
+      { name: ' Connie Molitor ', role: 'Executive' },
+    ]), [
+      { name: 'Barb Fultz', role: 'Back Office' },
+      { name: 'Connie Molitor', role: 'Executive' },
+    ]);
+  });
   it('shares one canonical wine revision contract with the Go action applier', () => {
     assert.equal(wineRevision(wine), '56514dfc14df894df9dbb0f24ba5f6d3180fb28b8d3d4a36b0a30237a4c99e7b');
   });
@@ -81,10 +93,11 @@ describe('hosted review package', () => {
   it('publishes immutable image bytes and manifest before moving current.json', async () => {
     const storage = memoryStorage();
     const draft = await buildReviewDraft({ catalog: [wine], manifest: { one: { slug: wine.slug, ok: false, alternates: [{ file: 'good.png', page: 'https://producer.example/wine' }] } }, fileExists: () => true, readBytes: async () => png });
-    const result = await publishReviewPackage({ environment: 'test', catalogCommit: 'a'.repeat(40), catalog: [wine], draft, storage, readBytes: async () => png, now: () => new Date('2026-08-15T00:00:00Z') });
+    const result = await publishReviewPackage({ environment: 'test', catalogCommit: 'a'.repeat(40), catalog: [wine], draft, reviewers, storage, readBytes: async () => png, now: () => new Date('2026-08-15T00:00:00Z') });
     assert.equal(result.wines, 1);
     const current = JSON.parse(storage.files.get('_review/test/current.json'));
     const manifest = JSON.parse(storage.files.get(`_review/test/packages/${current.packageId}/manifest.json`));
+    assert.deepEqual(manifest.reviewers, reviewers);
     assert.equal(manifest.wines[0].candidates[0].localFile, undefined);
     assert.ok(storage.files.has(`_review/test/packages/${current.packageId}/images/${manifest.wines[0].candidates[0].storageName}`));
   });
@@ -99,7 +112,7 @@ describe('hosted review package', () => {
     });
     priorCandidate.sha256 = (await import('node:crypto')).createHash('sha256').update(new Uint8Array([1, 2, 3])).digest('hex');
     storage.files.set('_review/test/packages/old-package/manifest.json', JSON.stringify(previous));
-    const result = await publishReviewPackage({ environment: 'test', catalogCommit: 'c'.repeat(40), catalog: [wine], draft: { schemaVersion: 1, wines: [] }, storage, readBytes: async () => { throw new Error('not local'); }, now: () => new Date('2026-08-16T00:00:00Z') });
+    const result = await publishReviewPackage({ environment: 'test', catalogCommit: 'c'.repeat(40), catalog: [wine], draft: { schemaVersion: 1, wines: [] }, reviewers, storage, readBytes: async () => { throw new Error('not local'); }, now: () => new Date('2026-08-16T00:00:00Z') });
     assert.equal(result.carried, 1);
     assert.equal(result.wines, 1);
   });
@@ -111,7 +124,7 @@ describe('hosted review package', () => {
       '_review/test/packages/old-package/manifest.json': JSON.stringify(previous),
     });
     const changed = { ...wine, imagePath: 'assets/img/wines/producer-wine-2022.jpg', imageSource: 'scraped-web' };
-    const result = await publishReviewPackage({ environment: 'test', catalogCommit: 'd'.repeat(40), catalog: [changed], draft: { schemaVersion: 1, wines: [] }, storage, readBytes: async () => { throw new Error('not local'); }, now: () => new Date('2026-08-17T00:00:00Z') });
+    const result = await publishReviewPackage({ environment: 'test', catalogCommit: 'd'.repeat(40), catalog: [changed], draft: { schemaVersion: 1, wines: [] }, reviewers, storage, readBytes: async () => { throw new Error('not local'); }, now: () => new Date('2026-08-17T00:00:00Z') });
     assert.equal(result.wines, 0);
     const current = JSON.parse(storage.files.get('_review/test/current.json'));
     const manifest = JSON.parse(storage.files.get(`_review/test/packages/${current.packageId}/manifest.json`));
