@@ -113,7 +113,7 @@ async function ensureHostname(pullZoneId, host) {
 }
 
 async function ensureDnsRecord(config, pullZone) {
-  const zones = await bunny('/dnszone');
+  const zones = (await bunny('/dnszone')).Items ?? [];
   const zone = one(zones, (item) => item.Domain === config.domain, `DNS zone for ${config.domain}`);
   const full = await bunny(`/dnszone/${zone.Id}`);
   const existing = (full.Records ?? []).filter((record) => record.Name === 'review');
