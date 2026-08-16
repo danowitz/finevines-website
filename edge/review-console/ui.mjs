@@ -55,9 +55,10 @@ button { cursor: pointer; }
 .modal-heading { min-width: 0; }
 .modal-heading strong, .modal-heading span { display: block; }
 .modal-heading span { margin-top: 3px; color: #cdbfb5; font-size: 13px; }
-.modal-stage { overflow: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr)); align-items: start; gap: 14px; padding: 16px; }
-.compare-card { min-width: 0; overflow: hidden; border-radius: 10px; background: #fff; color: #251c18; }
-.compare-card img { display: block; width: 100%; height: min(58vh, 620px); object-fit: contain; background: #fff; }
+.modal-stage { overflow-x: auto; overflow-y: hidden; display: flex; align-items: stretch; gap: 14px; padding: 16px; }
+.compare-card { flex: 0 0 clamp(300px, 24vw, 430px); min-width: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: 10px; background: #fff; color: #251c18; }
+.compare-card img { display: block; width: 100%; height: min(65vh, 700px); min-height: 0; object-fit: contain; background: #fff; }
+.compare-card .compare-actions { margin-top: auto; }
 .compare-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; padding: 10px; border-top: 1px solid #e4ddd5; }
 .compare-actions small { color: #69594f; flex: 1 0 100%; }
 .compare-actions a { color: #69594f; overflow-wrap: anywhere; flex: 1 0 100%; }
@@ -161,7 +162,12 @@ async function submit(wine, candidateId, card) {
   output.textContent = data.dispatched ? 'Queued. The deployment has been started.' : 'Queued. The nightly processor will pick it up.';
   output.className = 'status good';
   card.querySelectorAll('button').forEach((button) => button.disabled = true);
-  poll(data.id, output);
+  card.remove();
+  state.selected.delete(wine.sku);
+  const remaining = document.querySelectorAll('.wine').length;
+  status.textContent = wine.displayIdentity + ' queued · ' + remaining + ' wine' + (remaining === 1 ? '' : 's') + ' remaining';
+  if (!remaining) list.append(el('div', { class: 'empty', text: 'All review decisions have been queued.' }));
+  poll(data.id, status);
 }
 
 async function poll(id, output) {
@@ -198,7 +204,7 @@ function renderWine(wine) {
   const pick = el('button', { class: 'primary', type: 'button', disabled: 'disabled', text: 'Use selected image' });
   const none = el('button', { class: 'secondary', type: 'button', text: 'None of these' });
   const output = el('span', { class: 'status', text: '' });
-  const card = el('article', { class: 'wine', 'data-sku': wine.sku, 'data-search': wine.displayIdentity.toLowerCase() }, [head, grid, el('div', { class: 'actions' }, [pick, none, output])]);
+  const card = el('article', { class: 'wine', 'data-sku': wine.sku, 'data-search': (wine.displayIdentity + ' ' + wine.sku).toLowerCase() }, [head, grid, el('div', { class: 'actions' }, [pick, none, output])]);
   pick.addEventListener('click', () => submit(wine, state.selected.get(wine.sku), card));
   none.addEventListener('click', () => submit(wine, '', card));
   return card;
@@ -244,6 +250,6 @@ export function loginPage(message = '') {
 }
 
 export function consolePage() {
-  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><select id="reviewer" required aria-label="Your name"><option value="">Select your name</option></select><input id="search" type="search" placeholder="Find a wine" aria-label="Find a wine"></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
+  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><select id="reviewer" required aria-label="Your name"><option value="">Select your name</option></select><input id="search" type="search" placeholder="Search wines by name or SKU" aria-label="Search wines by name or SKU"></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
 <div id="modal" class="modal" hidden><section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div class="modal-heading"><strong id="modal-title"></strong><span id="modal-count"></span></div><button class="modal-close" type="button" data-close>Close</button></div><div id="modal-stage" class="modal-stage"></div></section></div>`, { script: true });
 }

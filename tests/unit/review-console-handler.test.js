@@ -111,6 +111,12 @@ describe('review console handler', () => {
     const script = await app.text();
     assert.match(script, /Remove from comparison/);
     assert.match(script, /event\.target === modal/);
+    assert.match(script, /card\.remove\(\)/);
+    assert.match(markup, /Search wines by name or SKU/);
+    const css = await (await handle(new Request('https://review.finevines.biz/app.css'))).text();
+    assert.match(css, /\.modal-stage\s*\{[^}]*display:\s*flex;/s);
+    assert.match(css, /\.modal-stage\s*\{[^}]*overflow-x:\s*auto;/s);
+    assert.doesNotMatch(css, /\.modal-stage\s*\{[^}]*grid-template-columns/s);
     const image = await handle(new Request('https://review.finevines.biz/api/packages/pkg-1/images/c1', { headers: { cookie } }));
     assert.equal(image.status, 200);
     assert.equal(image.headers.get('content-type'), 'image/png');
