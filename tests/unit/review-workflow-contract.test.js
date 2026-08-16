@@ -35,5 +35,8 @@ describe('hosted review workflow contract', () => {
     assert.doesNotMatch(workflow, /deploy_key:/);
     assert.match(provision, /node tools\/review-console\/provision\.mjs/);
     assert.match(provision, /environment: review-production/);
+    const provisioner = await readFile('tools/review-console/provision.mjs', 'utf8');
+    assert.match(provisioner, /bunny\('\/compute\/script'\)\)\.Items/);
+    assert.match(provisioner, /bunny\('\/dnszone'\)\)\.Items/);
   });
 });
