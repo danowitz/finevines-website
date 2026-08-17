@@ -21,6 +21,7 @@ import { candidateWindow } from './candidate-window.mjs';
 import { passedSlugs, reportSlugs, unresolvedSlugs, withoutPassed } from './comparison-progress.mjs';
 import { createBottleSelector } from './bottle-selector.mjs';
 import { reusableStagedRecord } from './staged-record.mjs';
+import { loadRejectedCandidates } from './rejected-candidates.mjs';
 import { buildCatalogImageDonors, reusableCatalogImage } from './catalog-image-reuse.mjs';
 import {
   loadFunnelStore,
@@ -54,6 +55,8 @@ const CANARY = has('canary');
 const RETRY_MISSES = has('retry-misses');
 const CANDIDATE_RECOVERY = has('candidate-recovery');
 const QUALITY_RECOVERY = has('quality-recovery');
+const REVIEW_RECOVERY = has('review-recovery');
+const REJECTED_CANDIDATES = opt('rejected-candidates', '');
 const OMIT_QUERY_VINTAGE = has('omit-query-vintage');
 const CATALOG_REUSE = !has('no-catalog-reuse');
 const TRACE = has('trace');
@@ -69,7 +72,7 @@ if (EXCLUDE_PASSED_REPORT && REPLAY_REPORT) {
 const SUPPORTED_LABEL_MODELS = new Set(['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-5.6-sol']);
 const REASONING_EFFORTS = new Set(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
 const LABEL_REASONING_EFFORT = MODEL === 'gpt-5.6-sol' ? opt('label-reasoning-effort', 'medium') : '';
-if (OMIT_QUERY_VINTAGE && !QUALITY_RECOVERY && !CANDIDATE_RECOVERY) {
+if (OMIT_QUERY_VINTAGE && !QUALITY_RECOVERY && !CANDIDATE_RECOVERY && !REVIEW_RECOVERY) {
   console.error('--omit-query-vintage is recovery-only');
   process.exit(2);
 }
@@ -269,6 +272,7 @@ const selector = createBottleSelector({
 await mkdir(OUT_DIR, { recursive: true });
 await mkdir(CANDIDATE_DIR, { recursive: true });
 const manifest = (await exists(MANIFEST)) ? JSON.parse(await readFile(MANIFEST, 'utf8')) : {};
+const rejectedCandidates = await loadRejectedCandidates(REJECTED_CANDIDATES);
 
 console.log(`${SEARCH_PROVIDER} image discovery: ready`);
 console.log(`identity reader: ${visionKey ? `${MODEL}${LABEL_REASONING_EFFORT ? ` (${LABEL_REASONING_EFFORT} effort)` : ''}, three-image primary batch plus targeted miss-only reads (ten-image ceiling)` : 'unavailable - grouped wines will stay due'}`);
@@ -411,12 +415,14 @@ async function processWine(wine) {
     return { wine, rec, evaluated: 0, unevaluated: 0, discoveryComplete };
   }
 
-  const window = candidateWindow(discovery.items);
+  const permitted = discovery.items.filter(rejectedCandidates.acceptIdentity);
+  const window = candidateWindow(permitted);
   Object.assign(rec.funnel, window.diagnostics);
   const downloaded = await downloadCandidates({
     items: window.candidates,
     directory: join(CANDIDATE_DIR, wine.slug),
     convert: convertToPng,
+    accept: rejectedCandidates.acceptBytes,
   });
   if (trace) trace.downloads = downloaded.trace || [];
   const candidates = downloaded.candidates;

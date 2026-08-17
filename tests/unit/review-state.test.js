@@ -128,7 +128,7 @@ describe('review state', () => {
     });
     assert.deepEqual(await state.actionStatus(second.id, 'test'), {
       id: second.id, status: 'needs_attention', attentionReason: 'catalog revision changed',
-      submittedAt: second.submittedAt, startedAt: '', completedAt: '',
+      launchExcluded: false, submittedAt: second.submittedAt, startedAt: '', completedAt: '',
     });
   });
 
@@ -146,6 +146,27 @@ describe('review state', () => {
     assert.equal(claimed.remaining, 1);
     assert.equal((await state.counts('test')).processing, 50);
     assert.equal((await state.counts('test')).queued, 1);
+  });
+
+  it('does not move claims without their processing trace events', async () => {
+    const base = createClient({ url: 'file::memory:' }); clients.push(base);
+    let failClaimBatch = false;
+    const client = {
+      execute: (...args) => base.execute(...args),
+      batch: (statements, mode) => {
+        if (failClaimBatch && statements.some((statement) => String(statement.sql || statement).includes('processor claimed action'))) {
+          throw new Error('trace storage failed');
+        }
+        return base.batch(statements, mode);
+      },
+    };
+    const state = createReviewState({ client, now: () => new Date('2026-08-16T12:00:00.000Z') });
+    await state.initialize();
+    await state.queue(action('00000000-0000-4000-8000-000000000052'));
+    failClaimBatch = true;
+    await assert.rejects(state.claim('test', { limit: 50, staleBefore: '2026-08-16T11:15:00.000Z' }), /trace storage failed/);
+    assert.equal((await state.counts('test')).queued, 1);
+    assert.equal((await state.counts('test')).processing, 0);
   });
 
   it('opens, escalates, and recovers one deduplicated incident notification sequence', async () => {
@@ -203,15 +224,32 @@ describe('review state', () => {
   });
 
   it('requires reasons for reopen/exclusion and can explicitly restart failed rediscovery', async () => {
-    const state = stateAt(); await state.initialize();
+    const client = createClient({ url: 'file::memory:' }); clients.push(client);
+    const state = createReviewState({ client, now: () => new Date('2026-08-16T12:00:00.000Z') }); await state.initialize();
     const makeRejected = (id, revision, sku, slug) => ({ ...action(id, { wineRevision: revision, sku }), kind: 'no-image', candidateId: '', wineSlug: slug, rejectedCandidates: [{ candidateId: 'old', sha256: 'e'.repeat(64), sourceImageUrl: '', sourceUrl: '' }] });
     const rediscover = makeRejected('00000000-0000-4000-8000-000000000083', '3'.repeat(64), 'SKU-3', 'wine-three');
     await state.queue(rediscover); await state.claim('test', { limit: 50, staleBefore: '2026-08-16T11:15:00.000Z' }); await state.scheduleRecovery(rediscover.id, 'test');
     await state.resolveRecovery(rediscover.id, 'needs_attention', 'no new candidates');
     assert.equal((await state.recoverAction(rediscover.id, 'rediscover')).status, 'processing');
+    assert.deepEqual((await state.pendingRecoveries('test')).map(({ actionId }) => actionId), [rediscover.id]);
+
+    const directRediscover = makeRejected('00000000-0000-4000-8000-000000000085', '5'.repeat(64), 'SKU-5', 'wine-five');
+    await state.queue(directRediscover); await state.transition(directRediscover.id, 'queued', 'needs_attention', 'discovery failed before recovery was scheduled');
+    assert.equal((await state.recoverAction(directRediscover.id, 'rediscover')).status, 'processing');
+    assert.ok((await state.pendingRecoveries('test')).some(({ actionId }) => actionId === directRediscover.id));
+
     const excluded = makeRejected('00000000-0000-4000-8000-000000000084', '4'.repeat(64), 'SKU-4', 'wine-four');
     await state.queue(excluded); await state.transition(excluded.id, 'queued', 'needs_attention', 'operator decision required');
     await assert.rejects(state.recoverAction(excluded.id, 'exclude', ''), /reason/);
     assert.equal((await state.recoverAction(excluded.id, 'exclude', 'supplier image required')).status, 'needs_attention');
+    assert.equal((await state.actionStatus(excluded.id, 'test')).launchExcluded, true);
+    const excludedStatus = await state.packageStatus('test', [{ sku: excluded.sku, wineRevision: excluded.wineRevision }]);
+    assert.equal(excludedStatus.counts.needsAttention, 0);
+    assert.deepEqual(await state.launchExclusions('test'), [{ sku: excluded.sku, wineRevision: excluded.wineRevision, reason: 'supplier image required' }]);
+    assert.deepEqual(await state.scanIncidents('test', 'joel@gritautomation.com'), []);
+
+    const eventRows = await client.execute({ sql: 'SELECT status, detail FROM review_action_events WHERE action_id = ? ORDER BY sequence', args: [excluded.id] });
+    assert.equal(eventRows.rows.at(-1).status, 'needs_attention');
+    assert.match(eventRows.rows.at(-1).detail, /temporarily excluded.*supplier image required/);
   });
 });

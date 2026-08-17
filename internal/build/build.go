@@ -22,6 +22,7 @@ import (
 	"github.com/gritautomation/finevines-website/internal/collectioneditorial"
 	"github.com/gritautomation/finevines-website/internal/label"
 	"github.com/gritautomation/finevines-website/internal/model"
+	"github.com/gritautomation/finevines-website/internal/reviewactions"
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 	"github.com/gritautomation/finevines-website/internal/taxonomy"
 )
@@ -729,7 +730,20 @@ type indexEntry struct {
 }
 
 func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error {
-	s, err := loadSite(dataDir, baseURL, gaID)
+	return run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID, nil)
+}
+
+// RunWithLaunchExclusions applies the review system's temporary launch overlay
+// without mutating Salesforce-owned catalog data. Excluded SKUs produce no
+// browse card, detail page, search entry, or sitemap URL in this build.
+type LaunchExclusions map[string]map[string]struct{}
+
+func RunWithLaunchExclusions(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string, exclusions LaunchExclusions) error {
+	return run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID, exclusions)
+}
+
+func run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string, exclusions LaunchExclusions) error {
+	s, err := loadSite(dataDir, baseURL, gaID, exclusions)
 	if err != nil {
 		return err
 	}
@@ -1067,6 +1081,18 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		return err
 	}
 	return nil
+}
+
+func withoutExcludedWines(wines []model.Wine, exclusions LaunchExclusions) []model.Wine {
+	kept := make([]model.Wine, 0, len(wines))
+	for _, wine := range wines {
+		revisions := exclusions[wine.SKU]
+		if _, excluded := revisions[reviewactions.WineRevision(wine)]; excluded {
+			continue
+		}
+		kept = append(kept, wine)
+	}
+	return kept
 }
 
 // pathed is implemented by every page data type via page's promoted
@@ -1934,7 +1960,7 @@ func dedupeBySlug(wines []model.Wine) []model.Wine {
 	return out
 }
 
-func loadSite(dataDir, baseURL, gaID string) (*site, error) {
+func loadSite(dataDir, baseURL, gaID string, exclusions LaunchExclusions) (*site, error) {
 	wines, err := model.LoadWines(filepath.Join(dataDir, "wines.json"))
 	if err != nil {
 		return nil, err
@@ -1951,7 +1977,7 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load taxonomy: %w", err)
 	}
-	cleaned := usableWines(taxonomyCatalog.Normalize(wines))
+	cleaned := usableWines(taxonomyCatalog.Normalize(withoutExcludedWines(wines, exclusions)))
 	// Unavailable wines keep a published detail page (their search ranking
 	// survives the stock-out) but appear on NO browse surface: s.Wines is
 	// active-only, so the portfolio, facets, catalog index, search, featured

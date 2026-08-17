@@ -32,7 +32,8 @@ export function createReviewState({ client, now = () => new Date() }) {
         started_at TEXT,
         completed_at TEXT,
         updated_at TEXT NOT NULL,
-        attention_reason TEXT
+        attention_reason TEXT,
+        launch_excluded INTEGER NOT NULL DEFAULT 0
       )`;
     await client.execute(actionTable);
     const schema = await client.execute(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'review_actions'`);
@@ -55,6 +56,10 @@ export function createReviewState({ client, now = () => new Date() }) {
       } finally {
         await client.execute('PRAGMA foreign_keys = ON');
       }
+    }
+    const actionColumns = await client.execute('PRAGMA table_info(review_actions)');
+    if (!actionColumns.rows.some((row) => String(rowValue(row, 'name')) === 'launch_excluded')) {
+      await client.execute('ALTER TABLE review_actions ADD COLUMN launch_excluded INTEGER NOT NULL DEFAULT 0');
     }
     await client.batch([
       `CREATE UNIQUE INDEX IF NOT EXISTS review_actions_active_wine
@@ -198,13 +203,17 @@ export function createReviewState({ client, now = () => new Date() }) {
   async function counts(environment = 'test') {
     const result = await client.execute({
       sql: `SELECT status, COUNT(*) AS total, MIN(submitted_at) AS oldest
-        FROM review_actions WHERE environment = ? GROUP BY status`,
+        FROM review_actions WHERE environment = ? AND launch_excluded = 0 GROUP BY status`,
       args: [environment],
     });
     const values = { needs_decision: 0, queued: 0, processing: 0, completed: 0, needs_attention: 0 };
     let oldestPendingAt = null;
     for (const row of result.rows) {
       const status = String(rowValue(row, 'status'));
+      if (Number(rowValue(row, 'launch_excluded') || 0) === 1) {
+        statuses[wine.wineRevision] = { ...statusFrom(row), launchExcluded: true };
+        continue;
+      }
       if (!ALL_STATUSES.has(status)) continue;
       const total = Number(rowValue(row, 'total'));
       values[status] += total;
@@ -234,7 +243,7 @@ export function createReviewState({ client, now = () => new Date() }) {
   async function packageStatus(environment, wines) {
     const revisions = new Set((Array.isArray(wines) ? wines : []).map(({ wineRevision }) => wineRevision));
     const result = await client.execute({
-      sql: `SELECT id, wine_revision, status, submitted_at, attention_reason
+      sql: `SELECT id, wine_revision, status, submitted_at, attention_reason, launch_excluded
         FROM review_actions WHERE environment = ? ORDER BY submitted_at DESC, id DESC`,
       args: [environment],
     });
@@ -272,7 +281,7 @@ export function createReviewState({ client, now = () => new Date() }) {
 
   async function actionStatus(id, environment) {
     const result = await client.execute({
-      sql: `SELECT id, status, attention_reason, submitted_at, started_at, completed_at
+      sql: `SELECT id, status, attention_reason, launch_excluded, submitted_at, started_at, completed_at
         FROM review_actions WHERE id = ? AND environment = ?`,
       args: [id, environment],
     });
@@ -282,6 +291,7 @@ export function createReviewState({ client, now = () => new Date() }) {
       id: String(rowValue(row, 'id')),
       status: String(rowValue(row, 'status')),
       attentionReason: rowValue(row, 'attention_reason') ? String(rowValue(row, 'attention_reason')) : '',
+      launchExcluded: Number(rowValue(row, 'launch_excluded') || 0) === 1,
       submittedAt: String(rowValue(row, 'submitted_at')),
       startedAt: rowValue(row, 'started_at') ? String(rowValue(row, 'started_at')) : '',
       completedAt: rowValue(row, 'completed_at') ? String(rowValue(row, 'completed_at')) : '',
@@ -304,6 +314,18 @@ export function createReviewState({ client, now = () => new Date() }) {
         mime: String(rowValue(row, 'mime')),
         bytes: rowValue(row, 'image_bytes'),
       },
+    }));
+  }
+
+  async function launchExclusions(environment) {
+    const result = await client.execute({
+      sql: `SELECT sku, wine_revision, attention_reason FROM review_actions
+        WHERE environment = ? AND launch_excluded = 1 ORDER BY sku, wine_revision`, args: [environment],
+    });
+    return result.rows.map((row) => ({
+      sku: String(rowValue(row, 'sku')),
+      wineRevision: String(rowValue(row, 'wine_revision')),
+      reason: String(rowValue(row, 'attention_reason') || ''),
     }));
   }
 
@@ -380,9 +402,11 @@ export function createReviewState({ client, now = () => new Date() }) {
     const stamp = now().toISOString();
     const result = await client.batch([
       { sql: `UPDATE review_recoveries SET status = ?, reason = ?, updated_at = ?
-          WHERE action_id = ? AND status = 'pending'`, args: [outcome, reason, stamp, actionId] },
+          WHERE action_id = ? AND status = 'pending'
+            AND EXISTS (SELECT 1 FROM review_actions WHERE id = ? AND status = 'processing')`, args: [outcome, reason, stamp, actionId, actionId] },
       { sql: `UPDATE review_actions SET status = ?, updated_at = ?, attention_reason = ?
-          WHERE id = ? AND status = 'processing'`, args: [actionStatus, stamp, reason, actionId] },
+          WHERE id = ? AND status = 'processing'
+            AND EXISTS (SELECT 1 FROM review_recoveries WHERE action_id = ? AND status = ? AND updated_at = ?)`, args: [actionStatus, stamp, reason, actionId, actionId, outcome, stamp] },
       { sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
           SELECT ?, ?, ?, ? WHERE changes() = 1`, args: [actionId, actionStatus, stamp, reason] },
     ], 'write');
@@ -394,20 +418,61 @@ export function createReviewState({ client, now = () => new Date() }) {
     if ((operation === 'exclude' || operation === 'reopen') && !String(reason).trim()) throw new Error('recovery reason is required');
     if (operation === 'retry') return transition(id, 'needs_attention', 'queued', reason);
     if (operation === 'reopen') {
-      const result = await client.execute({ sql: `UPDATE review_actions SET status = 'needs_decision', updated_at = ?, attention_reason = ? WHERE id = ? AND status = 'needs_attention'`, args: [now().toISOString(), reason, id] });
-      if (result.rowsAffected !== 1) throw new Error(`review action ${id} cannot be reopened`);
+      const stamp = now().toISOString();
+      const result = await client.batch([
+        { sql: `UPDATE review_actions SET status = 'needs_decision', updated_at = ?, attention_reason = ?, launch_excluded = 0 WHERE id = ? AND status = 'needs_attention'`, args: [stamp, reason, id] },
+        { sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
+            SELECT ?, 'needs_decision', ?, ? WHERE changes() = 1`, args: [id, stamp, reason] },
+      ], 'write');
+      if (result[0].rowsAffected !== 1) throw new Error(`review action ${id} cannot be reopened`);
       return { id, status: 'needs_decision' };
     }
     if (operation === 'exclude') {
-      const result = await client.execute({ sql: `UPDATE review_actions SET updated_at = ?, attention_reason = ? WHERE id = ? AND status = 'needs_attention'`, args: [now().toISOString(), reason, id] });
-      if (result.rowsAffected !== 1) throw new Error(`review action ${id} cannot be excluded`);
-      await client.execute({ sql: `UPDATE review_recoveries SET status = 'excluded', reason = ?, updated_at = ? WHERE action_id = ?`, args: [reason, now().toISOString(), id] });
+      const stamp = now().toISOString();
+      const detail = `temporarily excluded from launch: ${reason}`;
+      const result = await client.batch([
+        { sql: `UPDATE review_actions SET updated_at = ?, attention_reason = ?, launch_excluded = 1 WHERE id = ? AND status = 'needs_attention'`, args: [stamp, reason, id] },
+        { sql: `INSERT INTO review_recoveries
+            (action_id, environment, wine_revision, sku, slug, rejected_candidates_json, status, reason, requested_at, updated_at)
+            SELECT id, environment, wine_revision, sku,
+              COALESCE(json_extract(action_json, '$.wineSlug'), sku),
+              COALESCE(json_extract(action_json, '$.rejectedCandidates'), '[]'),
+              'excluded', ?, ?, ? FROM review_actions
+            WHERE id = ? AND status = 'needs_attention' AND launch_excluded = 1 AND updated_at = ?
+            ON CONFLICT(action_id) DO UPDATE SET status = 'excluded', reason = excluded.reason, updated_at = excluded.updated_at`,
+          args: [reason, stamp, stamp, id, stamp] },
+        { sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
+            SELECT ?, 'needs_attention', ?, ?
+            WHERE EXISTS (SELECT 1 FROM review_recoveries WHERE action_id = ? AND status = 'excluded' AND updated_at = ?)`,
+          args: [id, stamp, detail, id, stamp] },
+      ], 'write');
+      if (result[0].rowsAffected !== 1 || result[1].rowsAffected !== 1) throw new Error(`review action ${id} cannot be excluded`);
       return { id, status: 'needs_attention' };
     }
     const stamp = now().toISOString();
+    const current = await client.execute({ sql: 'SELECT * FROM review_actions WHERE id = ? AND status = ?', args: [id, 'needs_attention'] });
+    const row = current.rows[0];
+    if (!row) throw new Error(`review action ${id} cannot be rediscovered`);
+    const action = JSON.parse(String(rowValue(row, 'action_json')));
+    if (action.kind !== 'no-image' || !/^[A-Za-z0-9._-]{1,180}$/.test(action.wineSlug || '') || !Array.isArray(action.rejectedCandidates) || !action.rejectedCandidates.length) {
+      throw new Error(`review action ${id} has no valid rejected candidate set`);
+    }
+    const rejected = action.rejectedCandidates.map((candidate) => ({
+      candidateId: String(candidate.candidateId || ''), sha256: String(candidate.sha256 || ''),
+      sourceImageUrl: String(candidate.sourceImageUrl || ''), sourceUrl: String(candidate.sourceUrl || ''),
+    }));
+    if (rejected.some((candidate) => !/^[A-Za-z0-9._-]{1,120}$/.test(candidate.candidateId) || !/^[a-f0-9]{64}$/.test(candidate.sha256))) {
+      throw new Error(`review action ${id} has invalid rejected candidates`);
+    }
     const result = await client.batch([
-      { sql: `UPDATE review_actions SET status = 'processing', updated_at = ?, attention_reason = '' WHERE id = ? AND status = 'needs_attention'`, args: [stamp, id] },
-      { sql: `UPDATE review_recoveries SET status = 'pending', reason = '', requested_at = ?, updated_at = ? WHERE action_id = ?`, args: [stamp, stamp, id] },
+      { sql: `INSERT INTO review_recoveries
+          (action_id, environment, wine_revision, sku, slug, rejected_candidates_json, status, requested_at, updated_at)
+          SELECT id, environment, wine_revision, sku, ?, ?, 'pending', ?, ? FROM review_actions WHERE id = ? AND status = 'needs_attention'
+          ON CONFLICT(action_id) DO UPDATE SET status = 'pending', reason = '', requested_at = excluded.requested_at, updated_at = excluded.updated_at`,
+        args: [action.wineSlug, JSON.stringify(rejected), stamp, stamp, id] },
+      { sql: `UPDATE review_actions SET status = 'processing', updated_at = ?, attention_reason = '', launch_excluded = 0
+          WHERE id = ? AND status = 'needs_attention'
+            AND EXISTS (SELECT 1 FROM review_recoveries WHERE action_id = ? AND status = 'pending' AND updated_at = ?)`, args: [stamp, id, id, stamp] },
       { sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
           SELECT ?, 'processing', ?, 'rediscovery requested by administrator' WHERE changes() = 1`, args: [id, stamp] },
     ], 'write');
@@ -419,23 +484,24 @@ export function createReviewState({ client, now = () => new Date() }) {
     if (!Number.isInteger(limit) || limit < 1 || limit > 50) throw new Error('review claim limit must be between 1 and 50');
     if (!staleBefore || !Number.isFinite(Date.parse(staleBefore))) throw new Error('review claim requires a stale cutoff');
     const stamp = now().toISOString();
-    const result = await client.execute({
-      sql: `UPDATE review_actions SET status = 'processing', started_at = ?, updated_at = ?, attention_reason = ''
-        WHERE id IN (
-          SELECT id FROM review_actions
-          WHERE environment = ? AND (status = 'queued' OR (status = 'processing' AND started_at < ?))
-          ORDER BY CASE status WHEN 'queued' THEN 0 ELSE 1 END, submitted_at, id LIMIT ?
-        )
-        RETURNING id`,
-      args: [stamp, stamp, environment, staleBefore, limit],
+    const candidates = await client.execute({
+      sql: `SELECT id FROM review_actions
+        WHERE environment = ? AND (status = 'queued' OR (status = 'processing' AND started_at < ?))
+        ORDER BY CASE status WHEN 'queued' THEN 0 ELSE 1 END, submitted_at, id LIMIT ?`,
+      args: [environment, staleBefore, limit],
     });
-    const actionIds = result.rows.map((row) => String(rowValue(row, 'id'))).sort();
-    if (actionIds.length) {
-      await client.batch(actionIds.map((id) => ({
-        sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
-          VALUES (?, 'processing', ?, 'processor claimed action')`,
-        args: [id, stamp],
-      })), 'write');
+    const selected = candidates.rows.map((row) => String(rowValue(row, 'id')));
+    let actionIds = [];
+    if (selected.length) {
+      const statements = selected.flatMap((id) => [
+        { sql: `UPDATE review_actions SET status = 'processing', started_at = ?, updated_at = ?, attention_reason = '', launch_excluded = 0
+            WHERE id = ? AND environment = ? AND (status = 'queued' OR (status = 'processing' AND started_at < ?))`,
+          args: [stamp, stamp, id, environment, staleBefore] },
+        { sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
+            SELECT ?, 'processing', ?, 'processor claimed action' WHERE changes() = 1`, args: [id, stamp] },
+      ]);
+      const claimed = await client.batch(statements, 'write');
+      actionIds = selected.filter((_, index) => Number(claimed[index * 2].rowsAffected || 0) === 1).sort();
     }
     const remainingResult = await client.execute({
       sql: `SELECT COUNT(*) AS total FROM review_actions
@@ -492,7 +558,7 @@ export function createReviewState({ client, now = () => new Date() }) {
     const processingCutoff = new Date(now().getTime() - 45 * 60_000).toISOString();
     const actions = await client.execute({
       sql: `SELECT id, sku, status, submitted_at, started_at, attention_reason FROM review_actions
-        WHERE environment = ? AND (
+        WHERE environment = ? AND launch_excluded = 0 AND (
           status = 'needs_attention' OR
           (status = 'queued' AND submitted_at < ?) OR
           (status = 'processing' AND started_at < ?)
@@ -664,7 +730,7 @@ export function createReviewState({ client, now = () => new Date() }) {
   }
 
   return {
-    initialize, queue, importLegacyAction, counts, packageStatus, actionStatus, pendingActionPayloads, transition, claim, releaseClaims,
+    initialize, queue, importLegacyAction, counts, packageStatus, actionStatus, pendingActionPayloads, launchExclusions, transition, claim, releaseClaims,
     scheduleRecovery, pendingRecoveries, resolveRecovery, recoverAction,
     enqueueNotification, scanIncidents, claimNotifications, completeNotification,
     syncReviewerAccounts, listReviewerAccounts, reviewerAccount, setReviewerInvitation, setReviewerPassword, consumeReviewerInvitation,

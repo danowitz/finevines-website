@@ -170,6 +170,14 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
     return { command: 'pending-recoveries', pending: recoveries.length, output: value.output };
   }
 
+  if (value.command === 'export-launch-exclusions') {
+    if (!value.output) throw new Error('export-launch-exclusions requires --output');
+    const exclusions = await state.launchExclusions(environment);
+    await mkdir(dirname(value.output), { recursive: true });
+    await writeFile(value.output, `${JSON.stringify({ schemaVersion: 1, exclusions }, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+    return { command: 'export-launch-exclusions', excluded: exclusions.length, output: value.output };
+  }
+
   if (value.command === 'resolve-recovery') {
     if (!value['action-id'] || !value.draft) throw new Error('resolve-recovery requires --action-id and --draft');
     const recovery = (await state.pendingRecoveries(environment)).find(({ actionId }) => actionId === value['action-id']);
@@ -195,7 +203,7 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
     return { command: 'migrate', scanned: names.length, ...values };
   }
 
-  throw new Error('usage: queue.mjs <publish|claim|release|reconcile|complete|notify|sync-accounts|invite|pending-recoveries|export-recovery|resolve-recovery|migrate> --environment <name> [command options]');
+  throw new Error('usage: queue.mjs <publish|claim|release|reconcile|complete|notify|sync-accounts|invite|pending-recoveries|export-recovery|export-launch-exclusions|resolve-recovery|migrate> --environment <name> [command options]');
 }
 
 async function main() {

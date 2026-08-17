@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -39,7 +40,7 @@ func main() {
 	case "enrichcollections":
 		runErr = runEnrichCollections(cfg, os.Args[2:])
 	case "build":
-		runErr = runBuild(cfg)
+		runErr = runBuild(cfg, os.Args[2:])
 	case "redirects":
 		runErr = runRedirects(cfg, os.Args[2:])
 	case "deploy":
@@ -48,6 +49,8 @@ func main() {
 		runErr = runReviewApply(cfg, os.Args[2:])
 	case "reviewfinalize":
 		runErr = runReviewFinalize(cfg, os.Args[2:])
+	case "reviewers":
+		runErr = runReviewers(cfg)
 	case "notify":
 		runErr = runNotify(cfg, os.Args[2:])
 	case "report":
@@ -62,7 +65,41 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: finevines <enrich|enrichcollections|build|redirects|deploy|reviewapply|reviewfinalize|notify|report>")
+	fmt.Fprintln(os.Stderr, "usage: finevines <enrich|enrichcollections|build|redirects|deploy|reviewapply|reviewfinalize|reviewers|notify|report>")
+}
+
+func runReviewers(cfg config.Config) error {
+	for _, required := range []struct{ name, value string }{
+		{"FINEVINES_SF_BASE_URL", cfg.SFBaseURL},
+		{"FINEVINES_SF_CLIENT_ID", cfg.SFClientID},
+		{"FINEVINES_SF_CLIENT_SECRET", cfg.SFClientSecret},
+	} {
+		if required.value == "" {
+			return fmt.Errorf("reviewers: set %s in .env (or the environment)", required.name)
+		}
+	}
+	client := salesforce.NewClient(salesforce.Config{
+		BaseURL: cfg.SFBaseURL, ClientID: cfg.SFClientID, ClientSecret: cfg.SFClientSecret, APIVersion: cfg.SFAPIVersion,
+	}, http.DefaultClient)
+	users, err := client.TeamRoster(context.Background())
+	if err != nil {
+		return fmt.Errorf("reviewers: %w", err)
+	}
+	type reviewer struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+		Role  string `json:"role"`
+	}
+	roster := make([]reviewer, 0, len(users))
+	for _, user := range users {
+		if user.Role == "Executive" || user.Role == "Back Office" {
+			roster = append(roster, reviewer{Name: user.Name, Email: user.Email, Role: user.Role})
+		}
+	}
+	if err := json.NewEncoder(os.Stdout).Encode(roster); err != nil {
+		return fmt.Errorf("reviewers: encode roster: %w", err)
+	}
+	return nil
 }
 
 func runEnrichCollections(cfg config.Config, args []string) error {
@@ -126,8 +163,40 @@ func fatal(err error) {
 
 // runBuild renders data/*.json + assets/ + templates/*.tmpl into dist/ — see
 // internal/build.Run for the actual page-generation logic.
-func runBuild(cfg config.Config) error {
-	return build.Run("data", "assets", "templates", "dist", cfg.SiteBaseURL, cfg.GAID)
+func runBuild(cfg config.Config, args []string) error {
+	flags := flag.NewFlagSet("build", flag.ContinueOnError)
+	exclusionsFile := flags.String("launch-exclusions", "", "review-state launch exclusion overlay")
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if *exclusionsFile == "" {
+		return build.Run("data", "assets", "templates", "dist", cfg.SiteBaseURL, cfg.GAID)
+	}
+	data, err := os.ReadFile(*exclusionsFile)
+	if err != nil {
+		return fmt.Errorf("build: read launch exclusions: %w", err)
+	}
+	var document struct {
+		SchemaVersion int `json:"schemaVersion"`
+		Exclusions    []struct {
+			SKU          string `json:"sku"`
+			WineRevision string `json:"wineRevision"`
+		} `json:"exclusions"`
+	}
+	if err := json.Unmarshal(data, &document); err != nil || document.SchemaVersion != 1 {
+		return fmt.Errorf("build: invalid launch exclusions")
+	}
+	excluded := make(build.LaunchExclusions)
+	for _, exclusion := range document.Exclusions {
+		if strings.TrimSpace(exclusion.SKU) == "" || len(exclusion.WineRevision) != 64 {
+			return fmt.Errorf("build: launch exclusion has an invalid SKU or wine revision")
+		}
+		if excluded[exclusion.SKU] == nil {
+			excluded[exclusion.SKU] = make(map[string]struct{})
+		}
+		excluded[exclusion.SKU][exclusion.WineRevision] = struct{}{}
+	}
+	return build.RunWithLaunchExclusions("data", "assets", "templates", "dist", cfg.SiteBaseURL, cfg.GAID, excluded)
 }
 
 // runEnrich wires the real Salesforce/Anthropic/Imagen clients together and
