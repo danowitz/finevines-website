@@ -213,6 +213,8 @@ async function main() {
   const client = createClient({ url, authToken });
   try {
     const command = process.argv[2];
+    const environment = options(process.argv.slice(2)).environment || 'test';
+    const reviewUrl = environment === 'production' ? 'https://review.finevines.com' : 'https://review.finevines.biz';
     const state = createReviewState({ client });
     let mailer;
     if (command === 'notify') {
@@ -232,7 +234,7 @@ async function main() {
       } else throw new Error('FINEVINES_REVIEW_EMAIL_MODE must be disabled or smtp');
     }
     const accounts = ['sync-accounts', 'invite'].includes(command)
-      ? createReviewerAccounts({ state, mailer: createOutboxMailer(state) })
+      ? createReviewerAccounts({ state, mailer: createOutboxMailer(state), reviewUrl })
       : undefined;
     const storage = ['migrate', 'publish', 'complete'].includes(command) ? createBunnyStorage({
       endpoint: process.env.FINEVINES_REVIEW_STORAGE_ENDPOINT,

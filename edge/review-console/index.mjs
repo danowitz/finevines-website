@@ -34,6 +34,6 @@ const storage = createBunnyStorage({
 const dispatch = createGitHubDispatch({ token: process.env.GITHUB_DISPATCH_TOKEN, repository: process.env.GITHUB_REPOSITORY });
 const state = createReviewState({ client: createClient({ url: config.databaseUrl, authToken: config.databaseToken }) });
 const mailer = createOutboxMailer(state);
-const accounts = createReviewerAccounts({ state, mailer });
+const accounts = createReviewerAccounts({ state, mailer, reviewUrl: config.origin });
 const handle = createReviewConsole({ config, storage, state, accounts, dispatch });
 BunnySDK.net.http.serve(handle);

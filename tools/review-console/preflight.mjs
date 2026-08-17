@@ -32,23 +32,34 @@ async function requireOK(fetchImpl, url, init, name) {
   return response;
 }
 
-export async function runReviewPreflight({ environment = process.env, fetchImpl = fetch, createClientImpl = createClient } = {}) {
+const transientDispatch = (error) => /HTTP (429|500|502|503|504)$/.test(error?.message || '');
+
+async function verifyDispatch({ token, fetchImpl, sleep }) {
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      await sendRepositoryDispatch({
+        repository: 'danowitz/finevines-website', token,
+        eventType: 'review-console-preflight', payload: { source: 'review-console-provision' }, fetchImpl,
+      });
+      return 'dispatched';
+    } catch (error) {
+      if (!transientDispatch(error)) throw error;
+      if (attempt === 3) return 'temporarily unavailable';
+      await sleep(250 * (4 ** attempt));
+    }
+  }
+  return 'temporarily unavailable';
+}
+
+export async function runReviewPreflight({ environment = process.env, fetchImpl = fetch, createClientImpl = createClient, sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)) } = {}) {
   const config = values(environment);
   await requireOK(fetchImpl, 'https://api.bunny.net/compute/script', { headers: { AccessKey: config.FINEVINES_BUNNY_API_KEY } }, 'Bunny account');
   const storageRoot = `${config.FINEVINES_REVIEW_STORAGE_ENDPOINT.replace(/\/$/, '')}/${encodeURIComponent(config.FINEVINES_REVIEW_STORAGE_ZONE)}/`;
   await requireOK(fetchImpl, storageRoot, { headers: { AccessKey: config.FINEVINES_REVIEW_STORAGE_KEY } }, 'Bunny review storage');
-  const workflow = await requireOK(fetchImpl, 'https://api.github.com/repos/danowitz/finevines-website/actions/workflows/review-actions.yml', {
-    headers: { Authorization: `Bearer ${config.FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
-  }, 'GitHub processing trigger');
-  const workflowBody = await workflow.json();
-  if (workflowBody.state !== 'active') throw new Error(`GitHub processing trigger is ${workflowBody.state || 'unavailable'}`);
-  await sendRepositoryDispatch({
-    repository: 'danowitz/finevines-website', token: config.FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN,
-    eventType: 'review-console-preflight', payload: { source: 'review-console-provision' }, fetchImpl,
-  });
+  const processingTrigger = await verifyDispatch({ token: config.FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN, fetchImpl, sleep });
   const client = createClientImpl({ url: config.FINEVINES_REVIEW_DATABASE_URL, authToken: config.FINEVINES_REVIEW_DATABASE_TOKEN });
   try { await client.execute('SELECT 1 AS ready'); } finally { client.close(); }
-  return { storage: 'reachable', database: 'reachable', processingTrigger: 'dispatched', email: 'configured' };
+  return { storage: 'reachable', database: 'reachable', processingTrigger, email: 'configured' };
 }
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {

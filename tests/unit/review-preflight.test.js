@@ -20,7 +20,7 @@ test('review preflight proves storage, database, and an actual harmless processi
   const database = [];
   const result = await runReviewPreflight({ environment: complete, fetchImpl, createClientImpl: () => ({ execute: async (sql) => database.push(sql), close: () => {} }) });
   assert.deepEqual(result, { storage: 'reachable', database: 'reachable', processingTrigger: 'dispatched', email: 'configured' });
-  assert.deepEqual(requests.map(({ method }) => method), ['GET', 'GET', 'GET', 'POST']);
+  assert.deepEqual(requests.map(({ method }) => method), ['GET', 'GET', 'POST']);
   assert.deepEqual(database, ['SELECT 1 AS ready']);
 });
 
@@ -28,6 +28,27 @@ test('review preflight fails before any network call when one credential is abse
   let called = false;
   await assert.rejects(runReviewPreflight({ environment: { ...complete, FINEVINES_SMTP_PASS: '' }, fetchImpl: async () => { called = true; return new Response(); } }), /FINEVINES_SMTP_PASS/);
   assert.equal(called, false);
+});
+
+test('review preflight retries transient GitHub failures without blocking Bunny reconciliation', async () => {
+  let dispatches = 0;
+  const waits = [];
+  const fetchImpl = async (url) => {
+    if (url.endsWith('/dispatches')) {
+      dispatches += 1;
+      return new Response(null, { status: 503 });
+    }
+    return url.includes('api.github.com') ? Response.json({ state: 'active' }) : new Response('[]');
+  };
+  const result = await runReviewPreflight({
+    environment: complete,
+    fetchImpl,
+    createClientImpl: () => ({ execute: async () => {}, close: () => {} }),
+    sleep: async (milliseconds) => { waits.push(milliseconds); },
+  });
+  assert.equal(result.processingTrigger, 'temporarily unavailable');
+  assert.equal(dispatches, 4);
+  assert.deepEqual(waits, [250, 1_000, 4_000]);
 });
 
 test('review preflight rejects a non-Bunny transactional database before any network call', async () => {

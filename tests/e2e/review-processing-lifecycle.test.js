@@ -127,7 +127,7 @@ test('local acceptance gate carries one human selection through verified deploym
   const state = createReviewState({ client, now: () => new Date('2026-08-17T12:00:00Z') });
   await state.initialize();
   const mail = [];
-  const accounts = createReviewerAccounts({ state, mailer: { send: async (message) => mail.push(message) }, now: () => new Date('2026-08-17T12:00:00Z'), temporaryPassword: () => 'Temporary-review-pass-92!' });
+  const accounts = createReviewerAccounts({ state, mailer: { send: async (message) => mail.push(message) }, reviewUrl: 'https://review.finevines.biz', now: () => new Date('2026-08-17T12:00:00Z'), temporaryPassword: () => 'Temporary-review-pass-92!' });
   await accounts.sync([{ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }]);
   await accounts.activate('barb.fultz@finevines.com');
   assert.equal(mail.length, 1, 'invitation used the capture adapter');
@@ -215,7 +215,7 @@ test('local acceptance gate covers concurrent reviewers, fifty-action continuati
   const storage = fileStorage(join(root, 'objects'));
   const mail = [];
   let passwordSequence = 0;
-  const accounts = createReviewerAccounts({ state, mailer: { send: async (message) => mail.push(message) }, now: () => new Date('2026-08-17T12:00:00Z'), temporaryPassword: () => `Temporary-review-pass-${++passwordSequence}-92!` });
+  const accounts = createReviewerAccounts({ state, mailer: { send: async (message) => mail.push(message) }, reviewUrl: 'https://review.finevines.biz', now: () => new Date('2026-08-17T12:00:00Z'), temporaryPassword: () => `Temporary-review-pass-${++passwordSequence}-92!` });
   await accounts.sync([
     { name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' },
     { name: 'Connie Molitor', email: 'connie@finevines.com', role: 'Executive' },
@@ -329,7 +329,7 @@ test('real processor yields on deadline and preserves claims after an operationa
     await tracedScenario(client, scenario, async (trace) => {
     const state = createReviewState({ client, now: () => new Date('2026-08-17T12:00:00Z') });
     await state.initialize();
-    const accounts = createReviewerAccounts({ state, mailer: { send: async () => {} }, now: () => new Date('2026-08-17T12:00:00Z'), temporaryPassword: () => 'Temporary-boundary-pass-92!' });
+    const accounts = createReviewerAccounts({ state, mailer: { send: async () => {} }, reviewUrl: 'https://review.finevines.biz', now: () => new Date('2026-08-17T12:00:00Z'), temporaryPassword: () => 'Temporary-boundary-pass-92!' });
     await accounts.sync([{ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }]);
     await accounts.activate('barb.fultz@finevines.com');
     const invited = await accounts.authenticate('barb.fultz@finevines.com', 'Temporary-boundary-pass-92!');
@@ -439,6 +439,7 @@ test('real browser covers onboarding, modal choice, conflict, counters, and inci
   const accounts = createReviewerAccounts({
     state,
     mailer: { send: async () => {} },
+    reviewUrl: 'https://review.finevines.biz',
     now: clock,
     temporaryPassword: () => `Temporary-review-pass-${++passwordSequence}-92!`,
   });

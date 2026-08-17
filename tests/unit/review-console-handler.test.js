@@ -179,6 +179,11 @@ describe('review console handler', () => {
     assert.match(script, /event\.target === modal/);
     assert.doesNotMatch(script, /card\.remove\(\)/);
     assert.match(script, /setInterval\(activeRefresh, 10_000\)/);
+    assert.match(script, /Updates automatically every 10 seconds while this window is active/);
+    assert.match(script, /processor checks for new decisions every five minutes/);
+    assert.match(script, /Manage reviewer access/);
+    assert.match(script, /Send invitation/);
+    assert.doesNotMatch(script, /Resend invitation/);
     assert.match(script, /document\.visibilityState === 'visible' && document\.hasFocus\(\)/);
     assert.match(script, /window\.addEventListener\('focus', activeRefresh\)/);
     assert.match(script, /document\.addEventListener\('visibilitychange', activeRefresh\)/);
@@ -188,6 +193,7 @@ describe('review console handler', () => {
     assert.match(script, /encodeURIComponent\(wine\.searchQuery\)/);
     assert.match(script, /clipboardData/);
     const css = await (await handle(new Request('https://review.finevines.biz/app.css'))).text();
+    assert.match(css, /\.admin:empty\s*\{\s*display:\s*none/);
     assert.match(css, /\.modal-stage\s*\{[^}]*display:\s*flex;/s);
     assert.match(css, /\.modal-stage\s*\{[^}]*overflow-x:\s*auto;/s);
     assert.doesNotMatch(css, /\.modal-stage\s*\{[^}]*grid-template-columns/s);
@@ -338,6 +344,7 @@ describe('review console handler', () => {
     const formPage = await handle(new Request('https://review.finevines.biz/change-password', { headers: { cookie } }));
     const markup = await formPage.text();
     assert.match(markup, /Choose your password/);
+    assert.match(markup, /minlength="8"/);
     const csrf = markup.match(/name="csrf" value="([^"]+)"/)[1];
     const changed = await handle(new Request('https://review.finevines.biz/change-password', {
       method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz' },

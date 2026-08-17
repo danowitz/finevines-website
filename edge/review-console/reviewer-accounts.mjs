@@ -22,7 +22,7 @@ async function derive(password, salt, iterations = ITERATIONS) {
 }
 
 export async function hashPassword(password, salt = crypto.getRandomValues(new Uint8Array(16))) {
-  if (typeof password !== 'string' || password.length < 14) throw new Error('password must contain at least 14 characters');
+  if (typeof password !== 'string' || password.length < 8) throw new Error('password must contain at least 8 characters');
   return `pbkdf2-sha256$${ITERATIONS}$${b64(salt)}$${b64(await derive(password, salt))}`;
 }
 
@@ -64,9 +64,18 @@ function authenticatedAccount(account) {
   };
 }
 
-export function createReviewerAccounts({ state, mailer, now = () => new Date(), temporaryPassword = defaultTemporaryPassword }) {
+function exactReviewUrl(value) {
+  const normalized = String(value || '').trim().replace(/\/+$/, '');
+  let parsed;
+  try { parsed = new URL(normalized); } catch { throw new Error('reviewer accounts require a valid review URL'); }
+  if (parsed.protocol !== 'https:' || parsed.origin !== normalized) throw new Error('reviewer accounts require an exact HTTPS review origin');
+  return normalized;
+}
+
+export function createReviewerAccounts({ state, mailer, reviewUrl, now = () => new Date(), temporaryPassword = defaultTemporaryPassword }) {
   if (!state?.syncReviewerAccounts || !state?.reviewerAccount) throw new Error('reviewer accounts require review state');
   if (!mailer?.send) throw new Error('reviewer accounts require a mailer');
+  const reviewerOrigin = exactReviewUrl(reviewUrl);
 
   async function sync(roster) {
     const eligible = [];
@@ -96,7 +105,7 @@ export function createReviewerAccounts({ state, mailer, now = () => new Date(), 
       dedupeKey: `reviewer-invitation:${normalized}:${updated.credentialVersion}`,
       to: normalized,
       subject: 'Your Fine Vines image review invitation',
-      text: `Your temporary Fine Vines image review password is: ${password}\n\nIt expires in 72 hours and must be changed when you first sign in.`,
+      text: `Fine Vines image review access\n\nReview page: ${reviewerOrigin}\nUsername: ${normalized}\nTemporary password: ${password}\n\nThis temporary password expires in 72 hours. The first time you sign in, choose a new password with at least 8 characters.`,
     });
   }
 

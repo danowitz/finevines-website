@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createClient } from '@libsql/client';
 import { afterEach, describe, it } from 'node:test';
 import { createReviewState } from '../../edge/review-console/review-state.mjs';
-import { createReviewerAccounts } from '../../edge/review-console/reviewer-accounts.mjs';
+import { createReviewerAccounts, hashPassword, verifyPassword } from '../../edge/review-console/reviewer-accounts.mjs';
 
 const clients = [];
 afterEach(() => { while (clients.length) clients.pop().close(); });
@@ -16,6 +16,7 @@ async function fixture(now = '2026-08-16T12:00:00.000Z', temporaryPassword = () 
   const messages = [];
   const accounts = createReviewerAccounts({
     state,
+    reviewUrl: 'https://review.finevines.biz',
     now: () => new Date(clock),
     temporaryPassword,
     mailer: { send: async (message) => { messages.push(message); } },
@@ -48,6 +49,9 @@ describe('reviewer accounts', () => {
     assert.equal(messages.length, 1);
     assert.equal(messages[0].to, 'barb.fultz@finevines.com');
     assert.match(messages[0].text, /Random-Launch-Password-7x!/);
+    assert.match(messages[0].text, /Review page: https:\/\/review\.finevines\.biz/);
+    assert.match(messages[0].text, /Username: barb\.fultz@finevines\.com/);
+    assert.match(messages[0].text, /at least 8 characters/);
     assert.doesNotMatch(JSON.stringify(await accounts.list()), /Random-Launch-Password/);
 
     const temporary = await accounts.authenticate('barb.fultz@finevines.com', 'Random-Launch-Password-7x!');
@@ -59,6 +63,12 @@ describe('reviewer accounts', () => {
     const permanent = await accounts.authenticate('barb.fultz@finevines.com', 'A-new-private-password-92!');
     assert.equal(permanent.mustChangePassword, false);
     assert.equal(permanent.credentialVersion, 2);
+  });
+
+  it('accepts eight-character reviewer passwords but rejects shorter ones', async () => {
+    await assert.rejects(hashPassword('1234567'), /at least 8 characters/);
+    const encoded = await hashPassword('12345678');
+    assert.equal(await verifyPassword('12345678', encoded), true);
   });
 
   it('expires temporary credentials, rotates resends, and revokes removed reviewers', async () => {
