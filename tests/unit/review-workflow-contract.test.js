@@ -18,9 +18,12 @@ describe('hosted review workflow contract', () => {
     assert.match(workflow, /queue\.mjs complete/);
   });
 
-  it('keeps review processing out of the nightly catalog workflow and retires validation-only processing', async () => {
+  it('keeps ordinary review application in the bounded processor and routes only targeted image rediscovery through the catalog workflow', async () => {
     const pipeline = await readFile('.github/workflows/pipeline.yml', 'utf8');
-    assert.doesNotMatch(pipeline, /repository_dispatch|reviewapply|reviewfinalize|Prepare hosted review actions|Finalize hosted review receipts/);
+    assert.match(pipeline, /types: \[review-recovery\]/);
+    assert.doesNotMatch(pipeline, /reviewapply|reviewfinalize|Prepare hosted review actions|Finalize hosted review receipts/);
+    assert.match(pipeline, /export-recovery/);
+    assert.match(pipeline, /resolve-recovery/);
     await assert.rejects(readFile('.github/workflows/review-console-test-action.yml', 'utf8'), { code: 'ENOENT' });
   });
 
@@ -36,6 +39,7 @@ describe('hosted review workflow contract', () => {
     assert.match(workflow, /api_key: \$\{\{ secrets\.FINEVINES_BUNNY_API_KEY \}\}/);
     assert.doesNotMatch(workflow, /deploy_key:/);
     assert.match(provision, /node tools\/review-console\/provision\.mjs/);
+    assert.match(provision, /node tools\/review-console\/preflight\.mjs/);
     assert.match(provision, /environment: review-production/);
     const provisioner = await readFile('tools/review-console/provision.mjs', 'utf8');
     assert.match(provisioner, /bunny\('\/compute\/script'\)\)\.Items/);

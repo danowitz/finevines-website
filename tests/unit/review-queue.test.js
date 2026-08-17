@@ -132,4 +132,17 @@ describe('review queue command', () => {
     assert.equal(resolved.outcome, 'ready');
     assert.equal((await state.actionStatus(rejectedAction.id, 'test')).status, 'reopened');
   });
+
+  it('idempotently imports immutable legacy pending actions before claiming', async () => {
+    const state = await fixture();
+    const legacy = action('00000000-0000-4000-8000-000000000095', '5'.repeat(64));
+    const storage = {
+      list: async () => [`${legacy.id}.json`],
+      get: async () => JSON.stringify(legacy),
+    };
+    const first = await runQueueCommand({ args: ['migrate', '--environment', 'test'], state, storage });
+    const second = await runQueueCommand({ args: ['migrate', '--environment', 'test'], state, storage });
+    assert.deepEqual(first, { command: 'migrate', scanned: 1, queued: 1, existing: 0, needs_attention: 0 });
+    assert.deepEqual(second, { command: 'migrate', scanned: 1, queued: 0, existing: 1, needs_attention: 0 });
+  });
 });

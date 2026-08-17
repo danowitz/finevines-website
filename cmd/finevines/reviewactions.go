@@ -99,6 +99,13 @@ func reviewStore(cfg config.Config) (*deploy.BunnyClient, error) {
 	), nil
 }
 
+func selectedReviewStore(cfg config.Config, directory string) (reviewactions.Store, error) {
+	if strings.TrimSpace(directory) != "" {
+		return reviewactions.FileStore{Root: directory}, nil
+	}
+	return reviewStore(cfg)
+}
+
 // runReviewApply is the only catalog mutation seam for hosted-review actions.
 // It validates immutable action, package, candidate, and catalog revisions,
 // then prepares accepted images before build/deploy. Pending objects remain in
@@ -109,14 +116,17 @@ func runReviewApply(cfg config.Config, args []string) error {
 	decisionsPath := fs.String("decisions", ".run/review-decisions.json", "run-local prepared decision log")
 	appliedPath := fs.String("applied", ".run/queue-applied.json", "digest-compatible applied action log")
 	actionIDsPath := fs.String("action-ids", "", "optional JSON array of transactionally claimed action IDs")
+	reviewDirectory := fs.String("review-dir", "", "local review object directory (acceptance tests only)")
+	catalogPath := fs.String("catalog", reviewCatalogPath, "catalog JSON path")
+	imageDirectory := fs.String("image-dir", "assets/img/wines", "normalized wine image directory")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	store, err := reviewStore(cfg)
+	store, err := selectedReviewStore(cfg, *reviewDirectory)
 	if err != nil {
 		return fmt.Errorf("reviewapply: %w", err)
 	}
-	wines, err := model.LoadWines(reviewCatalogPath)
+	wines, err := model.LoadWines(*catalogPath)
 	if err != nil {
 		return fmt.Errorf("reviewapply: load catalog: %w", err)
 	}
@@ -130,12 +140,12 @@ func runReviewApply(cfg config.Config, args []string) error {
 	}
 	result, err := reviewactions.Prepare(context.Background(), reviewactions.PrepareInput{
 		Store: store, Normalizer: execNormalizer{bin: normalizer}, Environment: *environment,
-		Wines: wines, ImageDir: "assets/img/wines", Now: time.Now().UTC(), Log: log.Printf, ActionIDs: actionIDs,
+		Wines: wines, ImageDir: *imageDirectory, Now: time.Now().UTC(), Log: log.Printf, ActionIDs: actionIDs,
 	})
 	if err != nil {
 		return fmt.Errorf("reviewapply: %w", err)
 	}
-	if err := model.SaveWines(reviewCatalogPath, result.Wines); err != nil {
+	if err := model.SaveWines(*catalogPath, result.Wines); err != nil {
 		return fmt.Errorf("reviewapply: save catalog: %w", err)
 	}
 	if err := writeReviewJSON(*decisionsPath, result.Decisions); err != nil {
@@ -189,6 +199,8 @@ func runReviewFinalize(cfg config.Config, args []string) error {
 	decisionsPath := fs.String("decisions", ".run/review-decisions.json", "run-local prepared decision log")
 	target := fs.String("target", cfg.SiteBaseURL, "deployed site URL recorded in receipts")
 	runID := fs.String("run-id", os.Getenv("GITHUB_RUN_ID"), "workflow run identifier recorded in receipts")
+	reviewDirectory := fs.String("review-dir", "", "local review object directory (acceptance tests only)")
+	catalogCommit := fs.String("catalog-commit", "", "catalog commit override (acceptance tests only)")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -200,13 +212,16 @@ func runReviewFinalize(cfg config.Config, args []string) error {
 		log.Printf("reviewfinalize: no decisions to finalize")
 		return nil
 	}
-	store, err := reviewStore(cfg)
+	store, err := selectedReviewStore(cfg, *reviewDirectory)
 	if err != nil {
 		return fmt.Errorf("reviewfinalize: %w", err)
 	}
-	commit, err := gitHead()
-	if err != nil {
-		return fmt.Errorf("reviewfinalize: %w", err)
+	commit := strings.TrimSpace(*catalogCommit)
+	if commit == "" {
+		commit, err = gitHead()
+		if err != nil {
+			return fmt.Errorf("reviewfinalize: %w", err)
+		}
 	}
 	if err := reviewactions.Finalize(context.Background(), reviewactions.FinalizeInput{
 		Store: store, Environment: *environment, Decisions: decisions, CatalogCommit: commit,

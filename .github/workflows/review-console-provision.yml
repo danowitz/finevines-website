@@ -30,4 +30,12 @@ jobs:
           FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN: ${{ secrets.FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN }}
           FINEVINES_REVIEW_TEST_SESSION_SECRET: ${{ secrets.FINEVINES_REVIEW_TEST_SESSION_SECRET }}
           FINEVINES_REVIEW_PRODUCTION_SESSION_SECRET: ${{ secrets.FINEVINES_REVIEW_PRODUCTION_SESSION_SECRET }}
-        run: node tools/review-console/provision.mjs
+          FINEVINES_SMTP_HOST: ${{ secrets.FINEVINES_SMTP_HOST }}
+          FINEVINES_SMTP_PORT: ${{ secrets.FINEVINES_SMTP_PORT }}
+          FINEVINES_SMTP_USER: ${{ secrets.FINEVINES_SMTP_USER }}
+          FINEVINES_SMTP_PASS: ${{ secrets.FINEVINES_SMTP_PASS }}
+          FINEVINES_NOTIFY_FROM: ${{ secrets.FINEVINES_NOTIFY_FROM }}
+        run: |
+          npm ci --ignore-scripts
+          node tools/review-console/preflight.mjs
+          node tools/review-console/provision.mjs

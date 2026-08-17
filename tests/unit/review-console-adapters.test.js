@@ -28,6 +28,13 @@ describe('review console adapters', () => {
     assert.deepEqual(JSON.parse(seen.init.body), { event_type: 'review-recovery', client_payload: { action_id: 'action-id', slug: 'producer-wine-2022', environment: 'test' } });
   });
 
+  it('lists only immutable object names from a Bunny directory', async () => {
+    const storage = createBunnyStorage({ endpoint: 'https://storage.example', zone: 'zone', key: 'secret', fetchImpl: async () => Response.json([
+      { ObjectName: 'one.json', IsDirectory: false }, { ObjectName: 'nested', IsDirectory: true }, { ObjectName: 'two.json', IsDirectory: false },
+    ]) });
+    assert.deepEqual(await storage.list('_review/test/pending'), ['one.json', 'two.json']);
+  });
+
   it('keeps nightly processing available when no scoped dispatch token is configured', async () => {
     const dispatch = createGitHubDispatch({ token: '', repository: 'owner/repo' });
     await assert.rejects(() => dispatch('action-id', 'test'), /not configured/);

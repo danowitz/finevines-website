@@ -7,6 +7,7 @@ import { createReviewState } from '../../edge/review-console/review-state.mjs';
 import { createOutboxMailer } from '../../edge/review-console/outbox-mailer.mjs';
 import { createReviewerAccounts } from '../../edge/review-console/reviewer-accounts.mjs';
 import { buildReviewerRoster } from '../labelfetch/review-package.mjs';
+import { createBunnyStorage } from '../../edge/review-console/bunny-storage.mjs';
 
 function options(args) {
   const values = { command: args[0] || '' };
@@ -32,7 +33,7 @@ async function transitionIfNeeded(state, environment, id, from, to, detail) {
   await state.transition(id, from, to, detail);
 }
 
-export async function runQueueCommand({ args, state, now = () => new Date(), mailer, accounts }) {
+export async function runQueueCommand({ args, state, now = () => new Date(), mailer, accounts, storage }) {
   const value = options(args);
   const environment = value.environment || 'test';
   if (!['test', 'production'].includes(environment)) throw new Error('queue environment must be test or production');
@@ -131,7 +132,20 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
     return { command: 'resolve-recovery', actionId: recovery.actionId, slug: recovery.slug, outcome };
   }
 
-  throw new Error('usage: queue.mjs <claim|reconcile|complete|notify|sync-accounts|invite|export-recovery|resolve-recovery> --environment <name> [command options]');
+  if (value.command === 'migrate') {
+    if (!storage?.list || !storage?.get) throw new Error('migrate requires review storage');
+    const prefix = `_review/${environment}`;
+    const names = (await storage.list(`${prefix}/pending`)).filter((name) => /^[0-9a-f-]{36}\.json$/i.test(name));
+    const values = { queued: 0, existing: 0, needs_attention: 0 };
+    for (const name of names) {
+      const action = JSON.parse(await storage.get(`${prefix}/actions/${name}`));
+      const result = await state.importLegacyAction(action);
+      values[result.status] = (values[result.status] || 0) + 1;
+    }
+    return { command: 'migrate', scanned: names.length, ...values };
+  }
+
+  throw new Error('usage: queue.mjs <claim|reconcile|complete|notify|sync-accounts|invite|export-recovery|resolve-recovery|migrate> --environment <name> [command options]');
 }
 
 async function main() {
@@ -162,7 +176,12 @@ async function main() {
     const accounts = ['sync-accounts', 'invite'].includes(command)
       ? createReviewerAccounts({ state, mailer: createOutboxMailer(state) })
       : undefined;
-    const result = await runQueueCommand({ args: process.argv.slice(2), state, mailer, accounts });
+    const storage = command === 'migrate' ? createBunnyStorage({
+      endpoint: process.env.FINEVINES_REVIEW_STORAGE_ENDPOINT,
+      zone: process.env.FINEVINES_REVIEW_STORAGE_ZONE,
+      key: process.env.FINEVINES_REVIEW_STORAGE_KEY,
+    }) : undefined;
+    const result = await runQueueCommand({ args: process.argv.slice(2), state, mailer, accounts, storage });
     process.stdout.write(`${JSON.stringify(result)}\n`);
   } finally {
     client.close();

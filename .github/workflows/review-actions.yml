@@ -63,6 +63,8 @@ jobs:
           go build -o imgnorm ./tools/imgnorm
       - name: Synchronize eligible reviewer accounts
         run: node tools/review-console/queue.mjs sync-accounts --environment test --roster data/team.json
+      - name: Import any legacy immutable pending actions
+        run: node tools/review-console/queue.mjs migrate --environment test
       - name: Queue an explicitly requested reviewer invitation
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.invite_reviewer != '' }}
         run: node tools/review-console/queue.mjs invite --environment test --email "${{ inputs.invite_reviewer }}"

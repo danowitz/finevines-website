@@ -139,6 +139,24 @@ export function createReviewState({ client, now = () => new Date() }) {
     }
   }
 
+  async function importLegacyAction(action) {
+    if (!action?.id || action.environment === undefined || !action.wineRevision || !action.sku || !action.submittedAt) throw new Error('legacy review action is invalid');
+    if (await actionStatus(action.id, action.environment)) return { id: action.id, status: 'existing' };
+    try { return await queue(action); }
+    catch (error) {
+      if (!(error instanceof ActiveWineLockError)) throw error;
+      const stamp = now().toISOString();
+      await client.batch([
+        { sql: `INSERT INTO review_actions
+            (id, environment, package_id, wine_revision, sku, reviewer_email, kind, status, action_json, submitted_at, updated_at, attention_reason)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'needs_attention', ?, ?, ?, ?)`,
+          args: [action.id, action.environment, action.packageId, action.wineRevision, action.sku, action.reviewer, action.kind, JSON.stringify(action), action.submittedAt, stamp, `migration found another active action ${error.actionId} for this wine`] },
+        { sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail) VALUES (?, 'needs_attention', ?, 'legacy migration found a duplicate active wine decision')`, args: [action.id, stamp] },
+      ], 'write');
+      return { id: action.id, status: 'needs_attention' };
+    }
+  }
+
   async function counts(environment = 'test') {
     const result = await client.execute({
       sql: `SELECT status, COUNT(*) AS total, MIN(submitted_at) AS oldest
@@ -552,7 +570,7 @@ export function createReviewState({ client, now = () => new Date() }) {
   }
 
   return {
-    initialize, queue, counts, packageStatus, actionStatus, transition, claim,
+    initialize, queue, importLegacyAction, counts, packageStatus, actionStatus, transition, claim,
     scheduleRecovery, pendingRecoveries, resolveRecovery, recoverAction,
     enqueueNotification, scanIncidents, claimNotifications, completeNotification,
     syncReviewerAccounts, listReviewerAccounts, reviewerAccount, setReviewerInvitation, setReviewerPassword,
