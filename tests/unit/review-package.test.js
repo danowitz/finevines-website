@@ -121,6 +121,24 @@ describe('hosted review package', () => {
     assert.equal(manifest.wines[0].searchQuery, 'Producer Wine 2022 original query');
   });
 
+  it('migrates a legacy carried card to a producer-name-year Google query', async () => {
+    const bytes = new Uint8Array([1, 2, 3]);
+    const sha256 = (await import('node:crypto')).createHash('sha256').update(bytes).digest('hex');
+    const previous = {
+      schemaVersion: 1, packageId: 'legacy-package', environment: 'test', catalogCommit: 'b'.repeat(40),
+      wines: [{ sku: wine.sku, displayIdentity: 'Producer · Wine · 2022', wineRevision: wineRevision(wine), candidates: [{ candidateId: 'old', storageName: 'old.png', sha256, bytes: 3, mime: 'image/png', width: 1, height: 1 }] }],
+    };
+    const storage = memoryStorage({
+      '_review/test/current.json': JSON.stringify({ packageId: 'legacy-package' }),
+      '_review/test/packages/legacy-package/manifest.json': JSON.stringify(previous),
+      '_review/test/packages/legacy-package/images/old.png': bytes,
+    });
+    await publishReviewPackage({ environment: 'test', catalogCommit: 'c'.repeat(40), catalog: [wine], draft: { schemaVersion: 1, wines: [] }, reviewers, storage, readBytes: async () => { throw new Error('not local'); } });
+    const current = JSON.parse(storage.files.get('_review/test/current.json'));
+    const manifest = JSON.parse(storage.files.get(`_review/test/packages/${current.packageId}/manifest.json`));
+    assert.equal(manifest.wines[0].searchQuery, 'Producer Wine 2022');
+  });
+
   it('refuses to publish a review card when its original discovery query is unavailable', async () => {
     const storage = memoryStorage();
     const draft = await buildReviewDraft({ catalog: [wine], manifest: { one: { slug: wine.slug, ok: false, alternates: [{ file: 'good.png' }] } }, fileExists: () => true, readBytes: async () => png });

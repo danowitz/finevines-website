@@ -112,6 +112,14 @@ function publicCandidate(candidate) {
   return publicValue;
 }
 
+// Packages published before searchQuery existed cannot recover the historical
+// discovery text. Preserve those review decisions by migrating their displayed
+// producer/name/vintage identity into a one-time Google query. New draft cards
+// still fail closed unless the pipeline persisted the verbatim query.
+function legacySearchQuery(wine) {
+  return clean(wine.displayIdentity).replace(/\s*·\s*/g, ' ');
+}
+
 async function optionalJSON(storage, path) {
   try {
     const raw = await storage.get(path);
@@ -136,7 +144,7 @@ export async function publishReviewPackage({ environment, catalogCommit, catalog
     if (incoming.has(wine.sku) || revisions.get(wine.sku) !== wine.wineRevision) continue;
     incoming.set(wine.sku, {
       ...wine,
-      searchQuery: clean(wine.searchQuery) || clean(draft.searchQueries?.[wine.sku]),
+      searchQuery: clean(wine.searchQuery) || clean(draft.searchQueries?.[wine.sku]) || legacySearchQuery(wine),
       candidates: wine.candidates.map((candidate) => ({ ...candidate, storagePackageId: previous.packageId })),
     });
     carried++;
