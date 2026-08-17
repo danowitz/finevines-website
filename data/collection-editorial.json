@@ -861,6 +861,16 @@
     },
     {
       "kind": "producer",
+      "slug": "de-bortoli",
+      "name": "De Bortoli",
+      "mode": "generated",
+      "fingerprint": "c43b905d259f81c969c35be82e7e0d0bb4f9cff6043643e89ff2ea70f6f5859f",
+      "retryFingerprint": "c43b905d259f81c969c35be82e7e0d0bb4f9cff6043643e89ff2ea70f6f5859f",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/de-bortoli\" source label contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "digioia-royer",
       "name": "Digioia-Royer",
       "mode": "generated",
@@ -868,6 +878,30 @@
       "retryFingerprint": "d340479d79baa4367ef34e4c946a1f91ae47d22c7b06912bc62266dbe1de6f22",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/digioia-royer\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "disznoko",
+      "name": "Disznoko",
+      "mode": "generated",
+      "fingerprint": "a9b28008bed444186a5a19e0c3bff0743f75ed83f25a80725067781f3f600b03",
+      "eyebrow": "Producer Profile",
+      "heading": "Disznókő and the Noble Furmint of Tokaj",
+      "paragraphs": [
+        "Disznókő is a historic and respected estate perched at the gateway to Hungary’s Tokaj region, known for its expressive wines crafted across a spectrum from dry whites to botrytized treasures. The estate revitalized the traditions of Tokaji Aszú beginning in the early 1990s with an approach that balances purity of fruit and the complex character imparted by noble rot. Their winemaking ethos emphasizes deep understanding of site and terroir, reflected in a portfolio ranging from clarity-driven dry wines to the most layered expressions of late-harvest and Aszú style wines ([disznoko.hu](https://disznoko.hu/hu/borkeszites?utm_source=openai)).",
+        "Furmint is the cornerstone white grape of Tokaj, celebrated for its high natural acidity, mineral clarity, and remarkable versatility. This variety underpins both vibrant, terroir-driven dry whites and the lush, age-worthy sweet wines of Tokaji Aszú. Furmint’s ability to retain crisp acidity even in richly botrytized wines gives it structure and longevity. The style might vary from green apple, pear and quince in dry bottlings to apricot, honey and ginger in dessert styles, often with compelling minerality derived from Tokaj’s volcanic soils ([bor.hu](https://bor.hu/en/furmint/?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Disznókő winemaking philosophy",
+          "url": "https://www.disznoko.hu/hu/borkeszites"
+        },
+        {
+          "label": "Role of Furmint in Tokaj and styles",
+          "url": "https://bor.hu/en/furmint/"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
     },
     {
       "kind": "producer",
@@ -898,6 +932,26 @@
       "retryFingerprint": "0be7d49c6d3ebc036ee213cf2fbde568afe4fb22b092c4f7b847e52e1f06da6c",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/domaine-ratte\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "domaine-rhone",
+      "name": "Domaine Rhone",
+      "mode": "generated",
+      "fingerprint": "7a0b52abacbf93233e6c77d04dc24212426b65b966ae3ffc28a8383855e491a1",
+      "retryFingerprint": "7a0b52abacbf93233e6c77d04dc24212426b65b966ae3ffc28a8383855e491a1",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/domaine-rhone\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "dominique-mugneret",
+      "name": "Dominique Mugneret",
+      "mode": "generated",
+      "fingerprint": "40ae1482dc00886958d1010fef803665da4967b418819a8da51de02f11bc59e1",
+      "retryFingerprint": "40ae1482dc00886958d1010fef803665da4967b418819a8da51de02f11bc59e1",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/dominique-mugneret\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -941,6 +995,16 @@
     },
     {
       "kind": "producer",
+      "slug": "easton",
+      "name": "Easton",
+      "mode": "generated",
+      "fingerprint": "af4a50a4f9faa4482a4737b5d6d01423f1891bd801cebbd89e0c09bf03a6655f",
+      "retryFingerprint": "af4a50a4f9faa4482a4737b5d6d01423f1891bd801cebbd89e0c09bf03a6655f",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/easton\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "echarderie",
       "name": "Echarderie",
       "mode": "generated",
@@ -961,6 +1025,16 @@
     },
     {
       "kind": "producer",
+      "slug": "egeo",
+      "name": "Egeo",
+      "mode": "generated",
+      "fingerprint": "3fcb2caab67ba0cb392a530e9d32e87dde24376fbe7487c71628dc592cd4ecd0",
+      "retryFingerprint": "3fcb2caab67ba0cb392a530e9d32e87dde24376fbe7487c71628dc592cd4ecd0",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/egeo\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "elias-mora",
       "name": "Elias Mora",
       "mode": "generated",
@@ -978,6 +1052,16 @@
       "retryFingerprint": "54fd4bac98c048f6efc0060740f8bb70bf3b48c69b2d7b4e4a1db19f9f85a3f7",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/elizabeth-rose\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "episode",
+      "name": "Episode",
+      "mode": "generated",
+      "fingerprint": "f54a73b8981c32fb90492a3eab5ce558c085c3c84afd4ba7a74912231699ac4a",
+      "retryFingerprint": "f54a73b8981c32fb90492a3eab5ce558c085c3c84afd4ba7a74912231699ac4a",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/episode\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1031,6 +1115,76 @@
     },
     {
       "kind": "producer",
+      "slug": "filare",
+      "name": "Filare",
+      "mode": "generated",
+      "fingerprint": "96b6b0a786b85ae47450e1f1758558af6b9aafdebd68684accda035fb6056a49",
+      "retryFingerprint": "96b6b0a786b85ae47450e1f1758558af6b9aafdebd68684accda035fb6056a49",
+      "retryAfter": "2026-09-16",
+      "lastError": "research JSON has 210 words; expected 120 to 190"
+    },
+    {
+      "kind": "producer",
+      "slug": "finca-bacara",
+      "name": "Finca Bacara",
+      "mode": "generated",
+      "fingerprint": "6316c1d7b2bdb1852bac3f4625bd8bbaba707ac5509048e0b447359ec8437c50",
+      "retryFingerprint": "6316c1d7b2bdb1852bac3f4625bd8bbaba707ac5509048e0b447359ec8437c50",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/finca-bacara\" source label contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "finca-la-mata",
+      "name": "Finca la Mata",
+      "mode": "generated",
+      "fingerprint": "a9e881986344662a7182cb725fedc9c4a1a6e5dfdb53db45f46b731926570104",
+      "retryFingerprint": "a9e881986344662a7182cb725fedc9c4a1a6e5dfdb53db45f46b731926570104",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/finca-la-mata\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "flare",
+      "name": "Flare",
+      "mode": "generated",
+      "fingerprint": "d205ea21ce7ae226a99d4e16f413169565fec6ec76ca0399e0faa59c101cf14f",
+      "retryFingerprint": "d205ea21ce7ae226a99d4e16f413169565fec6ec76ca0399e0faa59c101cf14f",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/flare\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "fontanacota",
+      "name": "Fontanacota",
+      "mode": "generated",
+      "fingerprint": "263a2320a4b22a392645a4470f41703056e078c5ddf8021d7899165e12a6dbda",
+      "retryFingerprint": "263a2320a4b22a392645a4470f41703056e078c5ddf8021d7899165e12a6dbda",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/fontanacota\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "fort-cop-de-ma",
+      "name": "Fort Cop de Ma",
+      "mode": "generated",
+      "fingerprint": "5e73ae8c9d514a4fbff62b41dd470c5360ca46d808e50b3bd3a6e7b45a7eb4d9",
+      "retryFingerprint": "5e73ae8c9d514a4fbff62b41dd470c5360ca46d808e50b3bd3a6e7b45a7eb4d9",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/fort-cop-de-ma\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "fosse-seche",
+      "name": "Fosse Seche",
+      "mode": "generated",
+      "fingerprint": "4988ff0595f01ed3717cf26d40d1940740101afb72000af26125d486df34b418",
+      "retryFingerprint": "4988ff0595f01ed3717cf26d40d1940740101afb72000af26125d486df34b418",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/fosse-seche\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "frank",
       "name": "Frank",
       "mode": "generated",
@@ -1061,6 +1215,16 @@
     },
     {
       "kind": "producer",
+      "slug": "gagnard",
+      "name": "Gagnard",
+      "mode": "generated",
+      "fingerprint": "4ab045f15e2ec3f449a201ddf67b334c3e3386ede78bf58fef420d0ff8771164",
+      "retryFingerprint": "4ab045f15e2ec3f449a201ddf67b334c3e3386ede78bf58fef420d0ff8771164",
+      "retryAfter": "2026-09-16",
+      "lastError": "research JSON has 195 words; expected 120 to 190"
+    },
+    {
+      "kind": "producer",
       "slug": "galil",
       "name": "Galil",
       "mode": "generated",
@@ -1068,6 +1232,16 @@
       "retryFingerprint": "c816fddef747c1b262dfa52ba8f73e1202cea617b1afaf849659d0958c1f2173",
       "retryAfter": "2026-09-16",
       "lastError": "research JSON has 195 words; expected 120 to 190"
+    },
+    {
+      "kind": "producer",
+      "slug": "galil-mountain",
+      "name": "Galil Mountain",
+      "mode": "generated",
+      "fingerprint": "d4b7a884e8d7d71da28cc9b2c7c7313eb6997089b23e494f43113511341ed935",
+      "retryFingerprint": "d4b7a884e8d7d71da28cc9b2c7c7313eb6997089b23e494f43113511341ed935",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/galil-mountain\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1101,6 +1275,16 @@
     },
     {
       "kind": "producer",
+      "slug": "gerard-tremblay",
+      "name": "Gerard Tremblay",
+      "mode": "generated",
+      "fingerprint": "dc9e5f766831624e4ebccd7c396c75da07b28478fdb72e713e6b3e0e7ef24ad2",
+      "retryFingerprint": "dc9e5f766831624e4ebccd7c396c75da07b28478fdb72e713e6b3e0e7ef24ad2",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/gerard-tremblay\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "ghost-block",
       "name": "Ghost Block",
       "mode": "generated",
@@ -1118,6 +1302,36 @@
       "retryFingerprint": "7975e80b09bc7521027d78e9666efe8d6116830f82fdfe64f5a1edae795d47da",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/gilgal\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "gobillard",
+      "name": "Gobillard",
+      "mode": "generated",
+      "fingerprint": "529733c42bfac64de3657946fb10dc58f5a8660d2a001a77befe316962897da9",
+      "retryFingerprint": "529733c42bfac64de3657946fb10dc58f5a8660d2a001a77befe316962897da9",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/gobillard\" source label contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "grand-veneur",
+      "name": "Grand Veneur",
+      "mode": "generated",
+      "fingerprint": "ec84892fb5a7d8c6d65a753f820ce89ec317a5a1563c5c666b7a58fd12297cd4",
+      "retryFingerprint": "ec84892fb5a7d8c6d65a753f820ce89ec317a5a1563c5c666b7a58fd12297cd4",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/grand-veneur\" has invalid source \"Chateauneuf.dk summary of Grand Veneur holdings\""
+    },
+    {
+      "kind": "producer",
+      "slug": "grand-veneur-rcl",
+      "name": "Grand Veneur - Rcl",
+      "mode": "generated",
+      "fingerprint": "cd246916e5de2cca7aa467d107e2523932d76ef1dfa6c9f78d395afc35d4c786",
+      "retryFingerprint": "cd246916e5de2cca7aa467d107e2523932d76ef1dfa6c9f78d395afc35d4c786",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/grand-veneur-rcl\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1169,6 +1383,16 @@
     },
     {
       "kind": "producer",
+      "slug": "guzman-aldazabal",
+      "name": "Guzman Aldazabal",
+      "mode": "generated",
+      "fingerprint": "79b836f9ae4fcd77bcb74c0b90a2230dc5d7da23f152c5c5d63ffb3f6ab70b96",
+      "retryFingerprint": "79b836f9ae4fcd77bcb74c0b90a2230dc5d7da23f152c5c5d63ffb3f6ab70b96",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/guzman-aldazabal\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "hamel",
       "name": "Hamel",
       "mode": "generated",
@@ -1176,6 +1400,36 @@
       "retryFingerprint": "fce0163e08968b1d7fc966eaea851f8305a808b2663e4a302ed3cafea02a40d0",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/hamel\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "haut-selve",
+      "name": "Haut Selve",
+      "mode": "generated",
+      "fingerprint": "cf6912c0ff164cae1ea0d333204ebd9dd64b414d98a2d4fb8fb1cbbb50b25ddc",
+      "retryFingerprint": "cf6912c0ff164cae1ea0d333204ebd9dd64b414d98a2d4fb8fb1cbbb50b25ddc",
+      "retryAfter": "2026-09-16",
+      "lastError": "research JSON has 204 words; expected 120 to 190"
+    },
+    {
+      "kind": "producer",
+      "slug": "headline",
+      "name": "Headline",
+      "mode": "generated",
+      "fingerprint": "d8f5c6aec9106f099285b9b6ae12ff8873fed60d4e8d6b29184ed184451dbf9c",
+      "retryFingerprint": "d8f5c6aec9106f099285b9b6ae12ff8873fed60d4e8d6b29184ed184451dbf9c",
+      "retryAfter": "2026-09-16",
+      "lastError": "research did not find enough authoritative information"
+    },
+    {
+      "kind": "producer",
+      "slug": "hecquet",
+      "name": "Hecquet",
+      "mode": "generated",
+      "fingerprint": "e3b6078d2a0914101603bc5e58f04880824675d6a75295918fb7caca47ebf0ec",
+      "retryFingerprint": "e3b6078d2a0914101603bc5e58f04880824675d6a75295918fb7caca47ebf0ec",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/hecquet\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1189,6 +1443,38 @@
     },
     {
       "kind": "producer",
+      "slug": "heritiers-comte-lafon",
+      "name": "Heritiers Comte Lafon",
+      "mode": "generated",
+      "fingerprint": "5b8c3826f02414a8a18f0639570c5242d79c0c7f29943b6debd6281f40191a45",
+      "eyebrow": "Producer Spotlight",
+      "heading": "Héritiers du Comte Lafon in the Mâconnais",
+      "paragraphs": [
+        "Héritiers du Comte Lafon is the project of Dominique Lafon, celebrated for his Meursault domain, who in 1999 turned his attention to the Mâconnais, convinced of the unique quality of its limestone-rich southern Burgundy terroirs. The estate holds parcels in Milly‑Lamartine, Bussières, the village of Chardonnay, and the Viré‑Clessé area, including the Clos de la Crochette on calcareous soils that suit Chardonnay exceptionally well ([vistavin.fr](https://www.vistavin.fr/fr/1085-heritiers-comte-lafon?utm_source=openai)). A recent feature noted that wines like those from the Héritiers du Comte Lafon in Le Monsard deliver a denser, riper expression than typical for the region ([decanter.com](https://www.decanter.com/wine/burgundy-wine/decoding-the-maconnais-burgundy-lovers-should-keep-their-eyes-on-this-southern-star?utm_source=openai)).",
+        "The Mâconnais is the most southern and one of the largest wine subregions of Burgundy, extending about 35 km between Sennecey‑le‑Grand and Saint‑Vérand, trapped between the valleys of the Grosne and the Saône ([macon-tourisme.com](https://www.macon-tourisme.com/nos-essentiels/les-vignobles-du-maconnais-et-du-beaujolais/le-vignoble-maconnais/?utm_source=openai)). Chardonnay is overwhelmingly dominant here, planted over roughly 80 percent of the vineyards, where calcareous, marly, and siliceous soils impart both finesse and depth and support both approachable and ageworthy styles ([vins-bourgogne.fr](https://www.vins-bourgogne.fr/vins-et-terroirs/notre-vignoble/maconnais/le-maconnais-la-porte-sud-de-la-bourgogne%2C2390%2C9310.html?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Vistavin on Héritiers du Comte Lafon project",
+          "url": "https://www.vistavin.fr/fr/1085-heritiers-comte-lafon"
+        },
+        {
+          "label": "Decanter on Mâconnais context and Héritiers style",
+          "url": "https://www.decanter.com/wine/burgundy-wine/decoding-the-maconnais-burgundy-lovers-should-keep-their-eyes-on-this-southern-star"
+        },
+        {
+          "label": "Mâconnais regional overview",
+          "url": "https://www.macon-tourisme.com/nos-essentiels/les-vignobles-du-maconnais-et-du-beaujolais/le-vignoble-maconnais/"
+        },
+        {
+          "label": "Burgundy wines site on Mâconnais and Chardonnay",
+          "url": "https://terroirs-des-cotes-maconnaises.vins-macon.com/en/index.html"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
+    },
+    {
+      "kind": "producer",
       "slug": "hirtzberger",
       "name": "Hirtzberger",
       "mode": "generated",
@@ -1199,6 +1485,16 @@
     },
     {
       "kind": "producer",
+      "slug": "horacio",
+      "name": "Horacio",
+      "mode": "generated",
+      "fingerprint": "cd196d7ecef38bfa9dd604bb427b717c198da6d093caa1c0f653c2cb359783ca",
+      "retryFingerprint": "cd196d7ecef38bfa9dd604bb427b717c198da6d093caa1c0f653c2cb359783ca",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/horacio\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "hubert-lamy",
       "name": "Hubert Lamy",
       "mode": "generated",
@@ -1206,6 +1502,46 @@
       "retryFingerprint": "af3ed58731aa22f95c2dfa65a066b53469c57e47c73ed1d0494b0088e6563931",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/hubert-lamy\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "humbert",
+      "name": "Humbert",
+      "mode": "generated",
+      "fingerprint": "b68ef8f663a34c190a280cea43967f381d297632354f7c94add1051fa2fd0fa1",
+      "retryFingerprint": "b68ef8f663a34c190a280cea43967f381d297632354f7c94add1051fa2fd0fa1",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/humbert\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "jaboulet",
+      "name": "Jaboulet",
+      "mode": "generated",
+      "fingerprint": "ba0379383fe5cdb382ca512170aca9ef505f620ae63182ce2ada583198b602b0",
+      "retryFingerprint": "ba0379383fe5cdb382ca512170aca9ef505f620ae63182ce2ada583198b602b0",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/jaboulet\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "jack-tar",
+      "name": "Jack Tar",
+      "mode": "generated",
+      "fingerprint": "2cfd244ab8000268541ff98194f01b1cf17d032ebb057c19bbc2716d74e48346",
+      "retryFingerprint": "2cfd244ab8000268541ff98194f01b1cf17d032ebb057c19bbc2716d74e48346",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/jack-tar\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "jaraba",
+      "name": "Jaraba",
+      "mode": "generated",
+      "fingerprint": "71352c838778c9a8bfaf1805ff197a9df51b9bbb3ee810c128bde811e7a5d5ff",
+      "retryFingerprint": "71352c838778c9a8bfaf1805ff197a9df51b9bbb3ee810c128bde811e7a5d5ff",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/jaraba\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1239,6 +1575,16 @@
     },
     {
       "kind": "producer",
+      "slug": "jm-rcl-gerin",
+      "name": "Jm - Rcl Gerin",
+      "mode": "generated",
+      "fingerprint": "264a75dc6989a84b3da554ccc54f0a99849de8d5e0b507b0075ed624279d67c1",
+      "retryFingerprint": "264a75dc6989a84b3da554ccc54f0a99849de8d5e0b507b0075ed624279d67c1",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/jm-rcl-gerin\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "jouan",
       "name": "Jouan",
       "mode": "generated",
@@ -1246,6 +1592,16 @@
       "retryFingerprint": "2142e74697dabab5e4c1f00cbc5ad216a1f49a603cbebb8437e8e179b7732fa5",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/jouan\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "juillet-lallement",
+      "name": "Juillet-Lallement",
+      "mode": "generated",
+      "fingerprint": "182a3ba1d19d5a58d3c833df2c5b17b9d599684a465dad95672a7dd33a7bc442",
+      "retryFingerprint": "182a3ba1d19d5a58d3c833df2c5b17b9d599684a465dad95672a7dd33a7bc442",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/juillet-lallement\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1289,6 +1645,60 @@
     },
     {
       "kind": "producer",
+      "slug": "kraft",
+      "name": "Kraft",
+      "mode": "generated",
+      "fingerprint": "4a947e64f0a0a9e9d36de53669a05a534cd0ded2ce70797873ea01e567230a7b",
+      "retryFingerprint": "4a947e64f0a0a9e9d36de53669a05a534cd0ded2ce70797873ea01e567230a7b",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/kraft\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "la-tene",
+      "name": "La Tene",
+      "mode": "generated",
+      "fingerprint": "4e1bfd94285a31965ab424c5d7db8cd80599bdde016007b1a33d18153e0dab80",
+      "retryFingerprint": "4e1bfd94285a31965ab424c5d7db8cd80599bdde016007b1a33d18153e0dab80",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/la-tene\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "lacroix",
+      "name": "Lacroix",
+      "mode": "generated",
+      "fingerprint": "274a9788ffbaf067fd45471ffff1f0155dc403e24e1e4e0375ba7910de3b55fc",
+      "eyebrow": "French Table Wine by Lacroix",
+      "heading": "Lacroix’s Paul Lacroix Pinot Noir as Vin de France",
+      "paragraphs": [
+        "Lacroix’s Paul Lacroix Pinot Noir Vin de France comes from a tradition of Burgundian family producers, yet its Vin de France designation sets it apart from appellation‑controlled wines. Unlike IGP or AOP (Appellation d’Origine Protégée) that define production zones and strict vineyard practices, Vin de France is the broadest category in the modern French classification. Introduced in 2009, it allows producers flexibility in sourcing and blending grapes while still indicating varietal and vintage on the label ([en.wikipedia.org](https://en.wikipedia.org/wiki/Vin_de_France?utm_source=openai)).",
+        "This freedom makes Vin de France a compelling canvas for producers like Lacroix to express creativity and stylistic intent without geographic constraints. While the producer’s Burgundian roots may influence the house style, the Vin de France label primarily communicates that this wine offers approachable Pinot Noir driven by varietal character and vintage expression rather than terroir specification. It complements FineVines’ portfolio by offering buyers a straightforward yet authentic French Pinot Noir representing both tradition and imaginative production."
+      ],
+      "sources": [
+        {
+          "label": "Vin de France definition (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Vin_de_France"
+        },
+        {
+          "label": "Vin de France explanation (Vidal‑Fleury)",
+          "url": "https://www.vidal‑fleury.com/vin-de-france-tout-savoir-sur-lappellation-vdf"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
+    },
+    {
+      "kind": "producer",
+      "slug": "ladouys",
+      "name": "Ladouys",
+      "mode": "generated",
+      "fingerprint": "f62943683a9fb5783feed376ab23c42ad353f95a30b377a345231b326d9ae26a",
+      "retryFingerprint": "f62943683a9fb5783feed376ab23c42ad353f95a30b377a345231b326d9ae26a",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/ladouys\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "laffay",
       "name": "Laffay",
       "mode": "generated",
@@ -1296,6 +1706,48 @@
       "retryFingerprint": "c1745dba6c0fa3ead92739f1d1ef6ff50c0dce2956f89fdf31fde76a843f5231",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/laffay\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "lamarche",
+      "name": "Lamarche",
+      "mode": "generated",
+      "fingerprint": "f6b17f25be614a1d9ca9f4c351e01903e45509882ce4bc198c50912afb39b040",
+      "retryFingerprint": "f6b17f25be614a1d9ca9f4c351e01903e45509882ce4bc198c50912afb39b040",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/lamarche\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "launois",
+      "name": "Launois",
+      "mode": "generated",
+      "fingerprint": "c3f265ee8c5969f220ad17a3ff9bdfd6757d48081ff87c34b14cd9373e054b34",
+      "eyebrow": "Grower‑Producer Spotlight",
+      "heading": "Launois of Le Mesnil‑sur‑Oger: Singular Grand Cru Chardonnay",
+      "paragraphs": [
+        "Nestled in the esteemed village of Le Mesnil‑sur‑Oger on the Côte des Blancs, Launois is a family estate where Chardonnay reigns. Founded in 1872, the House of Launois Père et Fils remains dedicated to generational savoir‑faire, now under the guidance of Séverine and Caroline Launois, who oversee every step from precise picking to thoughtful pressing in their Grand Cru vineyards ([champagne-launois.fr](https://www.champagne-launois.fr/site/en/the-launois-family.html?utm_source=openai)). The result is a focused expression of limestone‑rich terroir that typifies this segment of Champagne.",
+        "Under the Paul Launois label, Julien and Sarah Launois harness a roughly six‑hectare vineyard in Le Mesnil‑sur‑Oger to craft pure Blanc de Blancs Grand Cru. Their Monochrome bottlings, from the eponymous cuvée, are vinified as Extra Brut with minimal dosage, aimed at showcasing vibrant mineral tension and refined texture. This approach accentuates chalk‑driven salinity and delicate Chardonnay character, offering both clarity and personality from a single origin ([sanks.fr](https://sanks.fr/producteurs/champagne-paul-launois?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "The Launois Family history and Grand Cru Côte des Blancs",
+          "url": "https://www.champagne-launois.fr/site/en/the-launois-family.html"
+        },
+        {
+          "label": "Launois Père et Fils tradition and estate overview",
+          "url": "https://www.champagne-launois.fr/site/fr/la-maison-une-famille.html"
+        },
+        {
+          "label": "Paul Launois grower‑producer practices and terroir",
+          "url": "https://sanks.fr/producteurs/champagne-paul-launois"
+        },
+        {
+          "label": "Monochrome Extra Brut blanc de blancs details",
+          "url": "https://www.champagne-paul-launois.fr/cuvee-monochrome/"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
     },
     {
       "kind": "producer",
@@ -1319,6 +1771,26 @@
     },
     {
       "kind": "producer",
+      "slug": "legado-de-moncayo",
+      "name": "Legado de Moncayo",
+      "mode": "generated",
+      "fingerprint": "b5a81e95a182d9f6c4bd9180bf3f1d8b5b0f2927ed2784884dd0eaa4a39205c9",
+      "retryFingerprint": "b5a81e95a182d9f6c4bd9180bf3f1d8b5b0f2927ed2784884dd0eaa4a39205c9",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/legado-de-moncayo\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "leroy",
+      "name": "Leroy",
+      "mode": "generated",
+      "fingerprint": "3280b9a3273385a4fdf3b045ba97c18704a01c48d5e9a272628d8e27c43c01fa",
+      "retryFingerprint": "3280b9a3273385a4fdf3b045ba97c18704a01c48d5e9a272628d8e27c43c01fa",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/leroy\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "leroy-domaine-collection",
       "name": "Leroy - Domaine/ Collection",
       "mode": "generated",
@@ -1336,6 +1808,16 @@
       "retryFingerprint": "60d4d99356b5695ecef1ca87e024e8ab8acbcd9f46d9ff5bc60da0ba9554c6c3",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/lestrille\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "libenzi",
+      "name": "Libenzi",
+      "mode": "generated",
+      "fingerprint": "6c9970e83f37946e24774b4f0013094ee13e355e2422a19296f021cde8f928db",
+      "retryFingerprint": "6c9970e83f37946e24774b4f0013094ee13e355e2422a19296f021cde8f928db",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/libenzi\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1399,6 +1881,30 @@
     },
     {
       "kind": "producer",
+      "slug": "maison-morey",
+      "name": "Maison Morey",
+      "mode": "generated",
+      "fingerprint": "e14888698d05c3eaf10e310f57d7791adb39a2c14b5b505a092b00d5d1d2c55c",
+      "eyebrow": "Discover Maison Morey",
+      "heading": "Maison Morey in Volnay 1er Cru “Pitures”",
+      "paragraphs": [
+        "Maison Morey, trading under its négociant name Maison Morey‑Blanc, brings a distinctive voice to the Côte de Beaune, crafting its Volnay 1er Cru “Pitures” from Pinot Noir fruit sourced since 2018. The climat “Pitures (dessus)” sits on a mid‑slope close to Volnay village, bordered by Pommard’s Clos des Ducs, where the cooler soils yield wines with Volnay elegance yet a firmer structure, enriched by delicate floral notes of peony and violet along with a refreshing anise‑licorice lift ([morey-meursault.fr](https://www.morey-meursault.fr/vin/volnay-pitures/?utm_source=openai)).",
+        "Volnay itself is a small appellation in the Côte de Beaune celebrated for refined, aromatic Pinot Noir that leans toward finesse rather than power, especially when compared to neighboring Pommard ([en.wikipedia.org](https://en.wikipedia.org/wiki/Volnay_wine?utm_source=openai)). Maison Morey’s “Pitures” embraces this style while reflecting its unique terroir: mid‑slope exposure brings structure and aromatic clarity, offering a seamless balance between floral lift and architectural depth. This nuanced expression is precisely the type of clarity and provenance that matters when exploring FineVines’ selection."
+      ],
+      "sources": [
+        {
+          "label": "Maison Morey‑Blanc official description of Volnay Pitures",
+          "url": "https://www.morey‑meursault.fr/vin/volnay‑pitures/"
+        },
+        {
+          "label": "Volnay climat and appellation overview",
+          "url": "https://en.wikipedia.org/wiki/Volnay_wine"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
+    },
+    {
+      "kind": "producer",
       "slug": "maison-roy",
       "name": "Maison Roy",
       "mode": "generated",
@@ -1439,6 +1945,16 @@
     },
     {
       "kind": "producer",
+      "slug": "maxime-cheurin-noellat",
+      "name": "Maxime-Cheurin Noellat",
+      "mode": "generated",
+      "fingerprint": "a0cb6bbe166211abc8ea03e06e3598ee99e1b18658c8870ce005d93218f87947",
+      "retryFingerprint": "a0cb6bbe166211abc8ea03e06e3598ee99e1b18658c8870ce005d93218f87947",
+      "retryAfter": "2026-09-16",
+      "lastError": "invalid character ':' after array element"
+    },
+    {
+      "kind": "producer",
       "slug": "mcnab",
       "name": "Mcnab",
       "mode": "generated",
@@ -1463,6 +1979,36 @@
     },
     {
       "kind": "producer",
+      "slug": "mcnab-ridge",
+      "name": "Mcnab Ridge",
+      "mode": "generated",
+      "fingerprint": "edb9a19e36c0daf016f92ad0af717d508d630e2501e0abb178d5fe4f0c2f614a",
+      "retryFingerprint": "edb9a19e36c0daf016f92ad0af717d508d630e2501e0abb178d5fe4f0c2f614a",
+      "retryAfter": "2026-09-16",
+      "lastError": "research JSON has 111 words; expected 120 to 190"
+    },
+    {
+      "kind": "producer",
+      "slug": "mediterranean-soul",
+      "name": "Mediterranean Soul",
+      "mode": "generated",
+      "fingerprint": "4b14187f57f0c85dd12d8c9cb44befd2e7771519d1df6bab46008810e3d1eb9e",
+      "retryFingerprint": "4b14187f57f0c85dd12d8c9cb44befd2e7771519d1df6bab46008810e3d1eb9e",
+      "retryAfter": "2026-09-16",
+      "lastError": "research did not find enough authoritative information"
+    },
+    {
+      "kind": "producer",
+      "slug": "meo-camuzet",
+      "name": "Meo Camuzet",
+      "mode": "generated",
+      "fingerprint": "ad1bbe43d8aa2b9dba21495918261a9b48e22f4a7e61b7b9fe3d0e0ebf95f9ce",
+      "retryFingerprint": "ad1bbe43d8aa2b9dba21495918261a9b48e22f4a7e61b7b9fe3d0e0ebf95f9ce",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/meo-camuzet\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "michel-bouzereau",
       "name": "Michel Bouzereau",
       "mode": "generated",
@@ -1470,6 +2016,16 @@
       "retryFingerprint": "be87df862e3bd536d6f2ac0b56a5530d70144ba93863511dbc5472ea176bd9b4",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/michel-bouzereau\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "milcent",
+      "name": "Milcent",
+      "mode": "generated",
+      "fingerprint": "1b636cac170d06d575afe89a2cbfa2ff5465d36ac51938b3e58e68691dcce612",
+      "retryFingerprint": "1b636cac170d06d575afe89a2cbfa2ff5465d36ac51938b3e58e68691dcce612",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/milcent\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1490,6 +2046,50 @@
       "retryFingerprint": "bcacba54ddffd942407719fb9a2d1b2caf21c5dd89b62a7c768274f543b31ae6",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/mocali\" source label contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "mona",
+      "name": "Mona",
+      "mode": "generated",
+      "fingerprint": "12195b288cc085e53fdcca6aabe963860d743b43fa35a3b555286f1a9cc1bd79",
+      "retryFingerprint": "12195b288cc085e53fdcca6aabe963860d743b43fa35a3b555286f1a9cc1bd79",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/mona\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "mont-hermon",
+      "name": "Mont Hermon",
+      "mode": "generated",
+      "fingerprint": "d154a32c7fac5c2b24db32a9edbfe723a2c7535abb4e1480f83c13401c3093ba",
+      "eyebrow": "Producer Spotlight: Mont Hermon",
+      "heading": "Mont Hermon from the Galilee: Crafted by Golan Heights Winery",
+      "paragraphs": [
+        "Mont Hermon wines are produced by Golan Heights Winery using grapes grown at the foot of Mount Hermon in Israel’s Galilee, a region celebrated for its elevation, volcanic soils, and sharp diurnal temperature shifts that favor complexity and freshness in wine ([fr.wikipedia.org](https://fr.wikipedia.org/wiki/Mont_Hermon?utm_source=openai)). This setting lends structural clarity and aromatic lift to the wines, and those familiar with the vineyard mosaic in the Golan know that cooler, well‑drained sites like Hermon can yield lively expressions even from Mediterranean red varieties. That heritage gives context to the Syrah‑Tempranillo blend represented in this collection.",
+        "Syrah and Tempranillo are both well‑adapted to warm‑climate sites yet benefit from the Galilean terroir’s cooling influences, where higher altitude and volcanic soils support expressive fruit and balanced structure. While Tempranillo brings bright cherry and subtle earth, Syrah contributes savory spice and medium‑bodied depth; the union often yields approachable wines that resonate with both classic and New World styles. FineVines’ selection from Mont Hermon showcases both the distinct identity of that terroir and the flexibility of this varietal pairing for a range of cellar and table contexts."
+      ],
+      "sources": [
+        {
+          "label": "Wikipedia on Mont Hermon wine production",
+          "url": "https://fr.wikipedia.org/wiki/Mont_Hermon"
+        },
+        {
+          "label": "Wikipedia on Israeli wine regions (Galilee)",
+          "url": "https://en.wikipedia.org/wiki/Israeli_wine"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
+    },
+    {
+      "kind": "producer",
+      "slug": "monte-real",
+      "name": "Monte Real",
+      "mode": "generated",
+      "fingerprint": "cb4c88740719d163d3eda3ebe1d134cdd537fb3638e4f39c76f2870699953f7c",
+      "retryFingerprint": "cb4c88740719d163d3eda3ebe1d134cdd537fb3638e4f39c76f2870699953f7c",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/monte-real\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
