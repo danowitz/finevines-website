@@ -126,7 +126,14 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
     if (request.method === 'GET' && url.pathname === '/api/current') {
       const current = JSON.parse(await storage.get(`${prefix}/current.json`));
       const manifest = await loadPackage(storage, prefix, current.packageId);
-      return json({ ...manifest, csrfToken: await csrfToken(config.sessionSecret, session.sessionId) });
+      await stateReady;
+      const currentStatus = await state.packageStatus(config.environment, manifest.wines);
+      return json({
+        ...manifest,
+        wines: currentStatus.decisions,
+        reviewStatus: { ...currentStatus.counts, oldestPendingAt: currentStatus.oldestPendingAt },
+        csrfToken: await csrfToken(config.sessionSecret, session.sessionId),
+      });
     }
 
     const imageRoute = url.pathname.match(/^\/api\/packages\/([^/]+)\/images\/([^/]+)$/);
@@ -148,10 +155,9 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
     const actionStatusRoute = url.pathname.match(/^\/api\/actions\/([0-9a-f-]{36})$/i);
     if (request.method === 'GET' && actionStatusRoute) {
       const id = actionStatusRoute[1];
-      const receipt = await storage.get(`${prefix}/receipts/${id}.json`);
-      if (receipt) return json(JSON.parse(receipt));
-      const pending = await storage.get(`${prefix}/pending/${id}.json`);
-      return pending ? json({ id, status: 'queued' }) : response('Not found', { status: 404 });
+      await stateReady;
+      const value = await state.actionStatus(id, config.environment);
+      return value ? json(value) : response('Not found', { status: 404 });
     }
 
     if (request.method === 'POST' && url.pathname === '/api/reviewer-images') {

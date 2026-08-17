@@ -15,12 +15,17 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY } = {
     ['_review/test/packages/pkg-1/manifest.json', JSON.stringify({
       schemaVersion: 1, packageId: 'pkg-1', environment: 'test', catalogCommit: 'abcdef1', createdAt: '2026-08-10T00:00:00Z', expiresAt: '2026-09-10T00:00:00Z',
       reviewers: [{ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }, { name: 'Connie Molitor', email: 'connie@finevines.com', role: 'Executive' }],
-      wines: [{ sku: '500740*', displayIdentity: 'Producer Wine 2022', searchQuery: 'Producer Wine 2022 exact query', wineRevision: 'a'.repeat(64), candidates: [{ candidateId: 'c1', storageName: 'c1.png', mime: 'image/png', bytes: candidate.length, width: 400, height: 800 }] }],
+      wines: [
+        { sku: '500740*', displayIdentity: 'Producer Wine 2022', searchQuery: 'Producer Wine 2022 exact query', wineRevision: 'a'.repeat(64), candidates: [{ candidateId: 'c1', storageName: 'c1.png', mime: 'image/png', bytes: candidate.length, width: 400, height: 800 }] },
+        { sku: '500741*', displayIdentity: 'Producer Other Wine 2021', searchQuery: 'Producer Other Wine 2021', wineRevision: 'b'.repeat(64), candidates: [{ candidateId: 'c2', storageName: 'c2.png', mime: 'image/png', bytes: candidate.length, width: 400, height: 800 }] },
+      ],
     })],
     ['_review/test/packages/pkg-1/images/c1.png', candidate],
+    ['_review/test/packages/pkg-1/images/c2.png', candidate],
   ]);
   const writes = [];
   const activeWines = new Map();
+  const queuedActions = [];
   const storage = {
     get: async (path) => files.get(path),
     getBytes: async (path) => files.get(path),
@@ -33,7 +38,22 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY } = {
       const active = activeWines.get(key);
       if (active) throw new ActiveWineLockError({ sku: action.sku, actionId: active });
       activeWines.set(key, action.id);
+      queuedActions.push(action);
       return { id: action.id, status: 'queued' };
+    },
+    packageStatus: async (environment, wines) => {
+      const active = new Map(queuedActions.filter((action) => action.environment === environment).map((action) => [action.wineRevision, action]));
+      const decisions = wines.filter((wine) => !active.has(wine.wineRevision));
+      return {
+        counts: { needsDecision: decisions.length, queued: active.size, processing: 0, completed: 0, needsAttention: 0 },
+        oldestPendingAt: active.size ? queuedActions[0].submittedAt : null,
+        decisions,
+        statuses: Object.fromEntries([...active].map(([revision, action]) => [revision, { actionId: action.id, status: 'queued', attentionReason: '' }])),
+      };
+    },
+    actionStatus: async (id, environment) => {
+      const action = queuedActions.find((value) => value.id === id && value.environment === environment);
+      return action ? { id, status: 'queued', attentionReason: '', submittedAt: action.submittedAt, startedAt: '', completedAt: '' } : null;
     },
   };
   const accounts = {
@@ -49,7 +69,7 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY } = {
   };
   const config = { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', sessionSecret: 'session-secret' };
   const handle = createReviewConsole({ config, storage, state, accounts, dispatch, now: () => new Date('2026-08-11T20:00:00Z'), uuid: (() => { let n = 0; return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`; })() });
-  return { handle, writes, files };
+  return { handle, writes, files, queuedActions };
 }
 
 async function login(handle) {
@@ -138,7 +158,11 @@ describe('review console handler', () => {
     assert.doesNotThrow(() => new Function(script));
     assert.match(script, /Remove from comparison/);
     assert.match(script, /event\.target === modal/);
-    assert.match(script, /card\.remove\(\)/);
+    assert.doesNotMatch(script, /card\.remove\(\)/);
+    assert.match(script, /setInterval\(activeRefresh, 10_000\)/);
+    assert.match(script, /document\.visibilityState === 'visible' && document\.hasFocus\(\)/);
+    assert.match(script, /window\.addEventListener\('focus', activeRefresh\)/);
+    assert.match(script, /document\.addEventListener\('visibilitychange', activeRefresh\)/);
     assert.doesNotMatch(markup, /Search wines by name or SKU/);
     assert.match(script, /Click here, then press Control V to paste your image\./);
     assert.match(script, /google\.com\/search\?tbm=isch/);
@@ -170,6 +194,13 @@ describe('review console handler', () => {
     const res = await handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) }));
     assert.equal(res.status, 202);
     assert.deepEqual(writes.map((p) => p.replace(/00000000-0000-4000-8000-\d{12}/, '<id>')), ['_review/test/actions/<id>.json', '_review/test/pending/<id>.json']);
+    const refreshed = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+    const value = await refreshed.json();
+    assert.equal(value.wines.length, 1);
+    assert.deepEqual(value.reviewStatus, {
+      needsDecision: 1, queued: 1, processing: 0, completed: 0, needsAttention: 0,
+      oldestPendingAt: '2026-08-11T20:00:00.000Z',
+    });
   });
 
   it('atomically accepts only one of two simultaneous same-wine submissions', async () => {
@@ -226,6 +257,21 @@ describe('review console handler', () => {
     const { id } = await queued.json();
     const pending = await handle(new Request(`https://review.finevines.biz/api/actions/${id}`, { headers: { cookie } }));
     assert.equal((await pending.json()).status, 'queued');
+  });
+
+  it('accepts simultaneous submissions for different wines', async () => {
+    const { handle } = fixture();
+    const cookie = await login(handle);
+    const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+    const csrf = (await current.json()).csrfToken;
+    const actions = [
+      { kind: 'image-select', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' },
+      { kind: 'image-select', sku: '500741*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'b'.repeat(64), candidateId: 'c2' },
+    ];
+    const responses = await Promise.all(actions.map((action) => handle(new Request('https://review.finevines.biz/api/actions', {
+      method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action),
+    }))));
+    assert.deepEqual(responses.map(({ status }) => status), [202, 202]);
   });
 
   it('forces an invited reviewer to change the temporary password before review access', async () => {

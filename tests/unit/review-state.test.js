@@ -14,6 +14,12 @@ function stateAt(iso = '2026-08-16T12:00:00.000Z') {
   return createReviewState({ client, now: () => new Date(iso) });
 }
 
+const packageWines = [
+  { sku: '500740*', wineRevision: 'a'.repeat(64) },
+  { sku: '500741*', wineRevision: 'b'.repeat(64) },
+  { sku: '500742*', wineRevision: 'c'.repeat(64) },
+];
+
 function action(id, { wineRevision = 'a'.repeat(64), sku = '500740*' } = {}) {
   return {
     schemaVersion: 1,
@@ -52,6 +58,31 @@ describe('review state', () => {
       completed: 0,
       needsAttention: 0,
       oldestPendingAt: '2026-08-16T12:00:00.000Z',
+    });
+  });
+
+  it('queues different wines independently and returns durable package status', async () => {
+    const state = stateAt();
+    await state.initialize();
+    const first = action('00000000-0000-4000-8000-000000000011');
+    const second = action('00000000-0000-4000-8000-000000000012', { wineRevision: 'b'.repeat(64), sku: '500741*' });
+    await Promise.all([state.queue(first), state.queue(second)]);
+    await state.transition(first.id, 'queued', 'processing', 'worker claimed action');
+    await state.transition(first.id, 'processing', 'completed', 'deployment verified');
+    await state.transition(second.id, 'queued', 'needs_attention', 'catalog revision changed');
+
+    assert.deepEqual(await state.packageStatus('test', packageWines), {
+      counts: { needsDecision: 1, queued: 0, processing: 0, completed: 1, needsAttention: 1 },
+      oldestPendingAt: null,
+      decisions: [packageWines[2]],
+      statuses: {
+        ['a'.repeat(64)]: { actionId: first.id, status: 'completed', attentionReason: '' },
+        ['b'.repeat(64)]: { actionId: second.id, status: 'needs_attention', attentionReason: 'catalog revision changed' },
+      },
+    });
+    assert.deepEqual(await state.actionStatus(second.id, 'test'), {
+      id: second.id, status: 'needs_attention', attentionReason: 'catalog revision changed',
+      submittedAt: second.submittedAt, startedAt: '', completedAt: '',
     });
   });
 });

@@ -125,6 +125,97 @@ export function createReviewState({ client, now = () => new Date() }) {
     };
   }
 
+  function statusFrom(row) {
+    return {
+      actionId: String(rowValue(row, 'id')),
+      status: String(rowValue(row, 'status')),
+      attentionReason: rowValue(row, 'attention_reason') ? String(rowValue(row, 'attention_reason')) : '',
+    };
+  }
+
+  async function packageStatus(environment, wines) {
+    const revisions = new Set((Array.isArray(wines) ? wines : []).map(({ wineRevision }) => wineRevision));
+    const result = await client.execute({
+      sql: `SELECT id, wine_revision, status, submitted_at, attention_reason
+        FROM review_actions WHERE environment = ? ORDER BY submitted_at DESC, id DESC`,
+      args: [environment],
+    });
+    const latest = new Map();
+    for (const row of result.rows) {
+      const revision = String(rowValue(row, 'wine_revision'));
+      if (revisions.has(revision) && !latest.has(revision)) latest.set(revision, row);
+    }
+    const values = { needsDecision: 0, queued: 0, processing: 0, completed: 0, needsAttention: 0 };
+    const statuses = {};
+    const decisions = [];
+    let oldestPendingAt = null;
+    for (const wine of Array.isArray(wines) ? wines : []) {
+      const row = latest.get(wine.wineRevision);
+      if (!row) {
+        values.needsDecision += 1;
+        decisions.push(wine);
+        continue;
+      }
+      const status = String(rowValue(row, 'status'));
+      if (status === 'needs_attention') values.needsAttention += 1;
+      else if (status === 'queued') values.queued += 1;
+      else if (status === 'processing') values.processing += 1;
+      else if (status === 'completed') values.completed += 1;
+      statuses[wine.wineRevision] = statusFrom(row);
+      if (ACTIVE_STATUSES.has(status)) {
+        const submittedAt = String(rowValue(row, 'submitted_at'));
+        if (!oldestPendingAt || submittedAt < oldestPendingAt) oldestPendingAt = submittedAt;
+      }
+    }
+    return { counts: values, oldestPendingAt, decisions, statuses };
+  }
+
+  async function actionStatus(id, environment) {
+    const result = await client.execute({
+      sql: `SELECT id, status, attention_reason, submitted_at, started_at, completed_at
+        FROM review_actions WHERE id = ? AND environment = ?`,
+      args: [id, environment],
+    });
+    const row = result.rows[0];
+    if (!row) return null;
+    return {
+      id: String(rowValue(row, 'id')),
+      status: String(rowValue(row, 'status')),
+      attentionReason: rowValue(row, 'attention_reason') ? String(rowValue(row, 'attention_reason')) : '',
+      submittedAt: String(rowValue(row, 'submitted_at')),
+      startedAt: rowValue(row, 'started_at') ? String(rowValue(row, 'started_at')) : '',
+      completedAt: rowValue(row, 'completed_at') ? String(rowValue(row, 'completed_at')) : '',
+    };
+  }
+
+  async function transition(id, from, to, detail = '') {
+    const allowed = {
+      queued: new Set(['processing', 'needs_attention']),
+      processing: new Set(['completed', 'needs_attention', 'queued']),
+      needs_attention: new Set(['queued']),
+      completed: new Set(),
+    };
+    if (!allowed[from]?.has(to)) throw new Error(`invalid review action transition ${from} -> ${to}`);
+    const stamp = now().toISOString();
+    const result = await client.batch([
+      {
+        sql: `UPDATE review_actions SET status = ?, updated_at = ?,
+          started_at = CASE WHEN ? = 'processing' THEN ? ELSE started_at END,
+          completed_at = CASE WHEN ? = 'completed' THEN ? ELSE completed_at END,
+          attention_reason = CASE WHEN ? = 'needs_attention' THEN ? ELSE '' END
+          WHERE id = ? AND status = ?`,
+        args: [to, stamp, to, stamp, to, stamp, to, detail, id, from],
+      },
+      {
+        sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
+          SELECT ?, ?, ?, ? WHERE changes() = 1`,
+        args: [id, to, stamp, detail],
+      },
+    ], 'write');
+    if (result[0].rowsAffected !== 1) throw new Error(`review action ${id} is not ${from}`);
+    return { id, status: to };
+  }
+
   async function syncReviewerAccounts(accounts) {
     const existing = await listReviewerAccounts();
     const incoming = new Set(accounts.map(({ email }) => email));
@@ -196,7 +287,7 @@ export function createReviewState({ client, now = () => new Date() }) {
   }
 
   return {
-    initialize, queue, counts,
+    initialize, queue, counts, packageStatus, actionStatus, transition,
     syncReviewerAccounts, listReviewerAccounts, reviewerAccount, setReviewerInvitation, setReviewerPassword,
   };
 }

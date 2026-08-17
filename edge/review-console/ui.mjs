@@ -85,7 +85,7 @@ const FAVICON_BASE64 = 'AAABAAEAEBAAAAEAGABoAwAAFgAAACgAAAAQAAAAIAAAAAEAGAAAAAAA
 export const FAVICON = Uint8Array.from(atob(FAVICON_BASE64), (character) => character.charCodeAt(0));
 
 export const APP_JS = `
-const state = { package: null, selected: new Map(), modal: null };
+const state = { package: null, selected: new Map(), modal: null, refreshing: null };
 const el = (tag, attrs = {}, children = []) => {
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(attrs)) {
@@ -154,15 +154,11 @@ function choose(wine, candidate, card) {
   card.closest('.wine').querySelector('.primary').disabled = false;
 }
 
-function finishQueue(wine, card, data) {
+async function finishQueue(wine, card) {
   const previewUrl = card.querySelector('.paste-zone')?.dataset.previewUrl;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
-  card.remove();
   state.selected.delete(wine.sku);
-  const remaining = document.querySelectorAll('.wine').length;
-  status.textContent = wine.displayIdentity + ' queued · ' + remaining + ' wine' + (remaining === 1 ? '' : 's') + ' remaining';
-  if (!remaining) list.append(el('div', { class: 'empty', text: 'All review decisions have been queued.' }));
-  poll(data.id, status);
+  await refresh();
 }
 
 async function submit(wine, candidateId, card) {
@@ -179,7 +175,7 @@ async function submit(wine, candidateId, card) {
   output.textContent = data.dispatched ? 'Queued. The deployment has been started.' : 'Queued. The nightly processor will pick it up.';
   output.className = 'status good';
   card.querySelectorAll('button').forEach((button) => button.disabled = true);
-  finishQueue(wine, card, data);
+  await finishQueue(wine, card);
 }
 
 async function submitPasted(wine, file, card, button, output) {
@@ -200,7 +196,7 @@ async function submitPasted(wine, file, card, button, output) {
     button.disabled = false;
     return;
   }
-  finishQueue(wine, card, data);
+  await finishQueue(wine, card);
 }
 
 function showPastedImage(wine, card, zone, file) {
@@ -258,18 +254,6 @@ function pasteZone(wine, card) {
   return zone;
 }
 
-async function poll(id, output) {
-  for (let attempt = 0; attempt < 90; attempt++) {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    const res = await fetch('/api/actions/' + encodeURIComponent(id), { credentials: 'same-origin' });
-    if (!res.ok) continue;
-    const value = await res.json();
-    output.textContent = value.status === 'deployed' ? 'Deployed to the website.' : value.status === 'validated' ? 'Test passed; production was not changed.' : value.status === 'conflict' ? 'Conflict: the wine changed; please review it again.' : value.status === 'rejected' ? 'Rejected by the safety checks.' : 'Queued for deployment.';
-    output.className = 'status ' + (value.status === 'deployed' || value.status === 'validated' ? 'good' : value.status === 'conflict' || value.status === 'rejected' ? 'bad' : '');
-    if (['deployed', 'validated', 'conflict', 'rejected'].includes(value.status)) return;
-  }
-}
-
 function renderWine(wine) {
   const title = el('h2', { text: wine.displayIdentity });
   const meta = el('div', { class: 'wine-meta', text: 'SKU ' + wine.sku + ' · ' + wine.candidates.length + ' candidate' + (wine.candidates.length === 1 ? '' : 's') });
@@ -302,21 +286,43 @@ function renderWine(wine) {
   return card;
 }
 
-async function start() {
-  const res = await fetch('/api/current', { credentials: 'same-origin' });
-  if (!res.ok) { status.textContent = 'The review package is not available. Please try again later.'; return; }
-  state.package = await res.json();
-  const wines = state.package.wines || [];
-  status.textContent = wines.length + ' wines need a decision · package expires ' + new Date(state.package.expiresAt).toLocaleDateString();
-  if (!wines.length) list.append(el('div', { class: 'empty', text: 'Nothing needs review right now.' }));
-  else wines.forEach((wine) => list.append(renderWine(wine)));
+function summaryText(reviewStatus, expiresAt) {
+  const value = reviewStatus || {};
+  return [
+    (value.needsDecision || 0) + ' need a decision',
+    (value.queued || 0) + ' queued',
+    (value.processing || 0) + ' processing',
+    (value.completed || 0) + ' completed',
+    (value.needsAttention || 0) + ' need attention',
+  ].join(' · ') + ' · package expires ' + new Date(expiresAt).toLocaleDateString();
+}
+
+async function refresh() {
+  if (state.refreshing) return state.refreshing;
+  state.refreshing = (async () => {
+    const res = await fetch('/api/current', { credentials: 'same-origin' });
+    if (!res.ok) { status.textContent = 'The review package is not available. Please try again later.'; return; }
+    state.package = await res.json();
+    const wines = state.package.wines || [];
+    status.textContent = summaryText(state.package.reviewStatus, state.package.expiresAt);
+    list.replaceChildren();
+    if (!wines.length) list.append(el('div', { class: 'empty', text: 'Nothing needs review right now.' }));
+    else wines.forEach((wine) => list.append(renderWine(wine)));
+  })();
+  try { await state.refreshing; } finally { state.refreshing = null; }
 }
 
 document.querySelectorAll('[data-close]').forEach((node) => node.addEventListener('click', closeModal));
 const modal = document.querySelector('#modal');
 modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
-start();
+const activeRefresh = () => {
+  if (document.visibilityState === 'visible' && document.hasFocus()) refresh();
+};
+window.addEventListener('focus', activeRefresh);
+document.addEventListener('visibilitychange', activeRefresh);
+setInterval(activeRefresh, 10_000);
+refresh();
 `;
 
 const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
