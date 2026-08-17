@@ -309,10 +309,15 @@ function summaryText(reviewStatus, expiresAt) {
   ].join(' · ') + ' · package expires ' + new Date(expiresAt).toLocaleDateString();
 }
 
-async function retryIncident(incident, button) {
+async function recoverIncident(incident, operation, button) {
   button.disabled = true;
-  const res = await fetch('/api/admin/actions/' + encodeURIComponent(incident.actionId) + '/retry', {
-    method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': state.package.csrfToken },
+  let reason = '';
+  if (operation === 'reopen' || operation === 'exclude') {
+    reason = prompt(operation === 'exclude' ? 'Why should this wine be temporarily excluded?' : 'Why are you reopening the original choices?') || '';
+    if (!reason.trim()) { button.disabled = false; return; }
+  }
+  const res = await fetch('/api/admin/actions/' + encodeURIComponent(incident.actionId) + '/' + operation, {
+    method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': state.package.csrfToken, 'Content-Type': 'application/json' }, body: JSON.stringify({ reason }),
   });
   if (!res.ok) { button.disabled = false; button.textContent = 'Retry failed'; return; }
   await refresh();
@@ -350,13 +355,19 @@ async function refresh() {
     status.textContent = summaryText(state.package.reviewStatus, state.package.expiresAt);
     incidentList.replaceChildren();
     for (const incident of state.package.incidents || []) {
-      const retry = el('button', { type: 'button', text: 'Retry safely' });
-      retry.addEventListener('click', () => retryIncident(incident, retry));
+      const controls = el('div', { class: 'actions' });
+      if (incident.status === 'needs_attention') {
+        for (const [operation, label] of [['retry', 'Retry safely'], ['reopen', 'Reopen choices'], ['rediscover', 'Search more broadly'], ['exclude', 'Temporarily exclude']]) {
+          const button = el('button', { type: 'button', text: label });
+          button.addEventListener('click', () => recoverIncident(incident, operation, button));
+          controls.append(button);
+        }
+      }
       incidentList.append(el('section', { class: 'incident', role: 'alert' }, [
         el('strong', { text: 'Review issue · SKU ' + incident.sku }),
         el('span', { text: incident.reason + ' · open ' + incident.ageMinutes + ' minutes' }),
         el('span', { text: 'Next: ' + incident.nextAction }),
-        retry,
+        controls,
       ]));
     }
     list.replaceChildren();

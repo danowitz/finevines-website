@@ -24,6 +24,8 @@ describe('review console adapters', () => {
     await dispatch('action-id', 'test');
     assert.equal(seen.url, 'https://api.github.com/repos/owner/repo/dispatches');
     assert.deepEqual(JSON.parse(seen.init.body), { event_type: 'review-console', client_payload: { actionId: 'action-id', environment: 'test' } });
+    await dispatch.recovery('action-id', 'producer-wine-2022', 'test');
+    assert.deepEqual(JSON.parse(seen.init.body), { event_type: 'review-recovery', client_payload: { action_id: 'action-id', slug: 'producer-wine-2022', environment: 'test' } });
   });
 
   it('keeps nightly processing available when no scoped dispatch token is configured', async () => {

@@ -19,6 +19,6 @@
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
-    "nodemailer": "^7.0.6"
+    "nodemailer": "9.0.5"
   }
 }

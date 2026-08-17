@@ -16,8 +16,8 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY } = {
       schemaVersion: 1, packageId: 'pkg-1', environment: 'test', catalogCommit: 'abcdef1', createdAt: '2026-08-10T00:00:00Z', expiresAt: '2026-09-10T00:00:00Z',
       reviewers: [{ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }, { name: 'Connie Molitor', email: 'connie@finevines.com', role: 'Executive' }],
       wines: [
-        { sku: '500740*', displayIdentity: 'Producer Wine 2022', searchQuery: 'Producer Wine 2022 exact query', wineRevision: 'a'.repeat(64), candidates: [{ candidateId: 'c1', storageName: 'c1.png', mime: 'image/png', bytes: candidate.length, width: 400, height: 800 }] },
-        { sku: '500741*', displayIdentity: 'Producer Other Wine 2021', searchQuery: 'Producer Other Wine 2021', wineRevision: 'b'.repeat(64), candidates: [{ candidateId: 'c2', storageName: 'c2.png', mime: 'image/png', bytes: candidate.length, width: 400, height: 800 }] },
+        { sku: '500740*', slug: 'producer-wine-2022', displayIdentity: 'Producer Wine 2022', searchQuery: 'Producer Wine 2022 exact query', wineRevision: 'a'.repeat(64), candidates: [{ candidateId: 'c1', storageName: 'c1.png', sha256: '1'.repeat(64), mime: 'image/png', bytes: candidate.length, width: 400, height: 800, sourceUrl: 'https://producer.example/wine', sourceImageUrl: 'https://producer.example/wine.png' }] },
+        { sku: '500741*', slug: 'producer-other-wine-2021', displayIdentity: 'Producer Other Wine 2021', searchQuery: 'Producer Other Wine 2021', wineRevision: 'b'.repeat(64), candidates: [{ candidateId: 'c2', storageName: 'c2.png', sha256: '2'.repeat(64), mime: 'image/png', bytes: candidate.length, width: 400, height: 800, sourceUrl: 'https://producer.example/other', sourceImageUrl: 'https://producer.example/other.png' }] },
       ],
     })],
     ['_review/test/packages/pkg-1/images/c1.png', candidate],
@@ -62,6 +62,14 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY } = {
       if (!action || action.status !== from) throw new Error('invalid transition');
       action.status = to; action.detail = detail;
     },
+    recoverAction: async (id, operation, reason) => {
+      const action = queuedActions.find((value) => value.id === id);
+      if (!action || action.status !== 'needs_attention') throw new Error('invalid transition');
+      action.status = operation === 'retry' ? 'queued' : operation === 'rediscover' ? 'rediscovering' : operation === 'reopen' ? 'reopened' : 'excluded';
+      action.detail = reason;
+      return { id, status: action.status };
+    },
+    pendingRecoveries: async () => [],
   };
   const accounts = {
     authenticate: async (email, password) => email === identity.email && password === 'correct horse' ? identity : null,
@@ -267,6 +275,21 @@ describe('review console handler', () => {
     const { id } = await queued.json();
     const pending = await handle(new Request(`https://review.finevines.biz/api/actions/${id}`, { headers: { cookie } }));
     assert.equal((await pending.json()).status, 'queued');
+  });
+
+  it('records the complete server-trusted rejected candidate identity set for none-of-these', async () => {
+    const { handle, files, writes } = fixture();
+    const cookie = await login(handle);
+    const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+    const csrf = (await current.json()).csrfToken;
+    const action = { kind: 'no-image', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: '' };
+    const response = await handle(new Request('https://review.finevines.biz/api/actions', {
+      method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action),
+    }));
+    assert.equal(response.status, 202);
+    const stored = JSON.parse(files.get(writes.find((path) => path.includes('/actions/'))));
+    assert.equal(stored.wineSlug, 'producer-wine-2022');
+    assert.deepEqual(stored.rejectedCandidates, [{ candidateId: 'c1', sha256: '1'.repeat(64), sourceImageUrl: 'https://producer.example/wine.png', sourceUrl: 'https://producer.example/wine' }]);
   });
 
   it('accepts simultaneous submissions for different wines', async () => {

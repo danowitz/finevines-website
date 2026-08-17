@@ -81,7 +81,7 @@ func fixture(t *testing.T) (*memoryStore, []model.Wine, string) {
 	bytes := []byte("candidate-image")
 	sum := sha256.Sum256(bytes)
 	action := Action{SchemaVersion: 1, ID: id, Environment: "test", Reviewer: "barb.fultz@finevines.com", SKU: "500740*", Kind: "image-select", PackageID: "pkg-1", TargetCatalogCommit: "abcdef1", WineRevision: WineRevision(wines[0]), CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", CSRFSessionID: "00000000-0000-4000-8000-000000000099"}
-	manifest := Manifest{SchemaVersion: 1, PackageID: "pkg-1", Environment: "test", CatalogCommit: "abcdef1", CreatedAt: "2026-08-15T00:00:00Z", ExpiresAt: "2026-09-14T00:00:00Z", Reviewers: []Reviewer{{Name: "Barb Fultz", Email: "barb.fultz@finevines.com", Role: "Back Office"}}, Wines: []PackageWine{{SKU: "500740*", WineRevision: action.WineRevision, Candidates: []Candidate{{CandidateID: "candidate-1", StorageName: "candidate-1.png", SHA256: hex.EncodeToString(sum[:]), Bytes: len(bytes), MIME: "image/png", SourceURL: "https://producer.example/wine"}}}}}
+	manifest := Manifest{SchemaVersion: 1, PackageID: "pkg-1", Environment: "test", CatalogCommit: "abcdef1", CreatedAt: "2026-08-15T00:00:00Z", ExpiresAt: "2026-09-14T00:00:00Z", Reviewers: []Reviewer{{Name: "Barb Fultz", Email: "barb.fultz@finevines.com", Role: "Back Office"}}, Wines: []PackageWine{{SKU: "500740*", Slug: "producer-wine-2022", WineRevision: action.WineRevision, Candidates: []Candidate{{CandidateID: "candidate-1", StorageName: "candidate-1.png", SHA256: hex.EncodeToString(sum[:]), Bytes: len(bytes), MIME: "image/png", SourceURL: "https://producer.example/wine"}}}}}
 	encode := func(value any) []byte {
 		data, err := json.Marshal(value)
 		if err != nil {
@@ -274,20 +274,26 @@ func TestPrepareRejectsTypedInvalidImageWithoutPoisoningBatch(t *testing.T) {
 	}
 }
 
-func TestPrepareRecordsNoImageAndPreventsRepeatedPresentation(t *testing.T) {
+func TestPrepareSchedulesBroaderDiscoveryForCompleteRejectedSet(t *testing.T) {
 	store, wines, id := fixture(t)
 	var action Action
 	if err := json.Unmarshal(store.files["_review/test/actions/"+id+".json"], &action); err != nil {
 		t.Fatal(err)
 	}
 	action.Kind, action.CandidateID = "no-image", ""
+	action.WineSlug = "producer-wine-2022"
+	var manifest Manifest
+	if err := json.Unmarshal(store.files["_review/test/packages/pkg-1/manifest.json"], &manifest); err != nil {
+		t.Fatal(err)
+	}
+	action.RejectedCandidates = []Candidate{{CandidateID: manifest.Wines[0].Candidates[0].CandidateID, SHA256: manifest.Wines[0].Candidates[0].SHA256, SourceURL: manifest.Wines[0].Candidates[0].SourceURL}}
 	data, _ := json.Marshal(action)
 	store.files["_review/test/actions/"+id+".json"], store.files["_review/test/pending/"+id+".json"] = data, data
 	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC)})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.Wines[0].ImageReviewStatus != "no-match" || result.Decisions[0].Status != "prepared" {
+	if result.Wines[0].ImageReviewStatus != "" || result.Decisions[0].Status != "rediscover" {
 		t.Fatalf("result = %#v", result)
 	}
 }
@@ -317,6 +323,25 @@ func TestFinalizeUploadsReceiptBeforeDeletingPending(t *testing.T) {
 	}
 	if receipt.VerifiedImageURL != fetched || !strings.Contains(fetched, "review-action="+id) {
 		t.Fatalf("verified image URL = %q, fetched %q", receipt.VerifiedImageURL, fetched)
+	}
+}
+
+func TestFinalizeRecordsRediscoveryHandoffAndDeletesPending(t *testing.T) {
+	store, _, id := fixture(t)
+	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "rediscover", Reviewer: "barb.fultz@finevines.com", SKU: "500740*", Kind: "no-image", PackageID: "pkg-1", SubmittedAt: "2026-08-15T01:00:00Z", PreparedAt: "2026-08-15T02:00:00Z"}
+	err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "123", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := store.files["_review/test/pending/"+id+".json"]; exists {
+		t.Fatal("rediscovery pending pointer was not removed after durable handoff")
+	}
+	var receipt Receipt
+	if err := json.Unmarshal(store.files["_review/test/receipts/"+id+".json"], &receipt); err != nil {
+		t.Fatal(err)
+	}
+	if receipt.Status != "rediscover" || receipt.VerifiedImageURL != "" {
+		t.Fatalf("receipt = %#v", receipt)
 	}
 }
 

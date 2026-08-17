@@ -51,13 +51,18 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
     if (!value.decisions) throw new Error('reconcile requires --decisions');
     const records = await decisions(value.decisions);
     let needsAttention = 0;
+    const recoveries = [];
     for (const decision of records) {
       if (decision.status === 'prepared') continue;
+      if (decision.status === 'rediscover') {
+        recoveries.push(await state.scheduleRecovery(decision.id, environment));
+        continue;
+      }
       if (!['rejected', 'conflict'].includes(decision.status)) throw new Error(`unsupported review decision ${decision.status}`);
       await transitionIfNeeded(state, environment, decision.id, 'processing', 'needs_attention', decision.reason || decision.status);
       needsAttention += 1;
     }
-    return { command: 'reconcile', decisions: records.length, needsAttention };
+    return { command: 'reconcile', decisions: records.length, needsAttention, recoveries };
   }
 
   if (value.command === 'complete') {
@@ -102,7 +107,31 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
     return { command: 'invite', email: value.email.trim().toLowerCase(), status: 'queued' };
   }
 
-  throw new Error('usage: queue.mjs <claim|reconcile|complete|notify|sync-accounts|invite> --environment <name> [command options]');
+  if (value.command === 'export-recovery') {
+    if (!value['action-id'] || !value.output) throw new Error('export-recovery requires --action-id and --output');
+    const recovery = (await state.pendingRecoveries(environment)).find(({ actionId }) => actionId === value['action-id']);
+    if (!recovery) throw new Error(`pending recovery ${value['action-id']} was not found`);
+    await mkdir(dirname(value.output), { recursive: true });
+    await writeFile(value.output, `${JSON.stringify(recovery, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+    return { command: 'export-recovery', actionId: recovery.actionId, slug: recovery.slug, rejected: recovery.rejectedCandidates.length };
+  }
+
+  if (value.command === 'resolve-recovery') {
+    if (!value['action-id'] || !value.draft || !value.catalog) throw new Error('resolve-recovery requires --action-id, --draft, and --catalog');
+    const recovery = (await state.pendingRecoveries(environment)).find(({ actionId }) => actionId === value['action-id']);
+    if (!recovery) throw new Error(`pending recovery ${value['action-id']} was not found`);
+    const draft = JSON.parse(await readFile(value.draft, 'utf8'));
+    const catalog = JSON.parse(await readFile(value.catalog, 'utf8'));
+    const hasNewCandidates = (draft.wines || []).some((wine) => wine.slug === recovery.slug && wine.candidates?.length);
+    const wine = catalog.find((item) => item.slug === recovery.slug);
+    const hasPublishedImage = Boolean(wine && wine.imagePath && !wine.imagePath.endsWith('.svg') && !['generated-label', 'generated-photo', 'label-scan', ''].includes(String(wine.imageSource || '')));
+    const outcome = hasNewCandidates || hasPublishedImage ? 'ready' : 'needs_attention';
+    const reason = outcome === 'ready' ? 'broader discovery produced new reviewable evidence' : 'broader discovery returned no genuinely new candidates';
+    await state.resolveRecovery(recovery.actionId, outcome, reason);
+    return { command: 'resolve-recovery', actionId: recovery.actionId, slug: recovery.slug, outcome };
+  }
+
+  throw new Error('usage: queue.mjs <claim|reconcile|complete|notify|sync-accounts|invite|export-recovery|resolve-recovery> --environment <name> [command options]');
 }
 
 async function main() {

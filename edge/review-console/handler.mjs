@@ -27,6 +27,16 @@ function actionTarget(manifest, action, reviewer) {
   const wine = manifest.wines.find((item) => item.sku === action.sku);
   if (!wine || wine.wineRevision !== action.wineRevision) throw new Error('action does not match wine');
   if (action.kind === 'image-select' && !wine.candidates?.some((candidate) => candidate.candidateId === action.candidateId)) throw new Error('candidate does not belong to wine');
+  if (action.kind === 'no-image') {
+    action.wineSlug = wine.slug;
+    action.rejectedCandidates = (wine.candidates || []).map((candidate) => ({
+      candidateId: candidate.candidateId,
+      sha256: candidate.sha256,
+      sourceImageUrl: candidate.sourceImageUrl || '',
+      sourceUrl: candidate.sourceUrl || '',
+    }));
+    if (!action.rejectedCandidates.length) throw new Error('no-image requires a candidate set');
+  }
   return wine;
 }
 
@@ -146,15 +156,23 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
       }
     }
 
-    const retryActionRoute = url.pathname.match(/^\/api\/admin\/actions\/([0-9a-f-]{36})\/retry$/i);
-    if (request.method === 'POST' && retryActionRoute) {
+    const recoverActionRoute = url.pathname.match(/^\/api\/admin\/actions\/([0-9a-f-]{36})\/(retry|reopen|rediscover|exclude)$/i);
+    if (request.method === 'POST' && recoverActionRoute) {
       if (request.headers.get('origin') !== config.origin) return json({ error: 'invalid origin' }, 403);
       if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
       try {
-        await state.transition(retryActionRoute[1], 'needs_attention', 'queued', `retried by ${reviewer.email}`);
-        let dispatched = true;
-        try { await dispatch(retryActionRoute[1], config.environment); } catch { dispatched = false; }
-        return json({ status: 'queued', dispatched }, 202);
+        let reason = '';
+        if (request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) reason = String((await request.json()).reason || '').trim();
+        const [id, operation] = recoverActionRoute.slice(1);
+        const result = await state.recoverAction(id, operation, reason || `${operation} requested by ${reviewer.email}`);
+        let dispatched = false;
+        if (operation === 'retry') {
+          try { await dispatch(id, config.environment); dispatched = true; } catch {}
+        } else if (operation === 'rediscover') {
+          const recovery = (await state.pendingRecoveries(config.environment)).find((item) => item.actionId === id);
+          try { await dispatch.recovery?.(id, recovery.slug, config.environment); dispatched = true; } catch {}
+        }
+        return json({ status: result.status, dispatched }, 202);
       } catch (error) {
         return json({ error: error.message }, 409);
       }

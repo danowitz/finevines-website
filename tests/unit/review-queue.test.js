@@ -106,4 +106,30 @@ describe('review queue command', () => {
     await runQueueCommand({ args: ['invite', '--environment', 'test', '--email', 'BARB.FULTZ@finevines.com'], state, accounts });
     assert.deepEqual(calls[1], ['activate', 'BARB.FULTZ@finevines.com']);
   });
+
+  it('exports rejected identities and reopens only when broader discovery finds new candidates', async () => {
+    const client = createClient({ url: 'file::memory:' }); clients.push(client);
+    const state = createReviewState({ client, now: () => new Date('2026-08-16T12:00:00Z') });
+    await state.initialize();
+    const rejectedAction = {
+      ...action('00000000-0000-4000-8000-000000000091', 'a'.repeat(64)), kind: 'no-image', candidateId: '', wineSlug: 'producer-wine-2022',
+      rejectedCandidates: [{ candidateId: 'old', sha256: 'e'.repeat(64), sourceImageUrl: 'https://images.example/old.png', sourceUrl: 'https://example.test/old' }],
+    };
+    await state.queue(rejectedAction);
+    await state.claim('test', { limit: 50, staleBefore: '2026-08-16T11:00:00Z' });
+    const decisionsFile = await tempFile('decisions.json');
+    await writeFile(decisionsFile, JSON.stringify([{ id: rejectedAction.id, status: 'rediscover' }]));
+    const reconciled = await runQueueCommand({ args: ['reconcile', '--environment', 'test', '--decisions', decisionsFile], state });
+    assert.equal(reconciled.recoveries[0].slug, 'producer-wine-2022');
+    const exported = await tempFile('rejected.json');
+    await runQueueCommand({ args: ['export-recovery', '--environment', 'test', '--action-id', rejectedAction.id, '--output', exported], state });
+    assert.equal(JSON.parse(await readFile(exported)).rejectedCandidates[0].candidateId, 'old');
+    const draft = await tempFile('draft.json');
+    const catalog = await tempFile('catalog.json');
+    await writeFile(draft, JSON.stringify({ wines: [{ slug: 'producer-wine-2022', candidates: [{ candidateId: 'new' }] }] }));
+    await writeFile(catalog, JSON.stringify([{ slug: 'producer-wine-2022', imagePath: 'assets/img/wines/producer-wine-2022.svg', imageSource: 'generated-label' }]));
+    const resolved = await runQueueCommand({ args: ['resolve-recovery', '--environment', 'test', '--action-id', rejectedAction.id, '--draft', draft, '--catalog', catalog], state });
+    assert.equal(resolved.outcome, 'ready');
+    assert.equal((await state.actionStatus(rejectedAction.id, 'test')).status, 'reopened');
+  });
 });

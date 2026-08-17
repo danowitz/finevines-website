@@ -1,5 +1,5 @@
-const ACTIVE_STATUSES = new Set(['queued', 'processing']);
-const ALL_STATUSES = new Set(['queued', 'processing', 'completed', 'needs_attention']);
+const ACTIVE_STATUSES = new Set(['queued', 'processing', 'rediscovering']);
+const ALL_STATUSES = new Set(['queued', 'processing', 'rediscovering', 'completed', 'needs_attention', 'reopened', 'excluded']);
 
 export class ActiveWineLockError extends Error {
   constructor({ sku, actionId }) {
@@ -27,7 +27,7 @@ export function createReviewState({ client, now = () => new Date() }) {
         sku TEXT NOT NULL,
         reviewer_email TEXT NOT NULL,
         kind TEXT NOT NULL,
-        status TEXT NOT NULL CHECK (status IN ('queued','processing','completed','needs_attention')),
+        status TEXT NOT NULL CHECK (status IN ('queued','processing','rediscovering','completed','needs_attention','reopened','excluded')),
         action_json TEXT NOT NULL,
         submitted_at TEXT NOT NULL,
         started_at TEXT,
@@ -37,7 +37,7 @@ export function createReviewState({ client, now = () => new Date() }) {
       )`,
       `CREATE UNIQUE INDEX IF NOT EXISTS review_actions_active_wine
         ON review_actions(environment, wine_revision)
-        WHERE status IN ('queued','processing')`,
+        WHERE status IN ('queued','processing','rediscovering')`,
       `CREATE INDEX IF NOT EXISTS review_actions_pending
         ON review_actions(environment, status, submitted_at, id)`,
       `CREATE TABLE IF NOT EXISTS review_action_events (
@@ -64,6 +64,7 @@ export function createReviewState({ client, now = () => new Date() }) {
         environment TEXT NOT NULL,
         action_id TEXT NOT NULL REFERENCES review_actions(id),
         sku TEXT NOT NULL,
+        action_status TEXT NOT NULL,
         reason TEXT NOT NULL,
         next_action TEXT NOT NULL,
         opened_at TEXT NOT NULL,
@@ -85,13 +86,27 @@ export function createReviewState({ client, now = () => new Date() }) {
       )`,
       `CREATE INDEX IF NOT EXISTS review_notifications_pending
         ON review_notifications(status, available_at, id)`,
+      `CREATE TABLE IF NOT EXISTS review_recoveries (
+        action_id TEXT PRIMARY KEY REFERENCES review_actions(id),
+        environment TEXT NOT NULL,
+        wine_revision TEXT NOT NULL,
+        sku TEXT NOT NULL,
+        slug TEXT NOT NULL,
+        rejected_candidates_json TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('pending','ready','needs_attention','excluded')),
+        reason TEXT NOT NULL DEFAULT '',
+        requested_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS review_recoveries_pending
+        ON review_recoveries(environment, status, requested_at, action_id)`,
     ], 'write');
   }
 
   async function activeFor(action) {
     const result = await client.execute({
       sql: `SELECT id, sku FROM review_actions
-        WHERE environment = ? AND wine_revision = ? AND status IN ('queued','processing')
+        WHERE environment = ? AND wine_revision = ? AND status IN ('queued','processing','rediscovering')
         ORDER BY submitted_at, id LIMIT 1`,
       args: [action.environment, action.wineRevision],
     });
@@ -130,7 +145,7 @@ export function createReviewState({ client, now = () => new Date() }) {
         FROM review_actions WHERE environment = ? GROUP BY status`,
       args: [environment],
     });
-    const values = { queued: 0, processing: 0, completed: 0, needs_attention: 0 };
+    const values = { queued: 0, processing: 0, rediscovering: 0, completed: 0, needs_attention: 0, reopened: 0, excluded: 0 };
     let oldestPendingAt = null;
     for (const row of result.rows) {
       const status = String(rowValue(row, 'status'));
@@ -144,7 +159,7 @@ export function createReviewState({ client, now = () => new Date() }) {
     return {
       needsDecision: 0,
       queued: values.queued,
-      processing: values.processing,
+      processing: values.processing + values.rediscovering,
       completed: values.completed,
       needsAttention: values.needs_attention,
       oldestPendingAt,
@@ -185,8 +200,9 @@ export function createReviewState({ client, now = () => new Date() }) {
       const status = String(rowValue(row, 'status'));
       if (status === 'needs_attention') values.needsAttention += 1;
       else if (status === 'queued') values.queued += 1;
-      else if (status === 'processing') values.processing += 1;
-      else if (status === 'completed') values.completed += 1;
+      else if (status === 'processing' || status === 'rediscovering') values.processing += 1;
+      else if (status === 'completed' || status === 'excluded') values.completed += 1;
+      else if (status === 'reopened') { values.needsDecision += 1; decisions.push(wine); }
       statuses[wine.wineRevision] = statusFrom(row);
       if (ACTIVE_STATUSES.has(status)) {
         const submittedAt = String(rowValue(row, 'submitted_at'));
@@ -218,8 +234,9 @@ export function createReviewState({ client, now = () => new Date() }) {
     const allowed = {
       queued: new Set(['processing', 'needs_attention']),
       processing: new Set(['completed', 'needs_attention', 'queued']),
-      needs_attention: new Set(['queued']),
-      completed: new Set(),
+      rediscovering: new Set(['completed', 'needs_attention']),
+      needs_attention: new Set(['queued', 'rediscovering', 'reopened', 'excluded']),
+      completed: new Set(), reopened: new Set(), excluded: new Set(),
     };
     if (!allowed[from]?.has(to)) throw new Error(`invalid review action transition ${from} -> ${to}`);
     const stamp = now().toISOString();
@@ -240,6 +257,81 @@ export function createReviewState({ client, now = () => new Date() }) {
     ], 'write');
     if (result[0].rowsAffected !== 1) throw new Error(`review action ${id} is not ${from}`);
     return { id, status: to };
+  }
+
+  async function scheduleRecovery(id, environment) {
+    const result = await client.execute({ sql: 'SELECT * FROM review_actions WHERE id = ? AND environment = ?', args: [id, environment] });
+    const row = result.rows[0];
+    if (!row || String(rowValue(row, 'status')) !== 'processing') throw new Error(`review action ${id} is not processing`);
+    const action = JSON.parse(String(rowValue(row, 'action_json')));
+    if (action.kind !== 'no-image' || !/^[A-Za-z0-9._-]{1,180}$/.test(action.wineSlug || '') || !Array.isArray(action.rejectedCandidates) || !action.rejectedCandidates.length) {
+      throw new Error(`review action ${id} has no valid rejected candidate set`);
+    }
+    const rejected = action.rejectedCandidates.map((candidate) => ({
+      candidateId: String(candidate.candidateId || ''), sha256: String(candidate.sha256 || ''),
+      sourceImageUrl: String(candidate.sourceImageUrl || ''), sourceUrl: String(candidate.sourceUrl || ''),
+    }));
+    if (rejected.some((candidate) => !/^[A-Za-z0-9._-]{1,120}$/.test(candidate.candidateId) || !/^[a-f0-9]{64}$/.test(candidate.sha256))) {
+      throw new Error(`review action ${id} has invalid rejected candidates`);
+    }
+    const stamp = now().toISOString();
+    await client.batch([
+      { sql: `INSERT INTO review_recoveries
+          (action_id, environment, wine_revision, sku, slug, rejected_candidates_json, status, requested_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+          ON CONFLICT(action_id) DO UPDATE SET status = 'pending', reason = '', updated_at = excluded.updated_at`,
+        args: [id, environment, String(rowValue(row, 'wine_revision')), String(rowValue(row, 'sku')), action.wineSlug, JSON.stringify(rejected), stamp, stamp] },
+      { sql: `UPDATE review_actions SET status = 'rediscovering', updated_at = ?, attention_reason = ''
+          WHERE id = ? AND status = 'processing'`, args: [stamp, id] },
+      { sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
+          SELECT ?, 'rediscovering', ?, 'broader candidate discovery scheduled' WHERE changes() = 1`, args: [id, stamp] },
+    ], 'write');
+    return { actionId: id, slug: action.wineSlug, rejected: rejected.length };
+  }
+
+  async function pendingRecoveries(environment) {
+    const result = await client.execute({
+      sql: `SELECT action_id, slug, rejected_candidates_json FROM review_recoveries
+        WHERE environment = ? AND status = 'pending' ORDER BY requested_at, action_id`, args: [environment],
+    });
+    return result.rows.map((row) => ({ actionId: String(rowValue(row, 'action_id')), slug: String(rowValue(row, 'slug')), rejectedCandidates: JSON.parse(String(rowValue(row, 'rejected_candidates_json'))) }));
+  }
+
+  async function resolveRecovery(actionId, outcome, reason = '') {
+    if (!['ready', 'needs_attention'].includes(outcome)) throw new Error('invalid recovery outcome');
+    const actionStatus = outcome === 'ready' ? 'reopened' : 'needs_attention';
+    const stamp = now().toISOString();
+    const result = await client.batch([
+      { sql: `UPDATE review_recoveries SET status = ?, reason = ?, updated_at = ?
+          WHERE action_id = ? AND status = 'pending'`, args: [outcome, reason, stamp, actionId] },
+      { sql: `UPDATE review_actions SET status = ?, updated_at = ?, completed_at = CASE WHEN ? = 'completed' THEN ? ELSE completed_at END,
+          attention_reason = CASE WHEN ? = 'needs_attention' THEN ? ELSE '' END
+          WHERE id = ? AND status = 'rediscovering'`, args: [actionStatus, stamp, actionStatus, stamp, actionStatus, reason, actionId] },
+      { sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
+          SELECT ?, ?, ?, ? WHERE changes() = 1`, args: [actionId, actionStatus, stamp, reason] },
+    ], 'write');
+    if (result[0].rowsAffected !== 1 || result[1].rowsAffected !== 1) throw new Error(`recovery ${actionId} is not pending`);
+  }
+
+  async function recoverAction(id, operation, reason = '') {
+    if (!['retry', 'reopen', 'rediscover', 'exclude'].includes(operation)) throw new Error('invalid recovery operation');
+    if ((operation === 'exclude' || operation === 'reopen') && !String(reason).trim()) throw new Error('recovery reason is required');
+    if (operation === 'retry') return transition(id, 'needs_attention', 'queued', reason);
+    if (operation === 'reopen') return transition(id, 'needs_attention', 'reopened', reason);
+    if (operation === 'exclude') {
+      await transition(id, 'needs_attention', 'excluded', reason);
+      await client.execute({ sql: `UPDATE review_recoveries SET status = 'excluded', reason = ?, updated_at = ? WHERE action_id = ?`, args: [reason, now().toISOString(), id] });
+      return { id, status: 'excluded' };
+    }
+    const stamp = now().toISOString();
+    const result = await client.batch([
+      { sql: `UPDATE review_actions SET status = 'rediscovering', updated_at = ?, attention_reason = '' WHERE id = ? AND status = 'needs_attention'`, args: [stamp, id] },
+      { sql: `UPDATE review_recoveries SET status = 'pending', reason = '', requested_at = ?, updated_at = ? WHERE action_id = ?`, args: [stamp, stamp, id] },
+      { sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
+          SELECT ?, 'rediscovering', ?, 'rediscovery requested by administrator' WHERE changes() = 1`, args: [id, stamp] },
+    ], 'write');
+    if (result[0].rowsAffected !== 1 || result[1].rowsAffected !== 1) throw new Error(`review action ${id} cannot be rediscovered`);
+    return { id, status: 'rediscovering' };
   }
 
   async function claim(environment, { limit = 50, staleBefore } = {}) {
@@ -286,6 +378,7 @@ export function createReviewState({ client, now = () => new Date() }) {
       id: String(rowValue(row, 'id')),
       actionId: String(rowValue(row, 'action_id')),
       sku: String(rowValue(row, 'sku')),
+      status: String(rowValue(row, 'action_status')),
       reason: String(rowValue(row, 'reason')),
       nextAction: String(rowValue(row, 'next_action')),
       openedAt: String(rowValue(row, 'opened_at')),
@@ -303,7 +396,7 @@ export function createReviewState({ client, now = () => new Date() }) {
         WHERE environment = ? AND (
           status = 'needs_attention' OR
           (status = 'queued' AND submitted_at < ?) OR
-          (status = 'processing' AND started_at < ?)
+          ((status = 'processing' OR status = 'rediscovering') AND started_at < ?)
         ) ORDER BY submitted_at, id`,
       args: [environment, queuedCutoff, processingCutoff],
     });
@@ -315,18 +408,20 @@ export function createReviewState({ client, now = () => new Date() }) {
       active.add(id);
       const reason = status === 'needs_attention'
         ? String(rowValue(row, 'attention_reason') || 'Action requires operator review')
-        : status === 'queued' ? 'Queued for more than 10 minutes' : 'Processing for more than 45 minutes';
-      const nextAction = status === 'needs_attention' ? 'Review the action and choose retry, reopen, rediscover, or temporary exclusion.' : 'The processor will retry safely; investigate the workflow if this persists.';
+        : status === 'queued' ? 'Queued for more than 10 minutes'
+          : status === 'rediscovering' ? 'Broader image discovery has not finished within 45 minutes'
+            : 'Processing for more than 45 minutes';
+      const nextAction = status === 'needs_attention' ? 'Review the action and choose retry, reopen, rediscover, or temporary exclusion.' : status === 'rediscovering' ? 'Broader image discovery will be retried; investigate the recovery workflow if this persists.' : 'The processor will retry safely; investigate the workflow if this persists.';
       const existing = await client.execute({ sql: 'SELECT * FROM review_incidents WHERE id = ?', args: [id] });
       const prior = existing.rows[0];
       if (!prior || rowValue(prior, 'recovered_at')) {
         await client.batch([
-          { sql: `INSERT INTO review_incidents (id, environment, action_id, sku, reason, next_action, opened_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-              ON CONFLICT(id) DO UPDATE SET reason = excluded.reason, next_action = excluded.next_action,
+          { sql: `INSERT INTO review_incidents (id, environment, action_id, sku, action_status, reason, next_action, opened_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+              ON CONFLICT(id) DO UPDATE SET action_status = excluded.action_status, reason = excluded.reason, next_action = excluded.next_action,
                 opened_at = excluded.opened_at, escalated_at = NULL, recovered_at = NULL, updated_at = excluded.updated_at
               WHERE review_incidents.recovered_at IS NOT NULL`,
-            args: [id, environment, actionId, String(rowValue(row, 'sku')), reason, nextAction, stamp, stamp] },
+            args: [id, environment, actionId, String(rowValue(row, 'sku')), status, reason, nextAction, stamp, stamp] },
           { sql: `INSERT INTO review_notifications (dedupe_key, recipient, subject, text_body, available_at)
               SELECT ?, ?, ?, ?, ? FROM review_incidents WHERE id = ? AND opened_at = ?
               ON CONFLICT(dedupe_key) DO NOTHING`,
@@ -341,7 +436,7 @@ export function createReviewState({ client, now = () => new Date() }) {
             args: [`incident-escalation:${id}:${rowValue(prior, 'opened_at')}`, recipient, `Fine Vines review still blocked: ${rowValue(row, 'sku')}`, `${reason}\n\nThis incident has remained open for four hours. ${nextAction}`, stamp, id, stamp] },
         ], 'write');
       } else {
-        await client.execute({ sql: 'UPDATE review_incidents SET reason = ?, next_action = ?, updated_at = ? WHERE id = ?', args: [reason, nextAction, stamp, id] });
+        await client.execute({ sql: 'UPDATE review_incidents SET action_status = ?, reason = ?, next_action = ?, updated_at = ? WHERE id = ?', args: [status, reason, nextAction, stamp, id] });
       }
     }
     const open = await client.execute({ sql: 'SELECT * FROM review_incidents WHERE environment = ? AND recovered_at IS NULL ORDER BY opened_at, id', args: [environment] });
@@ -458,6 +553,7 @@ export function createReviewState({ client, now = () => new Date() }) {
 
   return {
     initialize, queue, counts, packageStatus, actionStatus, transition, claim,
+    scheduleRecovery, pendingRecoveries, resolveRecovery, recoverAction,
     enqueueNotification, scanIncidents, claimNotifications, completeNotification,
     syncReviewerAccounts, listReviewerAccounts, reviewerAccount, setReviewerInvitation, setReviewerPassword,
   };

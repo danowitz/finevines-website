@@ -23,6 +23,7 @@ const retryMisses = has('retry-misses');
 const candidateRecovery = has('candidate-recovery');
 const qualityRecovery = has('quality-recovery');
 const omitQueryVintage = has('omit-query-vintage');
+const reviewRecovery = has('review-recovery');
 const slug = opt('slug', '');
 const trace = has('trace');
 const noCatalogReuse = has('no-catalog-reuse');
@@ -31,6 +32,7 @@ const labelModel = opt('label-model', '');
 const labelReasoningEffort = opt('label-reasoning-effort', '');
 const excludePassedReport = opt('exclude-passed-report', '');
 const replayReport = opt('replay-report', '');
+const rejectedCandidates = opt('rejected-candidates', '');
 if (excludePassedReport && replayReport) {
   console.error('choose only one prior report mode');
   process.exit(2);
@@ -43,7 +45,7 @@ if (candidateRecovery && qualityRecovery) {
   console.error('choose only one recovery scope');
   process.exit(2);
 }
-if (omitQueryVintage && !candidateRecovery && !qualityRecovery) {
+if (omitQueryVintage && !candidateRecovery && !qualityRecovery && !reviewRecovery) {
   console.error('--omit-query-vintage is recovery-only');
   process.exit(2);
 }
@@ -139,7 +141,9 @@ try {
     labelModel,
     labelReasoningEffort,
     excludePassedReport,
-    replayReport,
+  replayReport,
+  rejectedCandidates,
+  reviewRecovery,
     manifestPath: 'data/fetched-images/manifest.json',
   }, {
     preflight,

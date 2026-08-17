@@ -143,4 +143,39 @@ describe('review state', () => {
     assert.equal(messages.length, 1);
     assert.match(messages[0].subject, /recovered/);
   });
+
+  it('keeps a rejected candidate set locked through rediscovery and supports explicit recovery outcomes', async () => {
+    const state = stateAt();
+    await state.initialize();
+    const rejected = {
+      ...action('00000000-0000-4000-8000-000000000081'),
+      kind: 'no-image', candidateId: '', wineSlug: 'producer-wine-2022',
+      rejectedCandidates: [{ candidateId: 'candidate-1', sha256: 'd'.repeat(64), sourceImageUrl: 'https://images.example/one.png', sourceUrl: 'https://example.test/wine' }],
+    };
+    await state.queue(rejected);
+    await state.claim('test', { limit: 50, staleBefore: '2026-08-16T11:15:00.000Z' });
+    assert.deepEqual(await state.scheduleRecovery(rejected.id, 'test'), { actionId: rejected.id, slug: 'producer-wine-2022', rejected: 1 });
+    assert.equal((await state.actionStatus(rejected.id, 'test')).status, 'rediscovering');
+    assert.deepEqual(await state.pendingRecoveries('test'), [{ actionId: rejected.id, slug: 'producer-wine-2022', rejectedCandidates: rejected.rejectedCandidates }]);
+    await assert.rejects(state.queue(action('00000000-0000-4000-8000-000000000082')), ActiveWineLockError);
+    await state.resolveRecovery(rejected.id, 'needs_attention', 'broader discovery returned no new candidates');
+    assert.equal((await state.actionStatus(rejected.id, 'test')).status, 'needs_attention');
+    await state.recoverAction(rejected.id, 'reopen', 'review the original choices again');
+    const packageStatus = await state.packageStatus('test', [packageWines[0]]);
+    assert.equal(packageStatus.counts.needsDecision, 1);
+    assert.deepEqual(packageStatus.decisions, [packageWines[0]]);
+  });
+
+  it('requires reasons for reopen/exclusion and can explicitly restart failed rediscovery', async () => {
+    const state = stateAt(); await state.initialize();
+    const makeRejected = (id, revision, sku, slug) => ({ ...action(id, { wineRevision: revision, sku }), kind: 'no-image', candidateId: '', wineSlug: slug, rejectedCandidates: [{ candidateId: 'old', sha256: 'e'.repeat(64), sourceImageUrl: '', sourceUrl: '' }] });
+    const rediscover = makeRejected('00000000-0000-4000-8000-000000000083', '3'.repeat(64), 'SKU-3', 'wine-three');
+    await state.queue(rediscover); await state.claim('test', { limit: 50, staleBefore: '2026-08-16T11:15:00.000Z' }); await state.scheduleRecovery(rediscover.id, 'test');
+    await state.resolveRecovery(rediscover.id, 'needs_attention', 'no new candidates');
+    assert.equal((await state.recoverAction(rediscover.id, 'rediscover')).status, 'rediscovering');
+    const excluded = makeRejected('00000000-0000-4000-8000-000000000084', '4'.repeat(64), 'SKU-4', 'wine-four');
+    await state.queue(excluded); await state.transition(excluded.id, 'queued', 'needs_attention', 'operator decision required');
+    await assert.rejects(state.recoverAction(excluded.id, 'exclude', ''), /reason/);
+    assert.equal((await state.recoverAction(excluded.id, 'exclude', 'supplier image required')).status, 'excluded');
+  });
 });

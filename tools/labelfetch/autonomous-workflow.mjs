@@ -67,6 +67,8 @@ export async function runAutonomousImageWorkflow(config, adapters) {
     ...(config.labelReasoningEffort ? ['--label-reasoning-effort', config.labelReasoningEffort] : []),
     ...(config.excludePassedReport ? ['--exclude-passed-report', config.excludePassedReport] : []),
     ...(config.replayReport ? ['--replay-report', config.replayReport] : []),
+    ...(config.rejectedCandidates ? ['--rejected-candidates', config.rejectedCandidates] : []),
+    ...(config.reviewRecovery ? ['--review-recovery'] : []),
   ];
   await stage('fetch-and-verify', () => runStage('pipeline', pipelineArgs));
 

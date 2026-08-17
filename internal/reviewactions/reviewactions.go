@@ -57,22 +57,24 @@ func (err *InvalidImageError) Error() string { return fmt.Sprintf("invalid image
 func (err *InvalidImageError) Unwrap() error { return err.Err }
 
 type Action struct {
-	SchemaVersion       int    `json:"schemaVersion"`
-	ID                  string `json:"id"`
-	Environment         string `json:"environment"`
-	Reviewer            string `json:"reviewer"`
-	SKU                 string `json:"sku"`
-	Kind                string `json:"kind"`
-	PackageID           string `json:"packageId"`
-	TargetCatalogCommit string `json:"targetCatalogCommit"`
-	WineRevision        string `json:"wineRevision"`
-	CandidateID         string `json:"candidateId"`
-	ImageStorageName    string `json:"imageStorageName,omitempty"`
-	ImageSHA256         string `json:"imageSHA256,omitempty"`
-	ImageBytes          int    `json:"imageBytes,omitempty"`
-	ImageMIME           string `json:"imageMIME,omitempty"`
-	SubmittedAt         string `json:"submittedAt"`
-	CSRFSessionID       string `json:"csrfSessionId"`
+	SchemaVersion       int         `json:"schemaVersion"`
+	ID                  string      `json:"id"`
+	Environment         string      `json:"environment"`
+	Reviewer            string      `json:"reviewer"`
+	SKU                 string      `json:"sku"`
+	Kind                string      `json:"kind"`
+	PackageID           string      `json:"packageId"`
+	TargetCatalogCommit string      `json:"targetCatalogCommit"`
+	WineRevision        string      `json:"wineRevision"`
+	CandidateID         string      `json:"candidateId"`
+	ImageStorageName    string      `json:"imageStorageName,omitempty"`
+	ImageSHA256         string      `json:"imageSHA256,omitempty"`
+	ImageBytes          int         `json:"imageBytes,omitempty"`
+	ImageMIME           string      `json:"imageMIME,omitempty"`
+	WineSlug            string      `json:"wineSlug,omitempty"`
+	RejectedCandidates  []Candidate `json:"rejectedCandidates,omitempty"`
+	SubmittedAt         string      `json:"submittedAt"`
+	CSRFSessionID       string      `json:"csrfSessionId"`
 }
 
 type Candidate struct {
@@ -241,6 +243,18 @@ func validateAction(action Action, environment, fileID string) error {
 	if action.Kind == "no-image" && action.CandidateID != "" {
 		return fmt.Errorf("no-image action names a candidate")
 	}
+	if action.Kind == "no-image" {
+		if !validSegment(action.WineSlug) || len(action.RejectedCandidates) == 0 {
+			return fmt.Errorf("no-image action has no rejected candidate set")
+		}
+		for _, candidate := range action.RejectedCandidates {
+			if !validSegment(candidate.CandidateID) || !hashPattern.MatchString(candidate.SHA256) {
+				return fmt.Errorf("no-image action has invalid rejected candidate")
+			}
+		}
+	} else if action.WineSlug != "" || len(action.RejectedCandidates) != 0 {
+		return fmt.Errorf("rejected candidates require no-image")
+	}
 	if action.Kind == "reviewer-image" {
 		validMIME := action.ImageMIME == "image/png" || action.ImageMIME == "image/jpeg" || action.ImageMIME == "image/webp"
 		if action.CandidateID != "" || !validSegment(action.ImageStorageName) || !strings.HasPrefix(action.ImageStorageName, action.ID+".") ||
@@ -290,7 +304,23 @@ func validateManifest(manifest Manifest, action Action) (PackageWine, Candidate,
 		if wine.WineRevision != action.WineRevision {
 			return PackageWine{}, Candidate{}, fmt.Errorf("action does not match package wine revision")
 		}
-		if action.Kind == "no-image" || action.Kind == "reviewer-image" {
+		if action.Kind == "no-image" {
+			if action.WineSlug != wine.Slug || len(action.RejectedCandidates) != len(wine.Candidates) {
+				return PackageWine{}, Candidate{}, fmt.Errorf("rejected candidate set does not match package")
+			}
+			packageCandidates := make(map[string]Candidate, len(wine.Candidates))
+			for _, candidate := range wine.Candidates {
+				packageCandidates[candidate.CandidateID] = candidate
+			}
+			for _, rejected := range action.RejectedCandidates {
+				candidate, exists := packageCandidates[rejected.CandidateID]
+				if !exists || rejected.SHA256 != candidate.SHA256 || rejected.SourceImageURL != candidate.SourceImageURL || rejected.SourceURL != candidate.SourceURL {
+					return PackageWine{}, Candidate{}, fmt.Errorf("rejected candidate set does not match package")
+				}
+			}
+			return wine, Candidate{}, nil
+		}
+		if action.Kind == "reviewer-image" {
 			return wine, Candidate{}, nil
 		}
 		for _, candidate := range wine.Candidates {
@@ -404,10 +434,7 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			continue
 		}
 		if action.Kind == "no-image" {
-			result.Wines[index].ImageReviewStatus = "no-match"
-			result.Wines[index].ImageReviewedAt = input.Now.UTC().Format(time.RFC3339)
-			result.Wines[index].ImageReviewActionID = action.ID
-			decision.Status, decision.Reason = "prepared", "reviewer rejected every candidate"
+			decision.Status, decision.Reason = "rediscover", "reviewer rejected every candidate; broader discovery required"
 			result.Decisions = append(result.Decisions, decision)
 			continue
 		}
@@ -537,7 +564,7 @@ func Finalize(ctx context.Context, input FinalizeInput) error {
 	prefix := path.Join("_review", input.Environment)
 	verifiedURLs := make(map[string]string)
 	for _, decision := range input.Decisions {
-		if decision.Status != "prepared" || decision.Kind == "no-image" {
+		if decision.Status != "prepared" {
 			continue
 		}
 		if input.Fetcher == nil || !deployedPathPattern.MatchString(decision.DeployedImagePath) || !hashPattern.MatchString(decision.DeployedImageSHA256) {
@@ -555,10 +582,12 @@ func Finalize(ctx context.Context, input FinalizeInput) error {
 		verifiedURLs[decision.ID] = imageURL
 	}
 	for _, decision := range input.Decisions {
-		if decision.Status != "prepared" {
+		if decision.Status != "prepared" && decision.Status != "rediscover" {
 			continue
 		}
-		decision.Status = "completed"
+		if decision.Status == "prepared" {
+			decision.Status = "completed"
+		}
 		receipt := Receipt{Decision: decision, CatalogCommit: input.CatalogCommit, DeploymentTarget: input.DeploymentTarget, RunID: input.RunID, CompletedAt: input.Now.UTC().Format(time.RFC3339), VerifiedImageURL: verifiedURLs[decision.ID]}
 		data, err := json.MarshalIndent(receipt, "", "  ")
 		if err != nil {

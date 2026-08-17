@@ -90,8 +90,21 @@ jobs:
         if: ${{ steps.claim.outputs.claimed != '0' }}
         run: ./finevines reviewapply -environment test -action-ids .run/review-claims.json -decisions .run/review-decisions.json -applied .run/queue-applied.json
       - name: Isolate action-specific failures
+        id: reconcile
         if: ${{ steps.claim.outputs.claimed != '0' }}
-        run: node tools/review-console/queue.mjs reconcile --environment test --decisions .run/review-decisions.json
+        run: |
+          result="$(node tools/review-console/queue.mjs reconcile --environment test --decisions .run/review-decisions.json)"
+          echo "$result"
+          echo "recoveries=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(JSON.stringify(v.recoveries || []))' "$result")" >> "$GITHUB_OUTPUT"
+      - name: Start broader discovery for rejected candidate sets
+        if: ${{ steps.reconcile.outputs.recoveries != '' && steps.reconcile.outputs.recoveries != '[]' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RECOVERIES: ${{ steps.reconcile.outputs.recoveries }}
+        run: |
+          node -e 'for (const recovery of JSON.parse(process.env.RECOVERIES)) console.log(JSON.stringify({event_type:"review-recovery",client_payload:{environment:"test",action_id:recovery.actionId,slug:recovery.slug}}))' | while IFS= read -r payload; do
+            gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" --input - <<<"$payload"
+          done
       - name: Build and deploy the authoritative launch catalog
         if: ${{ steps.claim.outputs.claimed != '0' }}
         run: |
