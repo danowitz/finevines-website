@@ -29,7 +29,7 @@ const rows = catalog.filter(needsRealImage).map((wine) => {
 const stages = new Map();
 for (const row of rows) stages.set(row.stage, (stages.get(row.stage) || 0) + 1);
 const candidateBacked = rows.filter((row) => row.hasCandidates).length;
-const siteBase = 'https://finevines.biz/';
+const siteBase = new URL('/', process.env.FINEVINES_SITE_BASE_URL?.trim() || 'https://finevines.com');
 
 const cards = rows.map(({ wine, stage, reason, facts, hasCandidates }) => {
   const q = encodeURIComponent(query(wine));

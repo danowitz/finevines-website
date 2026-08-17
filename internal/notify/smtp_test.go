@@ -35,6 +35,16 @@ func TestRecipients_SplitsTrimsAndDropsBlanks(t *testing.T) {
 	}
 }
 
+func TestMessageID_FallbackUsesProductionDomain(t *testing.T) {
+	id, err := messageID("local-sender", time.Unix(0, 0))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasSuffix(id, "@finevines.com>") {
+		t.Errorf("messageID fallback = %q, want finevines.com domain", id)
+	}
+}
+
 // Submission ports carry TLS two different ways, and getting it wrong is not a
 // graceful failure: implicit TLS on 587 hangs the handshake, STARTTLS on 465
 // sends "EHLO" into a server waiting for a ClientHello. The rule is fixed by

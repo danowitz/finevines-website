@@ -259,7 +259,7 @@ func composeMessage(from string, to []string, m Message, now time.Time) ([]byte,
 	return b.Bytes(), nil
 }
 
-// envelopeAddress reduces "Fine Vines <catalog@finevines.biz>" to the bare
+// envelopeAddress reduces "Fine Vines <catalog@finevines.com>" to the bare
 // address the SMTP envelope takes. A value that will not parse is passed through
 // untouched: the relay's own rejection is a better error than a guess here.
 func envelopeAddress(addr string) string {
@@ -273,7 +273,7 @@ func envelopeAddress(addr string) string {
 // domain. Without one the receiving MTA invents its own, which costs threading
 // and reads as unusual to spam filters.
 func messageID(from string, now time.Time) (string, error) {
-	domain := "finevines.biz"
+	domain := "finevines.com"
 	if _, d, ok := strings.Cut(envelopeAddress(from), "@"); ok && d != "" {
 		domain = d
 	}

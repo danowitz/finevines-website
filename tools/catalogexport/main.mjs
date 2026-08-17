@@ -8,6 +8,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 const wines = JSON.parse(readFileSync('data/wines.json', 'utf8')).filter(
   (w) => (w.slug || '').trim() && (w.name || '').trim()
 );
+const siteBase = new URL('/', process.env.FINEVINES_SITE_BASE_URL?.trim() || 'https://finevines.com');
 const esc = (v) => '"' + String(v ?? '').replace(/"/g, '""').replace(/\s+/g, ' ').trim() + '"';
 
 const rows = [
@@ -20,7 +21,7 @@ const rows = [
 for (const w of wines) {
   rows.push(
     [
-      w.slug, `https://finevines.biz/wines/${w.slug}/`, w.producer, w.name, w.vintage,
+      w.slug, new URL(`wines/${w.slug}/`, siteBase).href, w.producer, w.name, w.vintage,
       w.region, w.appellation, w.country, w.varietal, w.color, w.abv, w.bottleSize,
       w.drinkWindow, w.matchConfidence, w.description, w.sommelierNotes, w.aroma,
       w.palate, w.finish, (w.foodPairings || []).join('; '),
