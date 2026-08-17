@@ -10,16 +10,16 @@ const complete = Object.fromEntries([
 complete.FINEVINES_REVIEW_TEST_SESSION_SECRET = 't'.repeat(32);
 complete.FINEVINES_REVIEW_PRODUCTION_SESSION_SECRET = 'p'.repeat(32);
 
-test('review preflight is read-only and proves storage, database, and processing trigger access', async () => {
+test('review preflight proves storage, database, and an actual harmless processing dispatch', async () => {
   const requests = [];
   const fetchImpl = async (url, init = {}) => {
     requests.push({ url, method: init.method || 'GET' });
-    return url.includes('api.github.com') ? Response.json({ state: 'active' }) : new Response('[]');
+    return url.endsWith('/dispatches') ? new Response(null, { status: 204 }) : url.includes('api.github.com') ? Response.json({ state: 'active' }) : new Response('[]');
   };
   const database = [];
   const result = await runReviewPreflight({ environment: complete, fetchImpl, createClientImpl: () => ({ execute: async (sql) => database.push(sql), close: () => {} }) });
-  assert.deepEqual(result, { storage: 'reachable', database: 'reachable', processingTrigger: 'active', email: 'configured' });
-  assert.ok(requests.every(({ method }) => method === 'GET'));
+  assert.deepEqual(result, { storage: 'reachable', database: 'reachable', processingTrigger: 'dispatched', email: 'configured' });
+  assert.deepEqual(requests.map(({ method }) => method), ['GET', 'GET', 'GET', 'POST']);
   assert.deepEqual(database, ['SELECT 1 AS ready']);
 });
 

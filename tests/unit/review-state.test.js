@@ -71,6 +71,17 @@ describe('review state', () => {
     });
   });
 
+  it('atomically stores a reviewer upload with its authoritative queue action', async () => {
+    const state = stateAt(); await state.initialize();
+    const selected = { ...action('00000000-0000-4000-8000-000000000003'), kind: 'reviewer-image', imageStorageName: 'image.png', imageMIME: 'image/png' };
+    const bytes = new Uint8Array([1, 2, 3, 4]);
+    await state.queue(selected, { bytes });
+    const payloads = await state.pendingActionPayloads('test');
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].action.id, selected.id);
+    assert.deepEqual(new Uint8Array(payloads[0].upload.bytes), bytes);
+  });
+
   it('queues different wines independently and returns durable package status', async () => {
     const state = stateAt();
     await state.initialize();
@@ -155,7 +166,7 @@ describe('review state', () => {
     await state.queue(rejected);
     await state.claim('test', { limit: 50, staleBefore: '2026-08-16T11:15:00.000Z' });
     assert.deepEqual(await state.scheduleRecovery(rejected.id, 'test'), { actionId: rejected.id, slug: 'producer-wine-2022', rejected: 1 });
-    assert.equal((await state.actionStatus(rejected.id, 'test')).status, 'rediscovering');
+    assert.equal((await state.actionStatus(rejected.id, 'test')).status, 'processing');
     assert.deepEqual(await state.pendingRecoveries('test'), [{ actionId: rejected.id, slug: 'producer-wine-2022', rejectedCandidates: rejected.rejectedCandidates }]);
     await assert.rejects(state.queue(action('00000000-0000-4000-8000-000000000082')), ActiveWineLockError);
     await state.resolveRecovery(rejected.id, 'needs_attention', 'broader discovery returned no new candidates');
@@ -172,10 +183,10 @@ describe('review state', () => {
     const rediscover = makeRejected('00000000-0000-4000-8000-000000000083', '3'.repeat(64), 'SKU-3', 'wine-three');
     await state.queue(rediscover); await state.claim('test', { limit: 50, staleBefore: '2026-08-16T11:15:00.000Z' }); await state.scheduleRecovery(rediscover.id, 'test');
     await state.resolveRecovery(rediscover.id, 'needs_attention', 'no new candidates');
-    assert.equal((await state.recoverAction(rediscover.id, 'rediscover')).status, 'rediscovering');
+    assert.equal((await state.recoverAction(rediscover.id, 'rediscover')).status, 'processing');
     const excluded = makeRejected('00000000-0000-4000-8000-000000000084', '4'.repeat(64), 'SKU-4', 'wine-four');
     await state.queue(excluded); await state.transition(excluded.id, 'queued', 'needs_attention', 'operator decision required');
     await assert.rejects(state.recoverAction(excluded.id, 'exclude', ''), /reason/);
-    assert.equal((await state.recoverAction(excluded.id, 'exclude', 'supplier image required')).status, 'excluded');
+    assert.equal((await state.recoverAction(excluded.id, 'exclude', 'supplier image required')).status, 'needs_attention');
   });
 });

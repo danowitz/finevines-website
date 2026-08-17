@@ -4,7 +4,7 @@ import { createHash, webcrypto } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 import { after, test } from 'node:test';
 import { createClient } from '@libsql/client';
@@ -13,6 +13,8 @@ import { createReviewerAccounts } from '../../edge/review-console/reviewer-accou
 import { createReviewState } from '../../edge/review-console/review-state.mjs';
 import { wineRevision } from '../../tools/labelfetch/review-package.mjs';
 import { runQueueCommand } from '../../tools/review-console/queue.mjs';
+import { APP_JS, consolePage } from '../../edge/review-console/ui.mjs';
+import { openBrowser } from '../helpers/browser.js';
 
 globalThis.crypto ??= webcrypto;
 const exec = promisify(execFile);
@@ -30,7 +32,7 @@ after(async () => {
 function fileStorage(root) {
   const name = (path) => {
     const target = resolve(root, ...path.split('/'));
-    if (target !== resolve(root) && !target.startsWith(resolve(root) + '\\')) throw new Error('storage path escaped root');
+    if (target !== resolve(root) && !target.startsWith(resolve(root) + sep)) throw new Error('storage path escaped root');
     return target;
   };
   return {
@@ -100,7 +102,7 @@ test('local acceptance gate carries one human selection through verified deploym
   const decisionRows = JSON.parse(await readFile(decisions, 'utf8')); assert.equal(decisionRows[0].status, 'prepared'); trace.push({ step: 'prepare', status: decisionRows[0].status });
   await runQueueCommand({ args: ['reconcile', '--environment', 'test', '--decisions', decisions], state });
 
-  const deployedFile = join(workspace, decisionRows[0].deployedImagePath.replaceAll('/', '\\'));
+  const deployedFile = resolve(workspace, ...decisionRows[0].deployedImagePath.split('/'));
   const server = createServer(async (req, res) => { const bytes = await readFile(deployedFile); res.writeHead(200, { 'content-type': 'image/jpeg' }); res.end(bytes); });
   await new Promise((resolveReady) => server.listen(0, '127.0.0.1', resolveReady));
   const target = `http://127.0.0.1:${server.address().port}`;
@@ -115,4 +117,86 @@ test('local acceptance gate carries one human selection through verified deploym
   trace.push({ step: 'verified-completion', actionId: queuedBody.id, status: 'completed', emailDeliveries: 0 });
   const tracePath = resolve(process.env.FINEVINES_E2E_TRACE || '.run/review-processing-e2e-trace.json'); await mkdir(dirname(tracePath), { recursive: true }); await writeFile(tracePath, JSON.stringify(trace, null, 2) + '\n');
   await client.close();
+});
+
+test('local acceptance gate covers concurrent reviewers, fifty-action continuation, and rejected-image recovery', async () => {
+  const client = createClient({ url: 'file::memory:' });
+  const state = createReviewState({ client, now: () => new Date('2026-08-17T12:00:00Z') });
+  await state.initialize();
+  const queued = [];
+  for (let index = 1; index <= 51; index++) {
+    const id = `10000000-0000-4000-8000-${String(index).padStart(12, '0')}`;
+    const action = {
+      schemaVersion: 1, id, environment: 'test', reviewer: index % 2 ? 'barb.fultz@finevines.com' : 'connie@finevines.com',
+      sku: `SKU-${index}`, kind: 'image-select', packageId: 'pkg-matrix', targetCatalogCommit: 'abcdef1',
+      wineRevision: index.toString(16).padStart(64, '0'), candidateId: `candidate-${index}`,
+      submittedAt: '2026-08-17T12:00:00Z', csrfSessionId: `session-${index % 2}`,
+    };
+    queued.push(action); await state.queue(action);
+  }
+  const claimFile = join(await mkdtemp(join(tmpdir(), 'finevines-review-matrix-')), 'claims.json'); roots.push(dirname(claimFile));
+  const first = await runQueueCommand({ args: ['claim', '--environment', 'test', '--output', claimFile], state, now: () => new Date('2026-08-17T12:01:00Z') });
+  assert.deepEqual({ claimed: first.claimed, remaining: first.remaining }, { claimed: 50, remaining: 1 });
+  assert.equal(new Set(queued.slice(0, 50).map(({ reviewer }) => reviewer)).size, 2, 'both reviewers retain independent decisions');
+
+  // An action-specific rejection is isolated while a prepared neighbor stays
+  // processing for verified deployment; an operational transition error does
+  // not delete either action.
+  const decisions = join(dirname(claimFile), 'decisions.json');
+  await writeFile(decisions, JSON.stringify([
+    { id: queued[0].id, status: 'rejected', reason: 'candidate revision conflict' },
+    { id: queued[1].id, status: 'prepared' },
+  ]));
+  const reconciled = await runQueueCommand({ args: ['reconcile', '--environment', 'test', '--decisions', decisions], state });
+  assert.equal(reconciled.needsAttention, 1);
+  assert.equal((await state.actionStatus(queued[0].id, 'test')).status, 'needs_attention');
+  assert.equal((await state.actionStatus(queued[1].id, 'test')).status, 'processing');
+  await assert.rejects(state.transition(queued[1].id, 'queued', 'completed'), /invalid review action transition|is not queued/);
+  assert.equal((await state.actionStatus(queued[1].id, 'test')).status, 'processing');
+
+  const rejected = {
+    schemaVersion: 1, id: '20000000-0000-4000-8000-000000000001', environment: 'test', reviewer: 'barb.fultz@finevines.com',
+    sku: 'SKU-RECOVERY', kind: 'no-image', packageId: 'pkg-matrix', targetCatalogCommit: 'abcdef1', wineRevision: 'f'.repeat(64),
+    candidateId: '', wineSlug: 'recovery-wine-2022', submittedAt: '2026-08-17T12:02:00Z', csrfSessionId: 'session-1',
+    rejectedCandidates: [{ candidateId: 'old', sha256: 'e'.repeat(64), sourceImageUrl: 'https://example.test/old.png', sourceUrl: 'https://example.test/old' }],
+  };
+  await state.queue(rejected);
+  await state.transition(rejected.id, 'queued', 'processing');
+  await state.scheduleRecovery(rejected.id, 'test');
+  assert.equal((await state.pendingRecoveries('test'))[0].rejectedCandidates[0].candidateId, 'old');
+  await state.resolveRecovery(rejected.id, 'ready', 'new candidate identity found');
+  const reopened = await state.packageStatus('test', [{ sku: rejected.sku, slug: rejected.wineSlug, wineRevision: rejected.wineRevision }]);
+  assert.equal(reopened.counts.needsDecision, 1);
+  assert.equal(reopened.decisions[0].slug, rejected.wineSlug);
+  await client.close();
+});
+
+test('review UI refreshes when focused and stays quiet in a background tab', { timeout: 30_000 }, async () => {
+  const browser = await openBrowser();
+  const page = await browser.newPage();
+  try {
+    await page.setContent(consolePage({ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }), { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => {
+      window.__reviewFetches = 0;
+      window.__reviewFocused = true;
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => window.__reviewFocused ? 'visible' : 'hidden' });
+      document.hasFocus = () => window.__reviewFocused;
+      window.fetch = async () => {
+        window.__reviewFetches += 1;
+        return { ok: true, json: async () => ({ wines: [], incidents: [], isAdministrator: false, expiresAt: '2026-09-17T00:00:00Z', reviewStatus: {} }) };
+      };
+    });
+    await page.evaluate((source) => (0, eval)(source), APP_JS);
+    await new Promise((resolveWait) => setTimeout(resolveWait, 50));
+    const initial = await page.evaluate(() => window.__reviewFetches);
+    assert.equal(initial, 1);
+    await page.evaluate(() => { window.__reviewFocused = false; window.dispatchEvent(new Event('focus')); document.dispatchEvent(new Event('visibilitychange')); });
+    await new Promise((resolveWait) => setTimeout(resolveWait, 50));
+    assert.equal(await page.evaluate(() => window.__reviewFetches), initial);
+    await page.evaluate(() => { window.__reviewFocused = true; window.dispatchEvent(new Event('focus')); });
+    await new Promise((resolveWait) => setTimeout(resolveWait, 50));
+    assert.equal(await page.evaluate(() => window.__reviewFetches), initial + 1);
+  } finally {
+    await page.close(); await browser.close();
+  }
 });

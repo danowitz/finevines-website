@@ -39,6 +39,19 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
   if (!['test', 'production'].includes(environment)) throw new Error('queue environment must be test or production');
   await state.initialize();
 
+  if (value.command === 'publish') {
+    if (!storage?.putImmutable || !state.pendingActionPayloads) throw new Error('publish requires review storage');
+    const prefix = `_review/${environment}`;
+    const payloads = await state.pendingActionPayloads(environment, { limit: 100 });
+    for (const { action, upload } of payloads) {
+      if (upload) await storage.putImmutable(`${prefix}/uploads/${upload.storageName}`, upload.bytes, upload.mime);
+      const encoded = JSON.stringify(action);
+      await storage.putImmutable(`${prefix}/actions/${action.id}.json`, encoded, 'application/json');
+      await storage.putImmutable(`${prefix}/pending/${action.id}.json`, encoded, 'application/json');
+    }
+    return { command: 'publish', published: payloads.length };
+  }
+
   if (value.command === 'claim') {
     if (!value.output) throw new Error('claim requires --output');
     const staleBefore = new Date(now().getTime() - 45 * 60_000).toISOString();
@@ -117,16 +130,21 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
     return { command: 'export-recovery', actionId: recovery.actionId, slug: recovery.slug, rejected: recovery.rejectedCandidates.length };
   }
 
+  if (value.command === 'pending-recoveries') {
+    if (!value.output) throw new Error('pending-recoveries requires --output');
+    const recoveries = await state.pendingRecoveries(environment);
+    await mkdir(dirname(value.output), { recursive: true });
+    await writeFile(value.output, `${JSON.stringify(recoveries.map(({ actionId, slug }) => ({ actionId, slug })), null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+    return { command: 'pending-recoveries', pending: recoveries.length, output: value.output };
+  }
+
   if (value.command === 'resolve-recovery') {
-    if (!value['action-id'] || !value.draft || !value.catalog) throw new Error('resolve-recovery requires --action-id, --draft, and --catalog');
+    if (!value['action-id'] || !value.draft) throw new Error('resolve-recovery requires --action-id and --draft');
     const recovery = (await state.pendingRecoveries(environment)).find(({ actionId }) => actionId === value['action-id']);
     if (!recovery) throw new Error(`pending recovery ${value['action-id']} was not found`);
     const draft = JSON.parse(await readFile(value.draft, 'utf8'));
-    const catalog = JSON.parse(await readFile(value.catalog, 'utf8'));
     const hasNewCandidates = (draft.wines || []).some((wine) => wine.slug === recovery.slug && wine.candidates?.length);
-    const wine = catalog.find((item) => item.slug === recovery.slug);
-    const hasPublishedImage = Boolean(wine && wine.imagePath && !wine.imagePath.endsWith('.svg') && !['generated-label', 'generated-photo', 'label-scan', ''].includes(String(wine.imageSource || '')));
-    const outcome = hasNewCandidates || hasPublishedImage ? 'ready' : 'needs_attention';
+    const outcome = hasNewCandidates ? 'ready' : 'needs_attention';
     const reason = outcome === 'ready' ? 'broader discovery produced new reviewable evidence' : 'broader discovery returned no genuinely new candidates';
     await state.resolveRecovery(recovery.actionId, outcome, reason);
     return { command: 'resolve-recovery', actionId: recovery.actionId, slug: recovery.slug, outcome };
@@ -145,7 +163,7 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
     return { command: 'migrate', scanned: names.length, ...values };
   }
 
-  throw new Error('usage: queue.mjs <claim|reconcile|complete|notify|sync-accounts|invite|export-recovery|resolve-recovery|migrate> --environment <name> [command options]');
+  throw new Error('usage: queue.mjs <publish|claim|reconcile|complete|notify|sync-accounts|invite|pending-recoveries|export-recovery|resolve-recovery|migrate> --environment <name> [command options]');
 }
 
 async function main() {
@@ -176,7 +194,7 @@ async function main() {
     const accounts = ['sync-accounts', 'invite'].includes(command)
       ? createReviewerAccounts({ state, mailer: createOutboxMailer(state) })
       : undefined;
-    const storage = command === 'migrate' ? createBunnyStorage({
+    const storage = ['migrate', 'publish'].includes(command) ? createBunnyStorage({
       endpoint: process.env.FINEVINES_REVIEW_STORAGE_ENDPOINT,
       zone: process.env.FINEVINES_REVIEW_STORAGE_ZONE,
       key: process.env.FINEVINES_REVIEW_STORAGE_KEY,

@@ -87,6 +87,19 @@ export async function runAutonomousImageWorkflow(config, adapters) {
     return report;
   }
 
+
+  // A reviewer rejection may discover new candidates, but it must never
+  // auto-approve or import one. Publish the new evidence for another explicit
+  // human decision and leave the authoritative catalog unchanged.
+  if (config.reviewRecovery) {
+    await stage('build-exception-review', () => runStage('review', []));
+    await stage('build-hosted-review-package', () => runStage('review-package', []));
+    report.outcome = 'review-candidates-ready';
+    report.completedAt = now();
+    await save();
+    return report;
+  }
+
   await stage('auto-approve-two-sources', () => runStage('auto-approve', ['--apply']));
   await stage('watermark-gate', () => runStage('watermark-sweep', ['--apply']));
   await stage('import', () => runStage('import', ['--apply', '--clean-only']));

@@ -104,14 +104,19 @@ export function createReviewerAccounts({ state, mailer, now = () => new Date(), 
     const account = await state.reviewerAccount(String(email || '').trim().toLowerCase());
     if (!account?.eligible || !account.passwordHash || !await verifyPassword(password, account.passwordHash)) return null;
     if (account.mustChangePassword && (!account.temporaryExpiresAt || Date.parse(account.temporaryExpiresAt) <= now().getTime())) return null;
+    if (account.mustChangePassword) {
+      if (account.invitationUsedAt) return null;
+      const consumed = await state.consumeReviewerInvitation(account.email, account.credentialVersion);
+      return consumed ? authenticatedAccount(consumed) : null;
+    }
     return authenticatedAccount(account);
   }
 
   async function changePassword(identity, currentPassword, newPassword) {
-    const current = await authenticate(identity?.email, currentPassword);
-    if (!current || current.credentialVersion !== identity.credentialVersion) throw new Error('current password is incorrect');
+    const account = await state.reviewerAccount(String(identity?.email || '').trim().toLowerCase());
+    if (!account?.eligible || account.credentialVersion !== identity.credentialVersion || !await verifyPassword(currentPassword, account.passwordHash)) throw new Error('current password is incorrect');
     if (currentPassword === newPassword) throw new Error('new password must be different');
-    const updated = await state.setReviewerPassword(current.email, await hashPassword(newPassword));
+    const updated = await state.setReviewerPassword(account.email, await hashPassword(newPassword));
     return authenticatedAccount(updated);
   }
 

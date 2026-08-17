@@ -356,7 +356,7 @@ async function refresh() {
     incidentList.replaceChildren();
     for (const incident of state.package.incidents || []) {
       const controls = el('div', { class: 'actions' });
-      if (incident.status === 'needs_attention') {
+      if (state.package.isAdministrator && incident.status === 'needs_attention') {
         for (const [operation, label] of [['retry', 'Retry safely'], ['reopen', 'Reopen choices'], ['rediscover', 'Search more broadly'], ['exclude', 'Temporarily exclude']]) {
           const button = el('button', { type: 'button', text: label });
           button.addEventListener('click', () => recoverIncident(incident, operation, button));
@@ -387,8 +387,7 @@ const activeRefresh = () => {
 window.addEventListener('focus', activeRefresh);
 document.addEventListener('visibilitychange', activeRefresh);
 setInterval(activeRefresh, 10_000);
-refresh();
-loadAccounts();
+refresh().then(() => { if (state.package?.isAdministrator) loadAccounts(); });
 `;
 
 const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);

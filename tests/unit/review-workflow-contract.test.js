@@ -6,11 +6,11 @@ describe('hosted review workflow contract', () => {
   it('uses one bounded processor for immediate, scheduled, manual, and continuation runs', async () => {
     const workflow = await readFile('.github/workflows/review-actions.yml', 'utf8');
     assert.match(workflow, /repository_dispatch:/);
-    assert.match(workflow, /types: \[review-console, review-console-continue\]/);
+    assert.match(workflow, /types: \[review-console, review-console-continue, review-recovery, review-console-preflight\]/);
     assert.match(workflow, /cron: '\*\/5 \* \* \* \*'/);
     assert.match(workflow, /workflow_dispatch:/);
     assert.match(workflow, /group: finevines-catalog-deploy/);
-    assert.match(workflow, /timeout-minutes: 45/);
+    assert.match(workflow, /timeout-minutes: 90/);
     assert.equal(workflow.match(/node tools\/review-console\/queue\.mjs claim/g)?.length, 1);
     assert.match(workflow, /reviewapply -environment test[^\n]*-action-ids \.run\/review-claims\.json/);
     assert.match(workflow, /review-console-continue/);
@@ -18,12 +18,14 @@ describe('hosted review workflow contract', () => {
     assert.match(workflow, /queue\.mjs complete/);
   });
 
-  it('keeps ordinary review application in the bounded processor and routes only targeted image rediscovery through the catalog workflow', async () => {
+  it('keeps application and targeted rediscovery in one review workflow without catalog auto-import', async () => {
     const pipeline = await readFile('.github/workflows/pipeline.yml', 'utf8');
-    assert.match(pipeline, /types: \[review-recovery\]/);
+    const review = await readFile('.github/workflows/review-actions.yml', 'utf8');
+    assert.doesNotMatch(pipeline, /types: \[review-recovery\]|export-recovery|resolve-recovery/);
     assert.doesNotMatch(pipeline, /reviewapply|reviewfinalize|Prepare hosted review actions|Finalize hosted review receipts/);
-    assert.match(pipeline, /export-recovery/);
-    assert.match(pipeline, /resolve-recovery/);
+    assert.match(review, /export-recovery/);
+    assert.match(review, /resolve-recovery/);
+    assert.match(review, /Publish only the new review evidence/);
     await assert.rejects(readFile('.github/workflows/review-console-test-action.yml', 'utf8'), { code: 'ENOENT' });
   });
 

@@ -52,12 +52,17 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
   const stateReady = state.initialize();
 
   async function queueAction(id, action, upload) {
-    if (upload) await storage.putImmutable(`${prefix}/uploads/${action.imageStorageName}`, upload.bytes, action.imageMIME);
-    const encoded = JSON.stringify(action);
-    await storage.putImmutable(`${prefix}/actions/${id}.json`, encoded, 'application/json');
     await stateReady;
-    await state.queue(action);
-    await storage.putImmutable(`${prefix}/pending/${id}.json`, encoded, 'application/json');
+    await state.queue(action, upload);
+    const encoded = JSON.stringify(action);
+    // SQL is the authoritative queue. Publishing the processor-compatible
+    // immutable objects is an idempotent optimization and is retried by every
+    // processor run; a storage outage cannot lose an accepted decision.
+    try {
+      if (upload) await storage.putImmutable(`${prefix}/uploads/${action.imageStorageName}`, upload.bytes, action.imageMIME);
+      await storage.putImmutable(`${prefix}/actions/${id}.json`, encoded, 'application/json');
+      await storage.putImmutable(`${prefix}/pending/${id}.json`, encoded, 'application/json');
+    } catch {}
     let dispatched = true;
     try { await dispatch(id, config.environment); } catch { dispatched = false; }
     return { id, status: 'queued', dispatched };
@@ -126,6 +131,8 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
       return response(null, { status: 303, headers: { Location: '/change-password' } });
     }
 
+    const administrator = reviewer.role === 'Support';
+
     if (request.method === 'GET' && url.pathname === '/') {
       return response(consolePage(reviewer), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
@@ -134,6 +141,7 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
     }
 
     if (request.method === 'GET' && url.pathname === '/api/admin/accounts') {
+      if (!administrator) return json({ error: 'administrator access required' }, 403);
       const current = JSON.parse(await storage.get(`${prefix}/current.json`));
       const manifest = await loadPackage(storage, prefix, current.packageId);
       await stateReady;
@@ -143,6 +151,7 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
 
     const activateAccountRoute = url.pathname.match(/^\/api\/admin\/accounts\/([^/]+)\/activate$/);
     if (request.method === 'POST' && activateAccountRoute) {
+      if (!administrator) return json({ error: 'administrator access required' }, 403);
       if (request.headers.get('origin') !== config.origin) return json({ error: 'invalid origin' }, 403);
       if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
       const email = decodeURIComponent(activateAccountRoute[1]);
@@ -158,6 +167,7 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
 
     const recoverActionRoute = url.pathname.match(/^\/api\/admin\/actions\/([0-9a-f-]{36})\/(retry|reopen|rediscover|exclude)$/i);
     if (request.method === 'POST' && recoverActionRoute) {
+      if (!administrator) return json({ error: 'administrator access required' }, 403);
       if (request.headers.get('origin') !== config.origin) return json({ error: 'invalid origin' }, 403);
       if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
       try {
@@ -189,6 +199,7 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
         wines: currentStatus.decisions,
         reviewStatus: { ...currentStatus.counts, oldestPendingAt: currentStatus.oldestPendingAt },
         incidents,
+        isAdministrator: administrator,
         csrfToken: await csrfToken(config.sessionSecret, session.sessionId),
       });
     }

@@ -8,7 +8,7 @@ before(() => { globalThis.crypto ??= webcrypto; });
 
 const REVIEWER_IDENTITY = { email: 'barb.fultz@finevines.com', name: 'Barb Fultz', role: 'Back Office', mustChangePassword: false, credentialVersion: 2 };
 
-function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY } = {}) {
+function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY, queueFailure = null, storageWriteFailure = null } = {}) {
   const candidate = new Uint8Array([1, 2, 3, 4]);
   const files = new Map([
     ['_review/test/current.json', JSON.stringify({ packageId: 'pkg-1' })],
@@ -30,11 +30,12 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY } = {
   const storage = {
     get: async (path) => files.get(path),
     getBytes: async (path) => files.get(path),
-    putImmutable: async (path, body) => { if (files.has(path)) throw new Error('exists'); files.set(path, body); writes.push(path); },
+    putImmutable: async (path, body) => { if (storageWriteFailure) throw storageWriteFailure; if (files.has(path)) throw new Error('exists'); files.set(path, body); writes.push(path); },
   };
   const state = {
     initialize: async () => {},
     queue: async (action) => {
+      if (queueFailure) throw queueFailure;
       const key = `${action.environment}:${action.wineRevision}`;
       const active = activeWines.get(key);
       if (active) throw new ActiveWineLockError({ sku: action.sku, actionId: active });
@@ -230,8 +231,8 @@ describe('review console handler', () => {
     const request = () => new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) });
     const responses = await Promise.all([handle(request()), handle(request())]);
     assert.deepEqual(responses.map((response) => response.status).sort(), [202, 409]);
-    assert.equal(new Set(writes).size, 3);
-    assert.equal(writes.filter((path) => path.includes('/actions/')).length, 2);
+    assert.equal(new Set(writes).size, 2);
+    assert.equal(writes.filter((path) => path.includes('/actions/')).length, 1);
     assert.equal(writes.filter((path) => path.includes('/pending/')).length, 1);
   });
 
@@ -275,6 +276,23 @@ describe('review console handler', () => {
     const { id } = await queued.json();
     const pending = await handle(new Request(`https://review.finevines.biz/api/actions/${id}`, { headers: { cookie } }));
     assert.equal((await pending.json()).status, 'queued');
+  });
+
+  it('accepts through a storage outage but writes nothing when the SQL transaction fails', async () => {
+    const submit = async (options) => {
+      const fixtureValue = fixture(options); const cookie = await login(fixtureValue.handle);
+      const current = await fixtureValue.handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+      const csrf = (await current.json()).csrfToken;
+      const response = await fixtureValue.handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify({ kind: 'image-select', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' }) }));
+      return { ...fixtureValue, response };
+    };
+    const storageDown = await submit({ storageWriteFailure: new Error('storage offline') });
+    assert.equal(storageDown.response.status, 202);
+    assert.equal(storageDown.queuedActions.length, 1);
+    assert.deepEqual(storageDown.writes, []);
+    const databaseDown = await submit({ queueFailure: new Error('database offline') });
+    assert.equal(databaseDown.response.status, 400);
+    assert.deepEqual(databaseDown.writes, []);
   });
 
   it('records the complete server-trusted rejected candidate identity set for none-of-these', async () => {
@@ -411,7 +429,7 @@ describe('review console handler', () => {
   });
 
   it('synchronizes and manages eligible accounts without exposing credentials', async () => {
-    const { handle, accountCalls } = fixture();
+    const { handle, accountCalls } = fixture({ identity: { ...REVIEWER_IDENTITY, role: 'Support' } });
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
@@ -428,8 +446,19 @@ describe('review console handler', () => {
     assert.deepEqual(accountCalls.at(-1), ['activate', 'barb.fultz@finevines.com']);
   });
 
+  it('denies administrator routes to ordinary executive and back-office reviewers', async () => {
+    const { handle } = fixture();
+    const cookie = await login(handle);
+    const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+    const csrf = (await current.json()).csrfToken;
+    assert.equal((await handle(new Request('https://review.finevines.biz/api/admin/accounts', { headers: { cookie } }))).status, 403);
+    assert.equal((await handle(new Request('https://review.finevines.biz/api/admin/accounts/barb.fultz%40finevines.com/activate', {
+      method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'x-csrf-token': csrf },
+    }))).status, 403);
+  });
+
   it('offers retry but no unsafe force-complete endpoint', async () => {
-    const { handle, queuedActions } = fixture();
+    const { handle, queuedActions } = fixture({ identity: { ...REVIEWER_IDENTITY, role: 'Support' } });
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;

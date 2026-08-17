@@ -2,7 +2,7 @@ name: review-actions
 
 on:
   repository_dispatch:
-    types: [review-console, review-console-continue]
+    types: [review-console, review-console-continue, review-recovery, review-console-preflight]
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
@@ -20,9 +20,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  drain:
+  preflight:
+    if: ${{ github.event.action == 'review-console-preflight' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    steps:
+      - run: echo "Review processor dispatch accepted."
+
+  drain:
+    if: ${{ github.event.action != 'review-recovery' && github.event.action != 'review-console-preflight' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
     env:
       FINEVINES_REVIEW_ENVIRONMENT: test
       FINEVINES_REVIEW_DATABASE_URL: ${{ secrets.FINEVINES_REVIEW_DATABASE_URL }}
@@ -65,9 +72,13 @@ jobs:
         run: node tools/review-console/queue.mjs sync-accounts --environment test --roster data/team.json
       - name: Import any legacy immutable pending actions
         run: node tools/review-console/queue.mjs migrate --environment test
+      - name: Preserve stalled-action incidents before retry changes their age
+        run: node tools/review-console/queue.mjs notify --environment test --recipient joel@gritautomation.com --from "$FINEVINES_NOTIFY_FROM"
       - name: Queue an explicitly requested reviewer invitation
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.invite_reviewer != '' }}
         run: node tools/review-console/queue.mjs invite --environment test --email "${{ inputs.invite_reviewer }}"
+      - name: Materialize the authoritative SQL queue for the Go processor
+        run: node tools/review-console/queue.mjs publish --environment test
       - name: Claim the complete pending queue
         id: claim
         run: |
@@ -98,13 +109,14 @@ jobs:
           result="$(node tools/review-console/queue.mjs reconcile --environment test --decisions .run/review-decisions.json)"
           echo "$result"
           echo "recoveries=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(JSON.stringify(v.recoveries || []))' "$result")" >> "$GITHUB_OUTPUT"
-      - name: Start broader discovery for rejected candidate sets
-        if: ${{ steps.reconcile.outputs.recoveries != '' && steps.reconcile.outputs.recoveries != '[]' }}
+      - name: Start or recover every pending broader discovery
+        if: ${{ always() }}
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-          RECOVERIES: ${{ steps.reconcile.outputs.recoveries }}
         run: |
-          node -e 'for (const recovery of JSON.parse(process.env.RECOVERIES)) console.log(JSON.stringify({event_type:"review-recovery",client_payload:{environment:"test",action_id:recovery.actionId,slug:recovery.slug}}))' | while IFS= read -r payload; do
+          node tools/review-console/queue.mjs pending-recoveries --environment test --output .run/review-recoveries.json
+          node -e 'const fs=require("fs"); for (const recovery of JSON.parse(fs.readFileSync(".run/review-recoveries.json"))) console.log(JSON.stringify({event_type:"review-recovery",client_payload:{environment:"test",action_id:recovery.actionId,slug:recovery.slug}}))' | while IFS= read -r payload; do
             gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" --input - <<<"$payload"
           done
       - name: Build and deploy the authoritative launch catalog
@@ -129,3 +141,56 @@ jobs:
       - name: Deliver review incident and invitation notifications
         if: ${{ always() }}
         run: node tools/review-console/queue.mjs notify --environment test --recipient joel@gritautomation.com --from "$FINEVINES_NOTIFY_FROM"
+
+  recover:
+    if: ${{ github.event.action == 'review-recovery' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      FINEVINES_REVIEW_DATABASE_URL: ${{ secrets.FINEVINES_REVIEW_DATABASE_URL }}
+      FINEVINES_REVIEW_DATABASE_TOKEN: ${{ secrets.FINEVINES_REVIEW_DATABASE_TOKEN }}
+      FINEVINES_REVIEW_STORAGE_ZONE: ${{ secrets.FINEVINES_REVIEW_STORAGE_ZONE }}
+      FINEVINES_REVIEW_STORAGE_KEY: ${{ secrets.FINEVINES_REVIEW_STORAGE_KEY }}
+      FINEVINES_REVIEW_STORAGE_ENDPOINT: ${{ secrets.FINEVINES_REVIEW_STORAGE_ENDPOINT }}
+      FINEVINES_BRAVE_SEARCH_KEY: ${{ secrets.FINEVINES_BRAVE_SEARCH_KEY }}
+      FINEVINES_SERPER_KEY: ${{ secrets.FINEVINES_SERPER_KEY }}
+      FINEVINES_GOOGLE_CSE_KEY: ${{ secrets.FINEVINES_GOOGLE_CSE_KEY }}
+      FINEVINES_GOOGLE_CSE_CX: ${{ secrets.FINEVINES_GOOGLE_CSE_CX }}
+      FINEVINES_GOOGLE_VISION_KEY: ${{ secrets.FINEVINES_GOOGLE_VISION_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-image.txt
+      - run: python -m pip install -r requirements-image.txt
+      - run: npm ci --ignore-scripts
+      - name: Build image verification tools
+        run: |
+          go build -o imgcheck ./tools/imgcheck
+          go build -o imghash ./tools/imghash
+          go build -o imgnorm ./tools/imgnorm
+      - name: Discover genuinely new review candidates
+        run: |
+          mkdir -p .run
+          node tools/review-console/queue.mjs export-recovery --environment test --action-id "${{ github.event.client_payload.action_id }}" --output .run/rejected-candidates.json
+          node tools/labelfetch/autonomous.mjs --apply --review-recovery --slug "${{ github.event.client_payload.slug }}" --no-catalog-reuse --search-provider brave-serper --rejected-candidates .run/rejected-candidates.json --trace --budget-minutes 120
+          if ! node -e 'const fs=require("fs"); const v=JSON.parse(fs.readFileSync(".run/review-draft.json")); process.exit(v.wines?.some(w=>w.slug===process.argv[1]&&w.candidates?.length)?0:1)' "${{ github.event.client_payload.slug }}"; then
+            node tools/labelfetch/autonomous.mjs --apply --review-recovery --slug "${{ github.event.client_payload.slug }}" --no-catalog-reuse --search-provider brave-serper --rejected-candidates .run/rejected-candidates.json --omit-query-vintage --trace --budget-minutes 120
+          fi
+      - name: Publish only the new review evidence
+        run: node tools/labelfetch/publish-review-package.mjs --environment test
+      - name: Return the wine to review only when new candidates exist
+        run: node tools/review-console/queue.mjs resolve-recovery --environment test --action-id "${{ github.event.client_payload.action_id }}" --draft .run/review-draft.json

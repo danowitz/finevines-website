@@ -49,6 +49,24 @@ describe('review queue command', () => {
     assert.equal(JSON.parse(await readFile(output, 'utf8')).length, 50);
   });
 
+  it('materializes SQL-authoritative actions idempotently before the processor claims them', async () => {
+    const state = await fixture();
+    const selected = action('00000000-0000-4000-8000-000000000009', '9'.repeat(64));
+    await state.queue(selected);
+    const objects = new Map();
+    const storage = { putImmutable: async (path, body) => {
+      const bytes = Buffer.from(body); const prior = objects.get(path);
+      if (prior && !prior.equals(bytes)) throw new Error('immutable mismatch');
+      objects.set(path, bytes);
+    } };
+    const first = await runQueueCommand({ args: ['publish', '--environment', 'test'], state, storage });
+    const second = await runQueueCommand({ args: ['publish', '--environment', 'test'], state, storage });
+    assert.deepEqual(first, { command: 'publish', published: 1 });
+    assert.deepEqual(second, first);
+    assert.ok(objects.has(`_review/test/actions/${selected.id}.json`));
+    assert.ok(objects.has(`_review/test/pending/${selected.id}.json`));
+  });
+
   it('isolates action-specific failures and completes only deployed decisions', async () => {
     const state = await fixture();
     const prepared = action('00000000-0000-4000-8000-000000000061', 'd'.repeat(64));
@@ -130,7 +148,8 @@ describe('review queue command', () => {
     await writeFile(catalog, JSON.stringify([{ slug: 'producer-wine-2022', imagePath: 'assets/img/wines/producer-wine-2022.svg', imageSource: 'generated-label' }]));
     const resolved = await runQueueCommand({ args: ['resolve-recovery', '--environment', 'test', '--action-id', rejectedAction.id, '--draft', draft, '--catalog', catalog], state });
     assert.equal(resolved.outcome, 'ready');
-    assert.equal((await state.actionStatus(rejectedAction.id, 'test')).status, 'reopened');
+    assert.equal((await state.actionStatus(rejectedAction.id, 'test')).status, 'needs_attention');
+    assert.equal((await state.packageStatus('test', [{ slug: 'producer-wine-2022', wineRevision: 'a'.repeat(64) }])).counts.needsDecision, 1);
   });
 
   it('idempotently imports immutable legacy pending actions before claiming', async () => {

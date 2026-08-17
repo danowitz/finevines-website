@@ -103,6 +103,15 @@ test('production recovery retries recorded misses and keeps every import gate', 
   ]);
 });
 
+test('a rejected-candidate recovery publishes evidence without auto-approval or catalog import', async () => {
+  const h = harness();
+  const result = await runAutonomousImageWorkflow({ ...config, reviewRecovery: true, slug: 'producer-wine-2022', noCatalogReuse: true, rejectedCandidates: 'rejected.json' }, h.adapters);
+  assert.equal(result.outcome, 'review-candidates-ready');
+  assert.deepEqual(h.calls.map((call) => Array.isArray(call) ? call[0] : call), ['preflight', 'pipeline', 'review', 'review-package']);
+  assert.ok(h.calls[1][1].includes('--review-recovery'));
+  assert.ok(!h.calls.some((call) => Array.isArray(call) && ['auto-approve', 'import'].includes(call[0])));
+});
+
 test('candidate recovery is a scoped retry that keeps every import gate', async () => {
   const h = harness();
   await runAutonomousImageWorkflow({
