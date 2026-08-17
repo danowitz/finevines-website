@@ -20,7 +20,23 @@ import { openBrowser } from '../helpers/browser.js';
 globalThis.crypto ??= webcrypto;
 const exec = promisify(execFile);
 const roots = [];
+const acceptanceTrace = [];
+
+async function recordStateTrace(client, scenario, evidence = {}) {
+  const result = await client.execute('SELECT action_id, status, occurred_at, detail FROM review_action_events ORDER BY sequence');
+  acceptanceTrace.push({
+    scenario,
+    evidence,
+    transitions: result.rows.map((row) => ({
+      actionId: String(row.action_id), status: String(row.status), occurredAt: String(row.occurred_at), detail: String(row.detail || ''),
+    })),
+  });
+}
+
 after(async () => {
+  const tracePath = resolve(process.env.FINEVINES_E2E_TRACE || '.run/review-processing-e2e-trace.json');
+  await mkdir(dirname(tracePath), { recursive: true });
+  await writeFile(tracePath, `${JSON.stringify({ schemaVersion: 1, generatedAt: new Date().toISOString(), scenarios: acceptanceTrace }, null, 2)}\n`);
   while (roots.length) {
     const root = roots.pop();
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -112,22 +128,21 @@ test('local acceptance gate carries one human selection through verified deploym
   await storage.put(`_review/test/packages/${manifest.packageId}/images/candidate-1.png`, png);
   await storage.put(`_review/test/packages/${manifest.packageId}/images/candidate-bad.png`, corruptPng);
 
-  const trace = [];
   const handle = createReviewConsole({
     config: { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', sessionSecret: 'local-e2e-session-secret', incidentRecipient: 'joel@gritautomation.com' },
     storage, state, accounts, dispatch: async () => { throw new Error('simulated immediate trigger outage'); },
     now: () => new Date('2026-08-17T12:00:00Z'), uuid: (() => { let n = 0; return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`; })(),
   });
   const login = await request(handle, '/login', { method: 'POST', body: new URLSearchParams({ email: 'barb.fultz@finevines.com', password: 'Private-review-password-93!' }) });
-  const cookie = login.headers.get('set-cookie').split(';')[0]; trace.push({ step: 'login', status: login.status });
+  const cookie = login.headers.get('set-cookie').split(';')[0];
   const current = await request(handle, '/api/current', { headers: { cookie } }); const currentBody = await current.json();
   const queued = await request(handle, '/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': currentBody.csrfToken }, body: JSON.stringify({ kind: 'image-select', sku: wine.sku, packageId: manifest.packageId, targetCatalogCommit: manifest.catalogCommit, wineRevision: manifest.wines[0].wineRevision, candidateId: 'candidate-1' }) });
-  const queuedBody = await queued.json(); assert.equal(queuedBody.dispatched, false); trace.push({ step: 'queue', ...queuedBody });
+  const queuedBody = await queued.json(); assert.equal(queuedBody.dispatched, false);
   const badQueued = await request(handle, '/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': currentBody.csrfToken }, body: JSON.stringify({ kind: 'image-select', sku: badWine.sku, packageId: manifest.packageId, targetCatalogCommit: manifest.catalogCommit, wineRevision: manifest.wines[1].wineRevision, candidateId: 'candidate-bad' }) });
   const badQueuedBody = await badQueued.json(); assert.equal(badQueued.status, 202);
 
   const claims = join(root, 'claims.json'); const claimed = await runQueueCommand({ args: ['claim', '--environment', 'test', '--output', claims], state, now: () => new Date('2026-08-17T12:05:00Z') });
-  assert.equal(claimed.claimed, 2); trace.push({ step: 'scheduled-claim', claimed: claimed.claimed });
+  assert.equal(claimed.claimed, 2);
   const workspace = join(root, 'workspace'); await mkdir(join(workspace, 'data'), { recursive: true }); await mkdir(join(workspace, 'assets', 'img', 'wines'), { recursive: true });
   const catalog = join(workspace, 'data', 'wines.json'); await writeFile(catalog, JSON.stringify([wine, badWine]));
   const executable = join(root, process.platform === 'win32' ? 'finevines.exe' : 'finevines'); const normalizer = join(workspace, process.platform === 'win32' ? 'imgnorm.exe' : 'imgnorm');
@@ -139,7 +154,6 @@ test('local acceptance gate carries one human selection through verified deploym
   const rejectedDecision = decisionRows.find(({ id }) => id === badQueuedBody.id);
   assert.equal(preparedDecision.status, 'prepared');
   assert.equal(rejectedDecision.status, 'rejected');
-  trace.push({ step: 'prepare', prepared: preparedDecision.status, isolatedInvalidImage: rejectedDecision.status });
   await runQueueCommand({ args: ['reconcile', '--environment', 'test', '--decisions', decisions], state });
 
   const deployedFile = resolve(workspace, ...preparedDecision.deployedImagePath.split('/'));
@@ -156,8 +170,14 @@ test('local acceptance gate carries one human selection through verified deploym
   assert.ok(await storage.get(`_review/test/receipts/${queuedBody.id}.json`));
   const deployedCatalog = JSON.parse(await readFile(catalog, 'utf8'));
   assert.equal(deployedCatalog.find(({ sku }) => sku === wine.sku).imageReviewActionId, queuedBody.id);
-  trace.push({ step: 'verified-completion', actionId: queuedBody.id, status: 'completed', emailDeliveries: 0 });
-  const tracePath = resolve(process.env.FINEVINES_E2E_TRACE || '.run/review-processing-e2e-trace.json'); await mkdir(dirname(tracePath), { recursive: true }); await writeFile(tracePath, JSON.stringify(trace, null, 2) + '\n');
+  await recordStateTrace(client, 'verified deployment and invalid-image isolation', {
+    loginStatus: login.status,
+    immediateDispatch: queuedBody.dispatched,
+    scheduledClaimCount: claimed.claimed,
+    prepared: { actionId: queuedBody.id, status: preparedDecision.status },
+    invalidImage: { actionId: badQueuedBody.id, status: rejectedDecision.status, finalStatus: 'needs_attention', reason: rejectedDecision.reason },
+    completion: { actionId: queuedBody.id, status: 'completed', pendingRemoved: true, receiptPresent: true, deployedHashVerified: true },
+  });
   await client.close();
 });
 
@@ -259,7 +279,94 @@ test('local acceptance gate covers concurrent reviewers, fifty-action continuati
   const reopened = await state.packageStatus('test', [{ sku: rejected.sku, slug: rejected.wineSlug, wineRevision: rejected.wineRevision }]);
   assert.equal(reopened.counts.needsDecision, 1);
   assert.equal(reopened.decisions[0].slug, rejected.wineSlug);
+  await recordStateTrace(client, 'fifty-action continuation, isolation, release, and rediscovery', {
+    firstClaim: { claimed: first.claimed, remaining: first.remaining },
+    continuationClaim: { claimed: second.claimed, remaining: second.remaining },
+    deferred: { actionId: queued[2].id, reason: 'processor yielded before the time limit', dispatchedReason: dispatches[0].body.client_payload.reason },
+    operationalRelease: { released: released.released, dispatchedReason: dispatches[1].body.client_payload.reason },
+    rejected: { actionId: queued[0].id, status: 'needs_attention', reason: 'candidate revision conflict' },
+    rediscovery: { actionId: rejected.id, rejectedCandidateId: 'old', outcome: resolved.outcome, resultingStatus: 'needs_decision' },
+  });
   await client.close();
+});
+
+test('real processor yields on deadline and preserves claims after an operational normalizer failure', { timeout: 120_000 }, async () => {
+  const root = await mkdtemp(join(tmpdir(), 'finevines-review-boundaries-')); roots.push(root);
+  const executable = join(root, process.platform === 'win32' ? 'finevines.exe' : 'finevines');
+  await exec('go', ['build', '-o', executable, './cmd/finevines']);
+
+  for (const mode of ['deadline', 'operational-failure']) {
+    const scenarioRoot = join(root, mode); const objectRoot = join(scenarioRoot, 'objects');
+    const storage = fileStorage(objectRoot);
+    const client = createClient({ url: 'file::memory:' });
+    const state = createReviewState({ client, now: () => new Date('2026-08-17T12:00:00Z') });
+    await state.initialize();
+    const accounts = createReviewerAccounts({ state, mailer: { send: async () => {} }, now: () => new Date('2026-08-17T12:00:00Z'), temporaryPassword: () => 'Temporary-boundary-pass-92!' });
+    await accounts.sync([{ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }]);
+    await accounts.activate('barb.fultz@finevines.com');
+    const invited = await accounts.authenticate('barb.fultz@finevines.com', 'Temporary-boundary-pass-92!');
+    await accounts.changePassword(invited, 'Temporary-boundary-pass-92!', 'Private-boundary-password-93!');
+    const wine = { id: `wine-${mode}`, sku: `SKU-${mode}`, slug: `producer-${mode}-2022`, producer: 'Producer', name: mode, vintage: '2022', imagePath: `assets/img/wines/producer-${mode}-2022.svg`, imageSource: 'generated-label', sourceHash: `source-${mode}`, status: 'Active' };
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
+    const sha = createHash('sha256').update(png).digest('hex');
+    const manifest = {
+      schemaVersion: 1, packageId: `pkg-${mode}`, environment: 'test', catalogCommit: 'abcdef1', createdAt: '2026-08-17T11:00:00Z', expiresAt: '2026-09-17T11:00:00Z',
+      reviewers: [{ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }],
+      wines: [{ sku: wine.sku, slug: wine.slug, displayIdentity: `Producer ${mode} 2022`, searchQuery: `Producer ${mode} 2022`, wineRevision: wineRevision(wine), candidates: [{ candidateId: `candidate-${mode}`, storageName: `candidate-${mode}.png`, sha256: sha, bytes: png.length, mime: 'image/png', width: 1, height: 1, sourceUrl: 'https://producer.example/wine', sourceImageUrl: 'https://producer.example/wine.png' }] }],
+    };
+    await storage.put('_review/test/current.json', JSON.stringify({ packageId: manifest.packageId }));
+    await storage.put(`_review/test/packages/${manifest.packageId}/manifest.json`, JSON.stringify(manifest));
+    await storage.put(`_review/test/packages/${manifest.packageId}/images/candidate-${mode}.png`, png);
+    let uuidSequence = 0;
+    const handle = createReviewConsole({
+      config: { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', sessionSecret: `boundary-session-${mode}`, incidentRecipient: 'joel@gritautomation.com' },
+      storage, state, accounts, dispatch: async () => {}, now: () => new Date('2026-08-17T12:00:00Z'),
+      uuid: () => `40000000-0000-4000-8000-${String(++uuidSequence).padStart(12, '0')}`,
+    });
+    const login = await request(handle, '/login', { method: 'POST', body: new URLSearchParams({ email: 'barb.fultz@finevines.com', password: 'Private-boundary-password-93!' }) });
+    const cookie = login.headers.get('set-cookie').split(';')[0];
+    const current = await request(handle, '/api/current', { headers: { cookie } }); const currentBody = await current.json();
+    const queuedResponse = await request(handle, '/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': currentBody.csrfToken }, body: JSON.stringify({ kind: 'image-select', sku: wine.sku, packageId: manifest.packageId, targetCatalogCommit: manifest.catalogCommit, wineRevision: manifest.wines[0].wineRevision, candidateId: `candidate-${mode}` }) });
+    const queued = await queuedResponse.json(); assert.equal(queuedResponse.status, 202);
+    const claims = join(scenarioRoot, 'claims.json');
+    const claimed = await runQueueCommand({ args: ['claim', '--environment', 'test', '--output', claims], state, now: () => new Date('2026-08-17T12:01:00Z') });
+    assert.equal(claimed.claimed, 1);
+
+    const workspace = join(scenarioRoot, 'workspace');
+    await mkdir(join(workspace, 'data'), { recursive: true }); await mkdir(join(workspace, 'assets', 'img', 'wines'), { recursive: true });
+    const catalog = join(workspace, 'data', 'wines.json'); await writeFile(catalog, JSON.stringify([wine]));
+    const normalizerSource = mode === 'deadline'
+      ? 'package main\nimport "time"\nfunc main(){ time.Sleep(5*time.Second) }\n'
+      : 'package main\nimport "os"\nfunc main(){ os.Exit(1) }\n';
+    const normalizerSourcePath = join(workspace, 'normalizer.go'); await writeFile(normalizerSourcePath, normalizerSource);
+    await exec('go', ['build', '-o', join(workspace, process.platform === 'win32' ? 'imgnorm.exe' : 'imgnorm'), normalizerSourcePath], { cwd: workspace });
+    const decisions = join(scenarioRoot, 'decisions.json'); const applied = join(scenarioRoot, 'applied.json');
+    const args = ['reviewapply', '-environment', 'test', '-review-dir', objectRoot, '-catalog', catalog, '-image-dir', join(workspace, 'assets', 'img', 'wines'), '-action-ids', claims, '-decisions', decisions, '-applied', applied];
+    const dispatches = [];
+    const fetchImpl = async (url, init) => { dispatches.push(JSON.parse(init.body)); return new Response(null, { status: 204 }); };
+    if (mode === 'deadline') {
+      args.push('-max-prepare-duration', '50ms');
+      await exec(executable, args, { cwd: workspace });
+      const records = JSON.parse(await readFile(decisions, 'utf8'));
+      assert.equal(records[0].status, 'deferred');
+      const reconciled = await runQueueCommand({ args: ['reconcile', '--environment', 'test', '--decisions', decisions], state });
+      assert.equal(reconciled.deferred, 1);
+      await dispatchReviewWorkflow({ repository: 'danowitz/finevines-website', token: 'test-token', eventType: 'review-console-continue', environment: 'test', reason: 'time-budget-yield', fetchImpl });
+      assert.equal((await state.actionStatus(queued.id, 'test')).status, 'queued');
+      await recordStateTrace(client, 'real Go processor deadline yield', { actionId: queued.id, processorDecision: records[0], dispatched: dispatches[0] });
+    } else {
+      await assert.rejects(exec(executable, args, { cwd: workspace }), /reviewapply/);
+      assert.equal((await state.actionStatus(queued.id, 'test')).status, 'processing');
+      const released = await runQueueCommand({ args: ['release', '--environment', 'test', '--action-ids', claims, '--reason', 'normalizer execution failed'], state });
+      assert.equal(released.released, 1);
+      await dispatchReviewWorkflow({ repository: 'danowitz/finevines-website', token: 'test-token', eventType: 'review-console-continue', environment: 'test', reason: 'operational-retry', fetchImpl });
+      assert.equal((await state.actionStatus(queued.id, 'test')).status, 'queued');
+      assert.ok(await storage.get(`_review/test/pending/${queued.id}.json`));
+      assert.equal(JSON.parse(await readFile(catalog, 'utf8'))[0].imageReviewActionId || '', '');
+      await recordStateTrace(client, 'real Go processor operational failure and preservation', { actionId: queued.id, processorError: 'normalizer execution failed', released: released.released, pendingPreserved: true, catalogUnchanged: true, dispatched: dispatches[0] });
+    }
+    await client.close();
+  }
 });
 
 test('review UI refreshes when focused and stays quiet in a background tab', { timeout: 30_000 }, async () => {
@@ -420,6 +527,14 @@ test('real browser covers onboarding, modal choice, conflict, counters, and inci
     await supportPage.evaluate(() => [...document.querySelectorAll('.incident button')].find((button) => button.textContent === 'Reopen choices').click());
     await supportPage.waitForFunction(() => !document.querySelector('.incident'));
     assert.equal((await state.actionStatus(actionId, 'test')).status, 'needs_decision');
+    await recordStateTrace(client, 'real browser onboarding, concurrency, counters, modal, and incident recovery', {
+      onboarding: { reviewer: roster[0].email, forcedPasswordChange: true, resultingPath: '/' },
+      modal: { opened: true, comparedCandidates: 2, backdropClosed: true, selectionApplied: true },
+      sameWineConflict: { sku: 'SKU-A', visibleToReviewer: roster[1].email },
+      independentWine: { sku: 'SKU-B', queued: true },
+      durableCounter: '2 queued',
+      incident: { actionId, visible: true, operation: 'reopen', resultingStatus: 'needs_decision' },
+    });
   } finally {
     await reviewerPage.close();
     await supportPage.close();
