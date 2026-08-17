@@ -2093,6 +2093,36 @@
     },
     {
       "kind": "producer",
+      "slug": "morat",
+      "name": "Morat",
+      "mode": "generated",
+      "fingerprint": "5de8c7f9ddf4056406b7235f18ec24b3ceec0abf3dcc0ca742ab0ba5ed2a9c2e",
+      "retryFingerprint": "5de8c7f9ddf4056406b7235f18ec24b3ceec0abf3dcc0ca742ab0ba5ed2a9c2e",
+      "retryAfter": "2026-09-16",
+      "lastError": "research JSON must contain exactly two paragraphs"
+    },
+    {
+      "kind": "producer",
+      "slug": "mordoree",
+      "name": "Mordoree",
+      "mode": "generated",
+      "fingerprint": "dfb30a202d3d8489803678eda5e2aecd19e18df6af346c73c82045db90326635",
+      "retryFingerprint": "dfb30a202d3d8489803678eda5e2aecd19e18df6af346c73c82045db90326635",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/mordoree\" source label contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "morin",
+      "name": "Morin",
+      "mode": "generated",
+      "fingerprint": "c44050ea5492e87ea9372189a61a18e6e2ee1b60ed16d8a4698c61b1cc2d70fc",
+      "retryFingerprint": "c44050ea5492e87ea9372189a61a18e6e2ee1b60ed16d8a4698c61b1cc2d70fc",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/morin\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "mouliniere",
       "name": "Mouliniere",
       "mode": "generated",
@@ -2100,6 +2130,16 @@
       "retryFingerprint": "d8361a3080e2f263586e699248ebf378c5bef9f591c090f6cb5cbf58af02dc6e",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/mouliniere\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "mount-hermon",
+      "name": "Mount Hermon",
+      "mode": "generated",
+      "fingerprint": "95c0971e5f1fef33a62b6f031f7c774c0b2e8b79c65c2282dc4487464feb5f3a",
+      "retryFingerprint": "95c0971e5f1fef33a62b6f031f7c774c0b2e8b79c65c2282dc4487464feb5f3a",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/mount-hermon\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2113,6 +2153,40 @@
     },
     {
       "kind": "producer",
+      "slug": "mullineux",
+      "name": "Mullineux",
+      "mode": "generated",
+      "fingerprint": "e29084696ddd5ca564c243c1355effe79d5f11a4b22c52d1f3741e3ec44ab1d2",
+      "retryFingerprint": "e29084696ddd5ca564c243c1355effe79d5f11a4b22c52d1f3741e3ec44ab1d2",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/mullineux\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "nessa",
+      "name": "Nessa",
+      "mode": "generated",
+      "fingerprint": "5d98d950d0a0d96dbf2ab13442f0436858de0a261b837b13342f2b47e93a5e19",
+      "eyebrow": "Producer Spotlight",
+      "heading": "Nessa: Albariño from Rías Baixas",
+      "paragraphs": [
+        "Nestled within Spain’s northwest region of Galicia, the Rías Baixas appellation is especially acclaimed for its Albariño wines crafted under the regulation and quality oversight of its Consejo Regulador. This denominación de origen, formally established in 1988, spans several coastal sub‑zones and protects the production of Albariño as a varietal, requiring it to reflect the distinctive maritime climate and slate soils of the area ([boe.es](https://www.boe.es/buscar/doc.php?id=BOE-A-1988-19043\u0026utm_source=openai)). Producers in Rías Baixas must adhere to strict standards for vineyard siting, varietal purity, and both analytical and organoleptic controls to carry the DO seal ([boe.es](https://www.boe.es/diario_boe/txt.php?id=BOE-A-2009-17064\u0026utm_source=openai)).",
+        "Within this storied region, Nessa produces a focused expression of Albariño that reflects both the grape’s lineage and the area’s character. While catalog specifics such as vintages or stock levels shift regularly, FineVines' inclusion of Nessa highlights its commitment to Galician whites rooted in place and tradition. A wine buyer exploring this selection can expect a wine that embodies the bright acidity, aroma profile, and mineral vitality typical of Albariño from Rías Baixas, supported by the DO's certification structure without naming particular wines or vintages."
+      ],
+      "sources": [
+        {
+          "label": "Rías Baixas DO regulation and Consejo Regulador information",
+          "url": "https://www.boe.es/buscar/doc.php?id=BOE-A-2009-17064"
+        },
+        {
+          "label": "Overview of Rías Baixas and Albariño",
+          "url": "https://en.wikipedia.org/wiki/R%C3%ADas_Baixas_DO"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
+    },
+    {
+      "kind": "producer",
       "slug": "nicole-lamarche",
       "name": "Nicole Lamarche",
       "mode": "generated",
@@ -2120,6 +2194,16 @@
       "retryFingerprint": "2221062be0849642735c762e0b4d070e48deed15a1c4f3b54441c9d98a3ef492",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/nicole-lamarche\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "nicot",
+      "name": "Nicot",
+      "mode": "generated",
+      "fingerprint": "6256d28b07907a63da1f08e344e28c1141a7f0344b8be2de538ee1b9efb8db46",
+      "retryFingerprint": "6256d28b07907a63da1f08e344e28c1141a7f0344b8be2de538ee1b9efb8db46",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/nicot\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2153,6 +2237,38 @@
     },
     {
       "kind": "producer",
+      "slug": "olivier",
+      "name": "Olivier",
+      "mode": "generated",
+      "fingerprint": "b2ec650c1324ed6bd72f61deb47580c6af77789928316ab237493f0deb9a1ee2",
+      "eyebrow": "Bergerac for Merlot‑Cabernet Franc Blend",
+      "heading": "Olivier of Bergerac: Merlot and Cabernet Franc in Context",
+      "paragraphs": [
+        "Bergerac, in the Dordogne of southwestern France, is one of the oldest appellations, earning its AOC status in 1936. Spread across roughly ninety communes, it sits just east of Bordeaux and features a patchwork of alluvial terraces, clay‑limestone and gravel soils, all shaped by the cool influence of the Dordogne River. This terroir yields wines with balanced ripeness, refined structure and textured fruit expression. The region’s red blends commonly combine Merlot, Cabernet Franc and Cabernet Sauvignon, with Merlot often dominant for its plushness and early ripening, while Cabernet Franc brings lifting freshness, floral perfume and clarity to the mix. ([en.wikipedia.org](https://en.wikipedia.org/wiki/Bergerac_wine?utm_source=openai))",
+        "Understanding Olivier’s Merlot‑Cabernet Franc blend benefits from this regional backdrop. In Bergerac, Merlot tends to deliver smooth, rounded texture and ripe red‑fruit character; Cabernet Franc contributes fine aromatics, structural finesse and a hint of pepper or violet. This complementary pairing reflects the balance that local winemakers seek. The specific expression of Olivier will derive from parcel selection, percentage of each grape, and maturation choices. Within this fine regional context, a single‑wine presentation like Olivier’s fits squarely into Bergerac’s tradition of thoughtful blending with a clear sense of place."
+      ],
+      "sources": [
+        {
+          "label": "Bergerac wine region overview (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Bergerac_wine"
+        },
+        {
+          "label": "ProWein 2026 talk on Bergerac terroir",
+          "url": "https://www.prowein.de/vis-content/event-prowein2026/exh-prowein2026.3057137/ProWein-2026-Couleurs-d-Aquitaine-S.A.S.-Paper-prowein2026.3057137-IaPLh71JQvufVs85s3cFpQ.pdf"
+        },
+        {
+          "label": "Guide to AOC Bergerac: terroir and cépages",
+          "url": "https://blog.ruedesvignerons.com/guide-des-vins/vins-sud-ouest/bergeracois/appellation-bergerac/"
+        },
+        {
+          "label": "Recent article on Bergerac variety and terroir identity",
+          "url": "https://www.agriculteursreunis-boutique.fr/cepages-terroirs-faconnent-identite-vins-bergerac-dordogne.html"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
+    },
+    {
+      "kind": "producer",
       "slug": "otano",
       "name": "Otano",
       "mode": "generated",
@@ -2163,6 +2279,16 @@
     },
     {
       "kind": "producer",
+      "slug": "pago-de-la-jaraba",
+      "name": "Pago de la Jaraba",
+      "mode": "generated",
+      "fingerprint": "de58c8e19b135555ce4c5c27c53f270aecfaa96435ab5bc5c2882c035c1e6c11",
+      "retryFingerprint": "de58c8e19b135555ce4c5c27c53f270aecfaa96435ab5bc5c2882c035c1e6c11",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/pago-de-la-jaraba\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "pato",
       "name": "Pato",
       "mode": "generated",
@@ -2170,6 +2296,16 @@
       "retryFingerprint": "238a790ce3cb9596f9ee049a834bc9beaca8383a21819e26fd02749ed8293af2",
       "retryAfter": "2026-09-16",
       "lastError": "invalid character '[' looking for beginning of object key string"
+    },
+    {
+      "kind": "producer",
+      "slug": "patrice-rion",
+      "name": "Patrice Rion",
+      "mode": "generated",
+      "fingerprint": "e0590843c6abc466b761dc442a6cfbd5c522b390f45a89a8d67ef28dcbefcf09",
+      "retryFingerprint": "e0590843c6abc466b761dc442a6cfbd5c522b390f45a89a8d67ef28dcbefcf09",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/patrice-rion\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2190,6 +2326,26 @@
       "retryFingerprint": "610bd523a9f22001786bea8112bac24006eb95f21c74bc5a66109dc3d74c9475",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/paul-lato\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "paveil-de-luze",
+      "name": "Paveil de Luze",
+      "mode": "generated",
+      "fingerprint": "401b83f8a82b2990473a6a6c188a58e13ae02de8f8806286e2b9e4b8b290708a",
+      "retryFingerprint": "401b83f8a82b2990473a6a6c188a58e13ae02de8f8806286e2b9e4b8b290708a",
+      "retryAfter": "2026-09-16",
+      "lastError": "invalid character '[' looking for beginning of object key string"
+    },
+    {
+      "kind": "producer",
+      "slug": "pazjos",
+      "name": "Pazjos",
+      "mode": "generated",
+      "fingerprint": "0645195d12850497821519f47e72b31526f1e00493b551db7c15e09aba534c27",
+      "retryFingerprint": "0645195d12850497821519f47e72b31526f1e00493b551db7c15e09aba534c27",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/pazjos\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2223,6 +2379,36 @@
     },
     {
       "kind": "producer",
+      "slug": "petirrojo",
+      "name": "Petirrojo",
+      "mode": "generated",
+      "fingerprint": "f49efce0a28bfbb5125f3a52961f202f850622b2a7d1bc246b386a8076597268",
+      "retryFingerprint": "f49efce0a28bfbb5125f3a52961f202f850622b2a7d1bc246b386a8076597268",
+      "retryAfter": "2026-09-16",
+      "lastError": "invalid character ':' after array element"
+    },
+    {
+      "kind": "producer",
+      "slug": "petroni",
+      "name": "Petroni",
+      "mode": "generated",
+      "fingerprint": "8c385f5cb5da77755e46275389d46fb9f44e9f949373b227ba6d7283eb22c04a",
+      "retryFingerprint": "8c385f5cb5da77755e46275389d46fb9f44e9f949373b227ba6d7283eb22c04a",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/petroni\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "peyros",
+      "name": "Peyros",
+      "mode": "generated",
+      "fingerprint": "13124c3cf985ecd3171463bc343bdc008fd075999a86bf1330100c9ebb12ac68",
+      "retryFingerprint": "13124c3cf985ecd3171463bc343bdc008fd075999a86bf1330100c9ebb12ac68",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/peyros\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "piaggia",
       "name": "Piaggia",
       "mode": "generated",
@@ -2230,6 +2416,16 @@
       "retryFingerprint": "45617b4f480ac61f6723a6ef6dfa720669ceff736fd057d3fd9b990aeef83a5a",
       "retryAfter": "2026-09-16",
       "lastError": "research JSON has 198 words; expected 120 to 190"
+    },
+    {
+      "kind": "producer",
+      "slug": "pichler-krutzler",
+      "name": "Pichler-Krutzler",
+      "mode": "generated",
+      "fingerprint": "daf19486a24aa84ec1d50a37bc1ca91f3d1cedbe9d33192a71dc7cf00d1b9176",
+      "retryFingerprint": "daf19486a24aa84ec1d50a37bc1ca91f3d1cedbe9d33192a71dc7cf00d1b9176",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/pichler-krutzler\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2243,6 +2439,54 @@
     },
     {
       "kind": "producer",
+      "slug": "pierre-usseglio",
+      "name": "Pierre Usseglio",
+      "mode": "generated",
+      "fingerprint": "e601a1528ddc2174566076a89af5935ae5d38b4af7b45f37bfc1825ee3fc516f",
+      "retryFingerprint": "e601a1528ddc2174566076a89af5935ae5d38b4af7b45f37bfc1825ee3fc516f",
+      "retryAfter": "2026-09-16",
+      "lastError": "research JSON has 207 words; expected 120 to 190"
+    },
+    {
+      "kind": "producer",
+      "slug": "pithon",
+      "name": "Pithon",
+      "mode": "generated",
+      "fingerprint": "dc002a906d0f450ce7b2ecfb1678aecdaf3c1c1f39d08538a2ff5617c64511fc",
+      "retryFingerprint": "dc002a906d0f450ce7b2ecfb1678aecdaf3c1c1f39d08538a2ff5617c64511fc",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/pithon\" source label contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "portal",
+      "name": "Portal",
+      "mode": "generated",
+      "fingerprint": "942ee41ccd2060e7dd2e7b3518afed1d7dc60e2906d12bd83357717b7ba60f0e",
+      "eyebrow": "Producer Spotlight",
+      "heading": "Quinta do Portal in the Douro",
+      "paragraphs": [
+        "Quinta do Portal, a family‑owned wine estate anchored in the steep schist soils of Portugal’s Douro Valley, stands as both a historical and contemporary touchstone in the region. The estate dates back to at least the 15th century, with roots in the Douro demarcated region and experience in Port production that spans over a century ([thebft.co.uk](https://www.thebft.co.uk/images/PDFs/bft_2011.pdf?utm_source=openai)). Situated in the Cima‑Corgo sub‑region, Quinta do Portal benefits from diverse altitudes and exposures across its nearly 100 hectares of vineyard, including several parcels such as Quinta dos Muros and Quinta do Confradeiro ([provavanguarda.pt](https://www.provavanguarda.pt/uploads/products/attachments/pVeruEmzn8DDXdyL-960959QDP_Portal6Barrels_Tawny_Porto_PT.pdf?utm_source=openai)). These site-specific differences help produce balanced fruit ideal for both Port and Douro wines.",
+        "FineVines is proud to showcase the 2003 Vintage Port from Portal. This bottling exemplifies the estate’s understanding of both tradition and craft. As a Douro producer, Portal operates under the rigorous regulation and traceability frameworks administered by the Instituto dos Vinhos do Douro e do Porto (IVDP), ensuring that its wines reflect the authenticity and typicity of the Douro terroir ([digital.ivdp.pt](https://digital.ivdp.pt/en/?utm_source=openai)). The combination of ancestral viticulture, varied vineyards, and compliance with regional standards defines Portal’s Vintage Port as emblematic of the Douro’s unique character."
+      ],
+      "sources": [
+        {
+          "label": "Quinta do Portal official site",
+          "url": "https://quintadoportal.com/pt/"
+        },
+        {
+          "label": "General info on Douro vineyards and Portal estate",
+          "url": "https://www.provavanguarda.pt/uploads/products/attachments/pVeruEmzn8DDXdyL-960959QDP_Portal6Barrels_Tawny_Porto_PT.pdf"
+        },
+        {
+          "label": "Douro traceability and IVDP regulations",
+          "url": "https://digital.ivdp.pt/en/"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
+    },
+    {
+      "kind": "producer",
       "slug": "powers",
       "name": "Powers",
       "mode": "generated",
@@ -2250,6 +2494,36 @@
       "retryFingerprint": "34816fe2db752c366120c06a33fca1fe4622102f0edcb2366dab8f97a4ca19d8",
       "retryAfter": "2026-09-16",
       "lastError": "research JSON has 207 words; expected 120 to 190"
+    },
+    {
+      "kind": "producer",
+      "slug": "proscotto",
+      "name": "Proscotto",
+      "mode": "generated",
+      "fingerprint": "6c30756bf3391595664ee97eaeb20cf9491ea85e51dfa455b2a652e111580709",
+      "retryFingerprint": "6c30756bf3391595664ee97eaeb20cf9491ea85e51dfa455b2a652e111580709",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/proscotto\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "puynormand",
+      "name": "Puynormand",
+      "mode": "generated",
+      "fingerprint": "a724ee990c8b8af9349e82c06e96ec5b1b9c6b085b55e50a7f2fbae6e57e2194",
+      "retryFingerprint": "a724ee990c8b8af9349e82c06e96ec5b1b9c6b085b55e50a7f2fbae6e57e2194",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/puynormand\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "rainer-wess",
+      "name": "Rainer Wess",
+      "mode": "generated",
+      "fingerprint": "3e562838ec5c1d027be9001c317c156ba9b654f304258f289f77a67398a3ee1c",
+      "retryFingerprint": "3e562838ec5c1d027be9001c317c156ba9b654f304258f289f77a67398a3ee1c",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/rainer-wess\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2263,6 +2537,52 @@
     },
     {
       "kind": "producer",
+      "slug": "raposo",
+      "name": "Raposo",
+      "mode": "generated",
+      "fingerprint": "a5685e8d24a0fee63f65ebdf8fb2a2d3dea0dd9882b2d21bcd63c435f45d33ee",
+      "eyebrow": "Discover Raposo of Dão",
+      "heading": "Carlos Raposo: A Singular Voice in Dão’s Touriga Nacional",
+      "paragraphs": [
+        "Carlos Raposo is a native of the Dão region whose journey took him from Burgundy through Australia, Spain and the United States, before returning to craft low‑intervention wines rooted in his homeland. He sources small lots of Touriga Nacional (and other varieties) from cooler, granitic sites around Serra da Estrela, a terroir that shapes wines with mineral clarity and forest‑spice nuance. His philosophy is simple yet precise: respect the purity that nature grants each vintage and express it through restrained, authentic winemaking ([tourinto.pt](https://www.tourinto.pt/en/produtores-portugal/vinhos-do-dao/carlos-raposo/?utm_source=openai)).",
+        "The Dão region itself is an enclave in north‑central Portugal, nestled among mountain ranges such as Estrela, Buçaco, Caramulo and Nave, which shelter it from maritime and continental extremes. Vineyards thrive at elevations between 400 and 800 meters in predominantly granite soils, stimulating aromatic complexity, fine acidity and balance in both red and white wines. Touriga Nacional finds a congenial home here alongside varieties like Encruzado, Alfrocheiro and Jaen, helping define Dão’s elegant, ageworthy character ([ivv.gov.pt](https://www.ivv.gov.pt/np4/%7B%24clientServletPath%7D/?fileName=IVV_2024.pdf\u0026newsId=1736\u0026utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Tourinto profile of Carlos Raposo",
+          "url": "https://www.tourinto.pt/en/produtores-portugal/vinhos-do-dao/carlos-raposo/"
+        },
+        {
+          "label": "Grossberg/Kopman profile of Carlos Raposo \u0026 his project",
+          "url": "https://www.gkselections.com/producers/raposo"
+        },
+        {
+          "label": "IVV Wines of Portugal technical document on Dão",
+          "url": "https://www.ivv.gov.pt/np4/{$clientServletPath}/?fileName=IVV_2024.pdf\u0026newsId=1736"
+        },
+        {
+          "label": "Fileira do Vinho Região Centro description of Dão",
+          "url": "https://fileiradovinhoregiaocentro.pt/dao/"
+        },
+        {
+          "label": "Wine Experiences in Portugal overview of Dão",
+          "url": "https://www.winexp.pt/en/winery-regions/dao"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
+    },
+    {
+      "kind": "producer",
+      "slug": "raymond-usseglio",
+      "name": "Raymond Usseglio",
+      "mode": "generated",
+      "fingerprint": "5244c175eb5bf6c48ca63de23a35ee5f5506c1e8932d90ffded8e4f2e164d376",
+      "retryFingerprint": "5244c175eb5bf6c48ca63de23a35ee5f5506c1e8932d90ffded8e4f2e164d376",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/raymond-usseglio\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "recoltant",
       "name": "Recoltant",
       "mode": "generated",
@@ -2270,6 +2590,26 @@
       "retryFingerprint": "47f2e5c503a1609ecd1def8dc63fe301a198ce37591cec5c762edbf83f0369ea",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/recoltant\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "reynier",
+      "name": "Reynier",
+      "mode": "generated",
+      "fingerprint": "f048ba036ab9acc6f5e5cc939695a4e09aa0acea96a2e0f29a9053b80852ea2b",
+      "retryFingerprint": "f048ba036ab9acc6f5e5cc939695a4e09aa0acea96a2e0f29a9053b80852ea2b",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/reynier\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "rios-de-tinta",
+      "name": "Rios de Tinta",
+      "mode": "generated",
+      "fingerprint": "a7d099b325a6fe354662cf81ada8490f0e45d8d2f8c8bee58386245f8a3ecd4e",
+      "retryFingerprint": "a7d099b325a6fe354662cf81ada8490f0e45d8d2f8c8bee58386245f8a3ecd4e",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/rios-de-tinta\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2313,6 +2653,36 @@
     },
     {
       "kind": "producer",
+      "slug": "roseline",
+      "name": "Roseline",
+      "mode": "generated",
+      "fingerprint": "66da00f1430c98a7e65e3ec471a9a7906cbf11b359f1fd200c65805eea924437",
+      "retryFingerprint": "66da00f1430c98a7e65e3ec471a9a7906cbf11b359f1fd200c65805eea924437",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/roseline\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "rotalier",
+      "name": "Rotalier",
+      "mode": "generated",
+      "fingerprint": "6c917334a2a271f5dad3ca191f01ef38775c65935c584c162fda02a73eeae912",
+      "retryFingerprint": "6c917334a2a271f5dad3ca191f01ef38775c65935c584c162fda02a73eeae912",
+      "retryAfter": "2026-09-16",
+      "lastError": "invalid character '[' looking for beginning of object key string"
+    },
+    {
+      "kind": "producer",
+      "slug": "russian-river-vineyards",
+      "name": "Russian River Vineyards",
+      "mode": "generated",
+      "fingerprint": "0266b2b08d6268b064d987635fcab0a8929f70362d0e94f7b3e256fc95ded596",
+      "retryFingerprint": "0266b2b08d6268b064d987635fcab0a8929f70362d0e94f7b3e256fc95ded596",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/russian-river-vineyards\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "saint-remy",
       "name": "Saint Remy",
       "mode": "generated",
@@ -2330,6 +2700,26 @@
       "retryFingerprint": "918f4baf7082e49b0c2a31e29a4b7951c2a08cad4cdd7f14c16774da60006b42",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/sarthes\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "school-house-vineyard",
+      "name": "School House Vineyard",
+      "mode": "generated",
+      "fingerprint": "7c1eaeaeb74c2ad5f72cdd6bbb7c4aeb002623e4e2264ab9aea0ec3cb721964a",
+      "retryFingerprint": "7c1eaeaeb74c2ad5f72cdd6bbb7c4aeb002623e4e2264ab9aea0ec3cb721964a",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/school-house-vineyard\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "sem-igual",
+      "name": "Sem Igual",
+      "mode": "generated",
+      "fingerprint": "028b7d451e68a9fca8e182e063b45e2c86268e6b7ef589f54c49168abcc9551c",
+      "retryFingerprint": "028b7d451e68a9fca8e182e063b45e2c86268e6b7ef589f54c49168abcc9551c",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/sem-igual\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2381,6 +2771,40 @@
     },
     {
       "kind": "producer",
+      "slug": "sorelli",
+      "name": "Sorelli",
+      "mode": "generated",
+      "fingerprint": "10436cb7e8306a8243526737a4d083322c98fd7d5709bae67f4021839f3e7578",
+      "eyebrow": "Tuscany’s Sorelli",
+      "heading": "Sorelli’s Chianti from the Heart of Tuscany",
+      "paragraphs": [
+        "Nestled in the rolling hills of central Tuscany, Sorelli is a family-owned wine estate with over a century devoted to Chianti and traditional regional expressions. Located in Figline e Incisa Valdarno near Florence, Vino Sorelli produces classic Chianti DOCG, Chianti Riserva, Superiore, Vin Santo, and Sangiovese IGT, combining modern production with deep ties to local growers and the Tuscan landscape ([consorziovinochianti.it](https://www.consorziovinochianti.it/aziende-old/vino-sorelli-s-p-a/?utm_source=openai)).",
+        "Chianti DOCG most often centers on Sangiovese, required to make up between 70 and 100 percent of the blend, while others such as Canaiolo, Colorino, and small percentages of Cabernet or white grapes may complement it ([consorziovinochianti.it](https://www.consorziovinochianti.it/chianti-identikit/?lang=en\u0026utm_source=openai)). The style is typically vivid and dry, with savory tannins and floral or red fruit aromas that soften and gain complexity with age ([consorziovinochianti.it](https://www.consorziovinochianti.it/chianti-identikit/?lang=en\u0026utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Vino Sorelli (Consorzio Vino Chianti)",
+          "url": "https://www.consorziovinochianti.it/aziende-old/vino-sorelli-s-p-a/"
+        },
+        {
+          "label": "Chianti Identikit (Consorzio Vino Chianti)",
+          "url": "https://www.consorziovinochianti.it/chianti-identikit/?lang=en"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
+    },
+    {
+      "kind": "producer",
+      "slug": "stone-fence",
+      "name": "Stone Fence",
+      "mode": "generated",
+      "fingerprint": "565248fef2c24d85760ef81bdfb693dd13f8696727176c8ea43f64b3e539907f",
+      "retryFingerprint": "565248fef2c24d85760ef81bdfb693dd13f8696727176c8ea43f64b3e539907f",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/stone-fence\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "subirats",
       "name": "Subirats",
       "mode": "generated",
@@ -2420,6 +2844,16 @@
         }
       ],
       "reviewedAt": "2026-08-17"
+    },
+    {
+      "kind": "producer",
+      "slug": "taonga",
+      "name": "Taonga",
+      "mode": "generated",
+      "fingerprint": "a50935fbbf78b0e995e87f4bdd849cf47c421555ee9186ffc8a0130360cea079",
+      "retryFingerprint": "a50935fbbf78b0e995e87f4bdd849cf47c421555ee9186ffc8a0130360cea079",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/taonga\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2507,6 +2941,36 @@
     },
     {
       "kind": "producer",
+      "slug": "torre-oria",
+      "name": "Torre Oria",
+      "mode": "generated",
+      "fingerprint": "d8d6bbb64e881a120559124e6966629366946d51c725fe88a864b5562e0ddb12",
+      "retryFingerprint": "d8d6bbb64e881a120559124e6966629366946d51c725fe88a864b5562e0ddb12",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/torre-oria\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "tremblay",
+      "name": "Tremblay",
+      "mode": "generated",
+      "fingerprint": "6b57f0f728bb7641f2a08f5cb013618279a7f89883c15060107f5a1c9829c5e0",
+      "retryFingerprint": "6b57f0f728bb7641f2a08f5cb013618279a7f89883c15060107f5a1c9829c5e0",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/tremblay\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "twins",
+      "name": "Twins",
+      "mode": "generated",
+      "fingerprint": "11ddada582d1dcb39b15b924f24fd15eb7f32a7b3c30fda0588f54c822d0005c",
+      "retryFingerprint": "11ddada582d1dcb39b15b924f24fd15eb7f32a7b3c30fda0588f54c822d0005c",
+      "retryAfter": "2026-09-16",
+      "lastError": "invalid character '[' looking for beginning of object key string"
+    },
+    {
+      "kind": "producer",
       "slug": "uivo",
       "name": "Uivo",
       "mode": "generated",
@@ -2535,6 +2999,16 @@
     },
     {
       "kind": "producer",
+      "slug": "uvaguilera",
+      "name": "Uvaguilera",
+      "mode": "generated",
+      "fingerprint": "bcbd6d5a9f3ff94df93af801e0e1d369532c08ace0cb31cbd89f4e6a4474c846",
+      "retryFingerprint": "bcbd6d5a9f3ff94df93af801e0e1d369532c08ace0cb31cbd89f4e6a4474c846",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/uvaguilera\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "vacheron",
       "name": "Vacheron",
       "mode": "generated",
@@ -2552,6 +3026,54 @@
       "retryFingerprint": "eb14c3265a55995a4ccde1ec3eb9161899bb288dc83d43cbe39ae3ff60d7615f",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/vara\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "veiga-naum",
+      "name": "Veiga Naum",
+      "mode": "generated",
+      "fingerprint": "f3799e0654da9c7856c39ebacf2a2d039fdd8abc8a7df1f670b80025146bc38d",
+      "retryFingerprint": "f3799e0654da9c7856c39ebacf2a2d039fdd8abc8a7df1f670b80025146bc38d",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/veiga-naum\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "ventura",
+      "name": "Ventura",
+      "mode": "generated",
+      "fingerprint": "e265988d2e78b88f6f459ca0cf09fb5435b14cc5922af87f31e1ea085cfab2e1",
+      "retryFingerprint": "e265988d2e78b88f6f459ca0cf09fb5435b14cc5922af87f31e1ea085cfab2e1",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/ventura\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "vermillion",
+      "name": "Vermillion",
+      "mode": "generated",
+      "fingerprint": "1df66d245b23238027a23f9d6cb44bbcbaa7a610fc98a4b59929346be9e27f13",
+      "eyebrow": "Featured Producer",
+      "heading": "Vermillion by Helen Keplinger",
+      "paragraphs": [
+        "Vermillion is the second label from Helen Keplinger, a Napa-based winemaker trained at UC Davis whose career spans influential tenures at Kenzo Estate, Bryant Family Vineyard, Arrow \u0026 Branch, and Grace Family Vineyard, among others ([scalewine.com](https://scalewine.com/producers/vermillion/?utm_source=openai)). Its inspiration traces back to Keplinger’s time in Priorat, Spain, where exposure to Grenache and Rhône blends shaped her philosophy. Vermillion reflects a thoughtful, approachable expression of that legacy, offering a single expressive red blend each vintage ([keplingerwines.com](https://keplingerwines.com/about/?utm_source=openai)).",
+        "Keplinger sources grapes for Vermillion from small vineyards across Napa Valley, Sonoma County, and the Sierra Foothills, applying a terroir-driven approach grounded in precise farming and restrained but intentional winemaking ([napawineproject.com](https://www.napawineproject.com/keplinger-wines/?utm_source=openai)). The result is a wine of balance and depth, grounded in regional character. Buyers can explore FineVines’ selection for the current vintage and appreciate Keplinger’s ability to craft a harmonious and food-friendly red that embodies both provenance and polish."
+      ],
+      "sources": [
+        {
+          "label": "Keplinger Wines official “About” page",
+          "url": "https://keplingerwines.com/about/"
+        },
+        {
+          "label": "Napa Wine Project profile on Keplinger Wines",
+          "url": "https://www.napawineproject.com/keplinger-wines/"
+        },
+        {
+          "label": "Scale Wine Wholesale summary of Vermillion",
+          "url": "https://scalewine.com/producers/vermillion/"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
     },
     {
       "kind": "producer",
@@ -2612,6 +3134,16 @@
       "retryFingerprint": "d403cdab916f5efe3a2d335e8187c20c619cba67c09e53e90862ca6cabd94967",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/weingut-kuhn\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "wolfberger",
+      "name": "Wolfberger",
+      "mode": "generated",
+      "fingerprint": "63f3e641ace9aae70daa20daab560e3649f7dae5956b4647bd051589aa5f0f5e",
+      "retryFingerprint": "63f3e641ace9aae70daa20daab560e3649f7dae5956b4647bd051589aa5f0f5e",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"producer/wolfberger\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
