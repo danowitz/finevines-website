@@ -10,6 +10,7 @@ const environments = [
     domain: 'finevines.biz',
     cookie: 'fv_review_test',
     sessionEnv: 'FINEVINES_REVIEW_TEST_SESSION_SECRET',
+    incidentRecipient: 'joel@gritautomation.com',
   },
   {
     name: 'production',
@@ -18,6 +19,7 @@ const environments = [
     domain: 'finevines.com',
     cookie: 'fv_review_production',
     sessionEnv: 'FINEVINES_REVIEW_PRODUCTION_SESSION_SECRET',
+    incidentRecipient: 'barb@finevines.com',
   },
 ];
 
@@ -175,6 +177,7 @@ for (const config of environments) {
     BUNNY_STORAGE_ENDPOINT: storageEndpoint,
     BUNNY_STORAGE_ZONE: storageZone,
     BUNNY_DATABASE_URL: databaseUrl,
+    REVIEW_INCIDENT_RECIPIENT: config.incidentRecipient,
   });
   await upsertSecrets(script, {
     REVIEW_SESSION_SECRET: sessionSecret,

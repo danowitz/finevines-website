@@ -25,6 +25,16 @@ button { cursor: pointer; }
 .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .controls input, .controls select { min-width: 220px; padding: 11px 13px; border: 1px solid #c9b9aa; border-radius: 8px; background: #fff; color: #251c18; }
 .summary { margin: 14px 0 22px; padding: 13px 16px; border-left: 5px solid #7d263b; background: #fff; border-radius: 8px; }
+.incidents:empty { display: none; }
+.incident { margin: 0 0 12px; padding: 14px 16px; border: 2px solid #a12222; border-radius: 10px; background: #fff1f0; color: #681717; }
+.incident strong, .incident span { display: block; }
+.incident span { margin-top: 4px; line-height: 1.4; }
+.incident button { margin-top: 10px; border: 0; border-radius: 7px; padding: 8px 12px; background: #7d263b; color: #fff; font-weight: 750; }
+.admin { margin: 0 0 18px; padding: 16px; border: 1px solid #d9cfc4; border-radius: 10px; background: #fff; }
+.admin h2 { margin: 0 0 10px; font: 700 20px/1.2 Georgia, serif; }
+.account { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid #eee5dc; }
+.account span { flex: 1; min-width: 240px; }
+.account button { border: 0; border-radius: 7px; padding: 8px 11px; background: #e8e0d7; font-weight: 750; }
 .wine { margin-bottom: 18px; padding: 18px; background: #fff; border: 1px solid #d9cfc4; border-radius: 14px; box-shadow: 0 2px 8px #3c24151a; }
 .wine-head { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
 .wine h2 { margin: 0 0 4px; font: 700 24px/1.15 Georgia, serif; }
@@ -98,6 +108,8 @@ const el = (tag, attrs = {}, children = []) => {
 };
 const status = document.querySelector('#summary');
 const list = document.querySelector('#wine-list');
+const incidentList = document.querySelector('#incidents');
+const admin = document.querySelector('#admin');
 
 function imageUrl(candidate) {
   return '/api/packages/' + encodeURIComponent(state.package.packageId) + '/images/' + encodeURIComponent(candidate.candidateId);
@@ -297,6 +309,37 @@ function summaryText(reviewStatus, expiresAt) {
   ].join(' · ') + ' · package expires ' + new Date(expiresAt).toLocaleDateString();
 }
 
+async function retryIncident(incident, button) {
+  button.disabled = true;
+  const res = await fetch('/api/admin/actions/' + encodeURIComponent(incident.actionId) + '/retry', {
+    method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': state.package.csrfToken },
+  });
+  if (!res.ok) { button.disabled = false; button.textContent = 'Retry failed'; return; }
+  await refresh();
+}
+
+async function loadAccounts() {
+  const res = await fetch('/api/admin/accounts', { credentials: 'same-origin' });
+  if (!res.ok) return;
+  const value = await res.json();
+  const rows = [el('h2', { text: 'Reviewer access' })];
+  for (const account of value.accounts || []) {
+    const button = el('button', { type: 'button', text: account.status === 'invitation_pending' ? 'Activate' : 'Resend invitation' });
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      const response = await fetch('/api/admin/accounts/' + encodeURIComponent(account.email) + '/activate', {
+        method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': value.csrfToken },
+      });
+      button.textContent = response.ok ? 'Invitation queued' : 'Could not queue invitation';
+      if (!response.ok) button.disabled = false;
+    });
+    rows.push(el('div', { class: 'account' }, [
+      el('span', { text: account.name + ' · ' + account.email + ' · ' + account.status }), button,
+    ]));
+  }
+  admin.replaceChildren(...rows);
+}
+
 async function refresh() {
   if (state.refreshing) return state.refreshing;
   state.refreshing = (async () => {
@@ -305,6 +348,17 @@ async function refresh() {
     state.package = await res.json();
     const wines = state.package.wines || [];
     status.textContent = summaryText(state.package.reviewStatus, state.package.expiresAt);
+    incidentList.replaceChildren();
+    for (const incident of state.package.incidents || []) {
+      const retry = el('button', { type: 'button', text: 'Retry safely' });
+      retry.addEventListener('click', () => retryIncident(incident, retry));
+      incidentList.append(el('section', { class: 'incident', role: 'alert' }, [
+        el('strong', { text: 'Review issue · SKU ' + incident.sku }),
+        el('span', { text: incident.reason + ' · open ' + incident.ageMinutes + ' minutes' }),
+        el('span', { text: 'Next: ' + incident.nextAction }),
+        retry,
+      ]));
+    }
     list.replaceChildren();
     if (!wines.length) list.append(el('div', { class: 'empty', text: 'Nothing needs review right now.' }));
     else wines.forEach((wine) => list.append(renderWine(wine)));
@@ -323,6 +377,7 @@ window.addEventListener('focus', activeRefresh);
 document.addEventListener('visibilitychange', activeRefresh);
 setInterval(activeRefresh, 10_000);
 refresh();
+loadAccounts();
 `;
 
 const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
@@ -344,6 +399,6 @@ export function changePasswordPage(csrf, message = '') {
 }
 
 export function consolePage(reviewer) {
-  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><span>Signed in as ${escapeHtml(reviewer.name)}</span></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
+  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><span>Signed in as ${escapeHtml(reviewer.name)}</span></div></header><div id="summary" class="summary">Loading the current review package…</div><div id="incidents" class="incidents" aria-live="polite"></div><section id="admin" class="admin"></section><section id="wine-list"></section></main>
 <div id="modal" class="modal" hidden><section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div class="modal-heading"><strong id="modal-title"></strong><span id="modal-count"></span></div><button class="modal-close" type="button" data-close>Close</button></div><div id="modal-stage" class="modal-stage"></div></section></div>`, { script: true });
 }

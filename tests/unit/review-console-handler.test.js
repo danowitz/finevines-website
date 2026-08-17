@@ -26,6 +26,7 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY } = {
   const writes = [];
   const activeWines = new Map();
   const queuedActions = [];
+  const accountCalls = [];
   const storage = {
     get: async (path) => files.get(path),
     getBytes: async (path) => files.get(path),
@@ -55,6 +56,12 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY } = {
       const action = queuedActions.find((value) => value.id === id && value.environment === environment);
       return action ? { id, status: 'queued', attentionReason: '', submittedAt: action.submittedAt, startedAt: '', completedAt: '' } : null;
     },
+    scanIncidents: async () => [],
+    transition: async (id, from, to, detail) => {
+      const action = queuedActions.find((value) => value.id === id);
+      if (!action || action.status !== from) throw new Error('invalid transition');
+      action.status = to; action.detail = detail;
+    },
   };
   const accounts = {
     authenticate: async (email, password) => email === identity.email && password === 'correct horse' ? identity : null,
@@ -66,10 +73,13 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY } = {
       identity = { ...identity, mustChangePassword: false, credentialVersion: identity.credentialVersion + 1 };
       return identity;
     },
+    sync: async (roster) => accountCalls.push(['sync', roster]),
+    list: async () => [{ email: 'barb.fultz@finevines.com', name: 'Barb Fultz', role: 'Back Office', source: 'salesforce', status: 'active' }],
+    activate: async (email) => accountCalls.push(['activate', email]),
   };
-  const config = { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', sessionSecret: 'session-secret' };
+  const config = { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', sessionSecret: 'session-secret', incidentRecipient: 'joel@gritautomation.com' };
   const handle = createReviewConsole({ config, storage, state, accounts, dispatch, now: () => new Date('2026-08-11T20:00:00Z'), uuid: (() => { let n = 0; return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`; })() });
-  return { handle, writes, files, queuedActions };
+  return { handle, writes, files, queuedActions, accountCalls };
 }
 
 async function login(handle) {
@@ -375,5 +385,40 @@ describe('review console handler', () => {
     assert.equal(res.status, 202);
     const actionPath = writes.find((path) => path.includes('/actions/'));
     assert.equal(JSON.parse(files.get(actionPath)).reviewer, 'barb.fultz@finevines.com');
+  });
+
+  it('synchronizes and manages eligible accounts without exposing credentials', async () => {
+    const { handle, accountCalls } = fixture();
+    const cookie = await login(handle);
+    const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+    const csrf = (await current.json()).csrfToken;
+    const listed = await handle(new Request('https://review.finevines.biz/api/admin/accounts', { headers: { cookie } }));
+    const body = await listed.json();
+    assert.equal(listed.status, 200);
+    assert.equal(body.accounts[0].status, 'active');
+    assert.equal(JSON.stringify(body).includes('password'), false);
+    assert.equal(accountCalls[0][0], 'sync');
+    const invited = await handle(new Request('https://review.finevines.biz/api/admin/accounts/barb.fultz%40finevines.com/activate', {
+      method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'x-csrf-token': csrf },
+    }));
+    assert.equal(invited.status, 202);
+    assert.deepEqual(accountCalls.at(-1), ['activate', 'barb.fultz@finevines.com']);
+  });
+
+  it('offers retry but no unsafe force-complete endpoint', async () => {
+    const { handle, queuedActions } = fixture();
+    const cookie = await login(handle);
+    const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+    const csrf = (await current.json()).csrfToken;
+    queuedActions.push({ id: '11111111-1111-4111-8111-111111111111', environment: 'test', status: 'needs_attention' });
+    const retried = await handle(new Request('https://review.finevines.biz/api/admin/actions/11111111-1111-4111-8111-111111111111/retry', {
+      method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'x-csrf-token': csrf },
+    }));
+    assert.equal(retried.status, 202);
+    assert.equal(queuedActions.at(-1).status, 'queued');
+    const forced = await handle(new Request('https://review.finevines.biz/api/admin/actions/11111111-1111-4111-8111-111111111111/complete', {
+      method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'x-csrf-token': csrf },
+    }));
+    assert.equal(forced.status, 404);
   });
 });

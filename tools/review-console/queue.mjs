@@ -4,6 +4,9 @@ import { dirname, resolve } from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { createReviewState } from '../../edge/review-console/review-state.mjs';
+import { createOutboxMailer } from '../../edge/review-console/outbox-mailer.mjs';
+import { createReviewerAccounts } from '../../edge/review-console/reviewer-accounts.mjs';
+import { buildReviewerRoster } from '../labelfetch/review-package.mjs';
 
 function options(args) {
   const values = { command: args[0] || '' };
@@ -29,7 +32,7 @@ async function transitionIfNeeded(state, environment, id, from, to, detail) {
   await state.transition(id, from, to, detail);
 }
 
-export async function runQueueCommand({ args, state, now = () => new Date() }) {
+export async function runQueueCommand({ args, state, now = () => new Date(), mailer, accounts }) {
   const value = options(args);
   const environment = value.environment || 'test';
   if (!['test', 'production'].includes(environment)) throw new Error('queue environment must be test or production');
@@ -69,7 +72,37 @@ export async function runQueueCommand({ args, state, now = () => new Date() }) {
     return { command: 'complete', decisions: records.length, completed };
   }
 
-  throw new Error('usage: queue.mjs <claim|reconcile|complete> --environment <name> [--output path|--decisions path]');
+  if (value.command === 'notify') {
+    if (!value.recipient || !value.from) throw new Error('notify requires --recipient and --from');
+    const incidents = await state.scanIncidents(environment, value.recipient);
+    if (mailer?.disabled) return { command: 'notify', incidents: incidents.length, sent: 0, delivery: 'disabled' };
+    if (!mailer?.send) throw new Error('notify requires a mail transport');
+    const messages = await state.claimNotifications({ limit: 25 });
+    let sent = 0;
+    for (const message of messages) {
+      await mailer.send({ from: value.from, ...message });
+      await state.completeNotification(message.id);
+      sent += 1;
+    }
+    return { command: 'notify', incidents: incidents.length, sent, delivery: 'smtp' };
+  }
+
+  if (value.command === 'sync-accounts') {
+    if (!value.roster) throw new Error('sync-accounts requires --roster');
+    if (!accounts?.sync || !accounts?.list) throw new Error('sync-accounts requires reviewer accounts');
+    const roster = buildReviewerRoster(JSON.parse(await readFile(value.roster, 'utf8')));
+    await accounts.sync(roster);
+    return { command: 'sync-accounts', eligible: (await accounts.list()).length };
+  }
+
+  if (value.command === 'invite') {
+    if (!value.email) throw new Error('invite requires --email');
+    if (!accounts?.activate) throw new Error('invite requires reviewer accounts');
+    await accounts.activate(value.email);
+    return { command: 'invite', email: value.email.trim().toLowerCase(), status: 'queued' };
+  }
+
+  throw new Error('usage: queue.mjs <claim|reconcile|complete|notify|sync-accounts|invite> --environment <name> [command options]');
 }
 
 async function main() {
@@ -78,7 +111,29 @@ async function main() {
   if (!url || !authToken) throw new Error('FINEVINES_REVIEW_DATABASE_URL and FINEVINES_REVIEW_DATABASE_TOKEN are required');
   const client = createClient({ url, authToken });
   try {
-    const result = await runQueueCommand({ args: process.argv.slice(2), state: createReviewState({ client }) });
+    const command = process.argv[2];
+    const state = createReviewState({ client });
+    let mailer;
+    if (command === 'notify') {
+      const mode = process.env.FINEVINES_REVIEW_EMAIL_MODE || 'disabled';
+      if (mode === 'disabled') mailer = { disabled: true };
+      else if (mode === 'smtp') {
+        const { default: nodemailer } = await import('nodemailer');
+        const port = Number(process.env.FINEVINES_SMTP_PORT);
+        if (!process.env.FINEVINES_SMTP_HOST || !Number.isInteger(port) || !process.env.FINEVINES_SMTP_USER || !process.env.FINEVINES_SMTP_PASS) {
+          throw new Error('SMTP review delivery requires host, port, user, and password');
+        }
+        const transport = nodemailer.createTransport({
+          host: process.env.FINEVINES_SMTP_HOST, port, secure: port === 465,
+          auth: { user: process.env.FINEVINES_SMTP_USER, pass: process.env.FINEVINES_SMTP_PASS },
+        });
+        mailer = { send: (message) => transport.sendMail({ from: message.from, to: message.to, subject: message.subject, text: message.text }) };
+      } else throw new Error('FINEVINES_REVIEW_EMAIL_MODE must be disabled or smtp');
+    }
+    const accounts = ['sync-accounts', 'invite'].includes(command)
+      ? createReviewerAccounts({ state, mailer: createOutboxMailer(state) })
+      : undefined;
+    const result = await runQueueCommand({ args: process.argv.slice(2), state, mailer, accounts });
     process.stdout.write(`${JSON.stringify(result)}\n`);
   } finally {
     client.close();

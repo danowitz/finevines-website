@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
+    inputs:
+      invite_reviewer:
+        description: 'Eligible reviewer email to invite or resend (optional)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -33,6 +38,12 @@ jobs:
       FINEVINES_BUNNY_SCRIPT_ID: ${{ secrets.FINEVINES_BUNNY_SCRIPT_ID }}
       FINEVINES_SITE_BASE_URL: https://finevines.biz
       FINEVINES_GA_ID: ${{ secrets.FINEVINES_GA_ID }}
+      FINEVINES_REVIEW_EMAIL_MODE: smtp
+      FINEVINES_SMTP_HOST: ${{ secrets.FINEVINES_SMTP_HOST }}
+      FINEVINES_SMTP_PORT: ${{ secrets.FINEVINES_SMTP_PORT }}
+      FINEVINES_SMTP_USER: ${{ secrets.FINEVINES_SMTP_USER }}
+      FINEVINES_SMTP_PASS: ${{ secrets.FINEVINES_SMTP_PASS }}
+      FINEVINES_NOTIFY_FROM: ${{ secrets.FINEVINES_NOTIFY_FROM }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,6 +61,11 @@ jobs:
         run: |
           go build -ldflags "-s -w" -o finevines ./cmd/finevines
           go build -o imgnorm ./tools/imgnorm
+      - name: Synchronize eligible reviewer accounts
+        run: node tools/review-console/queue.mjs sync-accounts --environment test --roster data/team.json
+      - name: Queue an explicitly requested reviewer invitation
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.invite_reviewer != '' }}
+        run: node tools/review-console/queue.mjs invite --environment test --email "${{ inputs.invite_reviewer }}"
       - name: Claim the complete pending queue
         id: claim
         run: |
@@ -95,3 +111,6 @@ jobs:
       - name: Mark verified actions complete
         if: ${{ steps.claim.outputs.claimed != '0' }}
         run: node tools/review-console/queue.mjs complete --environment test --decisions .run/review-decisions.json
+      - name: Deliver review incident and invitation notifications
+        if: ${{ always() }}
+        run: node tools/review-console/queue.mjs notify --environment test --recipient joel@gritautomation.com --from "$FINEVINES_NOTIFY_FROM"

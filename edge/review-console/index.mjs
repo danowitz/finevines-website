@@ -6,6 +6,7 @@ import { createGitHubDispatch } from './github-dispatch.mjs';
 import { createReviewConsole } from './handler.mjs';
 import { createReviewState } from './review-state.mjs';
 import { createReviewerAccounts } from './reviewer-accounts.mjs';
+import { createOutboxMailer } from './outbox-mailer.mjs';
 
 const environment = process.env.REVIEW_ENVIRONMENT;
 const config = {
@@ -15,6 +16,7 @@ const config = {
   sessionSecret: process.env.REVIEW_SESSION_SECRET,
   databaseUrl: process.env.BUNNY_DATABASE_URL,
   databaseToken: process.env.BUNNY_DATABASE_AUTH_TOKEN,
+  incidentRecipient: process.env.REVIEW_INCIDENT_RECIPIENT,
 };
 const required = Object.entries(config).filter(([, value]) => !value).map(([name]) => name);
 if (required.length) throw new Error(`review console configuration missing: ${required.join(', ')}`);
@@ -31,10 +33,7 @@ const storage = createBunnyStorage({
 });
 const dispatch = createGitHubDispatch({ token: process.env.GITHUB_DISPATCH_TOKEN, repository: process.env.GITHUB_REPOSITORY });
 const state = createReviewState({ client: createClient({ url: config.databaseUrl, authToken: config.databaseToken }) });
-// Invitation delivery is deliberately unavailable until the administrator
-// activates the mail transport. Login and review never depend on a shared
-// environment password.
-const mailer = { send: async () => { throw new Error('review invitation email is not configured'); } };
+const mailer = createOutboxMailer(state);
 const accounts = createReviewerAccounts({ state, mailer });
 const handle = createReviewConsole({ config, storage, state, accounts, dispatch });
 BunnySDK.net.http.serve(handle);

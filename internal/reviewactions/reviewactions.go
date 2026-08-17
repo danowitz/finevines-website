@@ -555,9 +555,10 @@ func Finalize(ctx context.Context, input FinalizeInput) error {
 		verifiedURLs[decision.ID] = imageURL
 	}
 	for _, decision := range input.Decisions {
-		if decision.Status == "prepared" {
-			decision.Status = "completed"
+		if decision.Status != "prepared" {
+			continue
 		}
+		decision.Status = "completed"
 		receipt := Receipt{Decision: decision, CatalogCommit: input.CatalogCommit, DeploymentTarget: input.DeploymentTarget, RunID: input.RunID, CompletedAt: input.Now.UTC().Format(time.RFC3339), VerifiedImageURL: verifiedURLs[decision.ID]}
 		data, err := json.MarshalIndent(receipt, "", "  ")
 		if err != nil {

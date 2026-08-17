@@ -123,15 +123,54 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
       return response(APP_JS, { headers: { 'Content-Type': 'text/javascript; charset=utf-8' } });
     }
 
+    if (request.method === 'GET' && url.pathname === '/api/admin/accounts') {
+      const current = JSON.parse(await storage.get(`${prefix}/current.json`));
+      const manifest = await loadPackage(storage, prefix, current.packageId);
+      await stateReady;
+      await accounts.sync(manifest.reviewers || []);
+      return json({ accounts: await accounts.list(), csrfToken: await csrfToken(config.sessionSecret, session.sessionId) });
+    }
+
+    const activateAccountRoute = url.pathname.match(/^\/api\/admin\/accounts\/([^/]+)\/activate$/);
+    if (request.method === 'POST' && activateAccountRoute) {
+      if (request.headers.get('origin') !== config.origin) return json({ error: 'invalid origin' }, 403);
+      if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
+      const email = decodeURIComponent(activateAccountRoute[1]);
+      try {
+        await accounts.activate(email);
+        let dispatched = true;
+        try { await dispatch(`account:${email}`, config.environment); } catch { dispatched = false; }
+        return json({ status: 'invited', dispatched }, 202);
+      } catch (error) {
+        return json({ error: error.message }, 400);
+      }
+    }
+
+    const retryActionRoute = url.pathname.match(/^\/api\/admin\/actions\/([0-9a-f-]{36})\/retry$/i);
+    if (request.method === 'POST' && retryActionRoute) {
+      if (request.headers.get('origin') !== config.origin) return json({ error: 'invalid origin' }, 403);
+      if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
+      try {
+        await state.transition(retryActionRoute[1], 'needs_attention', 'queued', `retried by ${reviewer.email}`);
+        let dispatched = true;
+        try { await dispatch(retryActionRoute[1], config.environment); } catch { dispatched = false; }
+        return json({ status: 'queued', dispatched }, 202);
+      } catch (error) {
+        return json({ error: error.message }, 409);
+      }
+    }
+
     if (request.method === 'GET' && url.pathname === '/api/current') {
       const current = JSON.parse(await storage.get(`${prefix}/current.json`));
       const manifest = await loadPackage(storage, prefix, current.packageId);
       await stateReady;
       const currentStatus = await state.packageStatus(config.environment, manifest.wines);
+      const incidents = await state.scanIncidents(config.environment, config.incidentRecipient);
       return json({
         ...manifest,
         wines: currentStatus.decisions,
         reviewStatus: { ...currentStatus.counts, oldestPendingAt: currentStatus.oldestPendingAt },
+        incidents,
         csrfToken: await csrfToken(config.sessionSecret, session.sessionId),
       });
     }

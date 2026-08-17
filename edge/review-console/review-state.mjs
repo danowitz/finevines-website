@@ -59,6 +59,32 @@ export function createReviewState({ client, now = () => new Date() }) {
         credential_version INTEGER NOT NULL DEFAULT 0,
         updated_at TEXT NOT NULL
       )`,
+      `CREATE TABLE IF NOT EXISTS review_incidents (
+        id TEXT PRIMARY KEY,
+        environment TEXT NOT NULL,
+        action_id TEXT NOT NULL REFERENCES review_actions(id),
+        sku TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        next_action TEXT NOT NULL,
+        opened_at TEXT NOT NULL,
+        escalated_at TEXT,
+        recovered_at TEXT,
+        updated_at TEXT NOT NULL
+      )`,
+      `CREATE TABLE IF NOT EXISTS review_notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        dedupe_key TEXT NOT NULL UNIQUE,
+        recipient TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        text_body TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('queued','sending','sent')) DEFAULT 'queued',
+        available_at TEXT NOT NULL,
+        claimed_at TEXT,
+        sent_at TEXT,
+        attempts INTEGER NOT NULL DEFAULT 0
+      )`,
+      `CREATE INDEX IF NOT EXISTS review_notifications_pending
+        ON review_notifications(status, available_at, id)`,
     ], 'write');
   }
 
@@ -246,6 +272,120 @@ export function createReviewState({ client, now = () => new Date() }) {
     return { actionIds, remaining: Number(rowValue(remainingResult.rows[0], 'total')) };
   }
 
+  async function enqueueNotification(message) {
+    const stamp = now().toISOString();
+    await client.execute({
+      sql: `INSERT INTO review_notifications (dedupe_key, recipient, subject, text_body, available_at)
+        VALUES (?, ?, ?, ?, ?) ON CONFLICT(dedupe_key) DO NOTHING`,
+      args: [message.dedupeKey, message.to, message.subject, message.text, stamp],
+    });
+  }
+
+  function incidentFrom(row) {
+    return {
+      id: String(rowValue(row, 'id')),
+      actionId: String(rowValue(row, 'action_id')),
+      sku: String(rowValue(row, 'sku')),
+      reason: String(rowValue(row, 'reason')),
+      nextAction: String(rowValue(row, 'next_action')),
+      openedAt: String(rowValue(row, 'opened_at')),
+      ageMinutes: Math.max(0, Math.floor((now().getTime() - Date.parse(String(rowValue(row, 'opened_at')))) / 60_000)),
+    };
+  }
+
+  async function scanIncidents(environment, recipient) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient || '')) throw new Error('incident recipient is invalid');
+    const stamp = now().toISOString();
+    const queuedCutoff = new Date(now().getTime() - 10 * 60_000).toISOString();
+    const processingCutoff = new Date(now().getTime() - 45 * 60_000).toISOString();
+    const actions = await client.execute({
+      sql: `SELECT id, sku, status, submitted_at, started_at, attention_reason FROM review_actions
+        WHERE environment = ? AND (
+          status = 'needs_attention' OR
+          (status = 'queued' AND submitted_at < ?) OR
+          (status = 'processing' AND started_at < ?)
+        ) ORDER BY submitted_at, id`,
+      args: [environment, queuedCutoff, processingCutoff],
+    });
+    const active = new Set();
+    for (const row of actions.rows) {
+      const actionId = String(rowValue(row, 'id'));
+      const status = String(rowValue(row, 'status'));
+      const id = `${environment}:${actionId}`;
+      active.add(id);
+      const reason = status === 'needs_attention'
+        ? String(rowValue(row, 'attention_reason') || 'Action requires operator review')
+        : status === 'queued' ? 'Queued for more than 10 minutes' : 'Processing for more than 45 minutes';
+      const nextAction = status === 'needs_attention' ? 'Review the action and choose retry, reopen, rediscover, or temporary exclusion.' : 'The processor will retry safely; investigate the workflow if this persists.';
+      const existing = await client.execute({ sql: 'SELECT * FROM review_incidents WHERE id = ?', args: [id] });
+      const prior = existing.rows[0];
+      if (!prior || rowValue(prior, 'recovered_at')) {
+        await client.batch([
+          { sql: `INSERT INTO review_incidents (id, environment, action_id, sku, reason, next_action, opened_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+              ON CONFLICT(id) DO UPDATE SET reason = excluded.reason, next_action = excluded.next_action,
+                opened_at = excluded.opened_at, escalated_at = NULL, recovered_at = NULL, updated_at = excluded.updated_at
+              WHERE review_incidents.recovered_at IS NOT NULL`,
+            args: [id, environment, actionId, String(rowValue(row, 'sku')), reason, nextAction, stamp, stamp] },
+          { sql: `INSERT INTO review_notifications (dedupe_key, recipient, subject, text_body, available_at)
+              SELECT ?, ?, ?, ?, ? FROM review_incidents WHERE id = ? AND opened_at = ?
+              ON CONFLICT(dedupe_key) DO NOTHING`,
+            args: [`incident-open:${id}:${stamp}`, recipient, `Fine Vines review needs attention: ${rowValue(row, 'sku')}`, `${reason}\n\n${nextAction}`, stamp, id, stamp] },
+        ], 'write');
+      } else if (!rowValue(prior, 'escalated_at') && now().getTime() - Date.parse(String(rowValue(prior, 'opened_at'))) >= 4 * 60 * 60_000) {
+        await client.batch([
+          { sql: 'UPDATE review_incidents SET escalated_at = ?, updated_at = ? WHERE id = ? AND escalated_at IS NULL', args: [stamp, stamp, id] },
+          { sql: `INSERT INTO review_notifications (dedupe_key, recipient, subject, text_body, available_at)
+              SELECT ?, ?, ?, ?, ? FROM review_incidents WHERE id = ? AND escalated_at = ?
+              ON CONFLICT(dedupe_key) DO NOTHING`,
+            args: [`incident-escalation:${id}:${rowValue(prior, 'opened_at')}`, recipient, `Fine Vines review still blocked: ${rowValue(row, 'sku')}`, `${reason}\n\nThis incident has remained open for four hours. ${nextAction}`, stamp, id, stamp] },
+        ], 'write');
+      } else {
+        await client.execute({ sql: 'UPDATE review_incidents SET reason = ?, next_action = ?, updated_at = ? WHERE id = ?', args: [reason, nextAction, stamp, id] });
+      }
+    }
+    const open = await client.execute({ sql: 'SELECT * FROM review_incidents WHERE environment = ? AND recovered_at IS NULL ORDER BY opened_at, id', args: [environment] });
+    for (const row of open.rows) {
+      const id = String(rowValue(row, 'id'));
+      if (active.has(id)) continue;
+      await client.batch([
+        { sql: 'UPDATE review_incidents SET recovered_at = ?, updated_at = ? WHERE id = ? AND recovered_at IS NULL', args: [stamp, stamp, id] },
+        { sql: `INSERT INTO review_notifications (dedupe_key, recipient, subject, text_body, available_at)
+            SELECT ?, ?, ?, ?, ? FROM review_incidents WHERE id = ? AND recovered_at = ?
+            ON CONFLICT(dedupe_key) DO NOTHING`,
+          args: [`incident-recovery:${id}:${rowValue(row, 'opened_at')}`, recipient, `Fine Vines review recovered: ${rowValue(row, 'sku')}`, `The review incident has recovered. No further action is required.`, stamp, id, stamp] },
+      ], 'write');
+    }
+    const current = await client.execute({ sql: 'SELECT * FROM review_incidents WHERE environment = ? AND recovered_at IS NULL ORDER BY opened_at, id', args: [environment] });
+    return current.rows.map(incidentFrom);
+  }
+
+  async function claimNotifications({ limit = 25, staleBefore } = {}) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error('notification claim limit must be between 1 and 100');
+    const cutoff = staleBefore || new Date(now().getTime() - 15 * 60_000).toISOString();
+    const stamp = now().toISOString();
+    const result = await client.execute({
+      sql: `UPDATE review_notifications SET status = 'sending', claimed_at = ?, attempts = attempts + 1
+        WHERE id IN (SELECT id FROM review_notifications
+          WHERE available_at <= ? AND (status = 'queued' OR (status = 'sending' AND claimed_at < ?))
+          ORDER BY id LIMIT ?)
+        RETURNING id, recipient, subject, text_body`,
+      args: [stamp, stamp, cutoff, limit],
+    });
+    return result.rows.map((row) => ({
+      id: Number(rowValue(row, 'id')), to: String(rowValue(row, 'recipient')),
+      subject: String(rowValue(row, 'subject')), text: String(rowValue(row, 'text_body')),
+    }));
+  }
+
+  async function completeNotification(id) {
+    const result = await client.execute({
+      sql: `UPDATE review_notifications SET status = 'sent', sent_at = ? WHERE id = ? AND status = 'sending'`,
+      args: [now().toISOString(), id],
+    });
+    if (result.rowsAffected !== 1) throw new Error(`notification ${id} is not sending`);
+  }
+
   async function syncReviewerAccounts(accounts) {
     const existing = await listReviewerAccounts();
     const incoming = new Set(accounts.map(({ email }) => email));
@@ -318,6 +458,7 @@ export function createReviewState({ client, now = () => new Date() }) {
 
   return {
     initialize, queue, counts, packageStatus, actionStatus, transition, claim,
+    enqueueNotification, scanIncidents, claimNotifications, completeNotification,
     syncReviewerAccounts, listReviewerAccounts, reviewerAccount, setReviewerInvitation, setReviewerPassword,
   };
 }

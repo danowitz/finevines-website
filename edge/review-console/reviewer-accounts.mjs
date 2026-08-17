@@ -91,8 +91,9 @@ export function createReviewerAccounts({ state, mailer, now = () => new Date(), 
     if (!account?.eligible) throw new Error('reviewer account is not eligible');
     const password = temporaryPassword();
     const expiresAt = new Date(now().getTime() + 72 * 60 * 60 * 1000).toISOString();
-    await state.setReviewerInvitation(normalized, await hashPassword(password), expiresAt);
+    const updated = await state.setReviewerInvitation(normalized, await hashPassword(password), expiresAt);
     await mailer.send({
+      dedupeKey: `reviewer-invitation:${normalized}:${updated.credentialVersion}`,
       to: normalized,
       subject: 'Your Fine Vines image review invitation',
       text: `Your temporary Fine Vines image review password is: ${password}\n\nIt expires in 72 hours and must be changed when you first sign in.`,

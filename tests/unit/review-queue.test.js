@@ -69,4 +69,41 @@ describe('review queue command', () => {
     assert.equal((await state.actionStatus(prepared.id, 'test')).status, 'completed');
     assert.equal((await state.actionStatus(rejected.id, 'test')).status, 'needs_attention');
   });
+
+  it('delivers incident email through an injected capture transport without network access', async () => {
+    const state = await fixture();
+    const stalled = action('00000000-0000-4000-8000-000000000081', 'f'.repeat(64));
+    await state.queue(stalled);
+    const sent = [];
+    const args = ['notify', '--environment', 'test', '--recipient', 'joel@gritautomation.com', '--from', 'catalog@finevines.com'];
+    const first = await runQueueCommand({ args, state, mailer: { send: async (message) => { sent.push(message); } } });
+    assert.equal(first.sent, 1);
+    assert.equal(sent[0].to, 'joel@gritautomation.com');
+    assert.match(sent[0].subject, /needs attention/);
+    const second = await runQueueCommand({ args, state, mailer: { send: async (message) => { sent.push(message); } } });
+    assert.equal(second.sent, 0);
+    assert.equal(sent.length, 1);
+  });
+
+  it('synchronizes eligible accounts and queues only an explicit invitation', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'finevines-review-roster-'));
+    const roster = join(directory, 'team.json');
+    await writeFile(roster, JSON.stringify([
+      { name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' },
+      { name: 'Sales Person', email: 'sales@finevines.com', role: 'Sales Rep' },
+    ]));
+    const calls = [];
+    const accounts = {
+      sync: async (people) => calls.push(['sync', people]),
+      list: async () => [{ email: 'barb.fultz@finevines.com' }, { email: 'joel@danowitz.com' }],
+      activate: async (email) => calls.push(['activate', email]),
+    };
+    const state = { initialize: async () => {} };
+    const synced = await runQueueCommand({ args: ['sync-accounts', '--environment', 'test', '--roster', roster], state, accounts });
+    assert.equal(synced.eligible, 2);
+    assert.deepEqual(calls[0], ['sync', [{ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }]]);
+    assert.equal(calls.length, 1);
+    await runQueueCommand({ args: ['invite', '--environment', 'test', '--email', 'BARB.FULTZ@finevines.com'], state, accounts });
+    assert.deepEqual(calls[1], ['activate', 'BARB.FULTZ@finevines.com']);
+  });
 });

@@ -14,6 +14,16 @@ function stateAt(iso = '2026-08-16T12:00:00.000Z') {
   return createReviewState({ client, now: () => new Date(iso) });
 }
 
+function mutableStateAt(iso) {
+  let clock = new Date(iso);
+  const client = createClient({ url: 'file::memory:' });
+  clients.push(client);
+  return {
+    state: createReviewState({ client, now: () => new Date(clock) }),
+    setTime: (value) => { clock = new Date(value); },
+  };
+}
+
 const packageWines = [
   { sku: '500740*', wineRevision: 'a'.repeat(64) },
   { sku: '500741*', wineRevision: 'b'.repeat(64) },
@@ -100,5 +110,37 @@ describe('review state', () => {
     assert.equal(claimed.remaining, 1);
     assert.equal((await state.counts('test')).processing, 50);
     assert.equal((await state.counts('test')).queued, 1);
+  });
+
+  it('opens, escalates, and recovers one deduplicated incident notification sequence', async () => {
+    const { state, setTime } = mutableStateAt('2026-08-16T12:00:00.000Z');
+    await state.initialize();
+    const queued = action('00000000-0000-4000-8000-000000000071');
+    await state.queue(queued);
+    setTime('2026-08-16T12:11:00.000Z');
+    let incidents = await state.scanIncidents('test', 'joel@gritautomation.com');
+    assert.equal(incidents.length, 1);
+    assert.equal(incidents[0].sku, queued.sku);
+    assert.match(incidents[0].reason, /10 minutes/);
+    await state.scanIncidents('test', 'joel@gritautomation.com');
+    let messages = await state.claimNotifications();
+    assert.equal(messages.length, 1);
+    assert.equal(messages[0].to, 'joel@gritautomation.com');
+    await state.completeNotification(messages[0].id);
+
+    setTime('2026-08-16T16:12:00.000Z');
+    await state.scanIncidents('test', 'joel@gritautomation.com');
+    messages = await state.claimNotifications();
+    assert.equal(messages.length, 1);
+    assert.match(messages[0].text, /four hours/);
+    await state.completeNotification(messages[0].id);
+
+    await state.transition(queued.id, 'queued', 'processing', 'retry');
+    await state.transition(queued.id, 'processing', 'completed', 'verified');
+    incidents = await state.scanIncidents('test', 'joel@gritautomation.com');
+    assert.deepEqual(incidents, []);
+    messages = await state.claimNotifications();
+    assert.equal(messages.length, 1);
+    assert.match(messages[0].subject, /recovered/);
   });
 });
