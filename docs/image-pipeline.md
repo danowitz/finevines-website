@@ -8,9 +8,8 @@ artwork.
 ## Publication path
 
 1. `tools/labelfetch/pipeline.mjs` sends the exact catalog identity to Brave
-   and Serper's Google Images endpoint. It interleaves and URL-deduplicates one
-   bounded 15-candidate window so neither index can crowd out the other, then
-   groups bottle/label designs locally. One readable anchor validates a repeated
+   Image Search and processes one bounded 15-candidate window, then groups
+   bottle/label designs locally. One readable anchor validates a repeated
    design; the cleanest highest-resolution member wins. At most three images are
    transcribed in one `gpt-4.1-nano` request, with no escalation. A blind
    transcription cannot become an identity anchor unless it contains the
@@ -43,7 +42,7 @@ node tools/labelfetch/import.mjs --apply --clean-only
 The unattended entrypoint is:
 
 ```sh
-node tools/labelfetch/autonomous.mjs --apply --search-provider brave-serper
+node tools/labelfetch/autonomous.mjs --apply --search-provider brave
 ```
 
 It performs a live configured image-endpoint health check before touching a wine,
@@ -53,13 +52,12 @@ to `.run/image-workflow.json` before and after every stage. A missing credential
 disabled API, partial provider outage, failed perceptual hash, failed child process, or missing verdict
 stops publication rather than being converted to â€œnothing found.â€
 
-Google Custom Search JSON API and Google Cloud Vision Web Detection were retired
-on 2026-08-16. Custom Search had contributed useful historical bottle images,
-which remain in the catalog with their provenance. It was removed because the
-current Brave + Serper path replaced it and Google has announced the API's
-2027-01-01 discontinuation. Web Detection was removed after a frozen 30-wine
-comparison made 46 requests, downloaded 206 expansion images, and recovered no
-wines.
+Google Custom Search JSON API, Google Cloud Vision Web Detection, and Serper
+were retired on 2026-08-16. Their useful historical bottle images remain in the
+catalog with provenance. Brave is the sole production image-search provider;
+Serper's $50 minimum six-month credit pack did not justify a permanent second
+dependency. Web Detection was removed after a frozen 30-wine comparison made
+46 requests, downloaded 206 expansion images, and recovered no wines.
 
 Comparison runs can replay the exact wine scope of an earlier artifact with
 `--replay-report path/to/image-canary.json`. This is distinct from

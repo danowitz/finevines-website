@@ -59,7 +59,6 @@ The hosted image-review click path is local and deterministic; it makes no AI ca
 
 **Bottle-image search** — used by the automated image-discovery stage:
 - `FINEVINES_BRAVE_SEARCH_KEY` — Brave Image Search API key for the independent image index.
-- `FINEVINES_SERPER_KEY` — Serper Google Images API key. The workflow combines its browser-like Google results with Brave before local consensus; keep it in GitHub Actions secrets, never `.env` in source control.
 
 **Mail relay (SMTP)** — needed only for `notify`, the nightly digest email. Not used by anything you run by
 hand. Fine Vines sends through smtp.com's relay; these come from that account:

@@ -89,7 +89,6 @@ jobs:
       # OpenAI — web-search enrichment, vision label reading, watermark sweep.
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       FINEVINES_BRAVE_SEARCH_KEY: ${{ secrets.FINEVINES_BRAVE_SEARCH_KEY }}
-      FINEVINES_SERPER_KEY: ${{ secrets.FINEVINES_SERPER_KEY }}
       # Bunny.net — storage zone (deploy upload + the _review/ queue), pull zone
       # purge, and the redirect middleware's script ID.
       FINEVINES_BUNNY_STORAGE_ZONE: ${{ secrets.FINEVINES_BUNNY_STORAGE_ZONE }}
@@ -218,14 +217,14 @@ jobs:
         if: ${{ github.event_name != 'repository_dispatch' }}
         run: |
           if [ "${{ github.event_name == 'workflow_dispatch' && inputs.quality_recovery }}" = "true" ]; then
-            node tools/labelfetch/autonomous.mjs --apply --search-provider brave-serper --retry-misses --quality-recovery --label-model gpt-4.1-mini --budget-minutes 60 --n "${{ inputs.image_limit }}"
-            node tools/labelfetch/autonomous.mjs --apply --search-provider brave-serper --retry-misses --quality-recovery --omit-query-vintage --label-model gpt-4.1-mini --budget-minutes 60 --n "${{ inputs.image_limit }}"
+            node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --quality-recovery --label-model gpt-4.1-mini --budget-minutes 60 --n "${{ inputs.image_limit }}"
+            node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --quality-recovery --omit-query-vintage --label-model gpt-4.1-mini --budget-minutes 60 --n "${{ inputs.image_limit }}"
           elif [ "${{ github.event_name == 'workflow_dispatch' && inputs.candidate_recovery }}" = "true" ]; then
-            node tools/labelfetch/autonomous.mjs --apply --search-provider brave-serper --retry-misses --candidate-recovery --label-model gpt-4.1-mini --budget-minutes 180 --n "${{ inputs.image_limit }}"
+            node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --candidate-recovery --label-model gpt-4.1-mini --budget-minutes 180 --n "${{ inputs.image_limit }}"
           elif [ "${{ github.event_name == 'workflow_dispatch' && inputs.retry_image_misses }}" = "true" ]; then
-            node tools/labelfetch/autonomous.mjs --apply --search-provider brave-serper --retry-misses --n "${{ inputs.image_limit }}"
+            node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --n "${{ inputs.image_limit }}"
           else
-            node tools/labelfetch/autonomous.mjs --apply --search-provider brave-serper
+            node tools/labelfetch/autonomous.mjs --apply --search-provider brave
           fi
 
       # The runner is disposable; retain the stage-by-stage receipt even when

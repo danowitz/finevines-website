@@ -26,7 +26,7 @@ const omitQueryVintage = has('omit-query-vintage');
 const slug = opt('slug', '');
 const trace = has('trace');
 const noCatalogReuse = has('no-catalog-reuse');
-const searchProvider = opt('search-provider', 'brave-serper');
+const searchProvider = opt('search-provider', 'brave');
 const labelModel = opt('label-model', '');
 const labelReasoningEffort = opt('label-reasoning-effort', '');
 const excludePassedReport = opt('exclude-passed-report', '');
@@ -89,12 +89,11 @@ async function runNodeStage(name, stageArgs) {
 }
 
 async function preflight() {
-  const [braveKey, serperKey, visionKey] = await Promise.all([
+  const [braveKey, visionKey] = await Promise.all([
     envOrFile('FINEVINES_BRAVE_SEARCH_KEY'),
-    envOrFile('FINEVINES_SERPER_KEY'),
     openaiKey(),
   ]);
-  validateImageDiscoveryCredentials(searchProvider, { braveKey, serperKey });
+  validateImageDiscoveryCredentials(searchProvider, { braveKey });
   if (!visionKey) throw new Error('OPENAI_API_KEY is missing');
   for (const binary of ['imgcheck', 'imghash', 'imgnorm']) {
     try { await access(binPath(binary)); }
@@ -107,7 +106,6 @@ async function preflight() {
   const discover = createImageDiscovery({
     name: searchProvider,
     braveKey,
-    serperKey,
   });
   const health = await discover(
     'Fine Vines wine bottle image workflow health check',

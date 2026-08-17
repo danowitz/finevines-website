@@ -65,14 +65,13 @@ describe('envOrFile — the general form behind openaiKey and search-provider ke
   test('falls back to the same key inside .env', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'env-'));
     const path = join(dir, '.env');
-    await writeFile(path, 'FINEVINES_BRAVE_SEARCH_KEY=from-file\nFINEVINES_SERPER_KEY=serper-from-file\n');
+    await writeFile(path, 'FINEVINES_BRAVE_SEARCH_KEY=from-file\n');
     assert.equal(await envOrFile('FINEVINES_BRAVE_SEARCH_KEY', {}, path), 'from-file');
-    assert.equal(await envOrFile('FINEVINES_SERPER_KEY', {}, path), 'serper-from-file');
   });
 
   test('neither the environment nor .env having it — nor .env existing at all — is an empty string, not a throw', async () => {
     // This is the exact crash this function replaces: pipeline.mjs used to
-    // read .env directly and unconditionally for these two keys, so on
+    // read .env directly and unconditionally for provider keys, so on
     // ubuntu-latest — no .env file — it threw ENOENT and took the whole
     // script down before a single wine was selected.
     assert.equal(await envOrFile('FINEVINES_BRAVE_SEARCH_KEY', {}, '/nonexistent'), '');

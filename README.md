@@ -274,7 +274,6 @@ Actions). The repo is public, so the pipeline workflow deliberately has no
 | `FINEVINES_SF_CLIENT_SECRET` | Connected App consumer secret |
 | `OPENAI_API_KEY` | Enrichment, vision label reading, watermark sweep |
 | `FINEVINES_BRAVE_SEARCH_KEY` | Brave Image Search discovery |
-| `FINEVINES_SERPER_KEY` | Serper Google Images discovery |
 | `FINEVINES_BUNNY_STORAGE_ZONE` | Storage zone name |
 | `FINEVINES_BUNNY_STORAGE_KEY` | Storage zone password |
 | `FINEVINES_BUNNY_STORAGE_ENDPOINT` | Regional storage host |

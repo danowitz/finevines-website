@@ -58,7 +58,7 @@ const OMIT_QUERY_VINTAGE = has('omit-query-vintage');
 const CATALOG_REUSE = !has('no-catalog-reuse');
 const TRACE = has('trace');
 const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
-const SEARCH_PROVIDER = opt('search-provider', 'brave-serper');
+const SEARCH_PROVIDER = opt('search-provider', 'brave');
 const MODEL = opt('label-model', process.env.FINEVINES_LABEL_MODEL || 'gpt-4.1-nano');
 const EXCLUDE_PASSED_REPORT = opt('exclude-passed-report', '');
 const REPLAY_REPORT = opt('replay-report', '');
@@ -236,9 +236,8 @@ if (!wines.length) {
 }
 
 const braveKey = await envOrFile('FINEVINES_BRAVE_SEARCH_KEY');
-const serperKey = await envOrFile('FINEVINES_SERPER_KEY');
 try {
-  validateImageDiscoveryCredentials(SEARCH_PROVIDER, { braveKey, serperKey });
+  validateImageDiscoveryCredentials(SEARCH_PROVIDER, { braveKey });
 } catch (error) {
   console.error(`${error.message}; no wine was searched and no miss was recorded`);
   process.exit(2);
@@ -246,7 +245,6 @@ try {
 const imageDiscover = createImageDiscovery({
   name: SEARCH_PROVIDER,
   braveKey,
-  serperKey,
 });
 const visionKey = await openaiKey();
 const producerLookup = buildProducerLookup(catalog);
