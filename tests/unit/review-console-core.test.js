@@ -22,6 +22,7 @@ describe('protected review console', () => {
     const headers = protectedHeaders();
     assert.match(headers['X-Robots-Tag'], /noindex/);
     assert.match(headers['X-Robots-Tag'], /noimageindex/);
+    assert.equal(headers['Referrer-Policy'], 'same-origin', 'same-origin forms retain an Origin value for CSRF validation');
     assert.equal(headers['Cache-Control'], 'no-store');
     assert.equal(headers['X-Frame-Options'], 'DENY');
   });

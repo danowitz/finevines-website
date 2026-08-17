@@ -29,9 +29,11 @@ jobs:
   drain:
     if: ${{ github.event.action != 'review-recovery' && github.event.action != 'review-console-preflight' }}
     runs-on: ubuntu-latest
-    # Preparation yields at 20 minutes, reserving the remainder for the single
-    # build/deploy/finalize transaction and failure cleanup before this ceiling.
-    timeout-minutes: 45
+    # The emergency job ceiling is deliberately larger than the claimed-work
+    # budget. Every blocking phase after claim has its own shorter timeout, so
+    # the processor reaches release + immediate continuation before 45 minutes
+    # of claimed work instead of relying on GitHub's hard cancellation path.
+    timeout-minutes: 60
     env:
       FINEVINES_REVIEW_ENVIRONMENT: test
       FINEVINES_REVIEW_DATABASE_URL: ${{ secrets.FINEVINES_REVIEW_DATABASE_URL }}
@@ -92,10 +94,7 @@ jobs:
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" --input - <<'JSON'
-          {"event_type":"review-console-continue","client_payload":{"environment":"test"}}
-          JSON
+        run: timeout --signal=TERM --kill-after=15s 1m node tools/review-console/dispatch.mjs --event-type review-console-continue --environment test --reason queue-remains
       - name: Snapshot the catalog
         if: ${{ steps.claim.outputs.claimed != '0' }}
         run: |
@@ -103,12 +102,12 @@ jobs:
           cp data/wines.json .run/wines-before.json
       - name: Prepare claimed review actions
         if: ${{ steps.claim.outputs.claimed != '0' }}
-        run: ./finevines reviewapply -environment test -max-prepare-duration 20m -action-ids .run/review-claims.json -decisions .run/review-decisions.json -applied .run/queue-applied.json
+        run: timeout --signal=TERM --kill-after=30s 16m ./finevines reviewapply -environment test -max-prepare-duration 15m -action-ids .run/review-claims.json -decisions .run/review-decisions.json -applied .run/queue-applied.json
       - name: Isolate action-specific failures
         id: reconcile
         if: ${{ steps.claim.outputs.claimed != '0' }}
         run: |
-          result="$(node tools/review-console/queue.mjs reconcile --environment test --decisions .run/review-decisions.json)"
+          result="$(timeout --signal=TERM --kill-after=15s 2m node tools/review-console/queue.mjs reconcile --environment test --decisions .run/review-decisions.json)"
           echo "$result"
           echo "recoveries=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(JSON.stringify(v.recoveries || []))' "$result")" >> "$GITHUB_OUTPUT"
           echo "deferred=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(String(v.deferred || 0))' "$result")" >> "$GITHUB_OUTPUT"
@@ -118,54 +117,51 @@ jobs:
         if: ${{ steps.reconcile.outputs.deferred != '0' }}
         env:
           GH_TOKEN: ${{ github.token }}
+        run: timeout --signal=TERM --kill-after=15s 1m node tools/review-console/dispatch.mjs --event-type review-console-continue --environment test --reason time-budget-yield
+      - name: Build and deploy the authoritative launch catalog
+        if: ${{ steps.reconcile.outputs.prepared != '0' }}
         run: |
-          gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" --input - <<'JSON'
-          {"event_type":"review-console-continue","client_payload":{"environment":"test","reason":"time-budget-yield"}}
-          JSON
+          timeout --signal=TERM --kill-after=30s 3m ./finevines build
+          timeout --signal=TERM --kill-after=30s 7m ./finevines deploy
+      - name: Commit the deployed catalog state
+        if: ${{ steps.reconcile.outputs.prepared != '0' }}
+        run: timeout --signal=TERM --kill-after=30s 3m bash tools/pipeline/commitback.sh
+      - name: Refresh the review package
+        if: ${{ steps.reconcile.outputs.prepared != '0' }}
+        run: |
+          printf '{"schemaVersion":1,"wines":[]}\n' > .run/review-draft.json
+          timeout --signal=TERM --kill-after=30s 2m node tools/labelfetch/publish-review-package.mjs --environment test
+      - name: Write durable receipts
+        if: ${{ steps.reconcile.outputs.finalizable != '0' }}
+        run: timeout --signal=TERM --kill-after=30s 3m ./finevines reviewfinalize -environment test -decisions .run/review-decisions.json -target https://finevines.biz -run-id "$GITHUB_RUN_ID"
+      - name: Mark verified actions complete
+        id: complete
+        if: ${{ steps.reconcile.outputs.prepared != '0' }}
+        run: timeout --signal=TERM --kill-after=30s 2m node tools/review-console/queue.mjs complete --environment test --decisions .run/review-decisions.json
+      - name: Release unfinished claims after an operational failure
+        if: ${{ always() && (failure() || cancelled()) && steps.claim.outputs.claimed != '0' }}
+        run: timeout --signal=TERM --kill-after=15s 2m node tools/review-console/queue.mjs release --environment test --action-ids .run/review-claims.json --reason "workflow stopped before verified completion"
+      - name: Continue immediately after an operational failure
+        if: ${{ always() && (failure() || cancelled()) && steps.claim.outputs.claimed != '0' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: timeout --signal=TERM --kill-after=15s 1m node tools/review-console/dispatch.mjs --event-type review-console-continue --environment test --reason operational-retry
       - name: Start or recover every pending broader discovery
         if: ${{ always() }}
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          node tools/review-console/queue.mjs pending-recoveries --environment test --output .run/review-recoveries.json
-          node -e 'const fs=require("fs"); for (const recovery of JSON.parse(fs.readFileSync(".run/review-recoveries.json"))) console.log(JSON.stringify({event_type:"review-recovery",client_payload:{environment:"test",action_id:recovery.actionId,slug:recovery.slug}}))' | while IFS= read -r payload; do
-            gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" --input - <<<"$payload"
-          done
-      - name: Build and deploy the authoritative launch catalog
-        if: ${{ steps.reconcile.outputs.prepared != '0' }}
-        run: |
-          ./finevines build
-          ./finevines deploy
-      - name: Commit the deployed catalog state
-        if: ${{ steps.reconcile.outputs.prepared != '0' }}
-        run: bash tools/pipeline/commitback.sh
-      - name: Refresh the review package
-        if: ${{ steps.reconcile.outputs.prepared != '0' }}
-        run: |
-          printf '{"schemaVersion":1,"wines":[]}\n' > .run/review-draft.json
-          node tools/labelfetch/publish-review-package.mjs --environment test
-      - name: Write durable receipts
-        if: ${{ steps.reconcile.outputs.finalizable != '0' }}
-        run: ./finevines reviewfinalize -environment test -decisions .run/review-decisions.json -target https://finevines.biz -run-id "$GITHUB_RUN_ID"
-      - name: Mark verified actions complete
-        if: ${{ steps.reconcile.outputs.prepared != '0' }}
-        run: node tools/review-console/queue.mjs complete --environment test --decisions .run/review-decisions.json
-      - name: Release unfinished claims after an operational failure
-        if: ${{ failure() && steps.claim.outputs.claimed != '0' }}
-        run: node tools/review-console/queue.mjs release --environment test --action-ids .run/review-claims.json --reason "workflow stopped before verified completion"
-      - name: Continue immediately after an operational failure
-        if: ${{ failure() && steps.claim.outputs.claimed != '0' }}
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" --input - <<'JSON'
-          {"event_type":"review-console-continue","client_payload":{"environment":"test","reason":"operational-retry"}}
-          JSON
+          timeout --signal=TERM --kill-after=15s 2m bash -c '
+            node tools/review-console/queue.mjs pending-recoveries --environment test --output .run/review-recoveries.json
+            node -e '\''const fs=require("fs"); for (const recovery of JSON.parse(fs.readFileSync(".run/review-recoveries.json"))) console.log(JSON.stringify({event_type:"review-recovery",client_payload:{environment:"test",action_id:recovery.actionId,slug:recovery.slug}}))'\'' | while IFS= read -r payload; do
+              gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" --input - <<<"$payload"
+            done
+          '
       - name: Deliver review incident and invitation notifications
         if: ${{ always() }}
-        run: node tools/review-console/queue.mjs notify --environment test --recipient joel@gritautomation.com --from "$FINEVINES_NOTIFY_FROM"
+        run: timeout --signal=TERM --kill-after=15s 2m node tools/review-console/queue.mjs notify --environment test --recipient joel@gritautomation.com --from "$FINEVINES_NOTIFY_FROM"
 
   recover:
     if: ${{ github.event.action == 'review-recovery' }}

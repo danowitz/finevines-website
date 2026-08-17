@@ -33,7 +33,10 @@ export function protectedHeaders(extra = {}) {
   return {
     'Cache-Control': 'no-store',
     'Content-Security-Policy': "default-src 'self'; img-src 'self' data: blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
-    'Referrer-Policy': 'no-referrer',
+    // Same-origin form posts must retain their trustworthy Origin value for
+    // CSRF checks. The policy still strips referrers from every cross-origin
+    // request, including candidate-source and Google search links.
+    'Referrer-Policy': 'same-origin',
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'X-Robots-Tag': ROBOTS,
