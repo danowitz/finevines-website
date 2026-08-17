@@ -1,29 +1,16 @@
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
+import { sendRepositoryDispatch } from '../../edge/review-console/github-repository-dispatch.mjs';
 
 const EVENTS = new Set(['review-console-continue', 'review-console-preflight']);
 
 export async function dispatchReviewWorkflow({ repository, token, eventType, environment = 'test', reason = '', fetchImpl = fetch }) {
-  const repositoryParts = String(repository || '').split('/');
-  if (repositoryParts.length !== 2 || repositoryParts.some((part) => !/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(part) || part.includes('..'))) {
-    throw new Error('GitHub repository must be owner/name');
-  }
-  if (!token) throw new Error('GitHub dispatch token is required');
   if (!EVENTS.has(eventType)) throw new Error('unsupported review dispatch event');
   if (!['test', 'production'].includes(environment)) throw new Error('review dispatch environment must be test or production');
-  const response = await fetchImpl(`https://api.github.com/repos/${repository}/dispatches`, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'User-Agent': 'finevines-review-processor',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-    signal: AbortSignal.timeout(30_000),
-    body: JSON.stringify({ event_type: eventType, client_payload: { environment, ...(reason ? { reason } : {}) } }),
+  await sendRepositoryDispatch({
+    repository, token, eventType, fetchImpl, signal: AbortSignal.timeout(30_000),
+    payload: { environment, ...(reason ? { reason } : {}) },
   });
-  if (!response.ok) throw new Error(`GitHub review dispatch failed with HTTP ${response.status}`);
   return { eventType, environment, reason };
 }
 

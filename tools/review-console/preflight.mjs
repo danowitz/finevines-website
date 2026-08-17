@@ -2,6 +2,7 @@ import { createClient } from '@libsql/client';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import process from 'node:process';
+import { sendRepositoryDispatch } from '../../edge/review-console/github-repository-dispatch.mjs';
 
 const REQUIRED = [
   'FINEVINES_BUNNY_API_KEY', 'FINEVINES_REVIEW_STORAGE_ENDPOINT', 'FINEVINES_REVIEW_STORAGE_ZONE',
@@ -39,11 +40,10 @@ export async function runReviewPreflight({ environment = process.env, fetchImpl 
   }, 'GitHub processing trigger');
   const workflowBody = await workflow.json();
   if (workflowBody.state !== 'active') throw new Error(`GitHub processing trigger is ${workflowBody.state || 'unavailable'}`);
-  await requireOK(fetchImpl, 'https://api.github.com/repos/danowitz/finevines-website/dispatches', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${config.FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' },
-    body: JSON.stringify({ event_type: 'review-console-preflight', client_payload: { source: 'review-console-provision' } }),
-  }, 'GitHub processing dispatch');
+  await sendRepositoryDispatch({
+    repository: 'danowitz/finevines-website', token: config.FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN,
+    eventType: 'review-console-preflight', payload: { source: 'review-console-provision' }, fetchImpl,
+  });
   const client = createClientImpl({ url: config.FINEVINES_REVIEW_DATABASE_URL, authToken: config.FINEVINES_REVIEW_DATABASE_TOKEN });
   try { await client.execute('SELECT 1 AS ready'); } finally { client.close(); }
   return { storage: 'reachable', database: 'reachable', processingTrigger: 'dispatched', email: 'configured' };
