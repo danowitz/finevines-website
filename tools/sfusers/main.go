@@ -53,7 +53,7 @@ type userSummary struct {
 
 func main() {
 	activeOnly := flag.Bool("active-only", false, "show only active Salesforce users")
-	websiteOnly := flag.Bool("website-only", false, "show the active Executive, Sales Rep, and Back Office website roster")
+	websiteOnly := flag.Bool("website-only", false, "show the active website roster selected by approved roles and temporary exceptions")
 	asJSON := flag.Bool("json", false, "print normalized JSON instead of the readable log")
 	flag.Parse()
 

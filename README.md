@@ -171,7 +171,8 @@ that becomes eligible appears after the next successful cycle; a wine that becom
 the rebuilt catalog and its obsolete page is deleted from Bunny.net during deployment.
 
 `data/wines.json` and `data/team.json` are machine-owned by `enrich`. The team roster is selected from active
-Salesforce users whose role is `Executive`, `Sales Rep`, or `Back Office`; local photo/reminder metadata is
+Salesforce users whose role is `Executive`, `Sales Rep`, or `Back Office`, plus the temporary immutable-ID
+exception for Jeff Barbour as `Sales Manager`; local photo/reminder metadata is
 preserved across syncs. George Molitor's client-confirmed public address is overridden to `george@finevines.com`.
 `data/news/` is human-owned through `plugins/finevines-news`. `data/site.json` owns shared
 contact details, their client-confirmation state, and homepage wine curation. All four feed the same build and

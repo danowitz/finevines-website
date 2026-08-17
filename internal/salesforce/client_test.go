@@ -301,7 +301,7 @@ func TestTeamRosterUsesApprovedActiveRolesAndStableDisplayOrder(t *testing.T) {
 	})
 	mux.HandleFunc("/services/data/v61.0/query", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query().Get("q")
-		for _, want := range []string{"FROM User", "IsActive = true", "'Sales Rep'", "'Executive'", "'Back Office'"} {
+		for _, want := range []string{"FROM User", "IsActive = true", "'Sales Rep'", "'Executive'", "'Back Office'", jeffBarbourUserID} {
 			if !strings.Contains(q, want) {
 				t.Errorf("team SOQL %q missing %q", q, want)
 			}
@@ -313,6 +313,7 @@ func TestTeamRosterUsesApprovedActiveRolesAndStableDisplayOrder(t *testing.T) {
 				{"Id": "3", "Name": "Barb Fultz", "Email": "barb@finevines.com", "UserRole": map[string]any{"Name": "Back Office"}},
 				{"Id": "2", "Name": "Trish Earley", "Email": "trish@finevines.com", "UserRole": map[string]any{"Name": "Sales Rep"}},
 				{"Id": "1", "Name": "Connie Molitor", "Email": "connie@finevines.com", "UserRole": map[string]any{"Name": "Executive"}},
+				{"Id": jeffBarbourUserID, "Name": "Jeff Barbour", "Email": "jeff@finevines.com", "UserRole": nil},
 				// Defense in depth: an unexpected row is not passed through.
 				{"Id": "4", "Name": "Integration", "Email": "bot@example.com", "UserRole": nil},
 			},
@@ -328,6 +329,7 @@ func TestTeamRosterUsesApprovedActiveRolesAndStableDisplayOrder(t *testing.T) {
 	}
 	want := []TeamUser{
 		{ID: "1", Name: "Connie Molitor", Email: "connie@finevines.com", Role: "Executive"},
+		{ID: jeffBarbourUserID, Name: "Jeff Barbour", Email: "jeff@finevines.com", Role: "Sales Manager"},
 		{ID: "2", Name: "Trish Earley", Email: "trish@finevines.com", Role: "Sales Rep"},
 		{ID: "3", Name: "Barb Fultz", Email: "barb@finevines.com", Role: "Back Office"},
 	}

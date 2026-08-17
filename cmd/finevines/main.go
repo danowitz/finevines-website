@@ -209,7 +209,7 @@ func runEnrich(cfg config.Config) error {
 		if err := model.ValidateTeamMembers(nextTeam); err != nil {
 			return fmt.Errorf("enrich: invalid Salesforce team roster: %w", err)
 		}
-		log.Printf("enrich: Salesforce selected %d active team members in Executive, Sales Rep, or Back Office roles", len(nextTeam))
+		log.Printf("enrich: Salesforce selected %d active team members by approved role or temporary user exception", len(nextTeam))
 	}
 	var enr enrich.Enricher
 	var imgs enrich.ImageProvider

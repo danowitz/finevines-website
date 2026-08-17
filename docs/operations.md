@@ -238,7 +238,8 @@ happened.
 ### Updating the team page
 
 Names, email addresses, roles, additions, and removals come from Salesforce automatically. An active Salesforce
-user appears when their role is `Executive`, `Sales Rep`, or `Back Office`; other users do not. Use the
+user appears when their role is `Executive`, `Sales Rep`, or `Back Office`. Jeff Barbour is temporarily
+included by immutable Salesforce user ID as `Sales Manager` while his Salesforce role remains unset; other users do not. Use the
 `finevines-team` skill only for a selected person's local photograph or internal photo reminder. Salesforce-owned
 fields are refreshed on the next nightly run. George's public address is the confirmed exception:
 `george@finevines.com` is used instead of his Salesforce User email.

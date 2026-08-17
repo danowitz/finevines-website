@@ -9,7 +9,7 @@ Status: confirmed for build. Scope: **Full build, Core** ($12,000) **+ News & Ev
 2. Wine enrichment (text & imagery) — one AI pass per wine: tasting description + sommelier notes (Claude API), plus a generated bottle image.
 3. Sync program & deploy — Go binary: reads Salesforce, applies eligibility rules, incremental (roster-diff) runs, deploys to Bunny.net with cache purge.
 4. Redirects from the current site — every existing finevines.com URL 301s to its new location; Google footprint carries over.
-5. About-page team sync — active Salesforce users in the Executive, Sales Rep, or Back Office roles; Claude skill retained only for local photo metadata.
+5. About-page team sync — active Salesforce users in the Executive, Sales Rep, or Back Office roles, plus a temporary immutable-ID exception for Jeff Barbour as Sales Manager while his Salesforce role remains unset; Claude skill retained only for local photo metadata.
 6. News & Events skill — Claude skill (marketplace plugin) to post tastings/arrivals/events; generates a landing page **and** an individual indexable page per post.
 7. Launch — initial 5,000–10,000-wine enrichment run, QA, go-live on the finevines.com domain.
 
@@ -158,7 +158,7 @@ Both live in this repo under `plugins/`, installable via `.claude-plugin/marketp
 
 **`finevines-team`**: edits only local `photoPath`/`note` metadata for a person already selected from Salesforce → offers to run `build && deploy`.
 
-`finevines-news` stays independent of Salesforce. The team skill never edits Salesforce-owned identity fields; `enrich` regenerates those fields from active users in the `Executive`, `Sales Rep`, or `Back Office` roles.
+`finevines-news` stays independent of Salesforce. The team skill never edits Salesforce-owned identity fields; `enrich` regenerates those fields from active users in the `Executive`, `Sales Rep`, or `Back Office` roles, plus the temporary immutable-ID Jeff Barbour exception described above.
 
 ## 10. Testing / QA
 

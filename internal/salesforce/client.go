@@ -89,17 +89,32 @@ const rosterSOQL = `SELECT Id, Name, Description, FV_Brand__c, FV_Vintage_Year__
  FV_Varietal__c, FV_Region__c, FV_Country__c, FV_OnHand_Qty__c, FV_Bottles_Per_Case__c,
  FV_Ready_To_Sell__c FROM Product2`
 
-// teamRosterSOQL is the client-approved provisional About-page rule
-// (2026-08-15): active Salesforce users in one of these three business roles.
-// No website-specific checkbox or hand-maintained allowlist is involved.
+// jeffBarbourUserID is a temporary client-approved exception while Fine Vines
+// decides how to model its Sales Manager role in Salesforce. Keying the
+// exception by immutable org User ID avoids accidentally including a different
+// person with the same name. Remove this exception once Jeff has an approved
+// Salesforce role covered by the normal roster rule.
+const jeffBarbourUserID = "0052I00000DehyxQAB"
+
+// teamRosterSOQL is the client-approved provisional About-page rule: active
+// Salesforce users in one of the approved business roles, plus the temporary
+// Jeff Barbour exception documented above.
 const teamRosterSOQL = `SELECT Id, Name, Email, UserRole.Name FROM User
  WHERE IsActive = true
- AND UserRole.Name IN ('Sales Rep', 'Executive', 'Back Office')`
+ AND (UserRole.Name IN ('Sales Rep', 'Executive', 'Back Office')
+      OR Id = '` + jeffBarbourUserID + `')`
 
 var teamRoleOrder = map[string]int{
-	"Executive":   0,
-	"Sales Rep":   1,
-	"Back Office": 2,
+	"Executive":     0,
+	"Sales Manager": 1,
+	"Sales Rep":     2,
+	"Back Office":   3,
+}
+
+// teamRoleOverrides supplies the public role label for temporary, explicitly
+// approved user exceptions that do not have a Salesforce UserRole.
+var teamRoleOverrides = map[string]string{
+	jeffBarbourUserID: "Sales Manager",
 }
 
 // teamPublicEmailOverrides contains client-confirmed public addresses that
@@ -182,11 +197,14 @@ func (c *Client) TeamRoster(ctx context.Context) ([]TeamUser, error) {
 
 	users := make([]TeamUser, 0, len(rows))
 	for _, row := range rows {
+		id := str(row["Id"])
 		role := relationshipString(row, "UserRole", "Name")
+		if publicRole, ok := teamRoleOverrides[id]; ok {
+			role = publicRole
+		}
 		if _, allowed := teamRoleOrder[role]; !allowed {
 			continue
 		}
-		id := str(row["Id"])
 		email := str(row["Email"])
 		if publicEmail, ok := teamPublicEmailOverrides[id]; ok {
 			email = publicEmail
