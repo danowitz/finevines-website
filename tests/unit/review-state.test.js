@@ -85,4 +85,20 @@ describe('review state', () => {
       submittedAt: second.submittedAt, startedAt: '', completedAt: '',
     });
   });
+
+  it('claims at most fifty actions and leaves an immediate continuation signal', async () => {
+    const state = stateAt();
+    await state.initialize();
+    for (let index = 1; index <= 51; index += 1) {
+      const suffix = String(index).padStart(12, '0');
+      await state.queue(action(`00000000-0000-4000-8000-${suffix}`, {
+        wineRevision: index.toString(16).padStart(64, '0'), sku: `SKU-${index}`,
+      }));
+    }
+    const claimed = await state.claim('test', { limit: 50, staleBefore: '2026-08-16T11:15:00.000Z' });
+    assert.equal(claimed.actionIds.length, 50);
+    assert.equal(claimed.remaining, 1);
+    assert.equal((await state.counts('test')).processing, 50);
+    assert.equal((await state.counts('test')).queued, 1);
+  });
 });

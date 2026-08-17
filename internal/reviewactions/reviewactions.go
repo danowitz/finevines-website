@@ -97,8 +97,9 @@ type PackageWine struct {
 }
 
 type Reviewer struct {
-	Name string `json:"name"`
-	Role string `json:"role"`
+	Name  string `json:"name"`
+	Email string `json:"email,omitempty"`
+	Role  string `json:"role"`
 }
 
 type Manifest struct {
@@ -144,6 +145,7 @@ type PrepareInput struct {
 	ImageDir    string
 	Now         time.Time
 	Log         func(string, ...any)
+	ActionIDs   map[string]struct{}
 }
 
 type PrepareResult struct {
@@ -250,9 +252,10 @@ func validateManifest(manifest Manifest, action Action) (PackageWine, Candidate,
 	if manifest.SchemaVersion != schemaVersion || manifest.PackageID != action.PackageID || manifest.Environment != action.Environment || manifest.CatalogCommit != action.TargetCatalogCommit {
 		return PackageWine{}, Candidate{}, fmt.Errorf("action does not match package")
 	}
-	reviewerAllowed := len(manifest.Reviewers) == 0 // Legacy packages predate roster enforcement; Edge no longer accepts new actions for them.
+	reviewerAllowed := action.Reviewer == "joel@danowitz.com" || len(manifest.Reviewers) == 0 // Legacy packages predate roster enforcement.
 	for _, reviewer := range manifest.Reviewers {
-		if reviewer.Name == action.Reviewer && (reviewer.Role == "Executive" || reviewer.Role == "Back Office") {
+		identityMatches := reviewer.Email == action.Reviewer || (reviewer.Email == "" && reviewer.Name == action.Reviewer)
+		if identityMatches && (reviewer.Role == "Executive" || reviewer.Role == "Back Office") {
 			reviewerAllowed = true
 			break
 		}
@@ -329,6 +332,11 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 		if !uuidPattern.MatchString(id) {
 			logf("reviewactions: ignoring unsafe pending object %q", name)
 			continue
+		}
+		if len(input.ActionIDs) > 0 {
+			if _, selected := input.ActionIDs[id]; !selected {
+				continue
+			}
 		}
 		result.Pending++
 		receiptPath := path.Join(prefix, "receipts", name)

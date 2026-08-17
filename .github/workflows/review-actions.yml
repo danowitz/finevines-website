@@ -1,0 +1,97 @@
+name: review-actions
+
+on:
+  repository_dispatch:
+    types: [review-console, review-console-continue]
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finevines-catalog-deploy
+  cancel-in-progress: false
+
+jobs:
+  drain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      FINEVINES_REVIEW_ENVIRONMENT: test
+      FINEVINES_REVIEW_DATABASE_URL: ${{ secrets.FINEVINES_REVIEW_DATABASE_URL }}
+      FINEVINES_REVIEW_DATABASE_TOKEN: ${{ secrets.FINEVINES_REVIEW_DATABASE_TOKEN }}
+      FINEVINES_REVIEW_STORAGE_ZONE: ${{ secrets.FINEVINES_REVIEW_STORAGE_ZONE }}
+      FINEVINES_REVIEW_STORAGE_KEY: ${{ secrets.FINEVINES_REVIEW_STORAGE_KEY }}
+      FINEVINES_REVIEW_STORAGE_ENDPOINT: ${{ secrets.FINEVINES_REVIEW_STORAGE_ENDPOINT }}
+      FINEVINES_BUNNY_STORAGE_ZONE: ${{ secrets.FINEVINES_BUNNY_STORAGE_ZONE }}
+      FINEVINES_BUNNY_STORAGE_KEY: ${{ secrets.FINEVINES_BUNNY_STORAGE_KEY }}
+      FINEVINES_BUNNY_STORAGE_ENDPOINT: ${{ secrets.FINEVINES_BUNNY_STORAGE_ENDPOINT }}
+      FINEVINES_BUNNY_API_KEY: ${{ secrets.FINEVINES_BUNNY_API_KEY }}
+      FINEVINES_BUNNY_PULL_ZONE_ID: ${{ secrets.FINEVINES_BUNNY_PULL_ZONE_ID }}
+      FINEVINES_BUNNY_SCRIPT_ID: ${{ secrets.FINEVINES_BUNNY_SCRIPT_ID }}
+      FINEVINES_SITE_BASE_URL: https://finevines.biz
+      FINEVINES_GA_ID: ${{ secrets.FINEVINES_GA_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Build the focused processor
+        run: |
+          go build -ldflags "-s -w" -o finevines ./cmd/finevines
+          go build -o imgnorm ./tools/imgnorm
+      - name: Claim the complete pending queue
+        id: claim
+        run: |
+          result="$(node tools/review-console/queue.mjs claim --environment test --output .run/review-claims.json)"
+          echo "$result"
+          node -e 'const v=JSON.parse(process.argv[1]); console.log(`claimed=${v.claimed}`); console.log(`remaining=${v.remaining}`)' "$result" >> "$GITHUB_OUTPUT"
+      - name: Queue an immediate recovery or continuation
+        if: ${{ steps.claim.outputs.remaining != '0' || steps.claim.outputs.claimed == '50' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" --input - <<'JSON'
+          {"event_type":"review-console-continue","client_payload":{"environment":"test"}}
+          JSON
+      - name: Snapshot the catalog
+        if: ${{ steps.claim.outputs.claimed != '0' }}
+        run: |
+          mkdir -p .run
+          cp data/wines.json .run/wines-before.json
+      - name: Prepare claimed review actions
+        if: ${{ steps.claim.outputs.claimed != '0' }}
+        run: ./finevines reviewapply -environment test -action-ids .run/review-claims.json -decisions .run/review-decisions.json -applied .run/queue-applied.json
+      - name: Isolate action-specific failures
+        if: ${{ steps.claim.outputs.claimed != '0' }}
+        run: node tools/review-console/queue.mjs reconcile --environment test --decisions .run/review-decisions.json
+      - name: Build and deploy the authoritative launch catalog
+        if: ${{ steps.claim.outputs.claimed != '0' }}
+        run: |
+          ./finevines build
+          ./finevines deploy
+      - name: Commit the deployed catalog state
+        if: ${{ steps.claim.outputs.claimed != '0' }}
+        run: bash tools/pipeline/commitback.sh
+      - name: Refresh the review package
+        if: ${{ steps.claim.outputs.claimed != '0' }}
+        run: |
+          printf '{"schemaVersion":1,"wines":[]}\n' > .run/review-draft.json
+          node tools/labelfetch/publish-review-package.mjs --environment test
+      - name: Write durable receipts
+        if: ${{ steps.claim.outputs.claimed != '0' }}
+        run: ./finevines reviewfinalize -environment test -decisions .run/review-decisions.json -target https://finevines.biz -run-id "$GITHUB_RUN_ID"
+      - name: Mark verified actions complete
+        if: ${{ steps.claim.outputs.claimed != '0' }}
+        run: node tools/review-console/queue.mjs complete --environment test --decisions .run/review-decisions.json

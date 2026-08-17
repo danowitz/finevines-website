@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 const reviewCatalogPath = "data/wines.json"
 
 var imgnormCandidates = []string{"imgnorm", "imgnorm.exe"}
+var reviewActionIDPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
 
 type execNormalizer struct{ bin string }
 
@@ -78,6 +80,7 @@ func runReviewApply(cfg config.Config, args []string) error {
 	environment := fs.String("environment", envDefault("FINEVINES_REVIEW_ENVIRONMENT", "production"), "review environment: test or production")
 	decisionsPath := fs.String("decisions", ".run/review-decisions.json", "run-local prepared decision log")
 	appliedPath := fs.String("applied", ".run/queue-applied.json", "digest-compatible applied action log")
+	actionIDsPath := fs.String("action-ids", "", "optional JSON array of transactionally claimed action IDs")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -93,9 +96,13 @@ func runReviewApply(cfg config.Config, args []string) error {
 	if err != nil {
 		return fmt.Errorf("reviewapply: %w", err)
 	}
+	actionIDs, err := loadActionIDs(*actionIDsPath)
+	if err != nil {
+		return fmt.Errorf("reviewapply: action ids: %w", err)
+	}
 	result, err := reviewactions.Prepare(context.Background(), reviewactions.PrepareInput{
 		Store: store, Normalizer: execNormalizer{bin: normalizer}, Environment: *environment,
-		Wines: wines, ImageDir: "assets/img/wines", Now: time.Now().UTC(), Log: log.Printf,
+		Wines: wines, ImageDir: "assets/img/wines", Now: time.Now().UTC(), Log: log.Printf, ActionIDs: actionIDs,
 	})
 	if err != nil {
 		return fmt.Errorf("reviewapply: %w", err)
@@ -121,6 +128,28 @@ func runReviewApply(cfg config.Config, args []string) error {
 	}
 	log.Printf("reviewapply: %d pending object(s), %d decision(s), %d catalog mutation(s)", result.Pending, len(result.Decisions), len(applied))
 	return nil
+}
+
+func loadActionIDs(name string) (map[string]struct{}, error) {
+	if strings.TrimSpace(name) == "" {
+		return nil, nil
+	}
+	data, err := os.ReadFile(name)
+	if err != nil {
+		return nil, err
+	}
+	var values []string
+	if err := json.Unmarshal(data, &values); err != nil {
+		return nil, err
+	}
+	selected := make(map[string]struct{}, len(values))
+	for _, value := range values {
+		if !reviewActionIDPattern.MatchString(value) {
+			return nil, fmt.Errorf("invalid action id %q", value)
+		}
+		selected[value] = struct{}{}
+	}
+	return selected, nil
 }
 
 // runReviewFinalize writes a durable receipt only after the workflow has built,

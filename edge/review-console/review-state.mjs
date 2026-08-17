@@ -216,6 +216,36 @@ export function createReviewState({ client, now = () => new Date() }) {
     return { id, status: to };
   }
 
+  async function claim(environment, { limit = 50, staleBefore } = {}) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) throw new Error('review claim limit must be between 1 and 50');
+    if (!staleBefore || !Number.isFinite(Date.parse(staleBefore))) throw new Error('review claim requires a stale cutoff');
+    const stamp = now().toISOString();
+    const result = await client.execute({
+      sql: `UPDATE review_actions SET status = 'processing', started_at = ?, updated_at = ?, attention_reason = ''
+        WHERE id IN (
+          SELECT id FROM review_actions
+          WHERE environment = ? AND (status = 'queued' OR (status = 'processing' AND started_at < ?))
+          ORDER BY CASE status WHEN 'queued' THEN 0 ELSE 1 END, submitted_at, id LIMIT ?
+        )
+        RETURNING id`,
+      args: [stamp, stamp, environment, staleBefore, limit],
+    });
+    const actionIds = result.rows.map((row) => String(rowValue(row, 'id'))).sort();
+    if (actionIds.length) {
+      await client.batch(actionIds.map((id) => ({
+        sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
+          VALUES (?, 'processing', ?, 'processor claimed action')`,
+        args: [id, stamp],
+      })), 'write');
+    }
+    const remainingResult = await client.execute({
+      sql: `SELECT COUNT(*) AS total FROM review_actions
+        WHERE environment = ? AND (status = 'queued' OR (status = 'processing' AND started_at < ?))`,
+      args: [environment, staleBefore],
+    });
+    return { actionIds, remaining: Number(rowValue(remainingResult.rows[0], 'total')) };
+  }
+
   async function syncReviewerAccounts(accounts) {
     const existing = await listReviewerAccounts();
     const incoming = new Set(accounts.map(({ email }) => email));
@@ -287,7 +317,7 @@ export function createReviewState({ client, now = () => new Date() }) {
   }
 
   return {
-    initialize, queue, counts, packageStatus, actionStatus, transition,
+    initialize, queue, counts, packageStatus, actionStatus, transition, claim,
     syncReviewerAccounts, listReviewerAccounts, reviewerAccount, setReviewerInvitation, setReviewerPassword,
   };
 }

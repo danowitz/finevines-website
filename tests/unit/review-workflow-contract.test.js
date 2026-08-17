@@ -3,23 +3,25 @@ import { readFile } from 'node:fs/promises';
 import { describe, it } from 'node:test';
 
 describe('hosted review workflow contract', () => {
-  it('orders production acknowledgement after deploy and commit and never uses the retired shared queue', async () => {
-    const workflow = await readFile('.github/workflows/pipeline.yml', 'utf8');
-    const apply = workflow.indexOf('Prepare hosted review actions');
-    const deploy = workflow.indexOf('- name: Deploy');
-    const commit = workflow.indexOf("Commit the run's state back to master");
-    const publish = workflow.indexOf('Publish the hosted review package');
-    const finalize = workflow.indexOf('Finalize hosted review receipts');
-    assert.ok(apply > 0 && apply < deploy && deploy < commit && commit < publish && publish < finalize);
-    assert.doesNotMatch(workflow, /finevines applyqueue|_review\/queue\.json/);
-    assert.match(workflow, /github\.event_name != 'repository_dispatch'/);
+  it('uses one bounded processor for immediate, scheduled, manual, and continuation runs', async () => {
+    const workflow = await readFile('.github/workflows/review-actions.yml', 'utf8');
+    assert.match(workflow, /repository_dispatch:/);
+    assert.match(workflow, /types: \[review-console, review-console-continue\]/);
+    assert.match(workflow, /cron: '\*\/5 \* \* \* \*'/);
+    assert.match(workflow, /workflow_dispatch:/);
+    assert.match(workflow, /group: finevines-catalog-deploy/);
+    assert.match(workflow, /timeout-minutes: 45/);
+    assert.equal(workflow.match(/node tools\/review-console\/queue\.mjs claim/g)?.length, 1);
+    assert.match(workflow, /reviewapply -environment test[^\n]*-action-ids \.run\/review-claims\.json/);
+    assert.match(workflow, /review-console-continue/);
+    assert.match(workflow, /queue\.mjs reconcile/);
+    assert.match(workflow, /queue\.mjs complete/);
   });
 
-  it('makes test clicks automatic but records validation rather than claiming a live deployment', async () => {
-    const workflow = await readFile('.github/workflows/review-console-test-action.yml', 'utf8');
-    assert.match(workflow, /repository_dispatch/);
-    assert.match(workflow, /reviewapply -environment test/);
-    assert.match(workflow, /-prepared-status validated -target validation-only/);
+  it('keeps review processing out of the nightly catalog workflow and retires validation-only processing', async () => {
+    const pipeline = await readFile('.github/workflows/pipeline.yml', 'utf8');
+    assert.doesNotMatch(pipeline, /repository_dispatch|reviewapply|reviewfinalize|Prepare hosted review actions|Finalize hosted review receipts/);
+    await assert.rejects(readFile('.github/workflows/review-console-test-action.yml', 'utf8'), { code: 'ENOENT' });
   });
 
   it('keeps console deployment gated until its Bunny infrastructure is configured', async () => {

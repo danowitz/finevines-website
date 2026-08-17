@@ -74,8 +74,8 @@ func fixture(t *testing.T) (*memoryStore, []model.Wine, string) {
 	id := "00000000-0000-4000-8000-000000000001"
 	bytes := []byte("candidate-image")
 	sum := sha256.Sum256(bytes)
-	action := Action{SchemaVersion: 1, ID: id, Environment: "test", Reviewer: "Barb Fultz", SKU: "500740*", Kind: "image-select", PackageID: "pkg-1", TargetCatalogCommit: "abcdef1", WineRevision: WineRevision(wines[0]), CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", CSRFSessionID: "00000000-0000-4000-8000-000000000099"}
-	manifest := Manifest{SchemaVersion: 1, PackageID: "pkg-1", Environment: "test", CatalogCommit: "abcdef1", CreatedAt: "2026-08-15T00:00:00Z", ExpiresAt: "2026-09-14T00:00:00Z", Reviewers: []Reviewer{{Name: "Barb Fultz", Role: "Back Office"}}, Wines: []PackageWine{{SKU: "500740*", WineRevision: action.WineRevision, Candidates: []Candidate{{CandidateID: "candidate-1", StorageName: "candidate-1.png", SHA256: hex.EncodeToString(sum[:]), Bytes: len(bytes), MIME: "image/png", SourceURL: "https://producer.example/wine"}}}}}
+	action := Action{SchemaVersion: 1, ID: id, Environment: "test", Reviewer: "barb.fultz@finevines.com", SKU: "500740*", Kind: "image-select", PackageID: "pkg-1", TargetCatalogCommit: "abcdef1", WineRevision: WineRevision(wines[0]), CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", CSRFSessionID: "00000000-0000-4000-8000-000000000099"}
+	manifest := Manifest{SchemaVersion: 1, PackageID: "pkg-1", Environment: "test", CatalogCommit: "abcdef1", CreatedAt: "2026-08-15T00:00:00Z", ExpiresAt: "2026-09-14T00:00:00Z", Reviewers: []Reviewer{{Name: "Barb Fultz", Email: "barb.fultz@finevines.com", Role: "Back Office"}}, Wines: []PackageWine{{SKU: "500740*", WineRevision: action.WineRevision, Candidates: []Candidate{{CandidateID: "candidate-1", StorageName: "candidate-1.png", SHA256: hex.EncodeToString(sum[:]), Bytes: len(bytes), MIME: "image/png", SourceURL: "https://producer.example/wine"}}}}}
 	encode := func(value any) []byte {
 		data, err := json.Marshal(value)
 		if err != nil {
@@ -112,6 +112,21 @@ func TestPrepareAppliesExactCandidateButKeepsPendingUntilFinalize(t *testing.T) 
 	}
 	if _, err := os.Stat(filepath.Join(filepath.Dir(result.Wines[0].ImagePath), filepath.Base(result.Wines[0].ImagePath))); err != nil {
 		t.Fatalf("normalized image missing: %v", err)
+	}
+}
+
+func TestPrepareOnlyProcessesClaimedActionIDs(t *testing.T) {
+	store, wines, _ := fixture(t)
+	result, err := Prepare(context.Background(), PrepareInput{
+		Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines,
+		ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC),
+		ActionIDs: map[string]struct{}{"00000000-0000-4000-8000-000000000099": {}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Pending != 0 || len(result.Decisions) != 0 {
+		t.Fatalf("unclaimed action was processed: pending=%d decisions=%#v", result.Pending, result.Decisions)
 	}
 }
 
