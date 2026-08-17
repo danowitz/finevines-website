@@ -21,9 +21,12 @@ async function fixture() {
 }
 
 function run(cwd, script, args = [], env = {}) {
+  const childEnv = { ...process.env };
+  delete childEnv.FINEVINES_SITE_BASE_URL;
+  Object.assign(childEnv, env);
   const result = spawnSync(process.execPath, [resolve(repo, script), ...args], {
     cwd,
-    env: { ...process.env, ...env },
+    env: childEnv,
     encoding: 'utf8',
   });
   assert.equal(result.status, 0, result.stderr || result.stdout);
