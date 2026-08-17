@@ -423,9 +423,10 @@ func TestFinalizeRetryAcceptsTheExistingCompletionProof(t *testing.T) {
 		t.Fatal(err)
 	}
 	input.RunID = "retry"
+	input.CatalogCommit = strings.Repeat("b", 40)
 	input.Now = input.Now.Add(time.Hour)
 	if err := Finalize(context.Background(), input); err != nil {
-		t.Fatalf("idempotent retry failed: %v", err)
+		t.Fatalf("idempotent retry after a later catalog commit failed: %v", err)
 	}
 	uploads := 0
 	for _, event := range store.events {

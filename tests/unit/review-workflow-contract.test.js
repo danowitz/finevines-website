@@ -12,7 +12,7 @@ describe('hosted review workflow contract', () => {
     assert.match(workflow, /group: finevines-catalog-deploy/);
     assert.match(workflow, /timeout-minutes: 60/);
     assert.match(workflow, /timeout[^\n]*16m[^\n]*max-prepare-duration 15m/);
-    assert.match(workflow, /timeout[^\n]*3m \.\/finevines build/);
+    assert.match(workflow, /timeout[^\n]*3m \.\/finevines build -launch-exclusions \.run\/launch-exclusions\.json/);
     assert.match(workflow, /timeout[^\n]*7m \.\/finevines deploy/);
     assert.match(workflow, /timeout[^\n]*3m bash tools\/pipeline\/commitback\.sh/);
     assert.match(workflow, /timeout[^\n]*3m \.\/finevines reviewfinalize/);
@@ -25,6 +25,12 @@ describe('hosted review workflow contract', () => {
     assert.equal(workflow.match(/node tools\/review-console\/dispatch\.mjs/g)?.length, 3);
     assert.match(workflow, /queue\.mjs reconcile/);
     assert.match(workflow, /queue\.mjs complete/);
+    assert.match(workflow, /queue\.mjs export-launch-exclusions/);
+    assert.match(workflow, /\.\/finevines reviewers > \.run\/salesforce-reviewers\.json/);
+    assert.match(workflow, /sync-accounts --environment test --roster \.run\/salesforce-reviewers\.json/);
+    assert.match(workflow, /Synchronize eligible reviewer accounts\r?\n\s+id: reviewer_sync\r?\n\s+continue-on-error: true/);
+    assert.match(workflow, /invite_reviewer != '' && steps\.reviewer_sync\.outcome == 'success'/);
+    assert.doesNotMatch(workflow, /sync-accounts --environment test --roster data\/team\.json/);
   });
 
   it('keeps application and targeted rediscovery in one review workflow without catalog auto-import', async () => {
@@ -32,6 +38,8 @@ describe('hosted review workflow contract', () => {
     const review = await readFile('.github/workflows/review-actions.yml', 'utf8');
     assert.doesNotMatch(pipeline, /types: \[review-recovery\]|export-recovery|resolve-recovery/);
     assert.doesNotMatch(pipeline, /reviewapply|reviewfinalize|Prepare hosted review actions|Finalize hosted review receipts/);
+    assert.match(pipeline, /export-launch-exclusions[^\n]*\.run\/launch-exclusions\.json/);
+    assert.match(pipeline, /finevines build -launch-exclusions \.run\/launch-exclusions\.json/);
     assert.match(review, /export-recovery/);
     assert.match(review, /resolve-recovery/);
     assert.match(review, /Publish only the new review evidence/);

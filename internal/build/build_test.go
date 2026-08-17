@@ -17,7 +17,17 @@ import (
 	"testing"
 
 	"github.com/gritautomation/finevines-website/internal/model"
+	"github.com/gritautomation/finevines-website/internal/reviewactions"
 )
+
+func TestWithoutExcludedWinesRemovesTheWineFromEveryLaunchSurface(t *testing.T) {
+	wines := []model.Wine{{SKU: "KEEP"}, {SKU: "EXCLUDE", ID: "old"}, {SKU: "EXCLUDE", ID: "new"}}
+	excludedRevision := reviewactions.WineRevision(wines[1])
+	got := withoutExcludedWines(wines, LaunchExclusions{"EXCLUDE": {excludedRevision: {}}})
+	if len(got) != 2 || got[0].SKU != "KEEP" || got[1].ID != "new" {
+		t.Fatalf("withoutExcludedWines = %#v", got)
+	}
+}
 
 func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 	dist := t.TempDir()

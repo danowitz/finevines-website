@@ -175,6 +175,16 @@ type FinalizeInput struct {
 	Fetcher          DeploymentFetcher
 }
 
+func validateCompletedReceipt(receipt Receipt, id, environment string) error {
+	if receipt.ID != id || receipt.Environment != environment || receipt.Status != "completed" ||
+		!commitPattern.MatchString(receipt.CatalogCommit) || !deployedPathPattern.MatchString(receipt.DeployedImagePath) ||
+		!hashPattern.MatchString(receipt.DeployedImageSHA256) || receipt.DeploymentTarget == "" ||
+		receipt.VerifiedImageURL == "" || receipt.RunID == "" || receipt.CompletedAt == "" {
+		return fmt.Errorf("reviewactions: receipt %s has invalid completion evidence", id)
+	}
+	return nil
+}
+
 func revision(w model.Wine) string {
 	values := []any{1, strings.TrimSpace(w.SKU), strings.TrimSpace(w.ID), strings.TrimSpace(w.Slug), strings.TrimSpace(w.Producer), strings.TrimSpace(w.Name), strings.TrimSpace(w.Vintage), strings.TrimSpace(w.Varietal), strings.TrimSpace(w.Region), strings.TrimSpace(w.Appellation), strings.TrimSpace(w.Country), strings.TrimSpace(w.Color), strings.TrimSpace(w.Style), strings.TrimSpace(w.BottleSize), strings.TrimSpace(w.ImagePath), strings.TrimSpace(w.ImageSource), strings.TrimSpace(w.ImageSourceURL), strings.TrimSpace(w.SourceHash), strings.TrimSpace(w.Status), strings.TrimSpace(w.ImageReviewStatus), strings.TrimSpace(w.ImageReviewedAt), strings.TrimSpace(w.ImageReviewActionID)}
 	encoded, _ := json.Marshal(values)
@@ -396,10 +406,11 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			return result, err
 		} else if len(receiptData) > 0 {
 			var receipt Receipt
-			if err := strictJSON(receiptData, &receipt); err != nil || receipt.ID != id || receipt.Environment != input.Environment || receipt.Status != "completed" ||
-				!commitPattern.MatchString(receipt.CatalogCommit) || !deployedPathPattern.MatchString(receipt.DeployedImagePath) ||
-				!hashPattern.MatchString(receipt.DeployedImageSHA256) || receipt.DeploymentTarget == "" || receipt.VerifiedImageURL == "" || receipt.RunID == "" {
+			if err := strictJSON(receiptData, &receipt); err != nil {
 				return result, fmt.Errorf("reviewactions: receipt %s has invalid completion evidence", id)
+			}
+			if err := validateCompletedReceipt(receipt, id, input.Environment); err != nil {
+				return result, err
 			}
 			if err := input.Store.Delete(ctx, path.Join(prefix, "pending", name)); err != nil {
 				if ctx.Err() != nil {
@@ -613,8 +624,30 @@ func Finalize(ctx context.Context, input FinalizeInput) error {
 	}
 	prefix := path.Join("_review", input.Environment)
 	verifiedURLs := make(map[string]string)
+	existingReceipts := make(map[string]Receipt)
 	for _, decision := range input.Decisions {
 		if decision.Status != "prepared" {
+			continue
+		}
+		receiptPath := path.Join(prefix, "receipts", decision.ID+".json")
+		existing, err := input.Store.Download(ctx, receiptPath)
+		if err != nil {
+			return err
+		}
+		if len(existing) > 0 {
+			var prior Receipt
+			if err := strictJSON(existing, &prior); err != nil {
+				return fmt.Errorf("reviewactions: receipt %s has invalid completion evidence", decision.ID)
+			}
+			if err := validateCompletedReceipt(prior, decision.ID, input.Environment); err != nil {
+				return err
+			}
+			expected := decision
+			expected.Status = "completed"
+			if prior.Decision != expected {
+				return fmt.Errorf("reviewactions: receipt %s already exists for a different decision", decision.ID)
+			}
+			existingReceipts[decision.ID] = prior
 			continue
 		}
 		if input.Fetcher == nil || !deployedPathPattern.MatchString(decision.DeployedImagePath) || !hashPattern.MatchString(decision.DeployedImageSHA256) {
@@ -633,6 +666,12 @@ func Finalize(ctx context.Context, input FinalizeInput) error {
 	}
 	for _, decision := range input.Decisions {
 		if decision.Status != "prepared" && decision.Status != "rediscover" {
+			continue
+		}
+		if _, recovered := existingReceipts[decision.ID]; recovered {
+			if err := input.Store.Delete(ctx, path.Join(prefix, "pending", decision.ID+".json")); err != nil {
+				return err
+			}
 			continue
 		}
 		if decision.Status == "prepared" {
