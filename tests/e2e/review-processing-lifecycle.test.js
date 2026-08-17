@@ -20,23 +20,47 @@ import { openBrowser } from '../helpers/browser.js';
 globalThis.crypto ??= webcrypto;
 const exec = promisify(execFile);
 const roots = [];
-const acceptanceTrace = [];
+const REQUIRED_TRACE_SCENARIOS = [
+  'verified deployment and invalid-image isolation',
+  'fifty-action continuation, isolation, release, and rediscovery',
+  'real Go processor deadline yield',
+  'real Go processor operational failure and preservation',
+  'real browser onboarding, concurrency, counters, modal, and incident recovery',
+];
+const acceptanceTrace = REQUIRED_TRACE_SCENARIOS.map((scenario) => ({ scenario, outcome: 'not-run', evidence: {}, transitions: [] }));
 
-async function recordStateTrace(client, scenario, evidence = {}) {
-  const result = await client.execute('SELECT action_id, status, occurred_at, detail FROM review_action_events ORDER BY sequence');
-  acceptanceTrace.push({
-    scenario,
-    evidence,
-    transitions: result.rows.map((row) => ({
+async function recordStateTrace(client, scenario, outcome, evidence = {}, error) {
+  const entry = acceptanceTrace.find((item) => item.scenario === scenario);
+  entry.outcome = outcome;
+  entry.evidence = { ...evidence, ...(error ? { error: { name: error.name, message: error.message, stack: error.stack } } : {}) };
+  try {
+    const result = await client.execute('SELECT action_id, status, occurred_at, detail FROM review_action_events ORDER BY sequence');
+    entry.transitions = result.rows.map((row) => ({
       actionId: String(row.action_id), status: String(row.status), occurredAt: String(row.occurred_at), detail: String(row.detail || ''),
-    })),
-  });
+    }));
+  } catch (traceError) {
+    entry.evidence.traceReadError = traceError.message;
+  }
+}
+
+async function tracedScenario(client, scenario, run) {
+  const trace = { evidence: {} };
+  try {
+    await run(trace);
+    await recordStateTrace(client, scenario, 'passed', trace.evidence);
+  } catch (error) {
+    await recordStateTrace(client, scenario, 'failed', trace.evidence, error);
+    throw error;
+  } finally {
+    await client.close();
+  }
 }
 
 after(async () => {
   const tracePath = resolve(process.env.FINEVINES_E2E_TRACE || '.run/review-processing-e2e-trace.json');
   await mkdir(dirname(tracePath), { recursive: true });
   await writeFile(tracePath, `${JSON.stringify({ schemaVersion: 1, generatedAt: new Date().toISOString(), scenarios: acceptanceTrace }, null, 2)}\n`);
+  assert.deepEqual(acceptanceTrace.map(({ scenario }) => scenario), REQUIRED_TRACE_SCENARIOS);
   while (roots.length) {
     const root = roots.pop();
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -99,6 +123,7 @@ test('local acceptance gate carries one human selection through verified deploym
   const root = await mkdtemp(join(tmpdir(), 'finevines-review-e2e-')); roots.push(root);
   const objectRoot = join(root, 'objects'); const storage = fileStorage(objectRoot);
   const client = createClient({ url: 'file::memory:' });
+  await tracedScenario(client, 'verified deployment and invalid-image isolation', async (trace) => {
   const state = createReviewState({ client, now: () => new Date('2026-08-17T12:00:00Z') });
   await state.initialize();
   const mail = [];
@@ -170,19 +195,20 @@ test('local acceptance gate carries one human selection through verified deploym
   assert.ok(await storage.get(`_review/test/receipts/${queuedBody.id}.json`));
   const deployedCatalog = JSON.parse(await readFile(catalog, 'utf8'));
   assert.equal(deployedCatalog.find(({ sku }) => sku === wine.sku).imageReviewActionId, queuedBody.id);
-  await recordStateTrace(client, 'verified deployment and invalid-image isolation', {
+  trace.evidence = {
     loginStatus: login.status,
     immediateDispatch: queuedBody.dispatched,
     scheduledClaimCount: claimed.claimed,
     prepared: { actionId: queuedBody.id, status: preparedDecision.status },
     invalidImage: { actionId: badQueuedBody.id, status: rejectedDecision.status, finalStatus: 'needs_attention', reason: rejectedDecision.reason },
     completion: { actionId: queuedBody.id, status: 'completed', pendingRemoved: true, receiptPresent: true, deployedHashVerified: true },
+  };
   });
-  await client.close();
 });
 
 test('local acceptance gate covers concurrent reviewers, fifty-action continuation, and rejected-image recovery', async () => {
   const client = createClient({ url: 'file::memory:' });
+  await tracedScenario(client, 'fifty-action continuation, isolation, release, and rediscovery', async (trace) => {
   const state = createReviewState({ client, now: () => new Date('2026-08-17T12:00:00Z') });
   await state.initialize();
   const root = await mkdtemp(join(tmpdir(), 'finevines-review-concurrent-')); roots.push(root);
@@ -279,15 +305,15 @@ test('local acceptance gate covers concurrent reviewers, fifty-action continuati
   const reopened = await state.packageStatus('test', [{ sku: rejected.sku, slug: rejected.wineSlug, wineRevision: rejected.wineRevision }]);
   assert.equal(reopened.counts.needsDecision, 1);
   assert.equal(reopened.decisions[0].slug, rejected.wineSlug);
-  await recordStateTrace(client, 'fifty-action continuation, isolation, release, and rediscovery', {
+  trace.evidence = {
     firstClaim: { claimed: first.claimed, remaining: first.remaining },
     continuationClaim: { claimed: second.claimed, remaining: second.remaining },
     deferred: { actionId: queued[2].id, reason: 'processor yielded before the time limit', dispatchedReason: dispatches[0].body.client_payload.reason },
     operationalRelease: { released: released.released, dispatchedReason: dispatches[1].body.client_payload.reason },
     rejected: { actionId: queued[0].id, status: 'needs_attention', reason: 'candidate revision conflict' },
     rediscovery: { actionId: rejected.id, rejectedCandidateId: 'old', outcome: resolved.outcome, resultingStatus: 'needs_decision' },
+  };
   });
-  await client.close();
 });
 
 test('real processor yields on deadline and preserves claims after an operational normalizer failure', { timeout: 120_000 }, async () => {
@@ -299,6 +325,8 @@ test('real processor yields on deadline and preserves claims after an operationa
     const scenarioRoot = join(root, mode); const objectRoot = join(scenarioRoot, 'objects');
     const storage = fileStorage(objectRoot);
     const client = createClient({ url: 'file::memory:' });
+    const scenario = mode === 'deadline' ? 'real Go processor deadline yield' : 'real Go processor operational failure and preservation';
+    await tracedScenario(client, scenario, async (trace) => {
     const state = createReviewState({ client, now: () => new Date('2026-08-17T12:00:00Z') });
     await state.initialize();
     const accounts = createReviewerAccounts({ state, mailer: { send: async () => {} }, now: () => new Date('2026-08-17T12:00:00Z'), temporaryPassword: () => 'Temporary-boundary-pass-92!' });
@@ -353,7 +381,7 @@ test('real processor yields on deadline and preserves claims after an operationa
       assert.equal(reconciled.deferred, 1);
       await dispatchReviewWorkflow({ repository: 'danowitz/finevines-website', token: 'test-token', eventType: 'review-console-continue', environment: 'test', reason: 'time-budget-yield', fetchImpl });
       assert.equal((await state.actionStatus(queued.id, 'test')).status, 'queued');
-      await recordStateTrace(client, 'real Go processor deadline yield', { actionId: queued.id, processorDecision: records[0], dispatched: dispatches[0] });
+      trace.evidence = { actionId: queued.id, processorDecision: records[0], dispatched: dispatches[0] };
     } else {
       await assert.rejects(exec(executable, args, { cwd: workspace }), /reviewapply/);
       assert.equal((await state.actionStatus(queued.id, 'test')).status, 'processing');
@@ -363,9 +391,9 @@ test('real processor yields on deadline and preserves claims after an operationa
       assert.equal((await state.actionStatus(queued.id, 'test')).status, 'queued');
       assert.ok(await storage.get(`_review/test/pending/${queued.id}.json`));
       assert.equal(JSON.parse(await readFile(catalog, 'utf8'))[0].imageReviewActionId || '', '');
-      await recordStateTrace(client, 'real Go processor operational failure and preservation', { actionId: queued.id, processorError: 'normalizer execution failed', released: released.released, pendingPreserved: true, catalogUnchanged: true, dispatched: dispatches[0] });
+      trace.evidence = { actionId: queued.id, processorError: 'normalizer execution failed', released: released.released, pendingPreserved: true, catalogUnchanged: true, dispatched: dispatches[0] };
     }
-    await client.close();
+    });
   }
 });
 
@@ -403,6 +431,7 @@ test('real browser covers onboarding, modal choice, conflict, counters, and inci
   const root = await mkdtemp(join(tmpdir(), 'finevines-review-browser-')); roots.push(root);
   const storage = fileStorage(join(root, 'objects'));
   const client = createClient({ url: 'file::memory:' });
+  await tracedScenario(client, 'real browser onboarding, concurrency, counters, modal, and incident recovery', async (trace) => {
   const clock = () => new Date('2026-08-17T12:00:00Z');
   const state = createReviewState({ client, now: clock });
   await state.initialize();
@@ -527,20 +556,20 @@ test('real browser covers onboarding, modal choice, conflict, counters, and inci
     await supportPage.evaluate(() => [...document.querySelectorAll('.incident button')].find((button) => button.textContent === 'Reopen choices').click());
     await supportPage.waitForFunction(() => !document.querySelector('.incident'));
     assert.equal((await state.actionStatus(actionId, 'test')).status, 'needs_decision');
-    await recordStateTrace(client, 'real browser onboarding, concurrency, counters, modal, and incident recovery', {
+    trace.evidence = {
       onboarding: { reviewer: roster[0].email, forcedPasswordChange: true, resultingPath: '/' },
       modal: { opened: true, comparedCandidates: 2, backdropClosed: true, selectionApplied: true },
       sameWineConflict: { sku: 'SKU-A', visibleToReviewer: roster[1].email },
       independentWine: { sku: 'SKU-B', queued: true },
       durableCounter: '2 queued',
       incident: { actionId, visible: true, operation: 'reopen', resultingStatus: 'needs_decision' },
-    });
+    };
   } finally {
     await reviewerPage.close();
     await supportPage.close();
     await reviewerBrowser.close();
     await supportBrowser.close();
     await hosted.close();
-    await client.close();
   }
+  });
 });
