@@ -54,10 +54,10 @@ describe('finding the OpenAI key', () => {
   });
 });
 
-describe('envOrFile — the general form behind openaiKey, also used for the Google CSE key/cx', () => {
+describe('envOrFile — the general form behind openaiKey and search-provider keys', () => {
   test('the real environment variable wins', async () => {
     assert.equal(
-      await envOrFile('FINEVINES_GOOGLE_CSE_KEY', { FINEVINES_GOOGLE_CSE_KEY: 'from-env' }, '/nonexistent'),
+      await envOrFile('FINEVINES_BRAVE_SEARCH_KEY', { FINEVINES_BRAVE_SEARCH_KEY: 'from-env' }, '/nonexistent'),
       'from-env'
     );
   });
@@ -65,9 +65,9 @@ describe('envOrFile — the general form behind openaiKey, also used for the Goo
   test('falls back to the same key inside .env', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'env-'));
     const path = join(dir, '.env');
-    await writeFile(path, 'FINEVINES_GOOGLE_CSE_KEY=from-file\nFINEVINES_GOOGLE_CSE_CX=cx-from-file\n');
-    assert.equal(await envOrFile('FINEVINES_GOOGLE_CSE_KEY', {}, path), 'from-file');
-    assert.equal(await envOrFile('FINEVINES_GOOGLE_CSE_CX', {}, path), 'cx-from-file');
+    await writeFile(path, 'FINEVINES_BRAVE_SEARCH_KEY=from-file\nFINEVINES_SERPER_KEY=serper-from-file\n');
+    assert.equal(await envOrFile('FINEVINES_BRAVE_SEARCH_KEY', {}, path), 'from-file');
+    assert.equal(await envOrFile('FINEVINES_SERPER_KEY', {}, path), 'serper-from-file');
   });
 
   test('neither the environment nor .env having it — nor .env existing at all — is an empty string, not a throw', async () => {
@@ -75,6 +75,6 @@ describe('envOrFile — the general form behind openaiKey, also used for the Goo
     // read .env directly and unconditionally for these two keys, so on
     // ubuntu-latest — no .env file — it threw ENOENT and took the whole
     // script down before a single wine was selected.
-    assert.equal(await envOrFile('FINEVINES_GOOGLE_CSE_KEY', {}, '/nonexistent'), '');
+    assert.equal(await envOrFile('FINEVINES_BRAVE_SEARCH_KEY', {}, '/nonexistent'), '');
   });
 });

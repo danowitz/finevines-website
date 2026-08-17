@@ -15,7 +15,7 @@ export function googleImagesURL(query) {
 function stageRows(trace) {
   const discovery = trace.discovery;
   const downloads = trace.downloads;
-  const selector = trace.selectorAfterWebExpansion || trace.selector;
+  const selector = trace.selector;
   const reader = selector?.reader;
   return [
     ['1. Catalog input', 'complete', `${trace.catalogInput?.name || ''} ${trace.catalogInput?.vintage || ''}`.trim()],
@@ -52,7 +52,7 @@ function renderDownloads(downloads) {
 }
 
 export function renderImageDiagnosticHtml({ trace, images = [], googleCapture = null }) {
-  const selector = trace.selectorAfterWebExpansion || trace.selector;
+  const selector = trace.selector;
   const reader = selector?.reader;
   const googleURL = googleImagesURL(trace.query);
   const stages = stageRows(trace).map(([name, status, detail]) => `<tr><th>${esc(name)}</th><td><span class="status ${esc(status.replaceAll(' ', '-'))}">${esc(status)}</span></td><td>${esc(detail)}</td></tr>`).join('');
@@ -80,10 +80,7 @@ async function packageTrace(tracePath, outputDirectory) {
   const assetDirectory = join(outputDirectory, 'assets');
   await mkdir(assetDirectory, { recursive: true });
   const images = [];
-  const downloads = [
-    ...(trace.downloads || []),
-    ...(trace.webExpansion?.downloads || []),
-  ];
+  const downloads = trace.downloads || [];
   for (const item of downloads.filter((entry) => entry.file)) {
     const destination = join(assetDirectory, basename(item.file));
     try {

@@ -82,10 +82,6 @@ function rankedRepresentatives(group) {
     area(right) - area(left));
 }
 
-export function bestVisualRepresentative(group) {
-  return rankedRepresentatives(group)[0] || null;
-}
-
 function diverseRepresentatives(group) {
   const ranked = rankedRepresentatives(group);
   const picked = ranked.length ? [ranked[0]] : [];

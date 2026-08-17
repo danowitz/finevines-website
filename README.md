@@ -214,14 +214,14 @@ Each run, in this order:
 
    Every attempted wine persists a durable summary in
    `data/image-funnel.json` (with the working record also present in the
-   gitignored `data/fetched-images/manifest.json`): Google results, blocked sources,
+   gitignored `data/fetched-images/manifest.json`): provider results, blocked sources,
    downloads, decodes, bottle-shape passes, visually repeated groups, label
    reads, identity anchors, explicit conflicts, publishable anchors, watermark
    outcome, and import outcome. Its
    terminal `failureStage` names the rule that stopped it. Run
    `node tools/labelfetch/funnel-report.mjs` for the aggregate human-readable
-   report, or add `--json` for machine-readable output. A Google credential or
-   permission failure is `google-unavailable`, never an empty-search verdict.
+   report, or add `--json` for machine-readable output. A provider credential,
+   permission, or transport failure is unavailable, never an empty-search verdict.
    Attempt records also carry the matcher version that produced them. When the
    discovery or identity algorithm materially improves, incrementing that
    version replays old misses once under the new rules; a current-version miss
@@ -275,9 +275,6 @@ Actions). The repo is public, so the pipeline workflow deliberately has no
 | `OPENAI_API_KEY` | Enrichment, vision label reading, watermark sweep |
 | `FINEVINES_BRAVE_SEARCH_KEY` | Brave Image Search discovery |
 | `FINEVINES_SERPER_KEY` | Serper Google Images discovery |
-| `FINEVINES_GOOGLE_CSE_KEY` | Temporary Google Custom Search image API key |
-| `FINEVINES_GOOGLE_CSE_CX` | Temporary Google Custom Search engine ID |
-| `FINEVINES_GOOGLE_VISION_KEY` | Bounded reverse-image Web Detection |
 | `FINEVINES_BUNNY_STORAGE_ZONE` | Storage zone name |
 | `FINEVINES_BUNNY_STORAGE_KEY` | Storage zone password |
 | `FINEVINES_BUNNY_STORAGE_ENDPOINT` | Regional storage host |

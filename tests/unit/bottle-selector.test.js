@@ -208,7 +208,6 @@ test('an exact-vintage source prioritizes a bottle but cannot publish unread pix
   assert.equal(result.pick, null);
   assert.equal(result.diagnostics.publishableAnchors, 0);
 });
-
 test('an exact source title cannot override a readable identity conflict', async () => {
   const subject = createBottleSelector({
     inspect: async (item) => ({ visualOk: true, shapeOk: item.shapeOk, cleanBackground: item.cleanBackground }),
@@ -254,10 +253,8 @@ test('similar siblings without an exact anchor remain a no-pick', async () => {
   assert.equal(result.reviewCandidates.length, 2);
   assert.equal(result.reviewCandidates[0].displayOk, true);
   assert.match(result.reviewCandidates[1].why, /identity not proven|conflict/i);
-  assert.deepEqual(result.expansionSeeds, []);
 });
-
-test('two matching conflict-free images yield one provisional reverse-search seed', async () => {
+test('two matching conflict-free images without a readable anchor remain a no-pick', async () => {
   const result = await selector({
     pairs: [{ a: 0, b: 1, score: 0.98 }],
     evidence: [{ id: 'scene' }, { id: 'clean' }],
@@ -267,10 +264,7 @@ test('two matching conflict-free images yield one provisional reverse-search see
   ]);
 
   assert.equal(result.pick, null);
-  assert.equal(result.expansionSeeds.length, 1);
-  assert.equal(result.expansionSeeds[0].id, 'clean');
-  assert.equal(result.expansionSeeds[0].verifiedIdentity, false);
-  assert.equal(result.diagnostics.provisionalExpansionSeeds, 1);
+  assert.equal(result.reason, 'identity unresolved: no readable product anchor');
 });
 
 test('every candidate supplied by the pipeline enters the selector', async () => {
@@ -434,7 +428,6 @@ test('target-relevant reader priority cannot override a wrong-producer conflict'
   assert.equal(result.pick, null);
   assert.equal(result.diagnostics.publishableAnchors, 0);
 });
-
 test('reads one targeted candidate at a time after the primary batch misses', async () => {
   const reads = [];
   const candidates = Array.from({ length: 6 }, (_, index) => candidate(`candidate-${index + 1}`, {
@@ -514,54 +507,4 @@ test('a perfect source title cannot publish a visually repeated stale image', as
 
   assert.equal(result.pick, null);
   assert.equal(result.diagnostics.publishableAnchors, 0);
-});
-
-test('a Web Detection full match inherits identity from its verified seed', async () => {
-  const result = await selector({
-    pairs: [{ a: 0, b: 1, score: 0.99 }],
-    evidence: [{ id: 'seed', anchor: true, label: 'Exact Wine' }],
-  }).select({ name: 'Exact Wine' }, [
-    candidate('seed', { cleanBackground: false, width: 400, height: 700 }),
-    candidate('web-copy', {
-      trustedFullMatch: true,
-      cleanBackground: true,
-      width: 900,
-      height: 1500,
-    }),
-  ]);
-  assert.equal(result.pick.id, 'web-copy');
-  assert.deepEqual(result.pick.anchorIds, ['seed', 'web-copy']);
-});
-
-test('a provisional Web Detection copy must earn identity from its own evidence', async () => {
-  const subject = selector({
-    pairs: [{ a: 0, b: 1, score: 0.99 }],
-    evidence: [{ id: 'seed' }, { id: 'web-copy' }],
-  });
-  const result = await subject.select({ name: 'Domaine Example Target Cuvee', vintage: '2022' }, [
-    candidate('seed'),
-    candidate('web-copy', { provisionalFullMatch: true, cleanBackground: true }),
-  ]);
-
-  assert.equal(result.pick, null);
-  assert.equal(result.diagnostics.identityAnchors, 0);
-});
-
-test('an exact product title cannot promote an unverified Web Detection copy', async () => {
-  const subject = selector({
-    pairs: [{ a: 0, b: 1, score: 0.99 }],
-    evidence: [{ id: 'seed' }, { id: 'web-copy' }],
-  });
-  const result = await subject.select({ name: 'Domaine Example Target Cuvee', vintage: '2022' }, [
-    candidate('seed'),
-    candidate('web-copy', {
-      provisionalFullMatch: true,
-      title: 'Domaine Example Target Cuvee 2022',
-      cleanBackground: true,
-      width: 900,
-      height: 1500,
-    }),
-  ]);
-
-  assert.equal(result.pick, null);
 });

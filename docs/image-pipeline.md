@@ -53,11 +53,13 @@ to `.run/image-workflow.json` before and after every stage. A missing credential
 disabled API, partial provider outage, failed perceptual hash, failed child process, or missing verdict
 stops publication rather than being converted to â€œnothing found.â€
 
-The optional Web Detection adapter can search both a complete bottle and its
-label crop, but it is not injected into scheduled workflows. A 2026-08-14
-30-wine comparison spent 46 Web Detection requests, downloaded 206 expansion
-images, and recovered zero wines. Keep it disabled until a frozen replay proves
-incremental value.
+Google Custom Search JSON API and Google Cloud Vision Web Detection were retired
+on 2026-08-16. Custom Search had contributed useful historical bottle images,
+which remain in the catalog with their provenance. It was removed because the
+current Brave + Serper path replaced it and Google has announced the API's
+2027-01-01 discontinuation. Web Detection was removed after a frozen 30-wine
+comparison made 46 requests, downloaded 206 expansion images, and recovered no
+wines.
 
 Comparison runs can replay the exact wine scope of an earlier artifact with
 `--replay-report path/to/image-canary.json`. This is distinct from
@@ -93,7 +95,7 @@ including failed runs; it is not mixed into the catalog commit.
   `imgnorm` is the supported path for a reviewed source file.
 - Visible contradictory producer, cuvee, or vintage information is a rejection.
   A “hit” is not a verified identity.
-- A Google permission, quota, transport, or credential failure is unavailable,
+- A provider permission, quota, transport, or credential failure is unavailable,
   never an empty result. The wine stays due and receives no miss/backoff entry.
 - Generated bottle-photo tools are disabled. Earlier generated-photo catalog
   entries were migrated to the neutral fallback.

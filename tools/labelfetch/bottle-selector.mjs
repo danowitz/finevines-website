@@ -1,6 +1,5 @@
 import { evaluateVisualPick } from './visual-pick.mjs';
 import {
-  bestVisualRepresentative,
   sourceIdentityEvidence,
 } from './identity-reading-plan.mjs';
 import { createIdentityProofEngine } from './identity-proof.mjs';
@@ -217,7 +216,6 @@ export function createBottleSelector({
         explicitConflicts: 0,
         publishableAnchors: 0,
         sourceIdentityAnchors: 0,
-        provisionalExpansionSeeds: 0,
         plannedIdentityCandidates: 0,
         readerCalls: 0,
         readerRetries: 0,
@@ -290,8 +288,6 @@ export function createBottleSelector({
       let selectedGroup = groups[0];
       let bestEvaluated = null;
       let selectedSourceAnchorIds = [];
-      const expansionSeeds = [];
-      const provisionalSeeds = [];
       const traceEvidence = [];
       const candidateIndex = new Map(inspected.map((candidate, index) => [candidate.id, index]));
       // Title corroboration may admit a moderate pair into a review group, but
@@ -327,7 +323,6 @@ export function createBottleSelector({
           const sourceEvidence = sourceIdentityEvidence(wine, candidate);
           const sourceAnchor = sourceEvidence.exactVintageSignal;
           const identityAnchor = byID.get(candidate.id)?.anchor === true;
-          const inheritedFullMatch = candidate.trustedFullMatch === true;
           return {
             ...candidate,
             explicitConflict,
@@ -336,7 +331,6 @@ export function createBottleSelector({
             // Publication requires blind pixel evidence or a verified full-copy
             // relationship to pixels that already earned that evidence.
             identityAnchor,
-            inheritedFullMatch,
             // A directly read vintage-neutral bottle may survive stale source
             // metadata. An unread candidate may not inherit identity through a
             // source that explicitly names another vintage or grape.
@@ -346,36 +340,20 @@ export function createBottleSelector({
           };
         });
         const readableAnchors = base.filter((candidate) =>
-          !candidate.explicitConflict && (candidate.identityAnchor || candidate.inheritedFullMatch));
+          !candidate.explicitConflict && candidate.identityAnchor);
         const judged = base.map((candidate) => {
-          const inheritedFrom = !candidate.identityAnchor && !candidate.inheritedFullMatch &&
+          const inheritedFrom = !candidate.identityAnchor &&
             !candidate.explicitConflict && !candidate.inheritanceBlocked
             ? readableAnchors.find((anchor) => directMatch(candidate.id, anchor.id))
             : null;
           return {
             ...candidate,
             anchor: !candidate.explicitConflict && Boolean(
-              candidate.identityAnchor || candidate.inheritedFullMatch || inheritedFrom),
+              candidate.identityAnchor || inheritedFrom),
             inheritedIdentity: Boolean(inheritedFrom),
             inheritedFrom: inheritedFrom?.id || '',
           };
         });
-        for (const candidate of judged) {
-          if (candidate.anchor && !candidate.explicitConflict &&
-              !expansionSeeds.some(({ id }) => id === candidate.id)) {
-            expansionSeeds.push({ ...candidate, verifiedIdentity: true });
-          }
-        }
-        // A conflict-free repeated design is useful as a reverse-search
-        // hypothesis even when its tiny labels cannot prove identity. Keep it
-        // explicitly provisional: neither it nor its Web Detection copies may
-        // inherit anchor status from visual similarity alone.
-        if (!judged.some((candidate) => candidate.explicitConflict)) {
-          const seed = bestVisualRepresentative(judged);
-          if (seed && !provisionalSeeds.some(({ id }) => id === seed.id)) {
-            provisionalSeeds.push({ ...seed, verifiedIdentity: false });
-          }
-        }
         const evaluated = evaluateVisualPick(judged);
         if (!bestEvaluated ||
             evaluated.diagnostics.identityAnchors > bestEvaluated.diagnostics.identityAnchors ||
@@ -404,9 +382,6 @@ export function createBottleSelector({
       }
       trace.evidence = traceEvidence;
       const pick = bestEvaluated?.pick || null;
-      if (!expansionSeeds.length && provisionalSeeds.length) {
-        expansionSeeds.push(provisionalSeeds[0]);
-      }
       Object.assign(diagnostics, {
         identityAnchors: bestEvaluated?.diagnostics.identityAnchors || 0,
         productIdentityAnchors: evidence.filter((item) => item.productAnchor === true).length,
@@ -416,7 +391,6 @@ export function createBottleSelector({
         anchorResolutionFailures: bestEvaluated?.diagnostics.anchorResolutionFailures || 0,
         publishableAnchors: bestEvaluated?.diagnostics.publishableAnchors || 0,
         sourceIdentityAnchors: selectedSourceAnchorIds.length,
-        provisionalExpansionSeeds: expansionSeeds.filter((seed) => !seed.verifiedIdentity).length,
       });
       if (pick) {
         trace.pick = pick.id;
@@ -431,7 +405,6 @@ export function createBottleSelector({
           trace,
           diagnostics,
           reviewCandidates: reviewCandidates(inspected, selectedGroup, evidence),
-          expansionSeeds,
         };
       }
       const unresolvedCodes = [...new Set(evidence.map(({ reasonCode }) => reasonCode).filter(Boolean))];
@@ -458,7 +431,6 @@ export function createBottleSelector({
         sourceAnchorIds: selectedSourceAnchorIds,
         diagnostics,
         reviewCandidates: reviewCandidates(inspected, selectedGroup, evidence),
-        expansionSeeds,
       };
     },
   };

@@ -1,6 +1,6 @@
 // One interface owns the unattended image workflow and its ordering invariants.
 // External processes and persistence are adapters so tests exercise the same
-// seam as the production CLI without touching Google, OpenAI, or the catalog.
+// seam as the production CLI without touching search APIs, OpenAI, or the catalog.
 
 export class ImageWorkflowStageError extends Error {
   constructor(stage, cause) {
@@ -62,7 +62,6 @@ export async function runAutonomousImageWorkflow(config, adapters) {
     ...(config.slug ? ['--slug', config.slug] : []),
     ...(config.trace ? ['--trace'] : []),
     ...(config.noCatalogReuse ? ['--no-catalog-reuse'] : []),
-    ...(config.searchProfile ? ['--search-profile', config.searchProfile] : []),
     ...(config.searchProvider ? ['--search-provider', config.searchProvider] : []),
     ...(config.labelModel ? ['--label-model', config.labelModel] : []),
     ...(config.labelReasoningEffort ? ['--label-reasoning-effort', config.labelReasoningEffort] : []),

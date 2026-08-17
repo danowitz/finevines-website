@@ -76,7 +76,7 @@ jobs:
           npm ci --ignore-scripts
       - name: Verify and build image tools
         run: |
-          node --test tests/unit/brave-images.test.js tests/unit/serper-images.test.js tests/unit/combined-image-discovery.test.js tests/unit/image-discovery.test.js tests/unit/web-match-expander.test.js tests/unit/autonomous-workflow.test.js
+          node --test tests/unit/brave-images.test.js tests/unit/serper-images.test.js tests/unit/combined-image-discovery.test.js tests/unit/image-discovery.test.js tests/unit/autonomous-workflow.test.js
           python -m unittest discover -s tests/python
           go test ./tools/...
           go build -o imgcheck ./tools/imgcheck
@@ -93,7 +93,7 @@ jobs:
           report="$(find previous-comparison -name image-canary.json -print -quit)"
           test -n "$report"
           echo "report=$report" >> "$GITHUB_OUTPUT"
-      - name: Test combined Brave and Google Images discovery
+      - name: Test combined Brave and Serper discovery
         env:
           WINE_SLUG: ${{ inputs.wine_slug }}
           PREVIOUS_REPORT: ${{ steps.previous.outputs.report }}
@@ -114,7 +114,7 @@ jobs:
             fi
           fi
           node tools/labelfetch/autonomous.mjs "${args[@]}"
-      - name: Capture the rendered Google Images comparison page
+      - name: Capture an unauthenticated Google Images diagnostic page
         if: always() && inputs.wine_slug != ''
         run: node tools/labelfetch/google-images-capture.mjs out-bottle/image-traces
       - name: Render diagnostic dossiers

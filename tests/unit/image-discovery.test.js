@@ -5,6 +5,13 @@ import {
   validateImageDiscoveryCredentials,
 } from '../../tools/labelfetch/image-discovery.mjs';
 
+test('the retired Google Custom Search provider is not accepted', () => {
+  assert.throws(
+    () => validateImageDiscoveryCredentials('google', { googleKey: 'key', googleCx: 'cx' }),
+    /unknown image search provider: google/,
+  );
+});
+
 test('combined discovery requires both provider credentials before any request', () => {
   assert.throws(
     () => validateImageDiscoveryCredentials('brave-serper', { braveKey: 'brave' }),

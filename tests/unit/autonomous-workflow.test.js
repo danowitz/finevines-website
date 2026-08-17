@@ -47,7 +47,7 @@ test('owns the complete safe production order behind one interface', async () =>
   assert.equal(h.reports.at(-1).outcome, 'completed');
 });
 
-test('a Google health failure stops before search and leaves a failed receipt', async () => {
+test('a provider health failure stops before search and leaves a failed receipt', async () => {
   const h = harness({ fail: 'preflight' });
   await assert.rejects(
     runAutonomousImageWorkflow(config, h.adapters),
