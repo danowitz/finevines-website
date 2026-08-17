@@ -575,8 +575,7 @@ func validateClientContentForDeploy(baseURL string, content model.SiteContent) e
 	if err != nil || parsed.Scheme == "" || parsed.Hostname() == "" {
 		return fmt.Errorf("deploy: FINEVINES_SITE_BASE_URL must be an absolute URL, got %q", baseURL)
 	}
-	host := strings.ToLower(strings.TrimSuffix(parsed.Hostname(), "."))
-	if host != "finevines.com" && host != "www.finevines.com" {
+	if !config.IsProductionSiteURL(baseURL) {
 		return nil
 	}
 	if !content.ContactConfirmed {

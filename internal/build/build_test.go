@@ -1006,7 +1006,7 @@ func TestSitemapListsEveryPage(t *testing.T) {
 
 func TestRobotsTxt(t *testing.T) {
 	dist := t.TempDir()
-	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.biz", ""); err != nil {
 		t.Fatal(err)
 	}
 	robots, err := os.ReadFile(filepath.Join(dist, "robots.txt"))
@@ -1016,7 +1016,7 @@ func TestRobotsTxt(t *testing.T) {
 	for _, want := range []string{
 		"User-agent: *",
 		"Allow: /",
-		"Sitemap: https://finevines.com/sitemap.xml",
+		"Sitemap: https://finevines.biz/sitemap.xml",
 	} {
 		if !strings.Contains(string(robots), want) {
 			t.Errorf("robots.txt missing %q", want)
@@ -1029,7 +1029,7 @@ func TestRobotsTxt(t *testing.T) {
 
 // TestRobotsTxtNonProductionDisallowsEverything guards the pre-launch bug a
 // site audit caught: the staging hosts (the Bunny *.b-cdn.net zone and
-// finevines.biz) were served the SAME "Allow: /" + Sitemap robots.txt as
+// the legacy finevines.com host) were served the SAME "Allow: /" + Sitemap robots.txt as
 // production, inviting search engines to index a build whose canonical URLs
 // point at the CDN hostname rather than the real domain. Indexability must
 // derive automatically from FINEVINES_SITE_BASE_URL — see isProductionHost —
@@ -1038,7 +1038,7 @@ func TestRobotsTxt(t *testing.T) {
 func TestRobotsTxtNonProductionDisallowsEverything(t *testing.T) {
 	for _, baseURL := range []string{
 		"https://finevines-com.b-cdn.net",
-		"https://finevines.biz",
+		"https://finevines.com",
 		"http://localhost:8080",
 	} {
 		dist := t.TempDir()
@@ -1072,7 +1072,7 @@ func TestRobotsTxtNonProductionDisallowsEverything(t *testing.T) {
 
 // TestIsProductionHost pins down the "is this the real domain" rule that
 // robots.txt, the per-page noindex meta tag, and (deliberately) the 404 page
-// all key off of: only finevines.com and its www alias are production.
+// all key off of: only finevines.biz and its www alias are production.
 // Mirrors cmd/finevines/main.go's validateClientContentForDeploy host check
 // (lowercased, trailing-dot stripped) so "production" means the same thing
 // everywhere in the codebase. Every edge case a live rollout can actually hit
@@ -1084,15 +1084,15 @@ func TestIsProductionHost(t *testing.T) {
 		baseURL string
 		want    bool
 	}{
-		{"https://finevines.com", true},
-		{"https://www.finevines.com", true},
-		{"https://finevines.com/", true},
-		{"https://finevines.com:8443", true},
-		{"http://finevines.com", true},
-		{"https://FineVines.COM", true},
-		{"https://finevines.com.", true}, // trailing-dot FQDN
+		{"https://finevines.biz", true},
+		{"https://www.finevines.biz", true},
+		{"https://finevines.biz/", true},
+		{"https://finevines.biz:8443", true},
+		{"http://finevines.biz", true},
+		{"https://FineVines.BIZ", true},
+		{"https://finevines.biz.", true}, // trailing-dot FQDN
 		{"https://finevines-com.b-cdn.net", false},
-		{"https://finevines.biz", false},
+		{"https://finevines.com", false},
 		{"http://localhost:8080", false},
 		{"http://localhost", false},
 		{"", false},
@@ -1127,7 +1127,7 @@ func TestNoIndexMetaFollowsProductionHost(t *testing.T) {
 	}
 
 	prodDist := t.TempDir()
-	if err := Run("testdata", "../../assets", "../../templates", prodDist, "https://finevines.com", ""); err != nil {
+	if err := Run("testdata", "../../assets", "../../templates", prodDist, "https://finevines.biz", ""); err != nil {
 		t.Fatal(err)
 	}
 	for _, rel := range [][]string{{"index.html"}, {"about", "index.html"}, {"contact", "index.html"}} {

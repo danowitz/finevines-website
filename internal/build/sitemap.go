@@ -2,11 +2,11 @@ package build
 
 import (
 	"encoding/xml"
-	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
+
+	"github.com/gritautomation/finevines-website/internal/config"
 )
 
 // sitemapURLSet and sitemapURL model the minimal subset of the sitemap
@@ -50,9 +50,9 @@ func writeSitemap(distDir, baseURL string, paths []string) error {
 }
 
 // isProductionHost reports whether baseURL points at the real public
-// domain — finevines.com or its www alias — the only host this build should
+// domain — finevines.biz or its www alias — the only host this build should
 // ever let search engines index. It fails safe: an unset, malformed, or any
-// other host (the *.b-cdn.net staging zones, finevines.biz, localhost,
+// other host (the *.b-cdn.net staging zones, legacy finevines.com, localhost,
 // whatever) all come back false. writeRobots and every page's noindex meta
 // (see site.NoIndex in build.go) derive from this single function, so
 // indexability is never a manual pre-launch step — it flips automatically
@@ -63,12 +63,7 @@ func writeSitemap(distDir, baseURL string, paths []string) error {
 // cmd/finevines/main.go's validateClientContentForDeploy host check, so
 // "is this production" means the same thing everywhere in the codebase.
 func isProductionHost(baseURL string) bool {
-	parsed, err := url.Parse(baseURL)
-	if err != nil {
-		return false
-	}
-	host := strings.ToLower(strings.TrimSuffix(parsed.Hostname(), "."))
-	return host == "finevines.com" || host == "www.finevines.com"
+	return config.IsProductionSiteURL(baseURL)
 }
 
 // writeRobots emits dist/robots.txt. On the production host this allows
