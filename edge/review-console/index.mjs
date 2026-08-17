@@ -1,6 +1,7 @@
 import * as BunnySDK from '@bunny.net/edgescript-sdk';
 import { createClient } from '@libsql/client/web';
 import process from 'node:process';
+import fineVinesLogo from '../../assets/img/finevines-logo.png';
 import { createBunnyStorage } from './bunny-storage.mjs';
 import { createGitHubDispatch } from './github-dispatch.mjs';
 import { createReviewConsole } from './handler.mjs';
@@ -35,5 +36,5 @@ const dispatch = createGitHubDispatch({ token: process.env.GITHUB_DISPATCH_TOKEN
 const state = createReviewState({ client: createClient({ url: config.databaseUrl, authToken: config.databaseToken }) });
 const mailer = createOutboxMailer(state);
 const accounts = createReviewerAccounts({ state, mailer, reviewUrl: config.origin });
-const handle = createReviewConsole({ config, storage, state, accounts, dispatch });
+const handle = createReviewConsole({ config, storage, state, accounts, dispatch, brandLogo: fineVinesLogo });
 BunnySDK.net.http.serve(handle);

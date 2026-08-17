@@ -11,7 +11,7 @@
     "pretest:e2e": "node tools/test-preflight.mjs --e2e",
     "test:e2e": "node --test tests/e2e/",
     "build": "go run ./cmd/finevines build",
-    "build:review-console": "esbuild edge/review-console/index.mjs --bundle --format=esm --platform=neutral --target=es2022 --external:@bunny.net/edgescript-sdk --external:node:process --outfile=.run/review-console.mjs"
+    "build:review-console": "esbuild edge/review-console/index.mjs --bundle --format=esm --platform=neutral --target=es2022 --loader:.png=dataurl --external:@bunny.net/edgescript-sdk --external:node:process --outfile=.run/review-console.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

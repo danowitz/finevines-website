@@ -40,7 +40,7 @@ function actionTarget(manifest, action, reviewer) {
   return wine;
 }
 
-export function createReviewConsole({ config, storage, state, accounts, dispatch, now = () => new Date(), uuid = () => crypto.randomUUID() }) {
+export function createReviewConsole({ config, storage, state, accounts, dispatch, brandLogo = '/favicon.ico', now = () => new Date(), uuid = () => crypto.randomUUID() }) {
   if (!state?.initialize || !state?.queue) throw new Error('review console requires review state');
   if (!accounts?.authenticate || !accounts?.sessionIdentity) throw new Error('review console requires reviewer accounts');
   const prefix = `_review/${config.environment}`;
@@ -84,14 +84,14 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
 
     if (request.method === 'POST' && url.pathname === '/login') {
       const clock = now().getTime();
-      if (clock < loginBlockedUntil) return response(loginPage('Too many attempts. Try again later.'), { status: 429, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Retry-After': String(Math.ceil((loginBlockedUntil - clock) / 1000)) } });
+      if (clock < loginBlockedUntil) return response(loginPage('Too many attempts. Try again later.', brandLogo), { status: 429, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Retry-After': String(Math.ceil((loginBlockedUntil - clock) / 1000)) } });
       const form = await request.formData();
       const identity = await accounts.authenticate(form.get('email'), form.get('password'));
       if (!identity) {
         loginFailures = loginFailures.filter((time) => clock - time < loginWindowMs);
         loginFailures.push(clock);
         if (loginFailures.length >= 5) loginBlockedUntil = clock + loginBlockMs;
-        return response(loginPage('Incorrect password.'), { status: 401, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        return response(loginPage('Incorrect password.', brandLogo), { status: 401, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
       }
       loginFailures = [];
       loginBlockedUntil = 0;
@@ -107,25 +107,25 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
     const reviewer = session ? await accounts.sessionIdentity(session.reviewerEmail, session.credentialVersion) : null;
     if (!session || !reviewer) {
       if (url.pathname !== '/') return response('Not found', { status: 404 });
-      return response(loginPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      return response(loginPage('', brandLogo), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
 
     if (reviewer.mustChangePassword) {
       const tokenValue = await csrfToken(config.sessionSecret, session.sessionId);
       if (request.method === 'GET' && url.pathname === '/change-password') {
-        return response(changePasswordPage(tokenValue), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        return response(changePasswordPage(tokenValue, '', brandLogo), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
       }
       if (request.method === 'POST' && url.pathname === '/change-password') {
-        if (request.headers.get('origin') !== config.origin) return response(changePasswordPage(tokenValue, 'Invalid request.'), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        if (request.headers.get('origin') !== config.origin) return response(changePasswordPage(tokenValue, 'Invalid request.', brandLogo), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
         const form = await request.formData();
-        if (form.get('csrf') !== tokenValue) return response(changePasswordPage(tokenValue, 'Invalid request.'), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        if (form.get('csrf') !== tokenValue) return response(changePasswordPage(tokenValue, 'Invalid request.', brandLogo), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
         try {
           const updated = await accounts.changePassword(reviewer, form.get('currentPassword'), form.get('newPassword'));
           const next = await issueSession({ secret: config.sessionSecret, environment: config.environment, sessionId: uuid(),
             reviewerEmail: updated.email, credentialVersion: updated.credentialVersion, mustChangePassword: false, now: now() });
           return response(null, { status: 303, headers: { Location: '/', 'Set-Cookie': `${cookieName}=${next}; Max-Age=43200; Path=/; HttpOnly; Secure; SameSite=Strict` } });
         } catch (error) {
-          return response(changePasswordPage(tokenValue, error.message), { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+          return response(changePasswordPage(tokenValue, error.message, brandLogo), { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
         }
       }
       return response(null, { status: 303, headers: { Location: '/change-password' } });
