@@ -25,15 +25,20 @@ button { cursor: pointer; }
 .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .controls input, .controls select { min-width: 220px; padding: 11px 13px; border: 1px solid #c9b9aa; border-radius: 8px; background: #fff; color: #251c18; }
 .summary { margin: 14px 0 22px; padding: 13px 16px; border-left: 5px solid #7d263b; background: #fff; border-radius: 8px; }
+.summary small { display: block; margin-top: 5px; color: #78665a; font-size: 12px; }
 .incidents:empty { display: none; }
 .incident { margin: 0 0 12px; padding: 14px 16px; border: 2px solid #a12222; border-radius: 10px; background: #fff1f0; color: #681717; }
 .incident strong, .incident span { display: block; }
 .incident span { margin-top: 4px; line-height: 1.4; }
 .incident button { margin-top: 10px; border: 0; border-radius: 7px; padding: 8px 12px; background: #7d263b; color: #fff; font-weight: 750; }
 .admin { margin: 0 0 18px; padding: 16px; border: 1px solid #d9cfc4; border-radius: 10px; background: #fff; }
-.admin h2 { margin: 0 0 10px; font: 700 20px/1.2 Georgia, serif; }
+.admin:empty { display: none; }
+.admin details > summary { cursor: pointer; font: 700 18px/1.2 Georgia, serif; }
+.admin-intro { margin: 12px 0 4px; color: #6e5b50; font-size: 13px; }
 .account { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid #eee5dc; }
-.account span { flex: 1; min-width: 240px; }
+.account > div { flex: 1; min-width: 240px; }
+.account strong, .account small { display: block; }
+.account small { margin-top: 3px; color: #78665a; }
 .account button { border: 0; border-radius: 7px; padding: 8px 11px; background: #e8e0d7; font-weight: 750; }
 .wine { margin-bottom: 18px; padding: 18px; background: #fff; border: 1px solid #d9cfc4; border-radius: 14px; box-shadow: 0 2px 8px #3c24151a; }
 .wine-head { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
@@ -184,7 +189,7 @@ async function submit(wine, candidateId, card) {
   const data = await res.json();
   const output = card.querySelector('.status');
   if (!res.ok) { output.textContent = data.error || 'Could not queue the selection.'; output.className = 'status bad'; return; }
-  output.textContent = data.dispatched ? 'Queued. The deployment has been started.' : 'Queued. The nightly processor will pick it up.';
+  output.textContent = data.dispatched ? 'Queued. Processing is starting now.' : 'Queued. The processor checks for new decisions every five minutes.';
   output.className = 'status good';
   card.querySelectorAll('button').forEach((button) => button.disabled = true);
   await finishQueue(wine, card);
@@ -327,22 +332,29 @@ async function loadAccounts() {
   const res = await fetch('/api/admin/accounts', { credentials: 'same-origin' });
   if (!res.ok) return;
   const value = await res.json();
-  const rows = [el('h2', { text: 'Reviewer access' })];
-  for (const account of value.accounts || []) {
-    const button = el('button', { type: 'button', text: account.status === 'invitation_pending' ? 'Activate' : 'Resend invitation' });
-    button.addEventListener('click', async () => {
-      button.disabled = true;
-      const response = await fetch('/api/admin/accounts/' + encodeURIComponent(account.email) + '/activate', {
-        method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': value.csrfToken },
+  const accounts = value.accounts || [];
+  const rows = [el('p', { class: 'admin-intro', text: 'Invitations are only needed for new reviewers. Active reviewers can already sign in.' })];
+  const labels = { invitation_pending: 'Not invited', invited: 'Invitation sent', active: 'Active' };
+  for (const account of accounts) {
+    const row = el('div', { class: 'account' }, [el('div', {}, [
+      el('strong', { text: account.name + ' · ' + (labels[account.status] || account.status) }),
+      el('small', { text: account.email + ' · ' + account.role }),
+    ])]);
+    if (account.status !== 'active') {
+      const button = el('button', { type: 'button', text: account.status === 'invitation_pending' ? 'Send invitation' : 'Send new invitation' });
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        const response = await fetch('/api/admin/accounts/' + encodeURIComponent(account.email) + '/activate', {
+          method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': value.csrfToken },
+        });
+        if (response.ok) await loadAccounts();
+        else { button.textContent = 'Could not send invitation'; button.disabled = false; }
       });
-      button.textContent = response.ok ? 'Invitation queued' : 'Could not queue invitation';
-      if (!response.ok) button.disabled = false;
-    });
-    rows.push(el('div', { class: 'account' }, [
-      el('span', { text: account.name + ' · ' + account.email + ' · ' + account.status }), button,
-    ]));
+      row.append(button);
+    }
+    rows.push(row);
   }
-  admin.replaceChildren(...rows);
+  admin.replaceChildren(el('details', {}, [el('summary', { text: 'Manage reviewer access (' + accounts.length + ')' }), ...rows]));
 }
 
 async function refresh() {
@@ -352,7 +364,10 @@ async function refresh() {
     if (!res.ok) { status.textContent = 'The review package is not available. Please try again later.'; return; }
     state.package = await res.json();
     const wines = state.package.wines || [];
-    status.textContent = summaryText(state.package.reviewStatus, state.package.expiresAt);
+    status.replaceChildren(
+      document.createTextNode(summaryText(state.package.reviewStatus, state.package.expiresAt)),
+      el('small', { text: 'Updates automatically every 10 seconds while this window is active.' }),
+    );
     incidentList.replaceChildren();
     for (const incident of state.package.incidents || []) {
       const controls = el('div', { class: 'actions' });
@@ -405,7 +420,7 @@ export function loginPage(message = '') {
 
 export function changePasswordPage(csrf, message = '') {
   const feedback = message ? `<p class="login-message" role="alert">${escapeHtml(message)}</p>` : '';
-  return documentPage(`<main class="login-shell"><header class="login-brand"><div class="login-mark" aria-hidden="true">FV</div><h1>Choose your password</h1><p>Your temporary password must be replaced before you can review images.</p></header><section class="login-card">${feedback}<form method="post" action="/change-password"><input type="hidden" name="csrf" value="${escapeHtml(csrf)}"><label for="current-password">Temporary password</label><input id="current-password" name="currentPassword" type="password" required autocomplete="current-password"><label for="new-password">New password</label><input id="new-password" name="newPassword" type="password" required minlength="14" autocomplete="new-password"><button class="login-submit" type="submit">Save password</button></form></section></main>`, { bodyClass: 'login-page' });
+  return documentPage(`<main class="login-shell"><header class="login-brand"><div class="login-mark" aria-hidden="true">FV</div><h1>Choose your password</h1><p>Your temporary password must be replaced before you can review images.</p></header><section class="login-card">${feedback}<form method="post" action="/change-password"><input type="hidden" name="csrf" value="${escapeHtml(csrf)}"><label for="current-password">Temporary password</label><input id="current-password" name="currentPassword" type="password" required autocomplete="current-password"><label for="new-password">New password</label><input id="new-password" name="newPassword" type="password" required minlength="8" autocomplete="new-password"><button class="login-submit" type="submit">Save password</button></form></section></main>`, { bodyClass: 'login-page' });
 }
 
 export function consolePage(reviewer) {
