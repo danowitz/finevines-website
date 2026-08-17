@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { requireBunnyDatabaseUrl } from './bunny-database.mjs';
 
 const API = 'https://api.bunny.net';
 const repository = 'danowitz/finevines-website';
@@ -33,7 +34,7 @@ const accountKey = required('FINEVINES_BUNNY_API_KEY');
 const storageEndpoint = required('FINEVINES_REVIEW_STORAGE_ENDPOINT').replace(/\/$/, '');
 const storageZone = required('FINEVINES_REVIEW_STORAGE_ZONE');
 const storageKey = required('FINEVINES_REVIEW_STORAGE_KEY');
-const databaseUrl = required('FINEVINES_REVIEW_DATABASE_URL');
+const databaseUrl = requireBunnyDatabaseUrl(required('FINEVINES_REVIEW_DATABASE_URL'));
 const databaseToken = required('FINEVINES_REVIEW_DATABASE_TOKEN');
 const dispatchToken = required('FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN');
 
