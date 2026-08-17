@@ -6,13 +6,15 @@ import { ActiveWineLockError } from '../../edge/review-console/review-state.mjs'
 
 before(() => { globalThis.crypto ??= webcrypto; });
 
-function fixture({ dispatch = async () => {} } = {}) {
+const REVIEWER_IDENTITY = { email: 'barb.fultz@finevines.com', name: 'Barb Fultz', role: 'Back Office', mustChangePassword: false, credentialVersion: 2 };
+
+function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY } = {}) {
   const candidate = new Uint8Array([1, 2, 3, 4]);
   const files = new Map([
     ['_review/test/current.json', JSON.stringify({ packageId: 'pkg-1' })],
     ['_review/test/packages/pkg-1/manifest.json', JSON.stringify({
       schemaVersion: 1, packageId: 'pkg-1', environment: 'test', catalogCommit: 'abcdef1', createdAt: '2026-08-10T00:00:00Z', expiresAt: '2026-09-10T00:00:00Z',
-      reviewers: [{ name: 'Barb Fultz', role: 'Back Office' }, { name: 'Connie Molitor', role: 'Executive' }],
+      reviewers: [{ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }, { name: 'Connie Molitor', email: 'connie@finevines.com', role: 'Executive' }],
       wines: [{ sku: '500740*', displayIdentity: 'Producer Wine 2022', searchQuery: 'Producer Wine 2022 exact query', wineRevision: 'a'.repeat(64), candidates: [{ candidateId: 'c1', storageName: 'c1.png', mime: 'image/png', bytes: candidate.length, width: 400, height: 800 }] }],
     })],
     ['_review/test/packages/pkg-1/images/c1.png', candidate],
@@ -34,13 +36,24 @@ function fixture({ dispatch = async () => {} } = {}) {
       return { id: action.id, status: 'queued' };
     },
   };
-  const config = { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', password: 'correct horse', sessionSecret: 'session-secret' };
-  const handle = createReviewConsole({ config, storage, state, dispatch, now: () => new Date('2026-08-11T20:00:00Z'), uuid: (() => { let n = 0; return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`; })() });
+  const accounts = {
+    authenticate: async (email, password) => email === identity.email && password === 'correct horse' ? identity : null,
+    sessionIdentity: async (email, version) => email === identity.email && version === identity.credentialVersion ? identity : null,
+    changePassword: async (current, oldPassword, newPassword) => {
+      assert.equal(current, identity);
+      assert.equal(oldPassword, 'correct horse');
+      assert.equal(newPassword, 'A-new-private-password-92!');
+      identity = { ...identity, mustChangePassword: false, credentialVersion: identity.credentialVersion + 1 };
+      return identity;
+    },
+  };
+  const config = { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', sessionSecret: 'session-secret' };
+  const handle = createReviewConsole({ config, storage, state, accounts, dispatch, now: () => new Date('2026-08-11T20:00:00Z'), uuid: (() => { let n = 0; return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`; })() });
   return { handle, writes, files };
 }
 
 async function login(handle) {
-  const body = new URLSearchParams({ password: 'correct horse' });
+  const body = new URLSearchParams({ email: 'barb.fultz@finevines.com', password: 'correct horse' });
   const res = await handle(new Request('https://review.finevines.biz/login', { method: 'POST', body }));
   return res.headers.get('set-cookie').split(';')[0];
 }
@@ -76,7 +89,7 @@ describe('review console handler', () => {
 
   it('sets a secure host-only cookie without a Domain attribute', async () => {
     const { handle } = fixture();
-    const res = await handle(new Request('https://review.finevines.biz/login', { method: 'POST', body: new URLSearchParams({ password: 'correct horse' }) }));
+    const res = await handle(new Request('https://review.finevines.biz/login', { method: 'POST', body: new URLSearchParams({ email: 'barb.fultz@finevines.com', password: 'correct horse' }) }));
     const cookie = res.headers.get('set-cookie');
     assert.match(cookie, /HttpOnly/); assert.match(cookie, /Secure/); assert.match(cookie, /SameSite=Strict/);
     assert.doesNotMatch(cookie, /Domain=/i);
@@ -85,10 +98,10 @@ describe('review console handler', () => {
   it('rate-limits repeated password failures without revealing protected data', async () => {
     const { handle } = fixture();
     for (let attempt = 0; attempt < 5; attempt++) {
-      const denied = await handle(new Request('https://review.finevines.biz/login', { method: 'POST', body: new URLSearchParams({ password: 'wrong' }) }));
+      const denied = await handle(new Request('https://review.finevines.biz/login', { method: 'POST', body: new URLSearchParams({ email: 'barb.fultz@finevines.com', password: 'wrong' }) }));
       assert.equal(denied.status, 401);
     }
-    const blocked = await handle(new Request('https://review.finevines.biz/login', { method: 'POST', body: new URLSearchParams({ password: 'correct horse' }) }));
+    const blocked = await handle(new Request('https://review.finevines.biz/login', { method: 'POST', body: new URLSearchParams({ email: 'barb.fultz@finevines.com', password: 'correct horse' }) }));
     assert.equal(blocked.status, 429);
     assert.equal(blocked.headers.get('retry-after'), '900');
     assert.doesNotMatch(await blocked.text(), /package|candidate/i);
@@ -100,8 +113,8 @@ describe('review console handler', () => {
     const res = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     assert.equal(res.status, 200);
     const broken = createReviewConsole({
-      config: { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', password: 'correct horse', sessionSecret: 'session-secret' },
-      storage: { get: async () => { throw new Error('storage offline'); } }, state: { initialize: async () => {}, queue: async () => {} }, dispatch: async () => {}, now: () => new Date('2026-08-11T20:00:00Z'),
+      config: { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', sessionSecret: 'session-secret' },
+      storage: { get: async () => { throw new Error('storage offline'); } }, state: { initialize: async () => {}, queue: async () => {} }, accounts: { authenticate: async () => REVIEWER_IDENTITY, sessionIdentity: async () => REVIEWER_IDENTITY }, dispatch: async () => {}, now: () => new Date('2026-08-11T20:00:00Z'),
     });
     const token = await login(broken);
     const failed = await broken(new Request('https://review.finevines.biz/api/current', { headers: { cookie: token } }));
@@ -117,7 +130,8 @@ describe('review console handler', () => {
     assert.equal(page.status, 200);
     const markup = await page.text();
     assert.match(markup, /Compare the candidates/);
-    assert.match(markup, /<select id="reviewer"/);
+    assert.doesNotMatch(markup, /<select id="reviewer"/);
+    assert.match(markup, /Barb Fultz/);
     assert.match(markup, /class="modal-dialog"/);
     const app = await handle(new Request('https://review.finevines.biz/app.js', { headers: { cookie } }));
     const script = await app.text();
@@ -152,7 +166,7 @@ describe('review console handler', () => {
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
-    const action = { kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
+    const action = { kind: 'image-select', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const res = await handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) }));
     assert.equal(res.status, 202);
     assert.deepEqual(writes.map((p) => p.replace(/00000000-0000-4000-8000-\d{12}/, '<id>')), ['_review/test/actions/<id>.json', '_review/test/pending/<id>.json']);
@@ -163,7 +177,7 @@ describe('review console handler', () => {
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
-    const action = { kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
+    const action = { kind: 'image-select', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const request = () => new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) });
     const responses = await Promise.all([handle(request()), handle(request())]);
     assert.deepEqual(responses.map((response) => response.status).sort(), [202, 409]);
@@ -177,7 +191,7 @@ describe('review console handler', () => {
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
-    const action = { kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
+    const action = { kind: 'image-select', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const res = await handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) }));
     assert.equal(res.status, 202);
     assert.equal((await res.json()).dispatched, false);
@@ -196,7 +210,7 @@ describe('review console handler', () => {
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
-    const action = { kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'not-in-package' };
+    const action = { kind: 'image-select', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'not-in-package' };
     const res = await handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) }));
     assert.equal(res.status, 400);
     assert.equal(writes.length, 0);
@@ -207,11 +221,34 @@ describe('review console handler', () => {
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
-    const action = { kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
+    const action = { kind: 'image-select', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const queued = await handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) }));
     const { id } = await queued.json();
     const pending = await handle(new Request(`https://review.finevines.biz/api/actions/${id}`, { headers: { cookie } }));
     assert.equal((await pending.json()).status, 'queued');
+  });
+
+  it('forces an invited reviewer to change the temporary password before review access', async () => {
+    const invited = { ...REVIEWER_IDENTITY, mustChangePassword: true, credentialVersion: 1 };
+    const { handle } = fixture({ identity: invited });
+    const signedIn = await handle(new Request('https://review.finevines.biz/login', {
+      method: 'POST', body: new URLSearchParams({ email: invited.email, password: 'correct horse' }),
+    }));
+    assert.equal(signedIn.status, 303);
+    assert.equal(signedIn.headers.get('location'), '/change-password');
+    const cookie = signedIn.headers.get('set-cookie').split(';')[0];
+
+    const formPage = await handle(new Request('https://review.finevines.biz/change-password', { headers: { cookie } }));
+    const markup = await formPage.text();
+    assert.match(markup, /Choose your password/);
+    const csrf = markup.match(/name="csrf" value="([^"]+)"/)[1];
+    const changed = await handle(new Request('https://review.finevines.biz/change-password', {
+      method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz' },
+      body: new URLSearchParams({ csrf, currentPassword: 'correct horse', newPassword: 'A-new-private-password-92!' }),
+    }));
+    assert.equal(changed.status, 303);
+    assert.equal(changed.headers.get('location'), '/');
+    assert.notEqual(changed.headers.get('set-cookie').split(';')[0], cookie);
   });
 
   it('immutably stores and queues a reviewer-pasted image in dependency order', async () => {
@@ -220,7 +257,6 @@ describe('review console handler', () => {
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
     const form = new FormData();
-    form.set('reviewer', 'Barb Fultz');
     form.set('sku', '500740*');
     form.set('packageId', 'pkg-1');
     form.set('targetCatalogCommit', 'abcdef1');
@@ -244,13 +280,13 @@ describe('review console handler', () => {
   });
 
   it('rejects unsafe reviewer-pasted image requests before writing anything', async () => {
-    const { handle, writes } = fixture();
+    const { handle, writes, files } = fixture();
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
     const submit = async (bytes, type = 'image/png', origin = 'https://review.finevines.biz') => {
       const form = new FormData();
-      for (const [key, value] of Object.entries({ reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64) })) form.set(key, value);
+      for (const [key, value] of Object.entries({ sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64) })) form.set(key, value);
       form.set('image', new Blob([bytes], { type }), 'pasted.bin');
       return handle(new Request('https://review.finevines.biz/api/reviewer-images', { method: 'POST', headers: { cookie, origin, 'x-csrf-token': csrf }, body: form }));
     };
@@ -270,7 +306,7 @@ describe('review console handler', () => {
     const csrf = (await current.json()).csrfToken;
     const submit = async (bytes) => {
       const form = new FormData();
-      for (const [key, value] of Object.entries({ reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64) })) form.set(key, value);
+      for (const [key, value] of Object.entries({ sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64) })) form.set(key, value);
       form.set('image', new Blob([bytes]), 'pasted.bin');
       return handle(new Request('https://review.finevines.biz/api/reviewer-images', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'x-csrf-token': csrf }, body: form }));
     };
@@ -283,15 +319,15 @@ describe('review console handler', () => {
     assert.deepEqual(writes, []);
   });
 
-  it('rejects a reviewer who is not on the package roster', async () => {
-    const { handle, writes } = fixture();
+  it('derives the reviewer from the authenticated session', async () => {
+    const { handle, writes, files } = fixture();
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const csrf = (await current.json()).csrfToken;
-    const action = { kind: 'image-select', reviewer: 'Sales Person', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
+    const action = { kind: 'image-select', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const res = await handle(new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) }));
-    assert.equal(res.status, 400);
-    assert.match((await res.json()).error, /reviewer/);
-    assert.equal(writes.length, 0);
+    assert.equal(res.status, 202);
+    const actionPath = writes.find((path) => path.includes('/actions/'));
+    assert.equal(JSON.parse(files.get(actionPath)).reviewer, 'barb.fultz@finevines.com');
   });
 });

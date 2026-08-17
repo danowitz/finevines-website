@@ -41,8 +41,11 @@ export function protectedHeaders(extra = {}) {
   };
 }
 
-export async function issueSession({ secret, environment, sessionId, now, ttlSeconds = 43_200 }) {
-  const payload = b64url(encoder.encode(JSON.stringify({ v: 1, environment, sessionId, exp: Math.floor(now.getTime() / 1000) + ttlSeconds })));
+export async function issueSession({ secret, environment, sessionId, reviewerEmail, credentialVersion, mustChangePassword, now, ttlSeconds = 43_200 }) {
+  const payload = b64url(encoder.encode(JSON.stringify({
+    v: 2, environment, sessionId, reviewerEmail, credentialVersion, mustChangePassword,
+    exp: Math.floor(now.getTime() / 1000) + ttlSeconds,
+  })));
   return `${payload}.${b64url(await hmac(secret, payload))}`;
 }
 
@@ -57,7 +60,8 @@ export async function verifySession(token, { secret, environment, now }) {
     for (let i = 0; i < actual.length; i++) mismatch |= actual[i] ^ expected[i];
     if (mismatch) return null;
     const parsed = JSON.parse(new TextDecoder().decode(fromB64url(payload)));
-    if (parsed.v !== 1 || parsed.environment !== environment || typeof parsed.sessionId !== 'string') return null;
+    if (parsed.v !== 2 || parsed.environment !== environment || typeof parsed.sessionId !== 'string') return null;
+    if (typeof parsed.reviewerEmail !== 'string' || !Number.isInteger(parsed.credentialVersion) || typeof parsed.mustChangePassword !== 'boolean') return null;
     if (!Number.isInteger(parsed.exp) || parsed.exp <= Math.floor(now.getTime() / 1000)) return null;
     return parsed;
   } catch {
@@ -66,7 +70,7 @@ export async function verifySession(token, { secret, environment, now }) {
 }
 
 export function validateAction(input, context) {
-  const allowed = new Set(['kind', 'reviewer', 'sku', 'packageId', 'targetCatalogCommit', 'wineRevision', 'candidateId', 'imageStorageName', 'imageSHA256', 'imageBytes', 'imageMIME']);
+  const allowed = new Set(['kind', 'sku', 'packageId', 'targetCatalogCommit', 'wineRevision', 'candidateId', 'imageStorageName', 'imageSHA256', 'imageBytes', 'imageMIME']);
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('action must be an object');
   for (const key of Object.keys(input)) if (!allowed.has(key)) throw new Error(`unknown action field ${key}`);
   const text = (key, max, pattern = /^.{1,}$/u) => {
@@ -81,7 +85,7 @@ export function validateAction(input, context) {
     schemaVersion: 1,
     id: context.id,
     environment: context.environment,
-    reviewer: text('reviewer', 80),
+    reviewer: String(context.reviewerEmail || ''),
     sku: text('sku', 80, /^[A-Za-z0-9._*-]+$/),
     kind,
     packageId: text('packageId', 160, /^[A-Za-z0-9._-]+$/),
@@ -91,6 +95,7 @@ export function validateAction(input, context) {
     submittedAt: context.now.toISOString(),
     csrfSessionId: context.sessionId,
   };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(action.reviewer) || action.reviewer.length > 254) throw new Error('invalid reviewer identity');
   if (kind === 'image-select' && !action.candidateId) throw new Error('image-select requires candidateId');
   if (kind === 'no-image' && action.candidateId) throw new Error('no-image cannot name a candidate');
   const imageFields = ['imageStorageName', 'imageSHA256', 'imageBytes', 'imageMIME'];

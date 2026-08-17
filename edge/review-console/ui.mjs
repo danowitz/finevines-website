@@ -98,7 +98,6 @@ const el = (tag, attrs = {}, children = []) => {
 };
 const status = document.querySelector('#summary');
 const list = document.querySelector('#wine-list');
-const reviewer = document.querySelector('#reviewer');
 
 function imageUrl(candidate) {
   return '/api/packages/' + encodeURIComponent(state.package.packageId) + '/images/' + encodeURIComponent(candidate.candidateId);
@@ -155,18 +154,6 @@ function choose(wine, candidate, card) {
   card.closest('.wine').querySelector('.primary').disabled = false;
 }
 
-function selectedReviewer() {
-  const name = reviewer.value.trim();
-  if (name) {
-    reviewer.setCustomValidity('');
-    return name;
-  }
-  reviewer.focus();
-  reviewer.setCustomValidity('Select your name before submitting.');
-  reviewer.reportValidity();
-  return '';
-}
-
 function finishQueue(wine, card, data) {
   const previewUrl = card.querySelector('.paste-zone')?.dataset.previewUrl;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -179,11 +166,9 @@ function finishQueue(wine, card, data) {
 }
 
 async function submit(wine, candidateId, card) {
-  const name = selectedReviewer();
-  if (!name) return;
   const kind = candidateId ? 'image-select' : 'no-image';
   const body = {
-    kind, reviewer: name, sku: wine.sku, packageId: state.package.packageId,
+    kind, sku: wine.sku, packageId: state.package.packageId,
     targetCatalogCommit: state.package.catalogCommit, wineRevision: wine.wineRevision,
     candidateId: candidateId || '',
   };
@@ -198,13 +183,10 @@ async function submit(wine, candidateId, card) {
 }
 
 async function submitPasted(wine, file, card, button, output) {
-  const name = selectedReviewer();
-  if (!name) return;
   button.disabled = true;
   output.textContent = 'Saving and queueing the pasted image…';
   output.className = 'paste-error';
   const body = new FormData();
-  body.set('reviewer', name);
   body.set('sku', wine.sku);
   body.set('packageId', state.package.packageId);
   body.set('targetCatalogCommit', state.package.catalogCommit);
@@ -324,9 +306,6 @@ async function start() {
   const res = await fetch('/api/current', { credentials: 'same-origin' });
   if (!res.ok) { status.textContent = 'The review package is not available. Please try again later.'; return; }
   state.package = await res.json();
-  for (const person of state.package.reviewers || []) reviewer.append(el('option', { value: person.name, text: person.name }));
-  reviewer.disabled = reviewer.options.length === 1;
-  if (reviewer.disabled) reviewer.options[0].textContent = 'Reviewer list unavailable';
   const wines = state.package.wines || [];
   status.textContent = wines.length + ' wines need a decision · package expires ' + new Date(state.package.expiresAt).toLocaleDateString();
   if (!wines.length) list.append(el('div', { class: 'empty', text: 'Nothing needs review right now.' }));
@@ -350,10 +329,15 @@ function documentPage(body, { script = false, bodyClass = '' } = {}) {
 
 export function loginPage(message = '') {
   const feedback = message ? `<p class="login-message" role="alert">${escapeHtml(message)}</p>` : '';
-  return documentPage(`<main class="login-shell"><header class="login-brand"><div class="login-mark" aria-hidden="true">FV</div><h1>Fine Vines</h1><p>Sign in to review and approve bottle images for the catalog.</p></header><section class="login-card">${feedback}<form method="post" action="/login"><label for="password">Review password</label><input id="password" name="password" type="password" required autocomplete="current-password" autofocus placeholder="Enter your password"><button class="login-submit" type="submit">Sign in</button></form><p class="login-note">Private review workspace · Authorized users only</p></section></main>`, { bodyClass: 'login-page' });
+  return documentPage(`<main class="login-shell"><header class="login-brand"><div class="login-mark" aria-hidden="true">FV</div><h1>Fine Vines</h1><p>Sign in to review and approve bottle images for the catalog.</p></header><section class="login-card">${feedback}<form method="post" action="/login"><label for="email">Email address</label><input id="email" name="email" type="email" required autocomplete="username" autofocus placeholder="you@example.com"><label for="password">Password</label><input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password"><button class="login-submit" type="submit">Sign in</button></form><p class="login-note">Private review workspace · Authorized users only</p></section></main>`, { bodyClass: 'login-page' });
 }
 
-export function consolePage() {
-  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><select id="reviewer" required aria-label="Your name"><option value="">Select your name</option></select></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
+export function changePasswordPage(csrf, message = '') {
+  const feedback = message ? `<p class="login-message" role="alert">${escapeHtml(message)}</p>` : '';
+  return documentPage(`<main class="login-shell"><header class="login-brand"><div class="login-mark" aria-hidden="true">FV</div><h1>Choose your password</h1><p>Your temporary password must be replaced before you can review images.</p></header><section class="login-card">${feedback}<form method="post" action="/change-password"><input type="hidden" name="csrf" value="${escapeHtml(csrf)}"><label for="current-password">Temporary password</label><input id="current-password" name="currentPassword" type="password" required autocomplete="current-password"><label for="new-password">New password</label><input id="new-password" name="newPassword" type="password" required minlength="14" autocomplete="new-password"><button class="login-submit" type="submit">Save password</button></form></section></main>`, { bodyClass: 'login-page' });
+}
+
+export function consolePage(reviewer) {
+  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><span>Signed in as ${escapeHtml(reviewer.name)}</span></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
 <div id="modal" class="modal" hidden><section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div class="modal-heading"><strong id="modal-title"></strong><span id="modal-count"></span></div><button class="modal-close" type="button" data-close>Close</button></div><div id="modal-stage" class="modal-stage"></div></section></div>`, { script: true });
 }

@@ -1,7 +1,7 @@
 import { csrfToken, issueSession, protectedHeaders, readCookie, validateAction, verifySession } from './core.mjs';
 import { inspectReviewerImage, ReviewerImageError } from './reviewer-image.mjs';
 import { ActiveWineLockError } from './review-state.mjs';
-import { APP_CSS, APP_JS, FAVICON, consolePage, loginPage } from './ui.mjs';
+import { APP_CSS, APP_JS, FAVICON, changePasswordPage, consolePage, loginPage } from './ui.mjs';
 
 const response = (body, init = {}) => new Response(body, { ...init, headers: protectedHeaders(init.headers) });
 const json = (value, status = 200) => response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
@@ -17,10 +17,9 @@ async function loadPackage(storage, prefix, packageId) {
   return manifest;
 }
 
-function actionTarget(manifest, action) {
+function actionTarget(manifest, action, reviewer) {
   if (manifest.environment !== action.environment || manifest.catalogCommit !== action.targetCatalogCommit) throw new Error('action does not match package');
-  const eligibleReviewer = manifest.reviewers?.some(({ name, role }) => name === action.reviewer && (role === 'Executive' || role === 'Back Office'));
-  if (!eligibleReviewer) throw new Error('reviewer is not authorized for this package');
+  if (!['Executive', 'Back Office', 'Support'].includes(reviewer.role)) throw new Error('reviewer is not authorized');
   const created = Date.parse(manifest.createdAt);
   const expires = Date.parse(manifest.expiresAt);
   const submitted = Date.parse(action.submittedAt);
@@ -31,16 +30,9 @@ function actionTarget(manifest, action) {
   return wine;
 }
 
-async function equalSecret(left, right) {
-  const enc = new TextEncoder();
-  const [a, b] = await Promise.all([left, right].map((v) => crypto.subtle.digest('SHA-256', enc.encode(String(v)))));
-  const aa = new Uint8Array(a), bb = new Uint8Array(b);
-  let mismatch = aa.length ^ bb.length;
-  for (let i = 0; i < aa.length; i++) mismatch |= aa[i] ^ bb[i];
-  return mismatch === 0;
-}
-export function createReviewConsole({ config, storage, state, dispatch, now = () => new Date(), uuid = () => crypto.randomUUID() }) {
+export function createReviewConsole({ config, storage, state, accounts, dispatch, now = () => new Date(), uuid = () => crypto.randomUUID() }) {
   if (!state?.initialize || !state?.queue) throw new Error('review console requires review state');
+  if (!accounts?.authenticate || !accounts?.sessionIdentity) throw new Error('review console requires reviewer accounts');
   const prefix = `_review/${config.environment}`;
   const cookieName = config.cookieName;
   const loginWindowMs = 10 * 60_000;
@@ -79,7 +71,8 @@ export function createReviewConsole({ config, storage, state, dispatch, now = ()
       const clock = now().getTime();
       if (clock < loginBlockedUntil) return response(loginPage('Too many attempts. Try again later.'), { status: 429, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Retry-After': String(Math.ceil((loginBlockedUntil - clock) / 1000)) } });
       const form = await request.formData();
-      if (!await equalSecret(form.get('password'), config.password)) {
+      const identity = await accounts.authenticate(form.get('email'), form.get('password'));
+      if (!identity) {
         loginFailures = loginFailures.filter((time) => clock - time < loginWindowMs);
         loginFailures.push(clock);
         if (loginFailures.length >= 5) loginBlockedUntil = clock + loginBlockMs;
@@ -88,19 +81,43 @@ export function createReviewConsole({ config, storage, state, dispatch, now = ()
       loginFailures = [];
       loginBlockedUntil = 0;
       const sessionId = uuid();
-      const token = await issueSession({ secret: config.sessionSecret, environment: config.environment, sessionId, now: now() });
-      return response(null, { status: 303, headers: { Location: '/', 'Set-Cookie': `${cookieName}=${token}; Max-Age=43200; Path=/; HttpOnly; Secure; SameSite=Strict` } });
+      const token = await issueSession({ secret: config.sessionSecret, environment: config.environment, sessionId,
+        reviewerEmail: identity.email, credentialVersion: identity.credentialVersion,
+        mustChangePassword: identity.mustChangePassword, now: now() });
+      return response(null, { status: 303, headers: { Location: identity.mustChangePassword ? '/change-password' : '/', 'Set-Cookie': `${cookieName}=${token}; Max-Age=43200; Path=/; HttpOnly; Secure; SameSite=Strict` } });
     }
 
     const token = readCookie(request.headers.get('cookie'), cookieName);
     const session = await verifySession(token, { secret: config.sessionSecret, environment: config.environment, now: now() });
-    if (!session) {
+    const reviewer = session ? await accounts.sessionIdentity(session.reviewerEmail, session.credentialVersion) : null;
+    if (!session || !reviewer) {
       if (url.pathname !== '/') return response('Not found', { status: 404 });
       return response(loginPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
 
+    if (reviewer.mustChangePassword) {
+      const tokenValue = await csrfToken(config.sessionSecret, session.sessionId);
+      if (request.method === 'GET' && url.pathname === '/change-password') {
+        return response(changePasswordPage(tokenValue), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      }
+      if (request.method === 'POST' && url.pathname === '/change-password') {
+        if (request.headers.get('origin') !== config.origin) return response(changePasswordPage(tokenValue, 'Invalid request.'), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        const form = await request.formData();
+        if (form.get('csrf') !== tokenValue) return response(changePasswordPage(tokenValue, 'Invalid request.'), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        try {
+          const updated = await accounts.changePassword(reviewer, form.get('currentPassword'), form.get('newPassword'));
+          const next = await issueSession({ secret: config.sessionSecret, environment: config.environment, sessionId: uuid(),
+            reviewerEmail: updated.email, credentialVersion: updated.credentialVersion, mustChangePassword: false, now: now() });
+          return response(null, { status: 303, headers: { Location: '/', 'Set-Cookie': `${cookieName}=${next}; Max-Age=43200; Path=/; HttpOnly; Secure; SameSite=Strict` } });
+        } catch (error) {
+          return response(changePasswordPage(tokenValue, error.message), { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        }
+      }
+      return response(null, { status: 303, headers: { Location: '/change-password' } });
+    }
+
     if (request.method === 'GET' && url.pathname === '/') {
-      return response(consolePage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      return response(consolePage(reviewer), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
     if (request.method === 'GET' && url.pathname === '/app.js') {
       return response(APP_JS, { headers: { 'Content-Type': 'text/javascript; charset=utf-8' } });
@@ -147,12 +164,12 @@ export function createReviewConsole({ config, storage, state, dispatch, now = ()
         const id = uuid();
         const imageStorageName = `${id}.${inspected.extension}`;
         const action = validateAction({
-          kind: 'reviewer-image', reviewer: form.get('reviewer'), sku: form.get('sku'), packageId: form.get('packageId'),
+          kind: 'reviewer-image', sku: form.get('sku'), packageId: form.get('packageId'),
           targetCatalogCommit: form.get('targetCatalogCommit'), wineRevision: form.get('wineRevision'), candidateId: '',
           imageStorageName, imageSHA256: inspected.sha256, imageBytes: inspected.bytesLength, imageMIME: inspected.mime,
-        }, { id, environment: config.environment, sessionId: session.sessionId, now: now(), allowReviewerImage: true });
+        }, { id, environment: config.environment, sessionId: session.sessionId, reviewerEmail: reviewer.email, now: now(), allowReviewerImage: true });
         const manifest = await loadPackage(storage, prefix, action.packageId);
-        actionTarget(manifest, action);
+        actionTarget(manifest, action, reviewer);
         return json(await queueAction(id, action, inspected), 202);
       } catch (error) {
         return json({ error: error.message }, error instanceof ReviewerImageError ? error.status : error instanceof ActiveWineLockError ? 409 : 400);
@@ -165,9 +182,9 @@ export function createReviewConsole({ config, storage, state, dispatch, now = ()
       if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
       try {
         const id = uuid();
-        const action = validateAction(await request.json(), { id, environment: config.environment, sessionId: session.sessionId, now: now() });
+        const action = validateAction(await request.json(), { id, environment: config.environment, sessionId: session.sessionId, reviewerEmail: reviewer.email, now: now() });
         const manifest = await loadPackage(storage, prefix, action.packageId);
-        actionTarget(manifest, action);
+        actionTarget(manifest, action, reviewer);
         return json(await queueAction(id, action), 202);
       } catch (error) {
         return json({ error: error.message }, error instanceof ActiveWineLockError ? 409 : 400);

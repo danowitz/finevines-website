@@ -9,7 +9,6 @@ const environments = [
     host: 'review.finevines.biz',
     domain: 'finevines.biz',
     cookie: 'fv_review_test',
-    passwordEnv: 'FINEVINES_REVIEW_TEST_PASSWORD',
     sessionEnv: 'FINEVINES_REVIEW_TEST_SESSION_SECRET',
   },
   {
@@ -18,7 +17,6 @@ const environments = [
     host: 'review.finevines.com',
     domain: 'finevines.com',
     cookie: 'fv_review_production',
-    passwordEnv: 'FINEVINES_REVIEW_PRODUCTION_PASSWORD',
     sessionEnv: 'FINEVINES_REVIEW_PRODUCTION_SESSION_SECRET',
   },
 ];
@@ -167,7 +165,6 @@ async function requestCertificate(host) {
 }
 
 for (const config of environments) {
-  const password = required(config.passwordEnv, 12);
   const sessionSecret = required(config.sessionEnv, 32);
   const { script, pullZone } = await ensureScript(config);
   await replaceVariables(script, {
@@ -180,7 +177,6 @@ for (const config of environments) {
     BUNNY_DATABASE_URL: databaseUrl,
   });
   await upsertSecrets(script, {
-    REVIEW_PASSWORD: password,
     REVIEW_SESSION_SECRET: sessionSecret,
     BUNNY_STORAGE_KEY: storageKey,
     BUNNY_DATABASE_AUTH_TOKEN: databaseToken,

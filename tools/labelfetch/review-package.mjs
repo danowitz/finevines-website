@@ -8,13 +8,16 @@ const hash = (value) => createHash('sha256').update(value).digest('hex');
 const clean = (value) => String(value || '').trim();
 
 export function buildReviewerRoster(team) {
-  const byName = new Map();
+  const byEmail = new Map();
   for (const person of Array.isArray(team) ? team : []) {
     const name = clean(person?.name);
     const role = clean(person?.role);
-    if (name && REVIEWER_ROLES.has(role) && !byName.has(name)) byName.set(name, { name, role });
+    const email = clean(person?.email).toLowerCase();
+    if (name && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && REVIEWER_ROLES.has(role) && !byEmail.has(email)) {
+      byEmail.set(email, { name, email, role });
+    }
   }
-  return [...byName.values()].sort((left, right) => left.name.localeCompare(right.name));
+  return [...byEmail.values()].sort((left, right) => left.name.localeCompare(right.name));
 }
 
 export function wineRevision(wine) {

@@ -4,7 +4,7 @@ import { buildReviewerRoster, buildReviewDraft, publishReviewPackage, wineRevisi
 
 const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
 const wine = { id: 'wine-1', sku: 'AB-1', slug: 'producer-wine-2022', producer: 'Producer', name: 'Wine', vintage: '2022', imagePath: 'assets/img/wines/producer-wine-2022.svg', imageSource: 'generated-label', sourceHash: 'source' };
-const reviewers = [{ name: 'Barb Fultz', role: 'Back Office' }];
+const reviewers = [{ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }];
 
 function memoryStorage(initial = {}) {
   const files = new Map(Object.entries(initial));
@@ -23,13 +23,14 @@ function memoryStorage(initial = {}) {
 describe('hosted review package', () => {
   it('limits the reviewer roster to current executives and back office users', () => {
     assert.deepEqual(buildReviewerRoster([
-      { name: 'Connie Molitor', role: 'Executive' },
-      { name: 'Daniel Pilkey', role: 'Sales Rep' },
-      { name: 'Barb Fultz', role: 'Back Office' },
-      { name: ' Connie Molitor ', role: 'Executive' },
+      { name: 'Connie Molitor', email: 'CONNIE@finevines.com', role: 'Executive' },
+      { name: 'Daniel Pilkey', email: 'dan@finevines.com', role: 'Sales Rep' },
+      { name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' },
+      { name: ' Connie Molitor ', email: 'connie@finevines.com', role: 'Executive' },
+      { name: 'Missing Email', role: 'Back Office' },
     ]), [
-      { name: 'Barb Fultz', role: 'Back Office' },
-      { name: 'Connie Molitor', role: 'Executive' },
+      { name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' },
+      { name: 'Connie Molitor', email: 'connie@finevines.com', role: 'Executive' },
     ]);
   });
   it('shares one canonical wine revision contract with the Go action applier', () => {

@@ -9,8 +9,10 @@ before(() => { globalThis.crypto ??= webcrypto; });
 describe('protected review console', () => {
   it('issues a host-environment-bound expiring session', async () => {
     const now = new Date('2026-08-11T20:00:00Z');
-    const token = await issueSession({ secret: 'test-secret', environment: 'test', sessionId: 'session-1', now });
-    assert.equal((await verifySession(token, { secret: 'test-secret', environment: 'test', now }))?.sessionId, 'session-1');
+    const token = await issueSession({ secret: 'test-secret', environment: 'test', sessionId: 'session-1', reviewerEmail: 'barb.fultz@finevines.com', credentialVersion: 2, mustChangePassword: false, now });
+    assert.deepEqual(await verifySession(token, { secret: 'test-secret', environment: 'test', now }), {
+      v: 2, environment: 'test', sessionId: 'session-1', reviewerEmail: 'barb.fultz@finevines.com', credentialVersion: 2, mustChangePassword: false, exp: 1786521600,
+    });
     assert.equal(await verifySession(token, { secret: 'test-secret', environment: 'production', now }), null);
     assert.equal(await verifySession(token, { secret: 'wrong', environment: 'test', now }), null);
     assert.equal(await verifySession(token, { secret: 'test-secret', environment: 'test', now: new Date(now.getTime() + 43_201_000) }), null);
@@ -26,29 +28,30 @@ describe('protected review console', () => {
 
   it('creates the strict immutable image-selection contract', () => {
     const action = validateAction({
-      kind: 'image-select', reviewer: 'Barbara', sku: 'AB-123', packageId: 'abc123-package',
+      kind: 'image-select', sku: 'AB-123', packageId: 'abc123-package',
       targetCatalogCommit: 'abcdef1234567', wineRevision: 'a'.repeat(64), candidateId: 'candidate-2',
-    }, { id: '00000000-0000-4000-8000-000000000001', environment: 'test', sessionId: 'session-1', now: new Date('2026-08-11T20:00:00Z') });
+    }, { id: '00000000-0000-4000-8000-000000000001', environment: 'test', sessionId: 'session-1', reviewerEmail: 'barb.fultz@finevines.com', now: new Date('2026-08-11T20:00:00Z') });
     assert.equal(action.environment, 'test');
     assert.equal(action.schemaVersion, 1);
     assert.equal(action.csrfSessionId, 'session-1');
+    assert.equal(action.reviewer, 'barb.fultz@finevines.com');
   });
 
   it('accepts catalog SKUs with inventory suffix asterisks', () => {
     const action = validateAction({
-      kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg',
+      kind: 'image-select', sku: '500740*', packageId: 'pkg',
       targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1',
-    }, { id: '00000000-0000-4000-8000-000000000001', environment: 'test', sessionId: 'session-1', now: new Date() });
+    }, { id: '00000000-0000-4000-8000-000000000001', environment: 'test', sessionId: 'session-1', reviewerEmail: 'barb.fultz@finevines.com', now: new Date() });
     assert.equal(action.sku, '500740*');
   });
 
   it('creates reviewer-image actions only for the trusted upload route', () => {
     const input = {
-      kind: 'reviewer-image', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg',
+      kind: 'reviewer-image', sku: '500740*', packageId: 'pkg',
       targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: '',
       imageStorageName: '00000000-0000-4000-8000-000000000001.png', imageSHA256: 'b'.repeat(64), imageBytes: 123, imageMIME: 'image/png',
     };
-    const context = { id: '00000000-0000-4000-8000-000000000001', environment: 'test', sessionId: 'session-1', now: new Date() };
+    const context = { id: '00000000-0000-4000-8000-000000000001', environment: 'test', sessionId: 'session-1', reviewerEmail: 'barb.fultz@finevines.com', now: new Date() };
     assert.throws(() => validateAction(input, context), /invalid kind/);
     const action = validateAction(input, { ...context, allowReviewerImage: true });
     assert.equal(action.kind, 'reviewer-image');
@@ -56,11 +59,12 @@ describe('protected review console', () => {
   });
 
   it('rejects extra fields, unsafe identifiers, and inconsistent kinds', () => {
-    const base = { kind: 'image-select', reviewer: 'Barbara', sku: 'AB-123', packageId: 'pkg', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
-    const context = { id: 'id', environment: 'test', sessionId: 's', now: new Date() };
+    const base = { kind: 'image-select', sku: 'AB-123', packageId: 'pkg', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
+    const context = { id: 'id', environment: 'test', sessionId: 's', reviewerEmail: 'barb.fultz@finevines.com', now: new Date() };
     assert.throws(() => validateAction({ ...base, admin: true }, context), /unknown action field/);
     assert.throws(() => validateAction({ ...base, packageId: '../prod' }, context), /invalid packageId/);
     assert.throws(() => validateAction({ ...base, kind: 'no-image' }, context), /cannot name a candidate/);
     assert.throws(() => validateAction({ ...base, candidateId: '' }, context), /invalid candidateId/);
+    assert.throws(() => validateAction({ ...base, reviewer: 'George Molitor' }, context), /unknown action field reviewer/);
   });
 });

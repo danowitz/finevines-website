@@ -47,6 +47,18 @@ export function createReviewState({ client, now = () => new Date() }) {
         occurred_at TEXT NOT NULL,
         detail TEXT NOT NULL DEFAULT ''
       )`,
+      `CREATE TABLE IF NOT EXISTS reviewer_accounts (
+        email TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        role TEXT NOT NULL,
+        source TEXT NOT NULL CHECK (source IN ('salesforce','support')),
+        eligible INTEGER NOT NULL DEFAULT 1,
+        password_hash TEXT,
+        temporary_expires_at TEXT,
+        must_change INTEGER NOT NULL DEFAULT 1,
+        credential_version INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL
+      )`,
     ], 'write');
   }
 
@@ -113,5 +125,78 @@ export function createReviewState({ client, now = () => new Date() }) {
     };
   }
 
-  return { initialize, queue, counts };
+  async function syncReviewerAccounts(accounts) {
+    const existing = await listReviewerAccounts();
+    const incoming = new Set(accounts.map(({ email }) => email));
+    const stamp = now().toISOString();
+    const statements = [];
+    for (const account of existing) {
+      if (account.source === 'salesforce' && !incoming.has(account.email) && account.eligible) {
+        statements.push({
+          sql: `UPDATE reviewer_accounts SET eligible = 0, credential_version = credential_version + 1, updated_at = ? WHERE email = ?`,
+          args: [stamp, account.email],
+        });
+      }
+    }
+    for (const account of accounts) {
+      statements.push({
+        sql: `INSERT INTO reviewer_accounts (email, name, role, source, eligible, updated_at)
+          VALUES (?, ?, ?, ?, 1, ?)
+          ON CONFLICT(email) DO UPDATE SET name = excluded.name, role = excluded.role,
+            source = excluded.source, eligible = 1, updated_at = excluded.updated_at`,
+        args: [account.email, account.name, account.role, account.source, stamp],
+      });
+    }
+    if (statements.length) await client.batch(statements, 'write');
+  }
+
+  function accountFrom(row) {
+    if (!row) return null;
+    return {
+      email: String(rowValue(row, 'email')),
+      name: String(rowValue(row, 'name')),
+      role: String(rowValue(row, 'role')),
+      source: String(rowValue(row, 'source')),
+      eligible: Boolean(Number(rowValue(row, 'eligible'))),
+      passwordHash: rowValue(row, 'password_hash') ? String(rowValue(row, 'password_hash')) : '',
+      temporaryExpiresAt: rowValue(row, 'temporary_expires_at') ? String(rowValue(row, 'temporary_expires_at')) : '',
+      mustChangePassword: Boolean(Number(rowValue(row, 'must_change'))),
+      credentialVersion: Number(rowValue(row, 'credential_version')),
+    };
+  }
+
+  async function listReviewerAccounts() {
+    const result = await client.execute('SELECT * FROM reviewer_accounts ORDER BY email');
+    return result.rows.map(accountFrom);
+  }
+
+  async function reviewerAccount(email) {
+    const result = await client.execute({ sql: 'SELECT * FROM reviewer_accounts WHERE email = ?', args: [email] });
+    return accountFrom(result.rows[0]);
+  }
+
+  async function setReviewerInvitation(email, passwordHash, expiresAt) {
+    const result = await client.execute({
+      sql: `UPDATE reviewer_accounts SET password_hash = ?, temporary_expires_at = ?, must_change = 1,
+        credential_version = credential_version + 1, updated_at = ? WHERE email = ? AND eligible = 1`,
+      args: [passwordHash, expiresAt, now().toISOString(), email],
+    });
+    if (result.rowsAffected !== 1) throw new Error('reviewer account is not eligible');
+    return reviewerAccount(email);
+  }
+
+  async function setReviewerPassword(email, passwordHash) {
+    const result = await client.execute({
+      sql: `UPDATE reviewer_accounts SET password_hash = ?, temporary_expires_at = NULL, must_change = 0,
+        credential_version = credential_version + 1, updated_at = ? WHERE email = ? AND eligible = 1`,
+      args: [passwordHash, now().toISOString(), email],
+    });
+    if (result.rowsAffected !== 1) throw new Error('reviewer account is not eligible');
+    return reviewerAccount(email);
+  }
+
+  return {
+    initialize, queue, counts,
+    syncReviewerAccounts, listReviewerAccounts, reviewerAccount, setReviewerInvitation, setReviewerPassword,
+  };
 }
