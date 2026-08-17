@@ -39,7 +39,24 @@ test('downloads every candidate supplied by the pipeline with bounded concurrenc
     downloadUnsupported: 0,
     downloadConversionFailures: 0,
     downloadTransportFailures: 0,
+    downloadExcluded: 0,
   });
+});
+
+test('excludes byte-identical reviewer-rejected candidates before selection', async () => {
+  const bytes = Buffer.alloc(2100);
+  bytes[0] = 0xff; bytes[1] = 0xd8;
+  let writes = 0;
+  const result = await downloadCandidates({
+    items: [{ url: 'https://example.test/rejected.jpg' }], directory: 'ignored',
+    mkdirImpl: async () => {}, writeFileImpl: async () => { writes++; },
+    fetchImpl: async () => ({ ok: true, arrayBuffer: async () => bytes }),
+    accept: async (received) => !received.equals(bytes),
+  });
+  assert.equal(result.candidates.length, 0);
+  assert.equal(result.diagnostics.downloadExcluded, 1);
+  assert.equal(writes, 0);
+  assert.equal(result.trace[0].outcome, 'excluded');
 });
 
 test('reports each download failure rule separately', async () => {

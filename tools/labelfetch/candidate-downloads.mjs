@@ -29,6 +29,7 @@ export async function downloadCandidates({
   concurrency = 3,
   idPrefix = 'candidate',
   filePrefix = 'candidate',
+  accept = async () => true,
 }) {
   await mkdirImpl(directory, { recursive: true });
   const attempted = items;
@@ -47,6 +48,7 @@ export async function downloadCandidates({
         bytes = await convert(bytes, response.headers?.get?.('content-type') || '');
         if (!bytes || bytes.length < 2000) return { candidate: null, failure: 'conversion', status: response.status || 200, bytes: receivedBytes };
       }
+      if (!await accept(bytes, item)) return { candidate: null, failure: 'excluded', status: response.status || 200, bytes: bytes.length };
       const file = join(directory, `${filePrefix}-${String(index + 1).padStart(2, '0')}.png`);
       await writeFileImpl(file, bytes);
       return { candidate: { ...item, id: `${idPrefix}-${index + 1}`, file }, failure: '', status: response.status || 200, bytes: bytes.length };
@@ -65,6 +67,7 @@ export async function downloadCandidates({
       downloadUnsupported: failures('unsupported'),
       downloadConversionFailures: failures('conversion'),
       downloadTransportFailures: failures('transport'),
+      downloadExcluded: failures('excluded'),
     },
     trace: results.map((result, index) => ({
       index: index + 1,

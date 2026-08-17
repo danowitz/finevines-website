@@ -24,6 +24,12 @@ export function createBunnyStorage({ endpoint, zone, key, fetchImpl = fetch }) {
     return response ? new Uint8Array(await response.arrayBuffer()) : undefined;
   };
   return {
+    list: async (path) => {
+      const response = await request('GET', path);
+      if (!response) return [];
+      const items = await response.json();
+      return (Array.isArray(items) ? items : []).filter((item) => !item.IsDirectory).map((item) => item.ObjectName).filter(Boolean).sort();
+    },
     getBytes,
     get: async (path) => {
       const response = await request('GET', path);

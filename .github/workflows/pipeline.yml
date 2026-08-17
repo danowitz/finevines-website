@@ -1,8 +1,7 @@
 # The whole FineVines publish path, unattended.
 #
-#   validate immutable review actions -> enrich -> collection editorial ->
-#   source images -> build -> deploy -> commit -> publish review
-#   receipts/package -> email the digest
+#   enrich -> collection editorial -> source images -> build -> deploy ->
+#   commit -> publish review package -> email the digest
 #
 # The repo stays the source of truth. Nothing here holds state between runs
 # except what it commits: data/, the imported photographs, and
@@ -46,17 +45,12 @@ on:
         required: true
         default: false
         type: boolean
-  # Fired by the review console's Edge Script the moment a reviewer submits a
-  # change, so their fix is live in minutes rather than at the next nightly run.
-  repository_dispatch:
-    types: [review-console]
-
 # Runs QUEUE, never overlap. Two concurrent runs would race the deploy manifest
 # and the commit-back push, and cancel-in-progress would abandon a run
 # mid-upload — which the deploy invariants survive, but only because they are
 # never asked to.
 concurrency:
-  group: pipeline
+  group: finevines-catalog-deploy
   cancel-in-progress: false
 
 permissions:
@@ -71,13 +65,13 @@ jobs:
     # rather than only in GitHub's behaviour, and so it survives that rule being
     # disabled. It does NOT extend the protection to the other triggers:
     # github.event.head_commit is null on schedule, workflow_dispatch and
-    # repository_dispatch, contains() reads null as the empty string, and the
+    # contains() reads null as the empty string, and the
     # guard passes. That is deliberate — a schedule or a reviewer's dispatch
     # firing right after a bot commit SHOULD run. Redoing work that just landed
     # is close to free: SourceHash means no unchanged wine is re-sent to OpenAI,
     # the attempt ledger means no image is re-fetched, and the manifest diff
     # means nothing is re-uploaded.
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') && (github.event_name != 'repository_dispatch' || github.event.client_payload.environment == 'production') }}
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 300
 
@@ -102,7 +96,6 @@ jobs:
       FINEVINES_REVIEW_STORAGE_ZONE: ${{ secrets.FINEVINES_REVIEW_STORAGE_ZONE }}
       FINEVINES_REVIEW_STORAGE_KEY: ${{ secrets.FINEVINES_REVIEW_STORAGE_KEY }}
       FINEVINES_REVIEW_STORAGE_ENDPOINT: ${{ secrets.FINEVINES_REVIEW_STORAGE_ENDPOINT }}
-      FINEVINES_REVIEW_ENVIRONMENT: production
       # Site.
       FINEVINES_SITE_BASE_URL: ${{ secrets.FINEVINES_SITE_BASE_URL }}
       FINEVINES_GA_ID: ${{ secrets.FINEVINES_GA_ID }}
@@ -164,15 +157,6 @@ jobs:
           go build -o imghash ./tools/imghash
           go build -o imgnorm ./tools/imgnorm
 
-      - name: Validate review-console dispatch
-        if: ${{ github.event_name == 'repository_dispatch' }}
-        env:
-          REVIEW_ACTION_ID: ${{ github.event.client_payload.actionId }}
-          REVIEW_ACTION_ENVIRONMENT: ${{ github.event.client_payload.environment }}
-        run: |
-          test "$REVIEW_ACTION_ENVIRONMENT" = "production"
-          [[ "$REVIEW_ACTION_ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]]
-
       # The catalog as it stands BEFORE anything runs. `notify` diffs against
       # this at the end. Taken here rather than derived from git later, because
       # by then the commit-back has landed and HEAD is the after-state.
@@ -188,19 +172,12 @@ jobs:
           mkdir -p .run
           cp data/wines.json .run/wines-before.json
 
-      # 1. Validate every immutable pending action against the exact package,
-      #    candidate bytes, and catalog revision it was submitted from. Pending
-      #    objects remain until the post-deploy receipt step.
-      - name: Prepare hosted review actions
-        run: ./finevines reviewapply -environment production -decisions .run/review-decisions.json -applied .run/queue-applied.json
-
-      # 2. Enrich against live Salesforce. SourceHash means unchanged wines are
+      # 1. Enrich against live Salesforce. SourceHash means unchanged wines are
       #    not re-sent to OpenAI, so this is cheap on a normal night.
       - name: Enrich
-        if: ${{ github.event_name != 'repository_dispatch' }}
         run: ./finevines enrich
 
-      # 3. Research collection-page editorial. New regions, producers, and
+      # 2. Research collection-page editorial. New regions, producers, and
       #    varietals always run before any old page. Once the live set is
       #    complete, material catalog changes run next; scheduled reviews run
       #    only when neither queue has work. The library checkpoints every
@@ -208,13 +185,12 @@ jobs:
       - name: Enrich collection pages
         run: ./finevines enrichcollections -limit 50 -review-days 365
 
-      # 4. Source bottle photographs: fetch + verify, watermark sweep, import
+      # 3. Source bottle photographs: fetch + verify, watermark sweep, import
       #    survivors. Both verification stages are hard gates. Deliberately
       #    The runner attempts the complete due backlog. It remains bounded by
       #    its two-hour wall-clock budget so it cannot consume the whole job
       #    timeout and lose the ledger writes that make it converge.
       - name: Source images
-        if: ${{ github.event_name != 'repository_dispatch' }}
         run: |
           if [ "${{ github.event_name == 'workflow_dispatch' && inputs.quality_recovery }}" = "true" ]; then
             node tools/labelfetch/autonomous.mjs --apply --search-provider brave --retry-misses --quality-recovery --label-model gpt-4.1-mini --budget-minutes 60 --n "${{ inputs.image_limit }}"
@@ -239,17 +215,17 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-      # 5. Build the static site.
+      # 4. Build the static site.
       - name: Build
         run: ./finevines build
 
-      # 6. Deploy. The manifest diff means only changed files upload; the
+      # 5. Deploy. The manifest diff means only changed files upload; the
       #    manifest is saved only after every upload and delete succeeds, and the
       #    purge only after that (see deploy.Run's ordering invariants).
       - name: Deploy
         run: ./finevines deploy
 
-      # 7. Commit the state back. AFTER the deploy, so the repo never claims to
+      # 6. Commit the state back. AFTER the deploy, so the repo never claims to
       #    have published something that failed to upload — the same invariant
       #    deploy.Run applies to its own manifest, extended one level up.
       #
@@ -274,14 +250,7 @@ jobs:
           node tools/labelfetch/publish-review-package.mjs --environment production
 
       - name: Publish the test review package
-        if: ${{ github.event_name != 'repository_dispatch' }}
         run: node tools/labelfetch/publish-review-package.mjs --environment test
-
-      # This is the acknowledgement boundary. The browser reports "deployed"
-      # only after the site upload, catalog commit, and rolling-package refresh
-      # all succeeded. Receipt upload precedes pending-pointer deletion.
-      - name: Finalize hosted review receipts
-        run: ./finevines reviewfinalize -environment production -decisions .run/review-decisions.json -target "$FINEVINES_SITE_BASE_URL" -run-id "$GITHUB_RUN_ID"
 
       # 10. Email the digest — only if the run changed something. Runs last so it
       #    reports what actually shipped, and is NOT `if: always()`: a failed run

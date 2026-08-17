@@ -1,6 +1,7 @@
 import { csrfToken, issueSession, protectedHeaders, readCookie, validateAction, verifySession } from './core.mjs';
 import { inspectReviewerImage, ReviewerImageError } from './reviewer-image.mjs';
-import { APP_CSS, APP_JS, FAVICON, consolePage, loginPage } from './ui.mjs';
+import { ActiveWineLockError } from './review-state.mjs';
+import { APP_CSS, APP_JS, FAVICON, changePasswordPage, consolePage, loginPage } from './ui.mjs';
 
 const response = (body, init = {}) => new Response(body, { ...init, headers: protectedHeaders(init.headers) });
 const json = (value, status = 200) => response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
@@ -16,10 +17,9 @@ async function loadPackage(storage, prefix, packageId) {
   return manifest;
 }
 
-function actionTarget(manifest, action) {
+function actionTarget(manifest, action, reviewer) {
   if (manifest.environment !== action.environment || manifest.catalogCommit !== action.targetCatalogCommit) throw new Error('action does not match package');
-  const eligibleReviewer = manifest.reviewers?.some(({ name, role }) => name === action.reviewer && (role === 'Executive' || role === 'Back Office'));
-  if (!eligibleReviewer) throw new Error('reviewer is not authorized for this package');
+  if (!['Executive', 'Back Office', 'Support'].includes(reviewer.role)) throw new Error('reviewer is not authorized');
   const created = Date.parse(manifest.createdAt);
   const expires = Date.parse(manifest.expiresAt);
   const submitted = Date.parse(action.submittedAt);
@@ -27,30 +27,42 @@ function actionTarget(manifest, action) {
   const wine = manifest.wines.find((item) => item.sku === action.sku);
   if (!wine || wine.wineRevision !== action.wineRevision) throw new Error('action does not match wine');
   if (action.kind === 'image-select' && !wine.candidates?.some((candidate) => candidate.candidateId === action.candidateId)) throw new Error('candidate does not belong to wine');
+  if (action.kind === 'no-image') {
+    action.wineSlug = wine.slug;
+    action.rejectedCandidates = (wine.candidates || []).map((candidate) => ({
+      candidateId: candidate.candidateId,
+      sha256: candidate.sha256,
+      sourceImageUrl: candidate.sourceImageUrl || '',
+      sourceUrl: candidate.sourceUrl || '',
+    }));
+    if (!action.rejectedCandidates.length) throw new Error('no-image requires a candidate set');
+  }
   return wine;
 }
 
-async function equalSecret(left, right) {
-  const enc = new TextEncoder();
-  const [a, b] = await Promise.all([left, right].map((v) => crypto.subtle.digest('SHA-256', enc.encode(String(v)))));
-  const aa = new Uint8Array(a), bb = new Uint8Array(b);
-  let mismatch = aa.length ^ bb.length;
-  for (let i = 0; i < aa.length; i++) mismatch |= aa[i] ^ bb[i];
-  return mismatch === 0;
-}
-export function createReviewConsole({ config, storage, dispatch, now = () => new Date(), uuid = () => crypto.randomUUID() }) {
+export function createReviewConsole({ config, storage, state, accounts, dispatch, now = () => new Date(), uuid = () => crypto.randomUUID() }) {
+  if (!state?.initialize || !state?.queue) throw new Error('review console requires review state');
+  if (!accounts?.authenticate || !accounts?.sessionIdentity) throw new Error('review console requires reviewer accounts');
   const prefix = `_review/${config.environment}`;
   const cookieName = config.cookieName;
   const loginWindowMs = 10 * 60_000;
   const loginBlockMs = 15 * 60_000;
   let loginFailures = [];
   let loginBlockedUntil = 0;
+  const stateReady = state.initialize();
 
   async function queueAction(id, action, upload) {
-    if (upload) await storage.putImmutable(`${prefix}/uploads/${action.imageStorageName}`, upload.bytes, action.imageMIME);
+    await stateReady;
+    await state.queue(action, upload);
     const encoded = JSON.stringify(action);
-    await storage.putImmutable(`${prefix}/actions/${id}.json`, encoded, 'application/json');
-    await storage.putImmutable(`${prefix}/pending/${id}.json`, encoded, 'application/json');
+    // SQL is the authoritative queue. Publishing the processor-compatible
+    // immutable objects is an idempotent optimization and is retried by every
+    // processor run; a storage outage cannot lose an accepted decision.
+    try {
+      if (upload) await storage.putImmutable(`${prefix}/uploads/${action.imageStorageName}`, upload.bytes, action.imageMIME);
+      await storage.putImmutable(`${prefix}/actions/${id}.json`, encoded, 'application/json');
+      await storage.putImmutable(`${prefix}/pending/${id}.json`, encoded, 'application/json');
+    } catch {}
     let dispatched = true;
     try { await dispatch(id, config.environment); } catch { dispatched = false; }
     return { id, status: 'queued', dispatched };
@@ -74,7 +86,8 @@ export function createReviewConsole({ config, storage, dispatch, now = () => new
       const clock = now().getTime();
       if (clock < loginBlockedUntil) return response(loginPage('Too many attempts. Try again later.'), { status: 429, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Retry-After': String(Math.ceil((loginBlockedUntil - clock) / 1000)) } });
       const form = await request.formData();
-      if (!await equalSecret(form.get('password'), config.password)) {
+      const identity = await accounts.authenticate(form.get('email'), form.get('password'));
+      if (!identity) {
         loginFailures = loginFailures.filter((time) => clock - time < loginWindowMs);
         loginFailures.push(clock);
         if (loginFailures.length >= 5) loginBlockedUntil = clock + loginBlockMs;
@@ -83,28 +96,112 @@ export function createReviewConsole({ config, storage, dispatch, now = () => new
       loginFailures = [];
       loginBlockedUntil = 0;
       const sessionId = uuid();
-      const token = await issueSession({ secret: config.sessionSecret, environment: config.environment, sessionId, now: now() });
-      return response(null, { status: 303, headers: { Location: '/', 'Set-Cookie': `${cookieName}=${token}; Max-Age=43200; Path=/; HttpOnly; Secure; SameSite=Strict` } });
+      const token = await issueSession({ secret: config.sessionSecret, environment: config.environment, sessionId,
+        reviewerEmail: identity.email, credentialVersion: identity.credentialVersion,
+        mustChangePassword: identity.mustChangePassword, now: now() });
+      return response(null, { status: 303, headers: { Location: identity.mustChangePassword ? '/change-password' : '/', 'Set-Cookie': `${cookieName}=${token}; Max-Age=43200; Path=/; HttpOnly; Secure; SameSite=Strict` } });
     }
 
     const token = readCookie(request.headers.get('cookie'), cookieName);
     const session = await verifySession(token, { secret: config.sessionSecret, environment: config.environment, now: now() });
-    if (!session) {
+    const reviewer = session ? await accounts.sessionIdentity(session.reviewerEmail, session.credentialVersion) : null;
+    if (!session || !reviewer) {
       if (url.pathname !== '/') return response('Not found', { status: 404 });
       return response(loginPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
 
+    if (reviewer.mustChangePassword) {
+      const tokenValue = await csrfToken(config.sessionSecret, session.sessionId);
+      if (request.method === 'GET' && url.pathname === '/change-password') {
+        return response(changePasswordPage(tokenValue), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      }
+      if (request.method === 'POST' && url.pathname === '/change-password') {
+        if (request.headers.get('origin') !== config.origin) return response(changePasswordPage(tokenValue, 'Invalid request.'), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        const form = await request.formData();
+        if (form.get('csrf') !== tokenValue) return response(changePasswordPage(tokenValue, 'Invalid request.'), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        try {
+          const updated = await accounts.changePassword(reviewer, form.get('currentPassword'), form.get('newPassword'));
+          const next = await issueSession({ secret: config.sessionSecret, environment: config.environment, sessionId: uuid(),
+            reviewerEmail: updated.email, credentialVersion: updated.credentialVersion, mustChangePassword: false, now: now() });
+          return response(null, { status: 303, headers: { Location: '/', 'Set-Cookie': `${cookieName}=${next}; Max-Age=43200; Path=/; HttpOnly; Secure; SameSite=Strict` } });
+        } catch (error) {
+          return response(changePasswordPage(tokenValue, error.message), { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        }
+      }
+      return response(null, { status: 303, headers: { Location: '/change-password' } });
+    }
+
+    const administrator = reviewer.role === 'Support';
+
     if (request.method === 'GET' && url.pathname === '/') {
-      return response(consolePage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      return response(consolePage(reviewer), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
     if (request.method === 'GET' && url.pathname === '/app.js') {
       return response(APP_JS, { headers: { 'Content-Type': 'text/javascript; charset=utf-8' } });
     }
 
+    if (request.method === 'GET' && url.pathname === '/api/admin/accounts') {
+      if (!administrator) return json({ error: 'administrator access required' }, 403);
+      const current = JSON.parse(await storage.get(`${prefix}/current.json`));
+      const manifest = await loadPackage(storage, prefix, current.packageId);
+      await stateReady;
+      await accounts.sync(manifest.reviewers || []);
+      return json({ accounts: await accounts.list(), csrfToken: await csrfToken(config.sessionSecret, session.sessionId) });
+    }
+
+    const activateAccountRoute = url.pathname.match(/^\/api\/admin\/accounts\/([^/]+)\/activate$/);
+    if (request.method === 'POST' && activateAccountRoute) {
+      if (!administrator) return json({ error: 'administrator access required' }, 403);
+      if (request.headers.get('origin') !== config.origin) return json({ error: 'invalid origin' }, 403);
+      if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
+      const email = decodeURIComponent(activateAccountRoute[1]);
+      try {
+        await accounts.activate(email);
+        let dispatched = true;
+        try { await dispatch(`account:${email}`, config.environment); } catch { dispatched = false; }
+        return json({ status: 'invited', dispatched }, 202);
+      } catch (error) {
+        return json({ error: error.message }, 400);
+      }
+    }
+
+    const recoverActionRoute = url.pathname.match(/^\/api\/admin\/actions\/([0-9a-f-]{36})\/(retry|reopen|rediscover|exclude)$/i);
+    if (request.method === 'POST' && recoverActionRoute) {
+      if (!administrator) return json({ error: 'administrator access required' }, 403);
+      if (request.headers.get('origin') !== config.origin) return json({ error: 'invalid origin' }, 403);
+      if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
+      try {
+        let reason = '';
+        if (request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) reason = String((await request.json()).reason || '').trim();
+        const [id, operation] = recoverActionRoute.slice(1);
+        const result = await state.recoverAction(id, operation, reason || `${operation} requested by ${reviewer.email}`);
+        let dispatched = false;
+        if (operation === 'retry') {
+          try { await dispatch(id, config.environment); dispatched = true; } catch {}
+        } else if (operation === 'rediscover') {
+          const recovery = (await state.pendingRecoveries(config.environment)).find((item) => item.actionId === id);
+          try { await dispatch.recovery?.(id, recovery.slug, config.environment); dispatched = true; } catch {}
+        }
+        return json({ status: result.status, dispatched }, 202);
+      } catch (error) {
+        return json({ error: error.message }, 409);
+      }
+    }
+
     if (request.method === 'GET' && url.pathname === '/api/current') {
       const current = JSON.parse(await storage.get(`${prefix}/current.json`));
       const manifest = await loadPackage(storage, prefix, current.packageId);
-      return json({ ...manifest, csrfToken: await csrfToken(config.sessionSecret, session.sessionId) });
+      await stateReady;
+      const currentStatus = await state.packageStatus(config.environment, manifest.wines);
+      const incidents = await state.scanIncidents(config.environment, config.incidentRecipient);
+      return json({
+        ...manifest,
+        wines: currentStatus.decisions,
+        reviewStatus: { ...currentStatus.counts, oldestPendingAt: currentStatus.oldestPendingAt },
+        incidents,
+        isAdministrator: administrator,
+        csrfToken: await csrfToken(config.sessionSecret, session.sessionId),
+      });
     }
 
     const imageRoute = url.pathname.match(/^\/api\/packages\/([^/]+)\/images\/([^/]+)$/);
@@ -126,10 +223,9 @@ export function createReviewConsole({ config, storage, dispatch, now = () => new
     const actionStatusRoute = url.pathname.match(/^\/api\/actions\/([0-9a-f-]{36})$/i);
     if (request.method === 'GET' && actionStatusRoute) {
       const id = actionStatusRoute[1];
-      const receipt = await storage.get(`${prefix}/receipts/${id}.json`);
-      if (receipt) return json(JSON.parse(receipt));
-      const pending = await storage.get(`${prefix}/pending/${id}.json`);
-      return pending ? json({ id, status: 'queued' }) : response('Not found', { status: 404 });
+      await stateReady;
+      const value = await state.actionStatus(id, config.environment);
+      return value ? json(value) : response('Not found', { status: 404 });
     }
 
     if (request.method === 'POST' && url.pathname === '/api/reviewer-images') {
@@ -142,15 +238,15 @@ export function createReviewConsole({ config, storage, dispatch, now = () => new
         const id = uuid();
         const imageStorageName = `${id}.${inspected.extension}`;
         const action = validateAction({
-          kind: 'reviewer-image', reviewer: form.get('reviewer'), sku: form.get('sku'), packageId: form.get('packageId'),
+          kind: 'reviewer-image', sku: form.get('sku'), packageId: form.get('packageId'),
           targetCatalogCommit: form.get('targetCatalogCommit'), wineRevision: form.get('wineRevision'), candidateId: '',
           imageStorageName, imageSHA256: inspected.sha256, imageBytes: inspected.bytesLength, imageMIME: inspected.mime,
-        }, { id, environment: config.environment, sessionId: session.sessionId, now: now(), allowReviewerImage: true });
+        }, { id, environment: config.environment, sessionId: session.sessionId, reviewerEmail: reviewer.email, now: now(), allowReviewerImage: true });
         const manifest = await loadPackage(storage, prefix, action.packageId);
-        actionTarget(manifest, action);
+        actionTarget(manifest, action, reviewer);
         return json(await queueAction(id, action, inspected), 202);
       } catch (error) {
-        return json({ error: error.message }, error instanceof ReviewerImageError ? error.status : 400);
+        return json({ error: error.message }, error instanceof ReviewerImageError ? error.status : error instanceof ActiveWineLockError ? 409 : 400);
       }
     }
 
@@ -160,12 +256,12 @@ export function createReviewConsole({ config, storage, dispatch, now = () => new
       if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
       try {
         const id = uuid();
-        const action = validateAction(await request.json(), { id, environment: config.environment, sessionId: session.sessionId, now: now() });
+        const action = validateAction(await request.json(), { id, environment: config.environment, sessionId: session.sessionId, reviewerEmail: reviewer.email, now: now() });
         const manifest = await loadPackage(storage, prefix, action.packageId);
-        actionTarget(manifest, action);
+        actionTarget(manifest, action, reviewer);
         return json(await queueAction(id, action), 202);
       } catch (error) {
-        return json({ error: error.message }, 400);
+        return json({ error: error.message }, error instanceof ActiveWineLockError ? 409 : 400);
       }
     }
 

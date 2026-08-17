@@ -284,8 +284,8 @@ but writes an honest `validated` receipt without changing a live site.
 
 Create two Bunny **Standalone** Edge Scripts and attach the custom hosts:
 `review.finevines.biz` for test and `review.finevines.com` for production. Each
-script has its own values below; do not reuse passwords, signing secrets, or
-cookie names between environments.
+script has its own values below; do not reuse signing secrets or cookie names
+between environments.
 
 | Bunny Edge value | Test | Production |
 |---|---|---|
@@ -296,12 +296,14 @@ cookie names between environments.
 | `BUNNY_STORAGE_ENDPOINT` | dedicated review zone's regional endpoint | same |
 | `BUNNY_STORAGE_ZONE` | dedicated private review zone | same |
 
-Store `REVIEW_PASSWORD` (12+ characters), `REVIEW_SESSION_SECRET` (32+ random
-characters), and `BUNNY_STORAGE_KEY` as Bunny **environment secrets**, not
-ordinary source variables. `GITHUB_DISPATCH_TOKEN` is optional: when present,
-it starts processing immediately; when absent, the immutable pending action is
-picked up automatically by the nightly pipeline. Never substitute a broad
-operator or desktop token. If configured, the token must be fine-grained,
+Store `REVIEW_SESSION_SECRET` (32+ random characters),
+`BUNNY_STORAGE_KEY`, and the database authentication token as Bunny
+**environment secrets**, not ordinary source variables. Reviewer credentials
+are individual salted password hashes in the transactional review database;
+there is no shared console password. `GITHUB_DISPATCH_TOKEN` is required to
+start processing immediately; the five-minute scheduled review processor is
+the independent recovery path. Never substitute a broad operator or desktop
+token. The token must be fine-grained,
 limited to this repository, with only **Contents: write** because that is the
 permission GitHub requires for repository dispatch.
 

@@ -175,3 +175,23 @@ func writeWines(t *testing.T, path, body string) {
 		t.Fatal(err)
 	}
 }
+
+func TestLoadActionIDsRejectsUnsafeClaims(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "claims.json")
+	if err := os.WriteFile(path, []byte(`["00000000-0000-4000-8000-000000000001"]`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ids, err := loadActionIDs(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := ids["00000000-0000-4000-8000-000000000001"]; !ok || len(ids) != 1 {
+		t.Fatalf("claims = %#v", ids)
+	}
+	if err := os.WriteFile(path, []byte(`["../../pending"]`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := loadActionIDs(path); err == nil {
+		t.Fatal("unsafe action id was accepted")
+	}
+}

@@ -68,14 +68,27 @@ func (invalidImageNormalizer) Normalize(context.Context, string, string) error {
 	return &InvalidImageError{Err: errors.New("decode failed")}
 }
 
+type deadlineNormalizer struct{}
+
+func (deadlineNormalizer) Normalize(ctx context.Context, _, _ string) error {
+	<-ctx.Done()
+	return ctx.Err()
+}
+
+type fetcherFunc func(context.Context, string) ([]byte, error)
+
+func (fetcher fetcherFunc) Fetch(ctx context.Context, target string) ([]byte, error) {
+	return fetcher(ctx, target)
+}
+
 func fixture(t *testing.T) (*memoryStore, []model.Wine, string) {
 	t.Helper()
 	wines := []model.Wine{{ID: "wine-1", SKU: "500740*", Slug: "producer-wine-2022", Producer: "Producer", Name: "Wine", Vintage: "2022", ImagePath: "assets/img/wines/producer-wine-2022.svg", ImageSource: model.ImageGeneratedLabel, SourceHash: "source"}}
 	id := "00000000-0000-4000-8000-000000000001"
 	bytes := []byte("candidate-image")
 	sum := sha256.Sum256(bytes)
-	action := Action{SchemaVersion: 1, ID: id, Environment: "test", Reviewer: "Barb Fultz", SKU: "500740*", Kind: "image-select", PackageID: "pkg-1", TargetCatalogCommit: "abcdef1", WineRevision: WineRevision(wines[0]), CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", CSRFSessionID: "00000000-0000-4000-8000-000000000099"}
-	manifest := Manifest{SchemaVersion: 1, PackageID: "pkg-1", Environment: "test", CatalogCommit: "abcdef1", CreatedAt: "2026-08-15T00:00:00Z", ExpiresAt: "2026-09-14T00:00:00Z", Reviewers: []Reviewer{{Name: "Barb Fultz", Role: "Back Office"}}, Wines: []PackageWine{{SKU: "500740*", WineRevision: action.WineRevision, Candidates: []Candidate{{CandidateID: "candidate-1", StorageName: "candidate-1.png", SHA256: hex.EncodeToString(sum[:]), Bytes: len(bytes), MIME: "image/png", SourceURL: "https://producer.example/wine"}}}}}
+	action := Action{SchemaVersion: 1, ID: id, Environment: "test", Reviewer: "barb.fultz@finevines.com", SKU: "500740*", Kind: "image-select", PackageID: "pkg-1", TargetCatalogCommit: "abcdef1", WineRevision: WineRevision(wines[0]), CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", CSRFSessionID: "00000000-0000-4000-8000-000000000099"}
+	manifest := Manifest{SchemaVersion: 1, PackageID: "pkg-1", Environment: "test", CatalogCommit: "abcdef1", CreatedAt: "2026-08-15T00:00:00Z", ExpiresAt: "2026-09-14T00:00:00Z", Reviewers: []Reviewer{{Name: "Barb Fultz", Email: "barb.fultz@finevines.com", Role: "Back Office"}}, Wines: []PackageWine{{SKU: "500740*", Slug: "producer-wine-2022", WineRevision: action.WineRevision, Candidates: []Candidate{{CandidateID: "candidate-1", StorageName: "candidate-1.png", SHA256: hex.EncodeToString(sum[:]), Bytes: len(bytes), MIME: "image/png", SourceURL: "https://producer.example/wine"}}}}}
 	encode := func(value any) []byte {
 		data, err := json.Marshal(value)
 		if err != nil {
@@ -110,8 +123,68 @@ func TestPrepareAppliesExactCandidateButKeepsPendingUntilFinalize(t *testing.T) 
 	if result.Wines[0].ImageReviewActionID != id {
 		t.Fatalf("image review action id = %q", result.Wines[0].ImageReviewActionID)
 	}
+	if result.Decisions[0].DeployedImagePath != "assets/img/wines/producer-wine-2022.jpg" ||
+		result.Decisions[0].DeployedImageSHA256 == "" {
+		t.Fatalf("deployment evidence = %#v", result.Decisions[0])
+	}
 	if _, err := os.Stat(filepath.Join(filepath.Dir(result.Wines[0].ImagePath), filepath.Base(result.Wines[0].ImagePath))); err != nil {
 		t.Fatalf("normalized image missing: %v", err)
+	}
+}
+
+func TestPrepareDefersClaimedWorkAfterGracefulDeadline(t *testing.T) {
+	store, wines, id := fixture(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	result, err := Prepare(ctx, PrepareInput{
+		Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines,
+		ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Decisions) != 1 || result.Decisions[0].ID != id || result.Decisions[0].Status != "deferred" {
+		t.Fatalf("decisions = %#v", result.Decisions)
+	}
+	if result.Wines[0].ImageReviewActionID != "" {
+		t.Fatal("deferred work mutated the catalog")
+	}
+	if _, ok := store.files["_review/test/pending/"+id+".json"]; !ok {
+		t.Fatal("deferred work lost its pending marker")
+	}
+}
+
+func TestPrepareCancelsAndDefersAnActionThatStallsMidNormalization(t *testing.T) {
+	store, wines, id := fixture(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+	result, err := Prepare(ctx, PrepareInput{
+		Store: store, Normalizer: deadlineNormalizer{}, Environment: "test", Wines: wines,
+		ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Decisions) != 1 || result.Decisions[0].ID != id || result.Decisions[0].Status != "deferred" {
+		t.Fatalf("decisions = %#v", result.Decisions)
+	}
+	if result.Wines[0].ImageReviewActionID != "" {
+		t.Fatal("cancelled normalization mutated the catalog")
+	}
+}
+
+func TestPrepareOnlyProcessesClaimedActionIDs(t *testing.T) {
+	store, wines, _ := fixture(t)
+	result, err := Prepare(context.Background(), PrepareInput{
+		Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines,
+		ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC),
+		ActionIDs: map[string]struct{}{"00000000-0000-4000-8000-000000000099": {}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Pending != 0 || len(result.Decisions) != 0 {
+		t.Fatalf("unclaimed action was processed: pending=%d decisions=%#v", result.Pending, result.Decisions)
 	}
 }
 
@@ -200,11 +273,16 @@ func TestPrepareRecognizesActionAlreadyCommittedBeforeReceiptRetry(t *testing.T)
 	wines[0].ImageReviewActionID = id
 	wines[0].ImagePath = "assets/img/wines/producer-wine-2022.jpg"
 	wines[0].ImageSource = model.ImageScrapedWeb
-	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Now()})
+	imageDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(imageDir, "producer-wine-2022.jpg"), []byte("already-deployed"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: imageDir, Now: time.Now()})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.Decisions[0].Status != "prepared" || !strings.Contains(result.Decisions[0].Reason, "already contains") {
+	if result.Decisions[0].Status != "prepared" || !strings.Contains(result.Decisions[0].Reason, "already contains") ||
+		result.Decisions[0].DeployedImagePath == "" || result.Decisions[0].DeployedImageSHA256 == "" {
 		t.Fatalf("decision = %#v", result.Decisions[0])
 	}
 }
@@ -249,28 +327,38 @@ func TestPrepareRejectsTypedInvalidImageWithoutPoisoningBatch(t *testing.T) {
 	}
 }
 
-func TestPrepareRecordsNoImageAndPreventsRepeatedPresentation(t *testing.T) {
+func TestPrepareSchedulesBroaderDiscoveryForCompleteRejectedSet(t *testing.T) {
 	store, wines, id := fixture(t)
 	var action Action
 	if err := json.Unmarshal(store.files["_review/test/actions/"+id+".json"], &action); err != nil {
 		t.Fatal(err)
 	}
 	action.Kind, action.CandidateID = "no-image", ""
+	action.WineSlug = "producer-wine-2022"
+	var manifest Manifest
+	if err := json.Unmarshal(store.files["_review/test/packages/pkg-1/manifest.json"], &manifest); err != nil {
+		t.Fatal(err)
+	}
+	action.RejectedCandidates = []Candidate{{CandidateID: manifest.Wines[0].Candidates[0].CandidateID, SHA256: manifest.Wines[0].Candidates[0].SHA256, SourceURL: manifest.Wines[0].Candidates[0].SourceURL}}
 	data, _ := json.Marshal(action)
 	store.files["_review/test/actions/"+id+".json"], store.files["_review/test/pending/"+id+".json"] = data, data
 	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC)})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.Wines[0].ImageReviewStatus != "no-match" || result.Decisions[0].Status != "prepared" {
+	if result.Wines[0].ImageReviewStatus != "" || result.Decisions[0].Status != "rediscover" {
 		t.Fatalf("result = %#v", result)
 	}
 }
 
 func TestFinalizeUploadsReceiptBeforeDeletingPending(t *testing.T) {
 	store, _, id := fixture(t)
-	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Reviewer: "Barbara", SKU: "AB-1", Kind: "image-select", PackageID: "pkg-1", CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", PreparedAt: "2026-08-15T02:00:00Z"}
-	err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "123", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC)})
+	deployed := []byte("normalized-deployed-image")
+	sum := sha256.Sum256(deployed)
+	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Reviewer: "barb.fultz@finevines.com", SKU: "AB-1", Kind: "image-select", PackageID: "pkg-1", CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", PreparedAt: "2026-08-15T02:00:00Z", DeployedImagePath: "assets/img/wines/producer-wine-2022.jpg", DeployedImageSHA256: hex.EncodeToString(sum[:])}
+	fetched := ""
+	fetcher := fetcherFunc(func(_ context.Context, target string) ([]byte, error) { fetched = target; return deployed, nil })
+	err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "123", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC), Fetcher: fetcher})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,24 +371,94 @@ func TestFinalizeUploadsReceiptBeforeDeletingPending(t *testing.T) {
 	if err := json.Unmarshal(store.files["_review/test/receipts/"+id+".json"], &receipt); err != nil {
 		t.Fatal(err)
 	}
-	if receipt.Status != "deployed" {
+	if receipt.Status != "completed" {
 		t.Fatalf("receipt status = %q", receipt.Status)
+	}
+	if receipt.VerifiedImageURL != fetched || !strings.Contains(fetched, "review-action="+id) {
+		t.Fatalf("verified image URL = %q, fetched %q", receipt.VerifiedImageURL, fetched)
 	}
 }
 
-func TestFinalizeCanRecordHonestValidationOnlyReceipt(t *testing.T) {
+func TestFinalizeRecordsRediscoveryHandoffAndDeletesPending(t *testing.T) {
 	store, _, id := fixture(t)
-	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Reviewer: "Barbara", SKU: "AB-1", Kind: "image-select", PackageID: "pkg-1", CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", PreparedAt: "2026-08-15T02:00:00Z"}
-	err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, PreparedStatus: "validated", CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "validation-only", RunID: "123", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC)})
+	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "rediscover", Reviewer: "barb.fultz@finevines.com", SKU: "500740*", Kind: "no-image", PackageID: "pkg-1", SubmittedAt: "2026-08-15T01:00:00Z", PreparedAt: "2026-08-15T02:00:00Z"}
+	err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "123", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC)})
 	if err != nil {
 		t.Fatal(err)
+	}
+	if _, exists := store.files["_review/test/pending/"+id+".json"]; exists {
+		t.Fatal("rediscovery pending pointer was not removed after durable handoff")
 	}
 	var receipt Receipt
 	if err := json.Unmarshal(store.files["_review/test/receipts/"+id+".json"], &receipt); err != nil {
 		t.Fatal(err)
 	}
-	if receipt.Status != "validated" {
-		t.Fatalf("receipt status = %q", receipt.Status)
+	if receipt.Status != "rediscover" || receipt.VerifiedImageURL != "" {
+		t.Fatalf("receipt = %#v", receipt)
+	}
+}
+
+func TestFinalizeHashMismatchPreservesPendingWork(t *testing.T) {
+	store, _, id := fixture(t)
+	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Kind: "image-select", DeployedImagePath: "assets/img/wines/producer-wine-2022.jpg", DeployedImageSHA256: strings.Repeat("a", 64)}
+	err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "123", Now: time.Now(), Fetcher: fetcherFunc(func(context.Context, string) ([]byte, error) { return []byte("wrong"), nil })})
+	if err == nil || !strings.Contains(err.Error(), "hash mismatch") {
+		t.Fatalf("Finalize error = %v", err)
+	}
+	if _, ok := store.files["_review/test/pending/"+id+".json"]; !ok {
+		t.Fatal("hash mismatch deleted pending work")
+	}
+	if len(store.events) != 0 {
+		t.Fatalf("hash mismatch wrote receipt events: %#v", store.events)
+	}
+}
+
+func TestFinalizeRetryAcceptsTheExistingCompletionProof(t *testing.T) {
+	store, _, id := fixture(t)
+	deployed := []byte("normalized-deployed-image")
+	sum := sha256.Sum256(deployed)
+	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Kind: "image-select", DeployedImagePath: "assets/img/wines/producer-wine-2022.jpg", DeployedImageSHA256: hex.EncodeToString(sum[:])}
+	input := FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "first", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC), Fetcher: fetcherFunc(func(context.Context, string) ([]byte, error) { return deployed, nil })}
+	if err := Finalize(context.Background(), input); err != nil {
+		t.Fatal(err)
+	}
+	input.RunID = "retry"
+	input.Now = input.Now.Add(time.Hour)
+	if err := Finalize(context.Background(), input); err != nil {
+		t.Fatalf("idempotent retry failed: %v", err)
+	}
+	uploads := 0
+	for _, event := range store.events {
+		if strings.HasPrefix(event, "upload:_review/test/receipts/") {
+			uploads++
+		}
+	}
+	if uploads != 1 {
+		t.Fatalf("receipt uploads = %d, events %#v", uploads, store.events)
+	}
+}
+
+func TestPrepareEmitsACompletionDecisionAfterReceiptSQLCrash(t *testing.T) {
+	store, wines, id := fixture(t)
+	deployed := []byte("normalized-deployed-image")
+	sum := sha256.Sum256(deployed)
+	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Reviewer: "barb.fultz@finevines.com", SKU: "500740*", Kind: "image-select", PackageID: "pkg-1", CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", PreparedAt: "2026-08-15T02:00:00Z", DeployedImagePath: "assets/img/wines/producer-wine-2022.jpg", DeployedImageSHA256: hex.EncodeToString(sum[:])}
+	if err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "first", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC), Fetcher: fetcherFunc(func(context.Context, string) ([]byte, error) { return deployed, nil })}); err != nil {
+		t.Fatal(err)
+	}
+	store.files["_review/test/pending/"+id+".json"] = append([]byte(nil), store.files["_review/test/actions/"+id+".json"]...)
+	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Now()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Decisions) != 1 || result.Decisions[0].ID != id || result.Decisions[0].Status != "prepared" || result.Decisions[0].DeployedImageSHA256 != decision.DeployedImageSHA256 {
+		t.Fatalf("recovery decisions = %#v", result.Decisions)
+	}
+	if _, ok := store.files["_review/test/pending/"+id+".json"]; ok {
+		t.Fatal("receipt recovery retained the pending marker")
+	}
+	if err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: result.Decisions, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "retry", Now: time.Now(), Fetcher: fetcherFunc(func(context.Context, string) ([]byte, error) { return deployed, nil })}); err != nil {
+		t.Fatalf("receipt recovery did not converge through finalization: %v", err)
 	}
 }
 

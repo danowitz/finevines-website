@@ -9,8 +9,8 @@ const environments = [
     host: 'review.finevines.biz',
     domain: 'finevines.biz',
     cookie: 'fv_review_test',
-    passwordEnv: 'FINEVINES_REVIEW_TEST_PASSWORD',
     sessionEnv: 'FINEVINES_REVIEW_TEST_SESSION_SECRET',
+    incidentRecipient: 'joel@gritautomation.com',
   },
   {
     name: 'production',
@@ -18,8 +18,8 @@ const environments = [
     host: 'review.finevines.com',
     domain: 'finevines.com',
     cookie: 'fv_review_production',
-    passwordEnv: 'FINEVINES_REVIEW_PRODUCTION_PASSWORD',
     sessionEnv: 'FINEVINES_REVIEW_PRODUCTION_SESSION_SECRET',
+    incidentRecipient: 'barb@finevines.com',
   },
 ];
 
@@ -33,6 +33,9 @@ const accountKey = required('FINEVINES_BUNNY_API_KEY');
 const storageEndpoint = required('FINEVINES_REVIEW_STORAGE_ENDPOINT').replace(/\/$/, '');
 const storageZone = required('FINEVINES_REVIEW_STORAGE_ZONE');
 const storageKey = required('FINEVINES_REVIEW_STORAGE_KEY');
+const databaseUrl = required('FINEVINES_REVIEW_DATABASE_URL');
+const databaseToken = required('FINEVINES_REVIEW_DATABASE_TOKEN');
+const dispatchToken = required('FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN');
 
 async function bunny(path, { method = 'GET', body, acceptable = [] } = {}) {
   const response = await fetch(`${API}${path}`, {
@@ -164,7 +167,6 @@ async function requestCertificate(host) {
 }
 
 for (const config of environments) {
-  const password = required(config.passwordEnv, 12);
   const sessionSecret = required(config.sessionEnv, 32);
   const { script, pullZone } = await ensureScript(config);
   await replaceVariables(script, {
@@ -174,11 +176,14 @@ for (const config of environments) {
     GITHUB_REPOSITORY: repository,
     BUNNY_STORAGE_ENDPOINT: storageEndpoint,
     BUNNY_STORAGE_ZONE: storageZone,
+    BUNNY_DATABASE_URL: databaseUrl,
+    REVIEW_INCIDENT_RECIPIENT: config.incidentRecipient,
   });
   await upsertSecrets(script, {
-    REVIEW_PASSWORD: password,
     REVIEW_SESSION_SECRET: sessionSecret,
     BUNNY_STORAGE_KEY: storageKey,
+    BUNNY_DATABASE_AUTH_TOKEN: databaseToken,
+    GITHUB_DISPATCH_TOKEN: dispatchToken,
   });
   await ensureHostname(pullZone.Id, config.host);
   await ensureDnsRecord(config, pullZone);

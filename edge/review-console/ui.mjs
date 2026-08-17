@@ -25,6 +25,16 @@ button { cursor: pointer; }
 .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .controls input, .controls select { min-width: 220px; padding: 11px 13px; border: 1px solid #c9b9aa; border-radius: 8px; background: #fff; color: #251c18; }
 .summary { margin: 14px 0 22px; padding: 13px 16px; border-left: 5px solid #7d263b; background: #fff; border-radius: 8px; }
+.incidents:empty { display: none; }
+.incident { margin: 0 0 12px; padding: 14px 16px; border: 2px solid #a12222; border-radius: 10px; background: #fff1f0; color: #681717; }
+.incident strong, .incident span { display: block; }
+.incident span { margin-top: 4px; line-height: 1.4; }
+.incident button { margin-top: 10px; border: 0; border-radius: 7px; padding: 8px 12px; background: #7d263b; color: #fff; font-weight: 750; }
+.admin { margin: 0 0 18px; padding: 16px; border: 1px solid #d9cfc4; border-radius: 10px; background: #fff; }
+.admin h2 { margin: 0 0 10px; font: 700 20px/1.2 Georgia, serif; }
+.account { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid #eee5dc; }
+.account span { flex: 1; min-width: 240px; }
+.account button { border: 0; border-radius: 7px; padding: 8px 11px; background: #e8e0d7; font-weight: 750; }
 .wine { margin-bottom: 18px; padding: 18px; background: #fff; border: 1px solid #d9cfc4; border-radius: 14px; box-shadow: 0 2px 8px #3c24151a; }
 .wine-head { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
 .wine h2 { margin: 0 0 4px; font: 700 24px/1.15 Georgia, serif; }
@@ -85,7 +95,7 @@ const FAVICON_BASE64 = 'AAABAAEAEBAAAAEAGABoAwAAFgAAACgAAAAQAAAAIAAAAAEAGAAAAAAA
 export const FAVICON = Uint8Array.from(atob(FAVICON_BASE64), (character) => character.charCodeAt(0));
 
 export const APP_JS = `
-const state = { package: null, selected: new Map(), modal: null };
+const state = { package: null, selected: new Map(), modal: null, refreshing: null };
 const el = (tag, attrs = {}, children = []) => {
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(attrs)) {
@@ -98,7 +108,8 @@ const el = (tag, attrs = {}, children = []) => {
 };
 const status = document.querySelector('#summary');
 const list = document.querySelector('#wine-list');
-const reviewer = document.querySelector('#reviewer');
+const incidentList = document.querySelector('#incidents');
+const admin = document.querySelector('#admin');
 
 function imageUrl(candidate) {
   return '/api/packages/' + encodeURIComponent(state.package.packageId) + '/images/' + encodeURIComponent(candidate.candidateId);
@@ -155,35 +166,17 @@ function choose(wine, candidate, card) {
   card.closest('.wine').querySelector('.primary').disabled = false;
 }
 
-function selectedReviewer() {
-  const name = reviewer.value.trim();
-  if (name) {
-    reviewer.setCustomValidity('');
-    return name;
-  }
-  reviewer.focus();
-  reviewer.setCustomValidity('Select your name before submitting.');
-  reviewer.reportValidity();
-  return '';
-}
-
-function finishQueue(wine, card, data) {
+async function finishQueue(wine, card) {
   const previewUrl = card.querySelector('.paste-zone')?.dataset.previewUrl;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
-  card.remove();
   state.selected.delete(wine.sku);
-  const remaining = document.querySelectorAll('.wine').length;
-  status.textContent = wine.displayIdentity + ' queued · ' + remaining + ' wine' + (remaining === 1 ? '' : 's') + ' remaining';
-  if (!remaining) list.append(el('div', { class: 'empty', text: 'All review decisions have been queued.' }));
-  poll(data.id, status);
+  await refresh();
 }
 
 async function submit(wine, candidateId, card) {
-  const name = selectedReviewer();
-  if (!name) return;
   const kind = candidateId ? 'image-select' : 'no-image';
   const body = {
-    kind, reviewer: name, sku: wine.sku, packageId: state.package.packageId,
+    kind, sku: wine.sku, packageId: state.package.packageId,
     targetCatalogCommit: state.package.catalogCommit, wineRevision: wine.wineRevision,
     candidateId: candidateId || '',
   };
@@ -194,17 +187,14 @@ async function submit(wine, candidateId, card) {
   output.textContent = data.dispatched ? 'Queued. The deployment has been started.' : 'Queued. The nightly processor will pick it up.';
   output.className = 'status good';
   card.querySelectorAll('button').forEach((button) => button.disabled = true);
-  finishQueue(wine, card, data);
+  await finishQueue(wine, card);
 }
 
 async function submitPasted(wine, file, card, button, output) {
-  const name = selectedReviewer();
-  if (!name) return;
   button.disabled = true;
   output.textContent = 'Saving and queueing the pasted image…';
   output.className = 'paste-error';
   const body = new FormData();
-  body.set('reviewer', name);
   body.set('sku', wine.sku);
   body.set('packageId', state.package.packageId);
   body.set('targetCatalogCommit', state.package.catalogCommit);
@@ -218,7 +208,7 @@ async function submitPasted(wine, file, card, button, output) {
     button.disabled = false;
     return;
   }
-  finishQueue(wine, card, data);
+  await finishQueue(wine, card);
 }
 
 function showPastedImage(wine, card, zone, file) {
@@ -276,18 +266,6 @@ function pasteZone(wine, card) {
   return zone;
 }
 
-async function poll(id, output) {
-  for (let attempt = 0; attempt < 90; attempt++) {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    const res = await fetch('/api/actions/' + encodeURIComponent(id), { credentials: 'same-origin' });
-    if (!res.ok) continue;
-    const value = await res.json();
-    output.textContent = value.status === 'deployed' ? 'Deployed to the website.' : value.status === 'validated' ? 'Test passed; production was not changed.' : value.status === 'conflict' ? 'Conflict: the wine changed; please review it again.' : value.status === 'rejected' ? 'Rejected by the safety checks.' : 'Queued for deployment.';
-    output.className = 'status ' + (value.status === 'deployed' || value.status === 'validated' ? 'good' : value.status === 'conflict' || value.status === 'rejected' ? 'bad' : '');
-    if (['deployed', 'validated', 'conflict', 'rejected'].includes(value.status)) return;
-  }
-}
-
 function renderWine(wine) {
   const title = el('h2', { text: wine.displayIdentity });
   const meta = el('div', { class: 'wine-meta', text: 'SKU ' + wine.sku + ' · ' + wine.candidates.length + ' candidate' + (wine.candidates.length === 1 ? '' : 's') });
@@ -320,24 +298,96 @@ function renderWine(wine) {
   return card;
 }
 
-async function start() {
-  const res = await fetch('/api/current', { credentials: 'same-origin' });
-  if (!res.ok) { status.textContent = 'The review package is not available. Please try again later.'; return; }
-  state.package = await res.json();
-  for (const person of state.package.reviewers || []) reviewer.append(el('option', { value: person.name, text: person.name }));
-  reviewer.disabled = reviewer.options.length === 1;
-  if (reviewer.disabled) reviewer.options[0].textContent = 'Reviewer list unavailable';
-  const wines = state.package.wines || [];
-  status.textContent = wines.length + ' wines need a decision · package expires ' + new Date(state.package.expiresAt).toLocaleDateString();
-  if (!wines.length) list.append(el('div', { class: 'empty', text: 'Nothing needs review right now.' }));
-  else wines.forEach((wine) => list.append(renderWine(wine)));
+function summaryText(reviewStatus, expiresAt) {
+  const value = reviewStatus || {};
+  return [
+    (value.needsDecision || 0) + ' need a decision',
+    (value.queued || 0) + ' queued',
+    (value.processing || 0) + ' processing',
+    (value.completed || 0) + ' completed',
+    (value.needsAttention || 0) + ' need attention',
+  ].join(' · ') + ' · package expires ' + new Date(expiresAt).toLocaleDateString();
+}
+
+async function recoverIncident(incident, operation, button) {
+  button.disabled = true;
+  let reason = '';
+  if (operation === 'reopen' || operation === 'exclude') {
+    reason = prompt(operation === 'exclude' ? 'Why should this wine be temporarily excluded?' : 'Why are you reopening the original choices?') || '';
+    if (!reason.trim()) { button.disabled = false; return; }
+  }
+  const res = await fetch('/api/admin/actions/' + encodeURIComponent(incident.actionId) + '/' + operation, {
+    method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': state.package.csrfToken, 'Content-Type': 'application/json' }, body: JSON.stringify({ reason }),
+  });
+  if (!res.ok) { button.disabled = false; button.textContent = 'Retry failed'; return; }
+  await refresh();
+}
+
+async function loadAccounts() {
+  const res = await fetch('/api/admin/accounts', { credentials: 'same-origin' });
+  if (!res.ok) return;
+  const value = await res.json();
+  const rows = [el('h2', { text: 'Reviewer access' })];
+  for (const account of value.accounts || []) {
+    const button = el('button', { type: 'button', text: account.status === 'invitation_pending' ? 'Activate' : 'Resend invitation' });
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      const response = await fetch('/api/admin/accounts/' + encodeURIComponent(account.email) + '/activate', {
+        method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': value.csrfToken },
+      });
+      button.textContent = response.ok ? 'Invitation queued' : 'Could not queue invitation';
+      if (!response.ok) button.disabled = false;
+    });
+    rows.push(el('div', { class: 'account' }, [
+      el('span', { text: account.name + ' · ' + account.email + ' · ' + account.status }), button,
+    ]));
+  }
+  admin.replaceChildren(...rows);
+}
+
+async function refresh() {
+  if (state.refreshing) return state.refreshing;
+  state.refreshing = (async () => {
+    const res = await fetch('/api/current', { credentials: 'same-origin' });
+    if (!res.ok) { status.textContent = 'The review package is not available. Please try again later.'; return; }
+    state.package = await res.json();
+    const wines = state.package.wines || [];
+    status.textContent = summaryText(state.package.reviewStatus, state.package.expiresAt);
+    incidentList.replaceChildren();
+    for (const incident of state.package.incidents || []) {
+      const controls = el('div', { class: 'actions' });
+      if (state.package.isAdministrator && incident.status === 'needs_attention') {
+        for (const [operation, label] of [['retry', 'Retry safely'], ['reopen', 'Reopen choices'], ['rediscover', 'Search more broadly'], ['exclude', 'Temporarily exclude']]) {
+          const button = el('button', { type: 'button', text: label });
+          button.addEventListener('click', () => recoverIncident(incident, operation, button));
+          controls.append(button);
+        }
+      }
+      incidentList.append(el('section', { class: 'incident', role: 'alert' }, [
+        el('strong', { text: 'Review issue · SKU ' + incident.sku }),
+        el('span', { text: incident.reason + ' · open ' + incident.ageMinutes + ' minutes' }),
+        el('span', { text: 'Next: ' + incident.nextAction }),
+        controls,
+      ]));
+    }
+    list.replaceChildren();
+    if (!wines.length) list.append(el('div', { class: 'empty', text: 'Nothing needs review right now.' }));
+    else wines.forEach((wine) => list.append(renderWine(wine)));
+  })();
+  try { await state.refreshing; } finally { state.refreshing = null; }
 }
 
 document.querySelectorAll('[data-close]').forEach((node) => node.addEventListener('click', closeModal));
 const modal = document.querySelector('#modal');
 modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
-start();
+const activeRefresh = () => {
+  if (document.visibilityState === 'visible' && document.hasFocus()) refresh();
+};
+window.addEventListener('focus', activeRefresh);
+document.addEventListener('visibilitychange', activeRefresh);
+setInterval(activeRefresh, 10_000);
+refresh().then(() => { if (state.package?.isAdministrator) loadAccounts(); });
 `;
 
 const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
@@ -350,10 +400,15 @@ function documentPage(body, { script = false, bodyClass = '' } = {}) {
 
 export function loginPage(message = '') {
   const feedback = message ? `<p class="login-message" role="alert">${escapeHtml(message)}</p>` : '';
-  return documentPage(`<main class="login-shell"><header class="login-brand"><div class="login-mark" aria-hidden="true">FV</div><h1>Fine Vines</h1><p>Sign in to review and approve bottle images for the catalog.</p></header><section class="login-card">${feedback}<form method="post" action="/login"><label for="password">Review password</label><input id="password" name="password" type="password" required autocomplete="current-password" autofocus placeholder="Enter your password"><button class="login-submit" type="submit">Sign in</button></form><p class="login-note">Private review workspace · Authorized users only</p></section></main>`, { bodyClass: 'login-page' });
+  return documentPage(`<main class="login-shell"><header class="login-brand"><div class="login-mark" aria-hidden="true">FV</div><h1>Fine Vines</h1><p>Sign in to review and approve bottle images for the catalog.</p></header><section class="login-card">${feedback}<form method="post" action="/login"><label for="email">Email address</label><input id="email" name="email" type="email" required autocomplete="username" autofocus placeholder="you@example.com"><label for="password">Password</label><input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password"><button class="login-submit" type="submit">Sign in</button></form><p class="login-note">Private review workspace · Authorized users only</p></section></main>`, { bodyClass: 'login-page' });
 }
 
-export function consolePage() {
-  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><select id="reviewer" required aria-label="Your name"><option value="">Select your name</option></select></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
+export function changePasswordPage(csrf, message = '') {
+  const feedback = message ? `<p class="login-message" role="alert">${escapeHtml(message)}</p>` : '';
+  return documentPage(`<main class="login-shell"><header class="login-brand"><div class="login-mark" aria-hidden="true">FV</div><h1>Choose your password</h1><p>Your temporary password must be replaced before you can review images.</p></header><section class="login-card">${feedback}<form method="post" action="/change-password"><input type="hidden" name="csrf" value="${escapeHtml(csrf)}"><label for="current-password">Temporary password</label><input id="current-password" name="currentPassword" type="password" required autocomplete="current-password"><label for="new-password">New password</label><input id="new-password" name="newPassword" type="password" required minlength="14" autocomplete="new-password"><button class="login-submit" type="submit">Save password</button></form></section></main>`, { bodyClass: 'login-page' });
+}
+
+export function consolePage(reviewer) {
+  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><span>Signed in as ${escapeHtml(reviewer.name)}</span></div></header><div id="summary" class="summary">Loading the current review package…</div><div id="incidents" class="incidents" aria-live="polite"></div><section id="admin" class="admin"></section><section id="wine-list"></section></main>
 <div id="modal" class="modal" hidden><section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div class="modal-heading"><strong id="modal-title"></strong><span id="modal-count"></span></div><button class="modal-close" type="button" data-close>Close</button></div><div id="modal-stage" class="modal-stage"></div></section></div>`, { script: true });
 }

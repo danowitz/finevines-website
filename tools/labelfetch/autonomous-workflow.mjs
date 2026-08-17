@@ -67,6 +67,8 @@ export async function runAutonomousImageWorkflow(config, adapters) {
     ...(config.labelReasoningEffort ? ['--label-reasoning-effort', config.labelReasoningEffort] : []),
     ...(config.excludePassedReport ? ['--exclude-passed-report', config.excludePassedReport] : []),
     ...(config.replayReport ? ['--replay-report', config.replayReport] : []),
+    ...(config.rejectedCandidates ? ['--rejected-candidates', config.rejectedCandidates] : []),
+    ...(config.reviewRecovery ? ['--review-recovery'] : []),
   ];
   await stage('fetch-and-verify', () => runStage('pipeline', pipelineArgs));
 
@@ -80,6 +82,19 @@ export async function runAutonomousImageWorkflow(config, adapters) {
 
   if (!(await exists(config.manifestPath))) {
     report.outcome = 'nothing-due';
+    report.completedAt = now();
+    await save();
+    return report;
+  }
+
+
+  // A reviewer rejection may discover new candidates, but it must never
+  // auto-approve or import one. Publish the new evidence for another explicit
+  // human decision and leave the authoritative catalog unchanged.
+  if (config.reviewRecovery) {
+    await stage('build-exception-review', () => runStage('review', []));
+    await stage('build-hosted-review-package', () => runStage('review-package', []));
+    report.outcome = 'review-candidates-ready';
     report.completedAt = now();
     await save();
     return report;
