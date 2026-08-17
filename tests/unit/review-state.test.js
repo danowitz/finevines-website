@@ -48,6 +48,25 @@ function action(id, { wineRevision = 'a'.repeat(64), sku = '500740*' } = {}) {
 }
 
 describe('review state', () => {
+  it('migrates the preceding transactional action schema without losing queued work', async () => {
+    const client = createClient({ url: 'file::memory:' }); clients.push(client);
+    await client.execute(`CREATE TABLE review_actions (
+      id TEXT PRIMARY KEY, environment TEXT NOT NULL, package_id TEXT NOT NULL, wine_revision TEXT NOT NULL,
+      sku TEXT NOT NULL, reviewer_email TEXT NOT NULL, kind TEXT NOT NULL,
+      status TEXT NOT NULL CHECK (status IN ('queued','processing','completed','needs_attention')),
+      action_json TEXT NOT NULL, decision_open INTEGER NOT NULL DEFAULT 0, launch_excluded INTEGER NOT NULL DEFAULT 0,
+      submitted_at TEXT NOT NULL, started_at TEXT, completed_at TEXT, updated_at TEXT NOT NULL, attention_reason TEXT)`);
+    const prior = action('00000000-0000-4000-8000-000000000000');
+    await client.execute({ sql: `INSERT INTO review_actions
+      (id, environment, package_id, wine_revision, sku, reviewer_email, kind, status, action_json, submitted_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'queued', ?, ?, ?)`, args: [prior.id, prior.environment, prior.packageId, prior.wineRevision, prior.sku, prior.reviewer, prior.kind, JSON.stringify(prior), prior.submittedAt, prior.submittedAt] });
+    const state = createReviewState({ client });
+    await state.initialize();
+    assert.equal((await state.actionStatus(prior.id, 'test')).status, 'queued');
+    await state.transition(prior.id, 'queued', 'needs_attention', 'manual review');
+    assert.equal((await state.recoverAction(prior.id, 'reopen', 'show it again')).status, 'needs_decision');
+  });
+
   it('atomically queues only one active action for a wine revision', async () => {
     const state = stateAt();
     await state.initialize();

@@ -76,16 +76,43 @@ describe('review queue command', () => {
     const claims = await tempFile('claims.json');
     await runQueueCommand({ args: ['claim', '--environment', 'test', '--output', claims], state, now: () => new Date('2026-08-16T13:00:00.000Z') });
     const decisions = await tempFile('decisions.json');
+    const preparedDecision = { id: prepared.id, environment: 'test', status: 'prepared', deployedImagePath: 'assets/img/wines/test.jpg', deployedImageSha256: 'a'.repeat(64) };
     await writeFile(decisions, JSON.stringify([
-      { id: prepared.id, status: 'prepared' },
+      preparedDecision,
       { id: rejected.id, status: 'rejected', reason: 'selected image could not be decoded' },
     ]));
     await runQueueCommand({ args: ['reconcile', '--environment', 'test', '--decisions', decisions], state });
     assert.equal((await state.actionStatus(rejected.id, 'test')).status, 'needs_attention');
     assert.equal((await state.actionStatus(prepared.id, 'test')).status, 'processing');
-    await runQueueCommand({ args: ['complete', '--environment', 'test', '--decisions', decisions], state });
+    const receipt = { ...preparedDecision, status: 'completed', catalogCommit: 'b'.repeat(40), deploymentTarget: 'https://finevines.biz', verifiedImageUrl: 'https://finevines.biz/assets/img/wines/test.jpg', runId: '123', completedAt: '2026-08-16T13:05:00Z' };
+    const storage = { get: async (path) => path.includes('/receipts/') ? JSON.stringify(receipt) : null };
+    await runQueueCommand({ args: ['complete', '--environment', 'test', '--decisions', decisions], state, storage });
     assert.equal((await state.actionStatus(prepared.id, 'test')).status, 'completed');
     assert.equal((await state.actionStatus(rejected.id, 'test')).status, 'needs_attention');
+  });
+
+  it('returns gracefully deferred claims to the queue and reports an immediate continuation', async () => {
+    const state = await fixture();
+    const deferred = action('00000000-0000-4000-8000-000000000063', '6'.repeat(64));
+    await state.queue(deferred);
+    const claims = await tempFile('claims.json');
+    await runQueueCommand({ args: ['claim', '--environment', 'test', '--output', claims], state, now: () => new Date('2026-08-16T13:00:00Z') });
+    const decisionsFile = await tempFile('deferred.json');
+    await writeFile(decisionsFile, JSON.stringify([{ id: deferred.id, status: 'deferred', reason: 'processor yielded before the deployment time reserve' }]));
+    const result = await runQueueCommand({ args: ['reconcile', '--environment', 'test', '--decisions', decisionsFile], state });
+    assert.equal(result.deferred, 1);
+    assert.equal((await state.actionStatus(deferred.id, 'test')).status, 'queued');
+  });
+
+  it('refuses to manufacture completion from a prepared decision without matching durable proof', async () => {
+    const state = await fixture();
+    const prepared = action('00000000-0000-4000-8000-000000000064', '7'.repeat(64));
+    await state.queue(prepared);
+    await state.transition(prepared.id, 'queued', 'processing');
+    const decisionsFile = await tempFile('unproven.json');
+    await writeFile(decisionsFile, JSON.stringify([{ id: prepared.id, environment: 'test', status: 'prepared', deployedImagePath: 'assets/img/wines/test.jpg', deployedImageSha256: 'a'.repeat(64) }]));
+    await assert.rejects(runQueueCommand({ args: ['complete', '--environment', 'test', '--decisions', decisionsFile], state, storage: { get: async () => null } }), /no durable completion receipt/);
+    assert.equal((await state.actionStatus(prepared.id, 'test')).status, 'processing');
   });
 
   it('delivers incident email through an injected capture transport without network access', async () => {
@@ -148,7 +175,7 @@ describe('review queue command', () => {
     await writeFile(catalog, JSON.stringify([{ slug: 'producer-wine-2022', imagePath: 'assets/img/wines/producer-wine-2022.svg', imageSource: 'generated-label' }]));
     const resolved = await runQueueCommand({ args: ['resolve-recovery', '--environment', 'test', '--action-id', rejectedAction.id, '--draft', draft, '--catalog', catalog], state });
     assert.equal(resolved.outcome, 'ready');
-    assert.equal((await state.actionStatus(rejectedAction.id, 'test')).status, 'needs_attention');
+    assert.equal((await state.actionStatus(rejectedAction.id, 'test')).status, 'needs_decision');
     assert.equal((await state.packageStatus('test', [{ slug: 'producer-wine-2022', wineRevision: 'a'.repeat(64) }])).counts.needsDecision, 1);
   });
 

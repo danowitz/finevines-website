@@ -156,6 +156,7 @@ type PrepareInput struct {
 	Now         time.Time
 	Log         func(string, ...any)
 	ActionIDs   map[string]struct{}
+	Deadline    time.Time
 }
 
 type PrepareResult struct {
@@ -377,6 +378,13 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			}
 		}
 		result.Pending++
+		if !input.Deadline.IsZero() && !time.Now().Before(input.Deadline) {
+			result.Decisions = append(result.Decisions, Decision{
+				SchemaVersion: 1, ID: id, Environment: input.Environment, Status: "deferred",
+				Reason: "processor yielded before the deployment time reserve", PreparedAt: input.Now.UTC().Format(time.RFC3339),
+			})
+			continue
+		}
 		receiptPath := path.Join(prefix, "receipts", name)
 		if receipt, err := input.Store.Download(ctx, receiptPath); err != nil {
 			return result, err

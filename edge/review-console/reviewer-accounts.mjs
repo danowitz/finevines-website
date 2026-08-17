@@ -104,11 +104,6 @@ export function createReviewerAccounts({ state, mailer, now = () => new Date(), 
     const account = await state.reviewerAccount(String(email || '').trim().toLowerCase());
     if (!account?.eligible || !account.passwordHash || !await verifyPassword(password, account.passwordHash)) return null;
     if (account.mustChangePassword && (!account.temporaryExpiresAt || Date.parse(account.temporaryExpiresAt) <= now().getTime())) return null;
-    if (account.mustChangePassword) {
-      if (account.invitationUsedAt) return null;
-      const consumed = await state.consumeReviewerInvitation(account.email, account.credentialVersion);
-      return consumed ? authenticatedAccount(consumed) : null;
-    }
     return authenticatedAccount(account);
   }
 

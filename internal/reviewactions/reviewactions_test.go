@@ -125,6 +125,27 @@ func TestPrepareAppliesExactCandidateButKeepsPendingUntilFinalize(t *testing.T) 
 	}
 }
 
+func TestPrepareDefersClaimedWorkAfterGracefulDeadline(t *testing.T) {
+	store, wines, id := fixture(t)
+	result, err := Prepare(context.Background(), PrepareInput{
+		Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines,
+		ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC),
+		Deadline: time.Now().Add(-time.Second),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Decisions) != 1 || result.Decisions[0].ID != id || result.Decisions[0].Status != "deferred" {
+		t.Fatalf("decisions = %#v", result.Decisions)
+	}
+	if result.Wines[0].ImageReviewActionID != "" {
+		t.Fatal("deferred work mutated the catalog")
+	}
+	if _, ok := store.files["_review/test/pending/"+id+".json"]; !ok {
+		t.Fatal("deferred work lost its pending marker")
+	}
+}
+
 func TestPrepareOnlyProcessesClaimedActionIDs(t *testing.T) {
 	store, wines, _ := fixture(t)
 	result, err := Prepare(context.Background(), PrepareInput{

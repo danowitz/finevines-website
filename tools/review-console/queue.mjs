@@ -68,6 +68,10 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
     const recoveries = [];
     for (const decision of records) {
       if (decision.status === 'prepared') continue;
+      if (decision.status === 'deferred') {
+        await transitionIfNeeded(state, environment, decision.id, 'processing', 'queued', decision.reason || 'processor yielded before the time limit');
+        continue;
+      }
       if (decision.status === 'rediscover') {
         recoveries.push(await state.scheduleRecovery(decision.id, environment));
         continue;
@@ -76,15 +80,36 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
       await transitionIfNeeded(state, environment, decision.id, 'processing', 'needs_attention', decision.reason || decision.status);
       needsAttention += 1;
     }
-    return { command: 'reconcile', decisions: records.length, needsAttention, recoveries };
+    return {
+      command: 'reconcile', decisions: records.length,
+      prepared: records.filter(({ status }) => status === 'prepared').length,
+      deferred: records.filter(({ status }) => status === 'deferred').length,
+      finalizable: records.filter(({ status }) => status === 'prepared' || status === 'rediscover').length,
+      needsAttention, recoveries,
+    };
   }
 
   if (value.command === 'complete') {
     if (!value.decisions) throw new Error('complete requires --decisions');
+    if (!storage?.get) throw new Error('complete requires review storage proof');
     const records = await decisions(value.decisions);
     let completed = 0;
     for (const decision of records) {
       if (decision.status !== 'prepared') continue;
+      const receiptText = await storage.get(`_review/${environment}/receipts/${decision.id}.json`);
+      if (!receiptText) throw new Error(`review action ${decision.id} has no durable completion receipt`);
+      const receipt = JSON.parse(receiptText);
+      const validReceipt = receipt.id === decision.id && receipt.environment === environment && receipt.status === 'completed'
+        && receipt.deployedImagePath === decision.deployedImagePath
+        && receipt.deployedImageSha256 === decision.deployedImageSha256
+        && /^[a-f0-9]{40}$/.test(String(receipt.catalogCommit || ''))
+        && /^https?:\/\//.test(String(receipt.deploymentTarget || ''))
+        && /^https?:\/\//.test(String(receipt.verifiedImageUrl || ''))
+        && String(receipt.runId || '').length > 0 && Number.isFinite(Date.parse(receipt.completedAt));
+      if (!validReceipt) throw new Error(`review action ${decision.id} has invalid completion proof`);
+      if (await storage.get(`_review/${environment}/pending/${decision.id}.json`)) {
+        throw new Error(`review action ${decision.id} still has a pending marker`);
+      }
       await transitionIfNeeded(state, environment, decision.id, 'processing', 'completed', 'deployment and receipt verified');
       completed += 1;
     }
@@ -194,7 +219,7 @@ async function main() {
     const accounts = ['sync-accounts', 'invite'].includes(command)
       ? createReviewerAccounts({ state, mailer: createOutboxMailer(state) })
       : undefined;
-    const storage = ['migrate', 'publish'].includes(command) ? createBunnyStorage({
+    const storage = ['migrate', 'publish', 'complete'].includes(command) ? createBunnyStorage({
       endpoint: process.env.FINEVINES_REVIEW_STORAGE_ENDPOINT,
       zone: process.env.FINEVINES_REVIEW_STORAGE_ZONE,
       key: process.env.FINEVINES_REVIEW_STORAGE_KEY,

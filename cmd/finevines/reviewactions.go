@@ -119,6 +119,7 @@ func runReviewApply(cfg config.Config, args []string) error {
 	reviewDirectory := fs.String("review-dir", "", "local review object directory (acceptance tests only)")
 	catalogPath := fs.String("catalog", reviewCatalogPath, "catalog JSON path")
 	imageDirectory := fs.String("image-dir", "assets/img/wines", "normalized wine image directory")
+	maxPrepareDuration := fs.Duration("max-prepare-duration", 0, "graceful preparation budget before remaining claims are deferred")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -138,9 +139,13 @@ func runReviewApply(cfg config.Config, args []string) error {
 	if err != nil {
 		return fmt.Errorf("reviewapply: action ids: %w", err)
 	}
+	var deadline time.Time
+	if *maxPrepareDuration > 0 {
+		deadline = time.Now().Add(*maxPrepareDuration)
+	}
 	result, err := reviewactions.Prepare(context.Background(), reviewactions.PrepareInput{
 		Store: store, Normalizer: execNormalizer{bin: normalizer}, Environment: *environment,
-		Wines: wines, ImageDir: *imageDirectory, Now: time.Now().UTC(), Log: log.Printf, ActionIDs: actionIDs,
+		Wines: wines, ImageDir: *imageDirectory, Now: time.Now().UTC(), Log: log.Printf, ActionIDs: actionIDs, Deadline: deadline,
 	})
 	if err != nil {
 		return fmt.Errorf("reviewapply: %w", err)

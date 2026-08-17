@@ -29,7 +29,9 @@ jobs:
   drain:
     if: ${{ github.event.action != 'review-recovery' && github.event.action != 'review-console-preflight' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # Preparation yields at 30 minutes, reserving 15 minutes for the single
+    # build/deploy/finalize transaction before this emergency ceiling.
+    timeout-minutes: 45
     env:
       FINEVINES_REVIEW_ENVIRONMENT: test
       FINEVINES_REVIEW_DATABASE_URL: ${{ secrets.FINEVINES_REVIEW_DATABASE_URL }}
@@ -101,7 +103,7 @@ jobs:
           cp data/wines.json .run/wines-before.json
       - name: Prepare claimed review actions
         if: ${{ steps.claim.outputs.claimed != '0' }}
-        run: ./finevines reviewapply -environment test -action-ids .run/review-claims.json -decisions .run/review-decisions.json -applied .run/queue-applied.json
+        run: ./finevines reviewapply -environment test -max-prepare-duration 30m -action-ids .run/review-claims.json -decisions .run/review-decisions.json -applied .run/queue-applied.json
       - name: Isolate action-specific failures
         id: reconcile
         if: ${{ steps.claim.outputs.claimed != '0' }}
@@ -109,6 +111,17 @@ jobs:
           result="$(node tools/review-console/queue.mjs reconcile --environment test --decisions .run/review-decisions.json)"
           echo "$result"
           echo "recoveries=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(JSON.stringify(v.recoveries || []))' "$result")" >> "$GITHUB_OUTPUT"
+          echo "deferred=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(String(v.deferred || 0))' "$result")" >> "$GITHUB_OUTPUT"
+          echo "prepared=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(String(v.prepared || 0))' "$result")" >> "$GITHUB_OUTPUT"
+          echo "finalizable=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(String(v.finalizable || 0))' "$result")" >> "$GITHUB_OUTPUT"
+      - name: Continue immediately after a graceful time-budget yield
+        if: ${{ steps.reconcile.outputs.deferred != '0' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" --input - <<'JSON'
+          {"event_type":"review-console-continue","client_payload":{"environment":"test","reason":"time-budget-yield"}}
+          JSON
       - name: Start or recover every pending broader discovery
         if: ${{ always() }}
         continue-on-error: true
@@ -120,23 +133,23 @@ jobs:
             gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" --input - <<<"$payload"
           done
       - name: Build and deploy the authoritative launch catalog
-        if: ${{ steps.claim.outputs.claimed != '0' }}
+        if: ${{ steps.reconcile.outputs.prepared != '0' }}
         run: |
           ./finevines build
           ./finevines deploy
       - name: Commit the deployed catalog state
-        if: ${{ steps.claim.outputs.claimed != '0' }}
+        if: ${{ steps.reconcile.outputs.prepared != '0' }}
         run: bash tools/pipeline/commitback.sh
       - name: Refresh the review package
-        if: ${{ steps.claim.outputs.claimed != '0' }}
+        if: ${{ steps.reconcile.outputs.prepared != '0' }}
         run: |
           printf '{"schemaVersion":1,"wines":[]}\n' > .run/review-draft.json
           node tools/labelfetch/publish-review-package.mjs --environment test
       - name: Write durable receipts
-        if: ${{ steps.claim.outputs.claimed != '0' }}
+        if: ${{ steps.reconcile.outputs.finalizable != '0' }}
         run: ./finevines reviewfinalize -environment test -decisions .run/review-decisions.json -target https://finevines.biz -run-id "$GITHUB_RUN_ID"
       - name: Mark verified actions complete
-        if: ${{ steps.claim.outputs.claimed != '0' }}
+        if: ${{ steps.reconcile.outputs.prepared != '0' }}
         run: node tools/review-console/queue.mjs complete --environment test --decisions .run/review-decisions.json
       - name: Deliver review incident and invitation notifications
         if: ${{ always() }}

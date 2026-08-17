@@ -109,7 +109,7 @@ test('local acceptance gate carries one human selection through verified deploym
   try {
     await exec(executable, ['reviewfinalize', '-environment', 'test', '-review-dir', objectRoot, '-decisions', decisions, '-target', target, '-run-id', 'local-e2e', '-catalog-commit', 'a'.repeat(40)], { cwd: workspace });
   } finally { await new Promise((resolveClose) => server.close(resolveClose)); }
-  await runQueueCommand({ args: ['complete', '--environment', 'test', '--decisions', decisions], state });
+  await runQueueCommand({ args: ['complete', '--environment', 'test', '--decisions', decisions], state, storage });
   assert.equal((await state.actionStatus(queuedBody.id, 'test')).status, 'completed');
   assert.equal(await storage.get(`_review/test/pending/${queuedBody.id}.json`), null);
   assert.ok(await storage.get(`_review/test/receipts/${queuedBody.id}.json`));
@@ -123,21 +123,53 @@ test('local acceptance gate covers concurrent reviewers, fifty-action continuati
   const client = createClient({ url: 'file::memory:' });
   const state = createReviewState({ client, now: () => new Date('2026-08-17T12:00:00Z') });
   await state.initialize();
-  const queued = [];
-  for (let index = 1; index <= 51; index++) {
-    const id = `10000000-0000-4000-8000-${String(index).padStart(12, '0')}`;
-    const action = {
-      schemaVersion: 1, id, environment: 'test', reviewer: index % 2 ? 'barb.fultz@finevines.com' : 'connie@finevines.com',
-      sku: `SKU-${index}`, kind: 'image-select', packageId: 'pkg-matrix', targetCatalogCommit: 'abcdef1',
-      wineRevision: index.toString(16).padStart(64, '0'), candidateId: `candidate-${index}`,
-      submittedAt: '2026-08-17T12:00:00Z', csrfSessionId: `session-${index % 2}`,
-    };
-    queued.push(action); await state.queue(action);
+  const root = await mkdtemp(join(tmpdir(), 'finevines-review-concurrent-')); roots.push(root);
+  const storage = fileStorage(join(root, 'objects'));
+  const mail = [];
+  let passwordSequence = 0;
+  const accounts = createReviewerAccounts({ state, mailer: { send: async (message) => mail.push(message) }, now: () => new Date('2026-08-17T12:00:00Z'), temporaryPassword: () => `Temporary-review-pass-${++passwordSequence}-92!` });
+  await accounts.sync([
+    { name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' },
+    { name: 'Connie Molitor', email: 'connie@finevines.com', role: 'Executive' },
+  ]);
+  for (const [email, temporary, permanent] of [
+    ['barb.fultz@finevines.com', 'Temporary-review-pass-1-92!', 'Private-review-password-93!'],
+    ['connie@finevines.com', 'Temporary-review-pass-2-92!', 'Private-review-password-94!'],
+  ]) {
+    await accounts.activate(email);
+    const invited = await accounts.authenticate(email, temporary);
+    await accounts.changePassword(invited, temporary, permanent);
   }
+  const wines = Array.from({ length: 51 }, (_, offset) => {
+    const index = offset + 1;
+    return { sku: `SKU-${index}`, slug: `wine-${index}`, displayIdentity: `Wine ${index}`, searchQuery: `Wine ${index}`, wineRevision: index.toString(16).padStart(64, '0'), candidates: [{ candidateId: `candidate-${index}`, storageName: `candidate-${index}.png`, sha256: 'a'.repeat(64), bytes: 68, mime: 'image/png', width: 1, height: 1, sourceUrl: 'https://example.test/wine', sourceImageUrl: 'https://example.test/wine.png' }] };
+  });
+  const manifest = { schemaVersion: 1, packageId: 'pkg-matrix', environment: 'test', catalogCommit: 'abcdef1', createdAt: '2026-08-17T11:00:00Z', expiresAt: '2026-09-17T11:00:00Z', reviewers: [{ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }, { name: 'Connie Molitor', email: 'connie@finevines.com', role: 'Executive' }], wines };
+  await storage.put('_review/test/current.json', JSON.stringify({ packageId: manifest.packageId }));
+  await storage.put('_review/test/packages/pkg-matrix/manifest.json', JSON.stringify(manifest));
+  let uuidSequence = 0;
+  const handle = createReviewConsole({ config: { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', sessionSecret: 'matrix-session-secret', incidentRecipient: 'joel@gritautomation.com' }, storage, state, accounts, dispatch: async () => {}, now: () => new Date('2026-08-17T12:00:00Z'), uuid: () => `10000000-0000-4000-8000-${String(++uuidSequence).padStart(12, '0')}` });
+  const sessions = [];
+  for (const [email, password] of [['barb.fultz@finevines.com', 'Private-review-password-93!'], ['connie@finevines.com', 'Private-review-password-94!']]) {
+    const login = await request(handle, '/login', { method: 'POST', body: new URLSearchParams({ email, password }) });
+    const cookie = login.headers.get('set-cookie').split(';')[0];
+    const current = await request(handle, '/api/current', { headers: { cookie } });
+    sessions.push({ cookie, csrf: (await current.json()).csrfToken });
+  }
+  const queued = [];
+  await Promise.all(wines.map(async (wine, index) => {
+    const session = sessions[index % 2];
+    const response = await request(handle, '/api/actions', { method: 'POST', headers: { cookie: session.cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': session.csrf }, body: JSON.stringify({ kind: 'image-select', sku: wine.sku, packageId: manifest.packageId, targetCatalogCommit: manifest.catalogCommit, wineRevision: wine.wineRevision, candidateId: wine.candidates[0].candidateId }) });
+    assert.equal(response.status, 202);
+    queued[index] = { ...(await response.json()), reviewer: index % 2 ? 'connie@finevines.com' : 'barb.fultz@finevines.com' };
+  }));
   const claimFile = join(await mkdtemp(join(tmpdir(), 'finevines-review-matrix-')), 'claims.json'); roots.push(dirname(claimFile));
   const first = await runQueueCommand({ args: ['claim', '--environment', 'test', '--output', claimFile], state, now: () => new Date('2026-08-17T12:01:00Z') });
   assert.deepEqual({ claimed: first.claimed, remaining: first.remaining }, { claimed: 50, remaining: 1 });
   assert.equal(new Set(queued.slice(0, 50).map(({ reviewer }) => reviewer)).size, 2, 'both reviewers retain independent decisions');
+  const secondFile = join(dirname(claimFile), 'claims-continued.json');
+  const second = await runQueueCommand({ args: ['claim', '--environment', 'test', '--output', secondFile], state, now: () => new Date('2026-08-17T12:02:00Z') });
+  assert.deepEqual({ claimed: second.claimed, remaining: second.remaining }, { claimed: 1, remaining: 0 });
 
   // An action-specific rejection is isolated while a prepared neighbor stays
   // processing for verified deployment; an operational transition error does
