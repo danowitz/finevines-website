@@ -409,19 +409,31 @@ test('review UI refreshes when focused and stays quiet in a background tab', { t
       document.hasFocus = () => window.__reviewFocused;
       window.fetch = async () => {
         window.__reviewFetches += 1;
-        return { ok: true, json: async () => ({ wines: [], incidents: [], isAdministrator: false, expiresAt: '2026-09-17T00:00:00Z', reviewStatus: {} }) };
+        return { ok: true, json: async () => ({
+          packageId: 'pkg-refresh', catalogCommit: 'abcdef1', csrfToken: 'csrf',
+          wines: [{
+            sku: 'refresh-1', wineRevision: 'a'.repeat(64), displayIdentity: 'Refresh Test Wine 2022', searchQuery: 'Refresh Test Wine 2022',
+            candidates: [{ candidateId: 'candidate-1', width: 400, height: 800, sourceHost: 'producer.example' }],
+          }],
+          incidents: [], isAdministrator: false, expiresAt: '2026-09-17T00:00:00Z', reviewStatus: {},
+        }) };
       };
     });
     await page.evaluate((source) => (0, eval)(source), APP_JS);
     await new Promise((resolveWait) => setTimeout(resolveWait, 50));
     const initial = await page.evaluate(() => window.__reviewFetches);
     assert.equal(initial, 1);
+    await page.click('.candidate');
+    assert.equal(await page.$eval('.candidate', (node) => node.classList.contains('selected')), true);
+    assert.equal(await page.$eval('.primary', (node) => node.disabled), false);
     await page.evaluate(() => { window.__reviewFocused = false; window.dispatchEvent(new Event('focus')); document.dispatchEvent(new Event('visibilitychange')); });
     await new Promise((resolveWait) => setTimeout(resolveWait, 50));
     assert.equal(await page.evaluate(() => window.__reviewFetches), initial);
     await page.evaluate(() => { window.__reviewFocused = true; window.dispatchEvent(new Event('focus')); });
     await new Promise((resolveWait) => setTimeout(resolveWait, 50));
     assert.equal(await page.evaluate(() => window.__reviewFetches), initial + 1);
+    assert.equal(await page.$eval('.candidate', (node) => node.classList.contains('selected')), true, 'background refresh must preserve the selected candidate');
+    assert.equal(await page.$eval('.primary', (node) => node.disabled), false, 'background refresh must preserve the enabled submit button');
   } finally {
     await page.close(); await browser.close();
   }

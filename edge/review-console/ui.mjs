@@ -7,8 +7,8 @@ button { cursor: pointer; }
 .login-page { min-height: 100vh; display: grid; place-items: center; padding: 28px 18px; background: radial-gradient(circle at 50% 0%, #fff 0, #f7f3eb 42%, #eee6da 100%); }
 .login-shell { width: min(440px, 100%); }
 .login-brand { margin-bottom: 20px; text-align: center; }
-.login-mark { display: inline-grid; place-items: center; width: 54px; height: 54px; margin-bottom: 14px; border: 1px solid #bca993; border-radius: 50%; background: #fffaf2; color: #7d263b; font: 700 20px/1 Georgia, serif; box-shadow: 0 8px 24px #3c24151a; }
-.login-brand h1 { margin: 0; font: 700 clamp(32px, 8vw, 44px)/1.02 Georgia, serif; letter-spacing: -.02em; }
+.login-logo { display: block; width: min(360px, 88%); height: auto; margin: 0 auto; }
+.login-brand h1 { margin: 18px 0 0; font: 700 clamp(28px, 7vw, 38px)/1.02 Georgia, serif; letter-spacing: -.02em; }
 .login-brand p { margin: 10px auto 0; max-width: 34ch; color: #6e5b50; line-height: 1.5; }
 .login-card { padding: 28px; border: 1px solid #d9cfc4; border-radius: 16px; background: #fff; box-shadow: 0 18px 50px #3c24151f; }
 .login-card label { display: block; margin-bottom: 9px; color: #4c3c34; font-size: 14px; font-weight: 750; }
@@ -296,11 +296,38 @@ function renderWine(wine) {
   const pick = el('button', { class: 'primary', type: 'button', disabled: 'disabled', text: 'Use selected image' });
   const none = el('button', { class: 'secondary', type: 'button', text: 'None of these' });
   const output = el('span', { class: 'status', text: '' });
-  const card = el('article', { class: 'wine', 'data-sku': wine.sku }, [head, grid]);
+  const reviewKey = state.package.packageId + ':' + wine.wineRevision;
+  const card = el('article', { class: 'wine', 'data-sku': wine.sku, 'data-review-key': reviewKey }, [head, grid]);
   card.append(pasteZone(wine, card), el('div', { class: 'actions' }, [pick, none, output]));
   pick.addEventListener('click', () => submit(wine, state.selected.get(wine.sku), card));
   none.addEventListener('click', () => submit(wine, '', card));
   return card;
+}
+
+function renderWines(wines) {
+  const existing = new Map([...list.querySelectorAll('.wine')].map((card) => [card.dataset.sku, card]));
+  const currentSkus = new Set(wines.map((wine) => wine.sku));
+  list.querySelector('.empty')?.remove();
+  for (const wine of wines) {
+    const reviewKey = state.package.packageId + ':' + wine.wineRevision;
+    let card = existing.get(wine.sku);
+    if (!card || card.dataset.reviewKey !== reviewKey) {
+      state.selected.delete(wine.sku);
+      const replacement = renderWine(wine);
+      if (card) card.replaceWith(replacement);
+      card = replacement;
+    }
+    list.append(card);
+  }
+  for (const [sku, card] of existing) {
+    if (!currentSkus.has(sku)) {
+      const previewUrl = card.querySelector('.paste-zone')?.dataset.previewUrl;
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      state.selected.delete(sku);
+      card.remove();
+    }
+  }
+  if (!wines.length) list.append(el('div', { class: 'empty', text: 'Nothing needs review right now.' }));
 }
 
 function summaryText(reviewStatus, expiresAt) {
@@ -385,9 +412,7 @@ async function refresh() {
         controls,
       ]));
     }
-    list.replaceChildren();
-    if (!wines.length) list.append(el('div', { class: 'empty', text: 'Nothing needs review right now.' }));
-    else wines.forEach((wine) => list.append(renderWine(wine)));
+    renderWines(wines);
   })();
   try { await state.refreshing; } finally { state.refreshing = null; }
 }
@@ -413,14 +438,14 @@ function documentPage(body, { script = false, bodyClass = '' } = {}) {
 <body${bodyClass ? ` class="${bodyClass}"` : ''}>${body}${script ? '<script src="/app.js" defer></script>' : ''}</body></html>`;
 }
 
-export function loginPage(message = '') {
+export function loginPage(message = '', brandLogo = '/favicon.ico') {
   const feedback = message ? `<p class="login-message" role="alert">${escapeHtml(message)}</p>` : '';
-  return documentPage(`<main class="login-shell"><header class="login-brand"><div class="login-mark" aria-hidden="true">FV</div><h1>Fine Vines</h1><p>Sign in to review and approve bottle images for the catalog.</p></header><section class="login-card">${feedback}<form method="post" action="/login"><label for="email">Email address</label><input id="email" name="email" type="email" required autocomplete="username" autofocus placeholder="you@example.com"><label for="password">Password</label><input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password"><button class="login-submit" type="submit">Sign in</button></form><p class="login-note">Private review workspace · Authorized users only</p></section></main>`, { bodyClass: 'login-page' });
+  return documentPage(`<main class="login-shell"><header class="login-brand"><img class="login-logo" src="${escapeHtml(brandLogo)}" alt="FineVines"><p>Sign in to review and approve bottle images for the catalog.</p></header><section class="login-card">${feedback}<form method="post" action="/login"><label for="email">Email address</label><input id="email" name="email" type="email" required autocomplete="username" autofocus placeholder="you@example.com"><label for="password">Password</label><input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password"><button class="login-submit" type="submit">Sign in</button></form><p class="login-note">Private review workspace · Authorized users only</p></section></main>`, { bodyClass: 'login-page' });
 }
 
-export function changePasswordPage(csrf, message = '') {
+export function changePasswordPage(csrf, message = '', brandLogo = '/favicon.ico') {
   const feedback = message ? `<p class="login-message" role="alert">${escapeHtml(message)}</p>` : '';
-  return documentPage(`<main class="login-shell"><header class="login-brand"><div class="login-mark" aria-hidden="true">FV</div><h1>Choose your password</h1><p>Your temporary password must be replaced before you can review images.</p></header><section class="login-card">${feedback}<form method="post" action="/change-password"><input type="hidden" name="csrf" value="${escapeHtml(csrf)}"><label for="current-password">Temporary password</label><input id="current-password" name="currentPassword" type="password" required autocomplete="current-password"><label for="new-password">New password</label><input id="new-password" name="newPassword" type="password" required minlength="8" autocomplete="new-password"><button class="login-submit" type="submit">Save password</button></form></section></main>`, { bodyClass: 'login-page' });
+  return documentPage(`<main class="login-shell"><header class="login-brand"><img class="login-logo" src="${escapeHtml(brandLogo)}" alt="FineVines"><h1>Choose your password</h1><p>Your temporary password must be replaced before you can review images.</p></header><section class="login-card">${feedback}<form method="post" action="/change-password"><input type="hidden" name="csrf" value="${escapeHtml(csrf)}"><label for="current-password">Temporary password</label><input id="current-password" name="currentPassword" type="password" required autocomplete="current-password"><label for="new-password">New password</label><input id="new-password" name="newPassword" type="password" required minlength="8" autocomplete="new-password"><button class="login-submit" type="submit">Save password</button></form></section></main>`, { bodyClass: 'login-page' });
 }
 
 export function consolePage(reviewer) {

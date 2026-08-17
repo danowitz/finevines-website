@@ -106,7 +106,8 @@ describe('review console handler', () => {
     assert.match(markup, /<link rel="stylesheet" href="\/app\.css">/);
     assert.match(markup, /<link rel="icon" href="\/favicon\.ico"/);
     assert.match(markup, /class="login-shell"/);
-    assert.match(markup, /Fine Vines image review/);
+    assert.match(markup, /class="login-logo"/);
+    assert.doesNotMatch(markup, /<h1>Fine Vines<\/h1>/);
 
     const stylesheet = await handle(new Request('https://review.finevines.biz/app.css'));
     assert.equal(stylesheet.status, 200);
@@ -177,7 +178,8 @@ describe('review console handler', () => {
     assert.doesNotThrow(() => new Function(script));
     assert.match(script, /Remove from comparison/);
     assert.match(script, /event\.target === modal/);
-    assert.doesNotMatch(script, /card\.remove\(\)/);
+    assert.match(script, /function renderWines\(wines\)/);
+    assert.doesNotMatch(script, /list\.replaceChildren\(\)/);
     assert.match(script, /setInterval\(activeRefresh, 10_000\)/);
     assert.match(script, /Updates automatically every 10 seconds while this window is active/);
     assert.match(script, /processor checks for new decisions every five minutes/);
