@@ -15,7 +15,7 @@ func TestValidateClientContentForDeploy(t *testing.T) {
 	confirmed := model.SiteContent{ContactConfirmed: true}
 	pending := model.SiteContent{}
 
-	for _, baseURL := range []string{"https://finevines.com", "https://www.finevines.com/"} {
+	for _, baseURL := range []string{"https://finevines.biz", "https://www.finevines.biz/"} {
 		if err := validateClientContentForDeploy(baseURL, confirmed); err != nil {
 			t.Errorf("confirmed production content rejected for %s: %v", baseURL, err)
 		}
@@ -34,7 +34,7 @@ func TestValidateClientContentForDeploy(t *testing.T) {
 	if err := validateClientContentForDeploy("https://staging.finevines.example", pending); err != nil {
 		t.Errorf("staging deploy should allow unconfirmed candidate content: %v", err)
 	}
-	if err := validateClientContentForDeploy("finevines.com", confirmed); err == nil {
+	if err := validateClientContentForDeploy("finevines.biz", confirmed); err == nil {
 		t.Error("relative site base URL should be rejected")
 	}
 }
