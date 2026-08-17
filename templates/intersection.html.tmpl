@@ -1,0 +1,31 @@
+{{define "intersection"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head" .}}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"CollectionPage","name":{{printf "%s %s Wines" .Intersection.Region .Intersection.Varietal}},"url":{{printf "%s%s" .BaseURL .Path}},"description":{{.Description}},"mainEntity":{"@type":"ItemList","numberOfItems":{{len .Cards}},"itemListElement":[{{range $i, $c := .Cards}}{{if $i}},{{end}}{"@type":"ListItem","position":{{inc $i}},"url":{{printf "%s/wines/%s/" $.BaseURL $c.Slug}},"name":{{spaceJoin $c.Producer $c.Name}}}{{end}}]}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{{range $i, $crumb := .Crumbs}}{{if $i}},{{end}}{"@type":"ListItem","position":{{inc $i}},"name":{{$crumb.Name}},"item":{{printf "%s%s" $.BaseURL $crumb.URL}}}{{end}}]}
+</script>
+</head>
+<body>
+{{template "header" .}}
+<main>
+  <section class="page-hero page-hero-plain"><div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">{{range $i, $crumb := .Crumbs}}{{if $i}}<span aria-hidden="true">/</span>{{end}}{{if lt (inc $i) (len $.Crumbs)}}<a href="{{$crumb.URL}}">{{$crumb.Name}}</a>{{else}}<span aria-current="page">{{$crumb.Name}}</span>{{end}}{{end}}</nav>
+    <span class="eyebrow">Region and Varietal</span>
+    <h1>{{.Intersection.Region}} {{.Intersection.Varietal}}</h1>
+    <p class="lede">{{comma (len .Intersection.Cards)}} wines in the current FineVines portfolio.</p>
+  </div></section>
+  {{if eq .PageNum 1}}<section class="wrap collection-editorial" aria-labelledby="intersection-title">
+    <div class="collection-editorial-copy"><span class="eyebrow">Explore the Selection</span><h2 id="intersection-title">{{.Intersection.Varietal}} through the lens of {{.Intersection.Region}}</h2><p>This selection brings together {{comma (len .Intersection.Cards)}} {{.Intersection.Varietal}} wines from {{.Intersection.Region}}{{with .Producers}}, including bottles from {{naturalList .}}{{end}}.</p>{{with .VintageRange}}<p>The current portfolio spans vintages from {{.}}, offering a useful view of how producer and vintage shape this regional expression. {{else}}<p>Compare producers and individual bottlings to see how each estate approaches this regional expression. {{end}}Continue to the broader <a href="{{$.RegionURL}}">{{$.Intersection.Region}} region</a> or <a href="{{$.VarietalURL}}">{{$.Intersection.Varietal}} collection</a>.</p></div>
+    {{with .Images}}<div class="collection-editorial-gallery">{{range .}}<figure class="is-bottle"><a href="{{.Href}}"><img src="/{{.Path}}" alt="{{.Alt}}" loading="lazy"></a><figcaption>{{.Caption}}</figcaption></figure>{{end}}</div>{{end}}
+  </section>{{end}}
+  <section class="wrap"><div class="collection-toolbar"><p class="collection-count">{{comma (len .Intersection.Cards)}} wines{{if gt .PageCount 1}} &middot; page {{.PageNum}} of {{.PageCount}}{{end}}</p><a class="collection-filter-link" href="{{.RegionURL}}">All {{.Intersection.Region}} wines</a></div>
+    <ul class="wine-grid view-cards" style="list-style:none;margin:0;padding:0;">{{range .Cards}}{{template "winecard" .}}{{end}}</ul>
+    {{if gt .PageCount 1}}<nav class="pagination" aria-label="{{.Intersection.Region}} {{.Intersection.Varietal}} pages">{{if .PrevURL}}<a href="{{.PrevURL}}">Previous</a>{{else}}<span>Previous</span>{{end}}<span>Page {{.PageNum}} of {{.PageCount}}</span>{{if .NextURL}}<a href="{{.NextURL}}">Next</a>{{else}}<span>Next</span>{{end}}</nav>{{end}}
+  </section>
+</main>
+{{template "footer" .}}
+</body></html>{{end}}

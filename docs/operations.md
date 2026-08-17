@@ -8,16 +8,26 @@ developer looking for the technical README, see [`../README.md`](../README.md) i
 
 ## What this tool does
 
-`finevines.exe` is one small program that does four jobs. **Normally you run none of them**: the site updates
+`finevines.exe` is one small program that does five jobs. **Normally you run none of them**: the site updates
 itself every night in the cloud (see "The nightly run" below). This table is here so the output makes sense when
 you read it, and for the rare occasion GRIT asks you to run something by hand.
 
 | Command | Plain-language description |
 |---|---|
 | `enrich` | Pulls the current wine list and public team roster from Salesforce, writes wine enrichment for anything new or changed, and refreshes `data\wines.json` plus `data\team.json`. This is the only step that talks to Salesforce. |
+| `enrichcollections` | Researches useful editorial for new region, producer, and varietal pages. New pages run first, material catalog changes second, and annual accuracy reviews only when neither queue has work. Completed pages are reused. |
 | `build` | Turns the wine list, the news posts, and the team roster into the actual website pages (HTML files) in a folder called `dist`. This step never goes out to the internet — it just reads the JSON files and writes pages. |
 | `deploy` | Uploads the freshly built pages to FineVines' hosting account (Bunny.net) and tells the CDN to clear its cache so visitors see the new version right away. Only files that actually changed get re-uploaded, so this is fast on a normal day. |
 | `redirects` | A separate, occasional command (not part of the nightly run) that maps every old finevines.com web address to its new location, so old links and Google search results keep working after the rebuild. This is mainly a one-time launch-day tool — GRIT will run this as part of go-live, not something you need to run regularly. |
+
+The build also maintains the SEO browse structure automatically. Known spelling
+variants in `data\taxonomy.json` resolve to one canonical producer, region, or
+varietal page, and region pages link through the geographic hierarchy. A focused
+region-and-varietal page is created only when the current catalog contains at
+least six matching wines from at least two producers. When stock changes and a
+combination falls below that floor, it is no longer advertised in the sitemap or
+collection links. `data\taxonomy.json` is curated source data and is not rewritten
+by the nightly pipeline.
 
 ---
 
@@ -41,9 +51,9 @@ values below.
 - `FINEVINES_SF_CLIENT_SECRET` — the Connected App's Consumer Secret.
 - `FINEVINES_SF_API_VERSION` — optional; leave blank and the tool picks a sensible default.
 
-**OpenAI** — needed for `enrich` (researches each wine and writes its tasting notes) and for the image stage
-(reads bottle labels and sweeps for watermarks). The hosted image-review click path is local and deterministic;
-it makes no AI call:
+**OpenAI** — needed for `enrich` (researches each wine and writes its tasting notes),
+`enrichcollections`, and the image stage (reads bottle labels and sweeps for watermarks).
+The hosted image-review click path is local and deterministic; it makes no AI call:
 - `OPENAI_API_KEY` — an API key from OpenAI's platform console. GRIT can help set up the account.
 - `FINEVINES_GOOGLE_VISION_KEY` — optional Google Cloud key restricted to the Cloud Vision API. The adapter remains available for bounded experiments, but scheduled workflows do not inject this key because the 2026-08-14 frozen comparison produced zero incremental recoveries from 46 requests.
 - `FINEVINES_SERPER_KEY` — Serper Google Images API key. The comparison workflow combines its browser-like Google results with Brave before local consensus; keep it in GitHub Actions secrets, never `.env` in source control.
@@ -69,7 +79,7 @@ of these come from the Bunny.net account dashboard once FineVines has a Bunny.ne
 - `FINEVINES_BUNNY_PULL_ZONE_ID` — the ID of the Pull Zone (CDN) in front of the storage zone.
 - `FINEVINES_BUNNY_SCRIPT_ID` — only needed if/when GRIT publishes the old-URL redirect map via
   `redirects --publish`; this identifies the Bunny Edge Script that serves the redirects. Not needed for the
-  nightly `enrich`/`build`/`deploy` cycle.
+  nightly `enrich`/`enrichcollections`/`build`/`deploy` cycle.
 
 **Site**
 - `FINEVINES_SITE_BASE_URL` — optional; the site's public URL (`https://finevines.com`). Leave blank and the
@@ -95,7 +105,7 @@ Everything lives together in one folder — call it the "repo root." That folder
 ## The nightly run
 
 The site updates itself. Every night at **2:15am Central** a GitHub Actions workflow runs the whole cycle in the
-cloud — reviewer corrections, Salesforce refresh, bottle photographs, build, upload, and a digest email
+cloud — reviewer corrections, Salesforce refresh, collection-page editorial, bottle photographs, build, upload, and a digest email
 summarising what changed. Nothing on the office machine has to be switched on, and there is nothing to schedule.
 The full detail is under "Runbook: the GitHub Actions pipeline" further down.
 
@@ -113,7 +123,7 @@ first if you have the option. Double-click it, or open a Command Prompt window i
 deploy.bat
 ```
 
-It runs `enrich`, then `build`, then `deploy`, in that order, and stops immediately if any step fails — so a
+It runs `enrich`, then `enrichcollections`, then `build`, then `deploy`, in that order, and stops immediately if any step fails — so a
 half-finished run never goes live. A normal run prints progress as it goes, ending with either:
 
 - `Done.` — everything succeeded and the live site now reflects the latest data.

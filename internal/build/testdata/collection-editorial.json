@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "kind": "region",
+      "slug": "burgundy",
+      "name": "Burgundy",
+      "mode": "curated",
+      "eyebrow": "Inside the Region",
+      "heading": "Burgundy is a map of differences",
+      "paragraphs": ["A short factual introduction to Burgundy."],
+      "images": [
+        {
+          "path": "assets/img/regions/burgundy-clos-vougeot.jpg",
+          "alt": "Burgundy vineyards",
+          "caption": "A vineyard caption.",
+          "credit": "Test photographer",
+          "sourceUrl": "https://example.com/burgundy",
+          "license": "Public domain"
+        }
+      ],
+      "related": [{"slug": "napa-valley", "label": "Napa Valley"}],
+      "sources": [{"label": "Test source", "url": "https://example.com/source"}]
+    }
+  ]
+}

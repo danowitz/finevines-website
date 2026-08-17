@@ -1,14 +1,13 @@
 package enrich
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
+	"github.com/gritautomation/finevines-website/internal/openairesponses"
 	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
 
@@ -57,10 +56,7 @@ const defaultEnrichModel = "gpt-4.1"
 // point baseURL at an httptest.Server, matching the ImagenClient/Salesforce
 // pattern in this package.
 type OpenAIEnricher struct {
-	apiKey  string
-	model   string
-	baseURL string
-	http    *http.Client
+	responses *openairesponses.Client
 }
 
 // NewOpenAIEnricher builds an enricher. model defaults to defaultEnrichModel;
@@ -70,10 +66,7 @@ func NewOpenAIEnricher(apiKey, model, baseURL string, hc *http.Client) *OpenAIEn
 	if model == "" {
 		model = defaultEnrichModel
 	}
-	if baseURL == "" {
-		baseURL = "https://api.openai.com"
-	}
-	return &OpenAIEnricher{apiKey: apiKey, model: model, baseURL: strings.TrimSuffix(baseURL, "/"), http: hc}
+	return &OpenAIEnricher{responses: openairesponses.New(apiKey, model, baseURL, hc)}
 }
 
 var _ Enricher = (*OpenAIEnricher)(nil)
@@ -142,17 +135,11 @@ func (e *OpenAIEnricher) EnrichWithNote(ctx context.Context, w salesforce.WineRa
 		prompt += "\n\nCORRECTION FROM THE FINEVINES TEAM (authoritative, overrides anything you find on the web):\n" + note
 	}
 
-	reqObj := map[string]any{
-		"model":             e.model,
-		"instructions":      searchSystem,
-		"input":             prompt,
-		"tools":             []map[string]string{{"type": "web_search"}},
-		"max_output_tokens": 2000,
-	}
-
 	var lastErr error
 	for attempt := 0; attempt < 2; attempt++ {
-		text, err := e.call(ctx, reqObj)
+		text, err := e.responses.Call(ctx, openairesponses.Request{
+			Instructions: searchSystem, Input: prompt, MaxOutputTokens: 2000, WebSearch: true,
+		})
 		if err != nil {
 			return EnrichResult{}, err // transport/HTTP error: caller logs & retries next run
 		}
@@ -163,78 +150,6 @@ func (e *OpenAIEnricher) EnrichWithNote(ctx context.Context, w salesforce.WineRa
 		lastErr = fmt.Errorf("unparseable enrichment for %s (attempt %d): %w", w.SKU, attempt+1, perr)
 	}
 	return EnrichResult{}, lastErr
-}
-
-// call POSTs one Responses API request and returns the assistant's aggregated
-// output text.
-func (e *OpenAIEnricher) call(ctx context.Context, reqObj map[string]any) (string, error) {
-	body, err := json.Marshal(reqObj)
-	if err != nil {
-		return "", err
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, e.baseURL+"/v1/responses", bytes.NewReader(body))
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Authorization", "Bearer "+e.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := e.http.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("openai responses: %w", err)
-	}
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("openai responses: read body: %w", err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("openai responses: HTTP %d: %s", resp.StatusCode, snippet(data))
-	}
-	return responsesOutputText(data)
-}
-
-// responsesOutputText pulls the assistant's text out of a Responses API reply,
-// tolerating either the convenience top-level "output_text" or the structured
-// "output[].content[]" array of output_text blocks.
-func responsesOutputText(data []byte) (string, error) {
-	var parsed struct {
-		OutputText string `json:"output_text"`
-		Output     []struct {
-			Type    string `json:"type"`
-			Content []struct {
-				Type string `json:"type"`
-				Text string `json:"text"`
-			} `json:"content"`
-		} `json:"output"`
-	}
-	if err := json.Unmarshal(data, &parsed); err != nil {
-		return "", fmt.Errorf("openai responses: decode: %w", err)
-	}
-	if strings.TrimSpace(parsed.OutputText) != "" {
-		return parsed.OutputText, nil
-	}
-	var sb strings.Builder
-	for _, o := range parsed.Output {
-		if o.Type != "message" {
-			continue
-		}
-		for _, c := range o.Content {
-			if c.Type == "output_text" {
-				sb.WriteString(c.Text)
-			}
-		}
-	}
-	return sb.String(), nil
-}
-
-func snippet(b []byte) string {
-	const max = 300
-	if len(b) > max {
-		return string(b[:max]) + "…"
-	}
-	return string(b)
 }
 
 // parseEnrichResult extracts the JSON object from a model text response

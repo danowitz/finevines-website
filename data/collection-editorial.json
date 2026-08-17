@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "kind": "region",
+      "slug": "burgundy",
+      "name": "Burgundy",
+      "mode": "curated",
+      "eyebrow": "Inside the Region",
+      "heading": "Burgundy is a map of differences",
+      "paragraphs": [
+        "Burgundy asks you to look closely. Its wines are organized around place, from broad regional appellations to villages and individual vineyard sites. Pinot Noir and Chardonnay do most of the work, but the story is not simply about grape variety. It is about how slope, exposure, soil, and generations of farming make neighboring parcels taste distinct.",
+        "Nowhere is that idea more visible than in the Climats of the Côte de Nuits and Côte de Beaune. UNESCO recognizes 1,247 precisely delimited vineyard parcels across a 50-kilometer strip south of Dijon. Stone walls, paths, and old boundaries still mark many of them. The FineVines Burgundy selection lets you move through that mosaic producer by producer and bottle by bottle."
+      ],
+      "images": [
+        {
+          "path": "assets/img/regions/burgundy-clos-vougeot.jpg",
+          "alt": "Vineyards surrounding Château du Clos de Vougeot in Burgundy",
+          "caption": "The vineyards of Clos de Vougeot, where old walls make the boundaries between parcels visible in the landscape.",
+          "credit": "Photograph by Urban",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Vineyards_vougeot2.jpg",
+          "license": "Public domain"
+        },
+        {
+          "path": "assets/img/regions/burgundy-haute-cote-de-nuits.jpg",
+          "alt": "Vineyard slopes in the Hautes-Côtes de Nuits in Burgundy",
+          "caption": "Vineyard slopes in the Hautes-Côtes de Nuits, above the celebrated Côte de Nuits villages.",
+          "credit": "Photograph by Hans Andersen",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bourgogne-haute-cote-des-nuits.jpg",
+          "license": "CC BY-SA 3.0"
+        }
+      ],
+      "related": [
+        {"slug": "chablis", "label": "Chablis"},
+        {"slug": "maconnais", "label": "Mâconnais"},
+        {"slug": "cote-chalonnaise", "label": "Côte Chalonnaise"}
+      ],
+      "sources": [
+        {
+          "label": "UNESCO: The Climats, terroirs of Burgundy",
+          "url": "https://whc.unesco.org/en/list/1425/"
+        },
+        {
+          "label": "Bourgogne Wine Board",
+          "url": "https://www.bourgogne-wines.com/"
+        }
+      ]
+    }
+  ]
+}

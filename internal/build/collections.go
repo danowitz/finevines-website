@@ -31,9 +31,12 @@ import (
 	"fmt"
 	"html/template"
 	"net/url"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
+	"github.com/gritautomation/finevines-website/internal/collectioneditorial"
 	"github.com/gritautomation/finevines-website/internal/model"
 )
 
@@ -214,16 +217,59 @@ type collectionPage struct {
 	// realistic page (Pinot Noir) still lands well inside what a crawler
 	// happily walks.
 	Related []collectionRelated
-	// Editorial enriches selected region pages with sourced prose and images.
-	// It renders on page one only so pagination never duplicates the article.
-	Editorial      *model.RegionEditorial
-	RelatedRegions []collectionLink
+	// Editorial renders on page one only so pagination never duplicates the
+	// article. Every collection gets a catalog-derived view; a validated library
+	// entry replaces its prose and can add curated photography.
+	Editorial *collectionEditorialView
+	Peers     []collectionLink
+	// RegionHierarchy and Intersections are published only on page one.
+	RegionHierarchy []collectionLink
+	Intersections   []collectionLink
+	Crumbs          []crumb
 	// IndexURL is this kind's own index (/producers/), so a collection is
 	// never a dead end even for a visitor who arrived on it cold from search.
 	IndexURL string
 	// FilterURL is the same cut on the portfolio, where the client engine can
 	// refine it further. The static page ranks; the app filters.
 	FilterURL string
+}
+
+func collectionCrumbs(s *site, kind collectionKind, value collection, pageNum int, published []collection) []crumb {
+	crumbs := []crumb{{Name: "Portfolio", URL: "/portfolio/"}, {Name: kind.Plural, URL: collectionIndexURL(kind)}}
+	if kind.Key == "region" {
+		publishedSlugs := map[string]bool{}
+		for _, item := range published {
+			publishedSlugs[item.Slug] = true
+		}
+		trail := s.Taxonomy.RegionTrail(value.Name)
+		for _, name := range trail[:max(0, len(trail)-1)] {
+			slug := model.Slugify(name)
+			if publishedSlugs[slug] {
+				crumbs = append(crumbs, crumb{Name: name, URL: collectionURL(kind, slug, 1)})
+			}
+		}
+	}
+	crumbs = append(crumbs, crumb{Name: value.Name, URL: collectionURL(kind, value.Slug, pageNum)})
+	return crumbs
+}
+
+type collectionEditorialImage struct {
+	Path      string
+	Alt       string
+	Caption   string
+	Credit    string
+	SourceURL string
+	License   string
+	Href      string
+	Curated   bool
+}
+
+type collectionEditorialView struct {
+	Eyebrow    string
+	Heading    string
+	Paragraphs []string
+	Images     []collectionEditorialImage
+	Sources    []collectioneditorial.Source
 }
 
 // collectionIndexGroup is one initial-letter block on an index page.
@@ -309,20 +355,229 @@ func relatedFor(kind collectionKind, cards []cardWine, valuesByKind map[string][
 	return out
 }
 
-func resolveRelatedRegions(requested []model.RegionLink, regions []collection) []collectionLink {
-	bySlug := make(map[string]collection, len(regions))
-	for _, region := range regions {
-		bySlug[region.Slug] = region
+func peerCollections(kind collectionKind, current collection, values []collection, pinned []collectioneditorial.Link, limit int) []collectionLink {
+	if limit <= 0 {
+		return nil
 	}
-	links := make([]collectionLink, 0, len(requested))
-	for _, related := range requested {
-		if region, ok := bySlug[related.Slug]; ok {
-			links = append(links, collectionLink{
-				Name: related.Label, URL: collectionURL(collectionKindByKey("region"), related.Slug, 1), Count: len(region.Cards),
-			})
+	bySlug := make(map[string]collection, len(values))
+	for _, value := range values {
+		bySlug[value.Slug] = value
+	}
+	links := make([]collectionLink, 0, limit)
+	seen := map[string]bool{current.Slug: true}
+	for _, requested := range pinned {
+		if value, ok := bySlug[requested.Slug]; ok && !seen[value.Slug] {
+			links = append(links, collectionLink{Name: requested.Label, URL: collectionURL(kind, value.Slug, 1), Count: len(value.Cards)})
+			seen[value.Slug] = true
+			if len(links) == limit {
+				return links
+			}
+		}
+	}
+
+	tokens := collectionTokens(kind, current.Cards)
+	type scored struct {
+		value   collection
+		overlap int
+		score   int
+	}
+	var candidates []scored
+	for _, value := range values {
+		if seen[value.Slug] {
+			continue
+		}
+		other := collectionTokens(kind, value.Cards)
+		overlap := 0
+		for token := range tokens {
+			if other[token] {
+				overlap++
+			}
+		}
+		if overlap == 0 {
+			continue
+		}
+		union := len(tokens) + len(other) - overlap
+		candidates = append(candidates, scored{value: value, overlap: overlap, score: overlap * 10000 / union})
+	}
+	sort.Slice(candidates, func(i, j int) bool {
+		if candidates[i].score != candidates[j].score {
+			return candidates[i].score > candidates[j].score
+		}
+		if candidates[i].overlap != candidates[j].overlap {
+			return candidates[i].overlap > candidates[j].overlap
+		}
+		if len(candidates[i].value.Cards) != len(candidates[j].value.Cards) {
+			return len(candidates[i].value.Cards) > len(candidates[j].value.Cards)
+		}
+		return candidates[i].value.Name < candidates[j].value.Name
+	})
+	for _, candidate := range candidates {
+		links = append(links, collectionLink{Name: candidate.value.Name, URL: collectionURL(kind, candidate.value.Slug, 1), Count: len(candidate.value.Cards)})
+		if len(links) == limit {
+			break
 		}
 	}
 	return links
+}
+
+func collectionTokens(kind collectionKind, cards []cardWine) map[string]bool {
+	tokens := map[string]bool{}
+	for _, card := range cards {
+		for _, other := range collectionKinds {
+			if other.Key == kind.Key {
+				continue
+			}
+			if slug := model.Slugify(strings.TrimSpace(other.Value(card))); slug != "" {
+				tokens[other.Key+"/"+slug] = true
+			}
+		}
+	}
+	return tokens
+}
+
+func editorialForCollection(kind collectionKind, value collection, related []collectionRelated, entry collectioneditorial.Entry, hasEntry bool, distDir string) *collectionEditorialView {
+	view := &collectionEditorialView{
+		Eyebrow:    collectionEyebrow(kind),
+		Heading:    "Explore " + value.Name + " through the FineVines portfolio",
+		Paragraphs: []string{catalogEditorialParagraph(kind, value, related)},
+	}
+	if hasEntry {
+		view.Eyebrow = entry.Eyebrow
+		view.Heading = entry.Heading
+		view.Paragraphs = entry.Paragraphs
+		view.Sources = entry.Sources
+		for _, image := range entry.Images {
+			view.Images = append(view.Images, collectionEditorialImage{
+				Path: image.Path, Alt: image.Alt, Caption: image.Caption, Credit: image.Credit,
+				SourceURL: image.SourceURL, License: image.License, Curated: true,
+			})
+		}
+	}
+	if len(view.Images) == 0 {
+		view.Images = bottleEditorialImages(value.Cards, distDir, 3)
+	}
+	return view
+}
+
+func bottleEditorialImages(cards []cardWine, distDir string, limit int) []collectionEditorialImage {
+	seen := map[string]bool{}
+	var images []collectionEditorialImage
+	for _, card := range cards {
+		if card.ImagePath == "" || seen[card.ImagePath] {
+			continue
+		}
+		imageFile := filepath.Join(distDir, filepath.FromSlash(strings.TrimLeft(card.ImagePath, "/")))
+		if info, err := os.Stat(imageFile); err != nil || info.IsDir() {
+			continue
+		}
+		seen[card.ImagePath] = true
+		caption := strings.TrimSpace(strings.Join([]string{card.Producer, card.Name, card.Vintage}, " "))
+		images = append(images, collectionEditorialImage{Path: card.ImagePath, Alt: "Bottle of " + caption, Caption: caption, Href: "/wines/" + card.Slug + "/"})
+		if len(images) == limit {
+			break
+		}
+	}
+	return images
+}
+
+func regionHierarchyLinks(s *site, current collection, regions []collection) []collectionLink {
+	published := map[string]collection{}
+	for _, region := range regions {
+		published[region.Name] = region
+	}
+	var out []collectionLink
+	trail := s.Taxonomy.RegionTrail(current.Name)
+	for _, name := range trail[:max(0, len(trail)-1)] {
+		if region, ok := published[name]; ok {
+			out = append(out, collectionLink{Name: name, URL: collectionURL(collectionKindByKey("region"), region.Slug, 1), Count: len(region.Cards)})
+		}
+	}
+	for _, name := range s.Taxonomy.RegionChildren(current.Name) {
+		if region, ok := published[name]; ok {
+			out = append(out, collectionLink{Name: name, URL: collectionURL(collectionKindByKey("region"), region.Slug, 1), Count: len(region.Cards)})
+		}
+	}
+	return out
+}
+
+func withoutDuplicateLinks(links, claimed []collectionLink) []collectionLink {
+	seen := map[string]bool{}
+	for _, link := range claimed {
+		seen[link.URL] = true
+	}
+	out := make([]collectionLink, 0, len(links))
+	for _, link := range links {
+		if !seen[link.URL] {
+			out = append(out, link)
+		}
+	}
+	return out
+}
+
+func collectionEyebrow(kind collectionKind) string {
+	switch kind.Key {
+	case "producer":
+		return "Meet the Producer"
+	case "varietal":
+		return "Explore the Varietal"
+	default:
+		return "Inside the Region"
+	}
+}
+
+func catalogEditorialParagraph(kind collectionKind, value collection, related []collectionRelated) string {
+	links := func(label string, limit int) []string {
+		for _, group := range related {
+			if group.Label == label {
+				var names []string
+				for i, link := range group.Links {
+					if i == limit {
+						break
+					}
+					names = append(names, link.Name)
+				}
+				return names
+			}
+		}
+		return nil
+	}
+	producers, regions, varietals := links("Producers", 4), links("Regions", 4), links("Varietals", 4)
+	switch kind.Key {
+	case "producer":
+		return fmt.Sprintf("The current FineVines selection from %s includes %s across %s. The portfolio spans %s, with each bottle below linked to its vintage and full wine details.", value.Name, countedWines(len(value.Cards)), describedList("region", regions), describedList("varietal", varietals))
+	case "varietal":
+		return fmt.Sprintf("The FineVines %s selection brings together %s from %s. Producers including %s show how the grape changes with place, vintage, and cellar approach.", value.Name, countedWines(len(value.Cards)), describedList("region", regions), naturalList(producers))
+	default:
+		return fmt.Sprintf("The FineVines selection from %s currently brings together %s from %s. The bottles below span %s, offering a direct way to explore the region through the producers and wines available now.", value.Name, countedWines(len(value.Cards)), describedList("producer", producers), describedList("varietal", varietals))
+	}
+}
+
+func countedWines(count int) string {
+	return fmt.Sprintf("%d %s", count, wineWord(count))
+}
+
+func describedList(singular string, values []string) string {
+	if len(values) == 0 {
+		return "the current catalog"
+	}
+	word := singular
+	if len(values) != 1 {
+		word += "s"
+	}
+	return word + " including " + naturalList(values)
+}
+
+func naturalList(values []string) string {
+	switch len(values) {
+	case 0:
+		return "the current selection"
+	case 1:
+		return values[0]
+	case 2:
+		return values[0] + " and " + values[1]
+	default:
+		return strings.Join(values[:len(values)-1], ", ") + ", and " + values[len(values)-1]
+	}
 }
 
 // indexGroups buckets values by first letter for the index page. Anything not
@@ -417,7 +672,7 @@ func collectionKindByKey(key string) collectionKind {
 // site-root paths for the sitemap — the same contract renderPortfolio has, so
 // the
 // sitemap is always a record of what was actually written.
-func renderCollections(tmpl *template.Template, distDir string, s *site, valuesByKind map[string][]collection) ([]string, error) {
+func renderCollections(tmpl *template.Template, distDir string, s *site, valuesByKind map[string][]collection, intersections []intersection) ([]string, error) {
 	var paths []string
 	for _, kind := range collectionKinds {
 		values := valuesByKind[kind.Key]
@@ -452,14 +707,20 @@ func renderCollections(tmpl *template.Template, distDir string, s *site, valuesB
 					nextURL = collectionURL(kind, v.Slug, n+1)
 				}
 
-				var editorial *model.RegionEditorial
-				var relatedRegions []collectionLink
+				var editorial *collectionEditorialView
+				var peers []collectionLink
+				if n == 1 {
+					entry, hasEntry := s.Editorials.Lookup(collectioneditorial.Kind(kind.Key), v.Slug)
+					editorial = editorialForCollection(kind, v, related, entry, hasEntry, distDir)
+					peers = peerCollections(kind, v, values, entry.Related, 6)
+				}
+				var hierarchy, intersectionLinks []collectionLink
 				if n == 1 && kind.Key == "region" {
-					if value, ok := s.Regions[v.Slug]; ok {
-						valueCopy := value
-						editorial = &valueCopy
-						relatedRegions = resolveRelatedRegions(value.RelatedRegions, valuesByKind["region"])
-					}
+					hierarchy = regionHierarchyLinks(s, v, valuesByKind["region"])
+					peers = withoutDuplicateLinks(peers, hierarchy)
+				}
+				if n == 1 {
+					intersectionLinks = intersectionsForCollection(kind, v, intersections)
 				}
 				description := fmt.Sprintf("%s %s from %s in the FineVines portfolio. Browse current availability by vintage, region, and varietal.",
 					comma(total), wineWord(total), v.Name)
@@ -479,20 +740,23 @@ func renderCollections(tmpl *template.Template, distDir string, s *site, valuesB
 						Path:        collectionURL(kind, v.Slug, n),
 						OGImage:     ogImage,
 					},
-					Kind:           kind,
-					Name:           v.Name,
-					Lede:           kind.lede(v.Name, total),
-					Total:          total,
-					Cards:          v.Cards[start:end],
-					PageNum:        n,
-					PageCount:      pageCount,
-					PrevURL:        prevURL,
-					NextURL:        nextURL,
-					Related:        related,
-					Editorial:      editorial,
-					RelatedRegions: relatedRegions,
-					IndexURL:       collectionIndexURL(kind),
-					FilterURL:      portfolioFilterURL(kind, v.Name),
+					Kind:            kind,
+					Name:            v.Name,
+					Lede:            kind.lede(v.Name, total),
+					Total:           total,
+					Cards:           v.Cards[start:end],
+					PageNum:         n,
+					PageCount:       pageCount,
+					PrevURL:         prevURL,
+					NextURL:         nextURL,
+					Related:         related,
+					Editorial:       editorial,
+					Peers:           peers,
+					RegionHierarchy: hierarchy,
+					Intersections:   intersectionLinks,
+					Crumbs:          collectionCrumbs(s, kind, v, n, valuesByKind[kind.Key]),
+					IndexURL:        collectionIndexURL(kind),
+					FilterURL:       portfolioFilterURL(kind, v.Name),
 				}
 				if err := renderPage(tmpl, distDir, rel, "collection", data); err != nil {
 					return nil, err

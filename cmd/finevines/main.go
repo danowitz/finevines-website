@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gritautomation/finevines-website/internal/build"
+	"github.com/gritautomation/finevines-website/internal/collectioneditorial"
 	"github.com/gritautomation/finevines-website/internal/config"
 	"github.com/gritautomation/finevines-website/internal/deploy"
 	"github.com/gritautomation/finevines-website/internal/enrich"
@@ -19,6 +20,7 @@ import (
 	"github.com/gritautomation/finevines-website/internal/redirects"
 	"github.com/gritautomation/finevines-website/internal/report"
 	"github.com/gritautomation/finevines-website/internal/salesforce"
+	"github.com/gritautomation/finevines-website/internal/taxonomy"
 )
 
 func main() {
@@ -34,6 +36,8 @@ func main() {
 	switch os.Args[1] {
 	case "enrich":
 		runErr = runEnrich(cfg)
+	case "enrichcollections":
+		runErr = runEnrichCollections(cfg, os.Args[2:])
 	case "build":
 		runErr = runBuild(cfg)
 	case "redirects":
@@ -58,7 +62,44 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: finevines <enrich|build|redirects|deploy|reviewapply|reviewfinalize|notify|report>")
+	fmt.Fprintln(os.Stderr, "usage: finevines <enrich|enrichcollections|build|redirects|deploy|reviewapply|reviewfinalize|notify|report>")
+}
+
+func runEnrichCollections(cfg config.Config, args []string) error {
+	flags := flag.NewFlagSet("enrichcollections", flag.ContinueOnError)
+	limit := flags.Int("limit", 50, "maximum new or review articles to research")
+	reviewDays := flags.Int("review-days", 365, "minimum age before a completed article is reviewed")
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if *limit <= 0 {
+		return fmt.Errorf("enrichcollections: -limit must be greater than zero")
+	}
+	if *reviewDays <= 0 {
+		return fmt.Errorf("enrichcollections: -review-days must be greater than zero")
+	}
+	if cfg.OpenAIAPIKey == "" {
+		return fmt.Errorf("enrichcollections: set OPENAI_API_KEY in .env (or the environment)")
+	}
+	wines, err := model.LoadWines("data/wines.json")
+	if err != nil {
+		return fmt.Errorf("enrichcollections: load catalog: %w", err)
+	}
+	taxonomyCatalog, err := taxonomy.Load("data/taxonomy.json")
+	if err != nil {
+		return fmt.Errorf("enrichcollections: load taxonomy: %w", err)
+	}
+	wines = taxonomyCatalog.Normalize(wines)
+	researcher := collectioneditorial.NewOpenAIResearcher(cfg.OpenAIAPIKey, cfg.OpenAIModel, "", http.DefaultClient)
+	report, err := collectioneditorial.Sync(context.Background(), "data/collection-editorial.json", wines, researcher, collectioneditorial.Options{
+		Limit: *limit, ReviewAfterDays: *reviewDays, Logf: log.Printf,
+	})
+	if err != nil {
+		return fmt.Errorf("enrichcollections: %w", err)
+	}
+	log.Printf("enrichcollections: discovered %d, attempted %d, published %d, failed %d, current %d, deferred %d",
+		report.Discovered, report.Attempted, report.Published, report.Failed, report.Current, report.Deferred)
+	return nil
 }
 
 // reportPath is where the enrichment coverage report is written — a LOCAL,

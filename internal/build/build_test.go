@@ -186,7 +186,7 @@ func TestRunEnrichesRegionPageWithEditorialAndPublishedNeighbours(t *testing.T) 
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		`class="wrap region-editorial"`,
+		`class="wrap collection-editorial"`,
 		`Burgundy is a map of differences`,
 		`src="/assets/img/regions/burgundy-clos-vougeot.jpg"`,
 		`href="/regions/napa-valley/"`,
@@ -194,6 +194,36 @@ func TestRunEnrichesRegionPageWithEditorialAndPublishedNeighbours(t *testing.T) 
 	} {
 		if !bytes.Contains(html, []byte(want)) {
 			t.Errorf("Burgundy page missing %q", want)
+		}
+	}
+}
+
+func TestRunAddsCatalogEditorialToEveryCollectionKind(t *testing.T) {
+	dist := t.TempDir()
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	for _, page := range []struct {
+		path string
+		want []string
+	}{
+		{
+			path: filepath.Join(dist, "producers", "hubert-lamy", "index.html"),
+			want: []string{`class="wrap collection-editorial"`, `Meet the Producer`, `Explore Hubert Lamy through the FineVines portfolio`, `href="/wines/hubert-lamy-`},
+		},
+		{
+			path: filepath.Join(dist, "varietals", "chardonnay", "index.html"),
+			want: []string{`class="wrap collection-editorial"`, `Explore the Varietal`, `The FineVines Chardonnay selection`},
+		},
+	} {
+		html, err := os.ReadFile(page.path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, want := range page.want {
+			if !bytes.Contains(html, []byte(want)) {
+				t.Errorf("%s missing %q", page.path, want)
+			}
 		}
 	}
 }
@@ -833,7 +863,7 @@ func TestSpellNum(t *testing.T) {
 
 func TestNewsPagesEmptyState(t *testing.T) {
 	dataDir := t.TempDir()
-	for _, name := range []string{"wines.json", "team.json", "site.json"} {
+	for _, name := range []string{"wines.json", "team.json", "site.json", "taxonomy.json"} {
 		data, err := os.ReadFile(filepath.Join("testdata", name))
 		if err != nil {
 			t.Fatal(err)
@@ -2802,6 +2832,23 @@ func TestMergeRedirects_UnionWithLifecycleWinningConflicts(t *testing.T) {
 	}
 	if got["/wines/shared/"] != "/wines/lifecycle-wins/" {
 		t.Error("on conflict the lifecycle entry must win (it is newer knowledge)")
+	}
+}
+
+func TestMergeRedirects_ExplicitSourcesOverrideGeneratedTaxonomyDefaults(t *testing.T) {
+	dir := t.TempDir()
+	lifecyclePath := filepath.Join(dir, "lifecycle-redirects.json")
+	writeJSON(t, lifecyclePath, map[string]string{"/regions/old-name/": "/regions/editor-approved-name/"})
+	distDir := t.TempDir()
+	if err := mergeRedirectsWith(distDir, map[string]string{"/regions/old-name/": "/regions/generated-name/"}, lifecyclePath); err != nil {
+		t.Fatal(err)
+	}
+	var got map[string]string
+	if err := json.Unmarshal([]byte(readFile(t, filepath.Join(distDir, "redirects.json"))), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got["/regions/old-name/"] != "/regions/editor-approved-name/" {
+		t.Fatalf("explicit redirect = %q, want curated source to override generated default", got["/regions/old-name/"])
 	}
 }
 

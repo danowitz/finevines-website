@@ -1,7 +1,8 @@
 # The whole FineVines publish path, unattended.
 #
-#   validate immutable review actions -> enrich -> source images -> build
-#   -> deploy -> commit -> publish review receipts/package -> email the digest
+#   validate immutable review actions -> enrich -> collection editorial ->
+#   source images -> build -> deploy -> commit -> publish review
+#   receipts/package -> email the digest
 #
 # The repo stays the source of truth. Nothing here holds state between runs
 # except what it commits: data/, the imported photographs, and
@@ -204,7 +205,15 @@ jobs:
         if: ${{ github.event_name != 'repository_dispatch' }}
         run: ./finevines enrich
 
-      # 3. Source bottle photographs: fetch + verify, watermark sweep, import
+      # 3. Research collection-page editorial. New regions, producers, and
+      #    varietals always run before any old page. Once the live set is
+      #    complete, material catalog changes run next; scheduled reviews run
+      #    only when neither queue has work. The library checkpoints every
+      #    attempt and cools failures down for 30 days.
+      - name: Enrich collection pages
+        run: ./finevines enrichcollections -limit 50 -review-days 365
+
+      # 4. Source bottle photographs: fetch + verify, watermark sweep, import
       #    survivors. Both verification stages are hard gates. Deliberately
       #    The runner attempts the complete due backlog. It remains bounded by
       #    its two-hour wall-clock budget so it cannot consume the whole job
@@ -235,17 +244,17 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-      # 4. Build the static site.
+      # 5. Build the static site.
       - name: Build
         run: ./finevines build
 
-      # 5. Deploy. The manifest diff means only changed files upload; the
+      # 6. Deploy. The manifest diff means only changed files upload; the
       #    manifest is saved only after every upload and delete succeeds, and the
       #    purge only after that (see deploy.Run's ordering invariants).
       - name: Deploy
         run: ./finevines deploy
 
-      # 6. Commit the state back. AFTER the deploy, so the repo never claims to
+      # 7. Commit the state back. AFTER the deploy, so the repo never claims to
       #    have published something that failed to upload — the same invariant
       #    deploy.Run applies to its own manifest, extended one level up.
       #
@@ -279,7 +288,7 @@ jobs:
       - name: Finalize hosted review receipts
         run: ./finevines reviewfinalize -environment production -decisions .run/review-decisions.json -target "$FINEVINES_SITE_BASE_URL" -run-id "$GITHUB_RUN_ID"
 
-      # 7. Email the digest — only if the run changed something. Runs last so it
+      # 10. Email the digest — only if the run changed something. Runs last so it
       #    reports what actually shipped, and is NOT `if: always()`: a failed run
       #    surfaces through GitHub's own workflow-failure email to the repo
       #    owner. This email is for content changes, not CI health.

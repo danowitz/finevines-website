@@ -1281,29 +1281,31 @@ h1, h2, .eyebrow, .lede { overflow-wrap: break-word; }
 /* ---- Facet collections (/producers/, /regions/, /varietals/) ------------------ */
 /* The value pages reuse .wine-grid and .pagination wholesale; only the
    chrome around them is new. */
-.region-editorial { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 34px 52px; align-items: start; }
-.region-editorial-copy h2 { margin: 8px 0 20px; max-width: 660px; }
-.region-editorial-copy p { max-width: 680px; color: var(--ink-soft); font-size: 18px; line-height: 1.68; }
-.region-editorial-gallery { display: grid; grid-template-columns: 1.35fr .85fr; gap: 14px; }
-.region-editorial-gallery figure { margin: 0; }
-.region-editorial-gallery img { width: 100%; height: 310px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }
-.region-editorial-gallery figcaption { margin-top: 8px; color: var(--ink-soft); font-size: 12.5px; line-height: 1.45; }
-.region-editorial-gallery figcaption a { color: inherit; }
-.region-neighbours { grid-column: 1 / -1; padding: 24px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.region-neighbours h3 { margin: 0 0 12px; font-family: var(--sans); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-dark); }
-.region-neighbours ul { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.region-neighbours a { color: var(--bordeaux-700); font-weight: 600; }
-.region-editorial-sources { grid-column: 1 / -1; margin: -18px 0 0; color: var(--ink-soft); font-family: var(--sans); font-size: 11px; }
-.region-editorial-sources a { color: inherit; }
+.collection-editorial { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 34px 52px; align-items: start; }
+.collection-editorial-copy h2 { margin: 8px 0 20px; max-width: 660px; }
+.collection-editorial-copy p { max-width: 680px; color: var(--ink-soft); font-size: 18px; line-height: 1.68; }
+.collection-editorial-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 14px; }
+.collection-editorial-gallery figure { margin: 0; }
+.collection-editorial-gallery img { width: 100%; height: 310px; border-radius: 10px; border: 1px solid var(--line); }
+.collection-editorial-gallery .is-curated img { object-fit: cover; }
+.collection-editorial-gallery .is-bottle img { object-fit: contain; padding: 18px; background: var(--parchment-100); }
+.collection-editorial-gallery figcaption { margin-top: 8px; color: var(--ink-soft); font-size: 12.5px; line-height: 1.45; }
+.collection-editorial-gallery figcaption a { color: inherit; }
+.collection-peers { grid-column: 1 / -1; padding: 24px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.collection-peers h3 { margin: 0 0 12px; font-family: var(--sans); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-dark); }
+.collection-peers ul { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.collection-peers a { color: var(--bordeaux-700); font-weight: 600; }
+.collection-editorial-sources { grid-column: 1 / -1; margin: -18px 0 0; color: var(--ink-soft); font-family: var(--sans); font-size: 11px; }
+.collection-editorial-sources a { color: inherit; }
 @media (max-width: 850px) {
-  .region-editorial { grid-template-columns: 1fr; gap: 24px; }
-  .region-editorial-gallery img { height: 240px; }
-  .region-neighbours, .region-editorial-sources { grid-column: auto; }
-  .region-editorial-sources { margin-top: -8px; }
+  .collection-editorial { grid-template-columns: 1fr; gap: 24px; }
+  .collection-editorial-gallery img { height: 240px; }
+  .collection-peers, .collection-editorial-sources { grid-column: auto; }
+  .collection-editorial-sources { margin-top: -8px; }
 }
 @media (max-width: 520px) {
-  .region-editorial-gallery { grid-template-columns: 1fr; }
-  .region-editorial-gallery img { height: 220px; }
+  .collection-editorial-gallery { grid-template-columns: 1fr; }
+  .collection-editorial-gallery img { height: 220px; }
 }
 
 .collection-toolbar { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; padding: 26px 0 18px; border-bottom: 1px solid var(--line); margin-bottom: 26px; }
