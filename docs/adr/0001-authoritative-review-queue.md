@@ -1,6 +1,6 @@
 # ADR-0001: One authoritative, queue-driven image review system
 
-**Status:** Accepted  
+**Status:** Accepted
 **Date:** 2026-08-16
 
 ## Context

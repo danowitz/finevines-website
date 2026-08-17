@@ -1,7 +1,7 @@
 # Authoritative Image Review Processing
 
-**Date:** 2026-08-16  
-**Status:** Approved for implementation  
+**Date:** 2026-08-16
+**Status:** Approved for implementation
 **Supersedes:** The environment split, shared-password authentication, test-only action processor, and nightly review fallback in the earlier protected review-console design.
 
 ## Problem Statement
