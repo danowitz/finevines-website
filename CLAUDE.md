@@ -96,3 +96,13 @@ artifacts, and are complete/self-contained on their own.
 - **Real team roster** (confirmed, use these — not placeholders): George Molitor (Founder & President), Connie
   Molitor (Operations), Jeff Barbour, Trish Earley, Tim Freehan, Heather Malpass, Richie Ribando, Dan Pilkey, Steven
   Fladung (all Sales), Barbara Fultz (Office Manager, and the one who'll actually run the Claude skills day-to-day).
+
+## Agent skills
+
+### Issue tracker
+
+Specifications and implementation tickets live in this repository's GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+This is a single-context repository: use the root `CONTEXT.md` and system-wide ADRs under `docs/adr/`. See `docs/agents/domain.md`.
