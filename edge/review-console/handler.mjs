@@ -1,4 +1,5 @@
 import { csrfToken, issueSession, protectedHeaders, readCookie, validateAction, verifySession } from './core.mjs';
+import { inspectReviewerImage, ReviewerImageError } from './reviewer-image.mjs';
 import { APP_CSS, APP_JS, FAVICON, consolePage, loginPage } from './ui.mjs';
 
 const response = (body, init = {}) => new Response(body, { ...init, headers: protectedHeaders(init.headers) });
@@ -44,6 +45,16 @@ export function createReviewConsole({ config, storage, dispatch, now = () => new
   const loginBlockMs = 15 * 60_000;
   let loginFailures = [];
   let loginBlockedUntil = 0;
+
+  async function queueAction(id, action, upload) {
+    if (upload) await storage.putImmutable(`${prefix}/uploads/${action.imageStorageName}`, upload.bytes, action.imageMIME);
+    const encoded = JSON.stringify(action);
+    await storage.putImmutable(`${prefix}/actions/${id}.json`, encoded, 'application/json');
+    await storage.putImmutable(`${prefix}/pending/${id}.json`, encoded, 'application/json');
+    let dispatched = true;
+    try { await dispatch(id, config.environment); } catch { dispatched = false; }
+    return { id, status: 'queued', dispatched };
+  }
 
   const route = async function route(request) {
     const url = new URL(request.url);
@@ -121,6 +132,28 @@ export function createReviewConsole({ config, storage, dispatch, now = () => new
       return pending ? json({ id, status: 'queued' }) : response('Not found', { status: 404 });
     }
 
+    if (request.method === 'POST' && url.pathname === '/api/reviewer-images') {
+      if (request.headers.get('origin') !== config.origin) return json({ error: 'invalid origin' }, 403);
+      if (!request.headers.get('content-type')?.toLowerCase().startsWith('multipart/form-data')) return json({ error: 'content type must be multipart/form-data' }, 415);
+      if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
+      try {
+        const form = await request.formData();
+        const inspected = await inspectReviewerImage(form.get('image'));
+        const id = uuid();
+        const imageStorageName = `${id}.${inspected.extension}`;
+        const action = validateAction({
+          kind: 'reviewer-image', reviewer: form.get('reviewer'), sku: form.get('sku'), packageId: form.get('packageId'),
+          targetCatalogCommit: form.get('targetCatalogCommit'), wineRevision: form.get('wineRevision'), candidateId: '',
+          imageStorageName, imageSHA256: inspected.sha256, imageBytes: inspected.bytesLength, imageMIME: inspected.mime,
+        }, { id, environment: config.environment, sessionId: session.sessionId, now: now(), allowReviewerImage: true });
+        const manifest = await loadPackage(storage, prefix, action.packageId);
+        actionTarget(manifest, action);
+        return json(await queueAction(id, action, inspected), 202);
+      } catch (error) {
+        return json({ error: error.message }, error instanceof ReviewerImageError ? error.status : 400);
+      }
+    }
+
     if (request.method === 'POST' && url.pathname === '/api/actions') {
       if (request.headers.get('origin') !== config.origin) return json({ error: 'invalid origin' }, 403);
       if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) return json({ error: 'content type must be application/json' }, 415);
@@ -130,12 +163,7 @@ export function createReviewConsole({ config, storage, dispatch, now = () => new
         const action = validateAction(await request.json(), { id, environment: config.environment, sessionId: session.sessionId, now: now() });
         const manifest = await loadPackage(storage, prefix, action.packageId);
         actionTarget(manifest, action);
-        const encoded = JSON.stringify(action);
-        await storage.putImmutable(`${prefix}/actions/${id}.json`, encoded);
-        await storage.putImmutable(`${prefix}/pending/${id}.json`, encoded);
-        let dispatched = true;
-        try { await dispatch(id, config.environment); } catch { dispatched = false; }
-        return json({ id, status: 'queued', dispatched }, 202);
+        return json(await queueAction(id, action), 202);
       } catch (error) {
         return json({ error: error.message }, 400);
       }

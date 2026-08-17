@@ -1,7 +1,7 @@
 const encoder = new TextEncoder();
 
 export const ROBOTS = 'noindex, nofollow, noarchive, nosnippet, noimageindex';
-export const ACTION_KINDS = new Set(['image-select', 'no-image']);
+export const ACTION_KINDS = new Set(['image-select', 'no-image', 'reviewer-image']);
 
 function b64url(bytes) {
   return btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
@@ -32,7 +32,7 @@ export function readCookie(header, name) {
 export function protectedHeaders(extra = {}) {
   return {
     'Cache-Control': 'no-store',
-    'Content-Security-Policy': "default-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+    'Content-Security-Policy': "default-src 'self'; img-src 'self' data: blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
     'Referrer-Policy': 'no-referrer',
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
@@ -66,7 +66,7 @@ export async function verifySession(token, { secret, environment, now }) {
 }
 
 export function validateAction(input, context) {
-  const allowed = new Set(['kind', 'reviewer', 'sku', 'packageId', 'targetCatalogCommit', 'wineRevision', 'candidateId']);
+  const allowed = new Set(['kind', 'reviewer', 'sku', 'packageId', 'targetCatalogCommit', 'wineRevision', 'candidateId', 'imageStorageName', 'imageSHA256', 'imageBytes', 'imageMIME']);
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('action must be an object');
   for (const key of Object.keys(input)) if (!allowed.has(key)) throw new Error(`unknown action field ${key}`);
   const text = (key, max, pattern = /^.{1,}$/u) => {
@@ -76,6 +76,7 @@ export function validateAction(input, context) {
   };
   const kind = text('kind', 32);
   if (!ACTION_KINDS.has(kind)) throw new Error('invalid kind');
+  if (kind === 'reviewer-image' && context.allowReviewerImage !== true) throw new Error('invalid kind');
   const action = {
     schemaVersion: 1,
     id: context.id,
@@ -86,11 +87,21 @@ export function validateAction(input, context) {
     packageId: text('packageId', 160, /^[A-Za-z0-9._-]+$/),
     targetCatalogCommit: text('targetCatalogCommit', 64, /^[a-f0-9]{7,64}$/),
     wineRevision: text('wineRevision', 64, /^[a-f0-9]{64}$/),
-    candidateId: input.candidateId === '' && kind === 'no-image' ? '' : text('candidateId', 120, /^[A-Za-z0-9._-]+$/),
+    candidateId: input.candidateId === '' && (kind === 'no-image' || kind === 'reviewer-image') ? '' : text('candidateId', 120, /^[A-Za-z0-9._-]+$/),
     submittedAt: context.now.toISOString(),
     csrfSessionId: context.sessionId,
   };
   if (kind === 'image-select' && !action.candidateId) throw new Error('image-select requires candidateId');
   if (kind === 'no-image' && action.candidateId) throw new Error('no-image cannot name a candidate');
+  const imageFields = ['imageStorageName', 'imageSHA256', 'imageBytes', 'imageMIME'];
+  if (kind === 'reviewer-image') {
+    action.imageStorageName = text('imageStorageName', 180, /^[A-Za-z0-9._-]+$/);
+    action.imageSHA256 = text('imageSHA256', 64, /^[a-f0-9]{64}$/);
+    if (!Number.isInteger(input.imageBytes) || input.imageBytes <= 0 || input.imageBytes > 10 * 1024 * 1024) throw new Error('invalid imageBytes');
+    action.imageBytes = input.imageBytes;
+    action.imageMIME = text('imageMIME', 24, /^image\/(?:jpeg|png|webp)$/);
+  } else if (imageFields.some((field) => input[field] !== undefined)) {
+    throw new Error('image metadata requires reviewer-image');
+  }
   return action;
 }

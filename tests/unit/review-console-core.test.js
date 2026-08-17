@@ -42,6 +42,19 @@ describe('protected review console', () => {
     assert.equal(action.sku, '500740*');
   });
 
+  it('creates reviewer-image actions only for the trusted upload route', () => {
+    const input = {
+      kind: 'reviewer-image', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg',
+      targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: '',
+      imageStorageName: '00000000-0000-4000-8000-000000000001.png', imageSHA256: 'b'.repeat(64), imageBytes: 123, imageMIME: 'image/png',
+    };
+    const context = { id: '00000000-0000-4000-8000-000000000001', environment: 'test', sessionId: 'session-1', now: new Date() };
+    assert.throws(() => validateAction(input, context), /invalid kind/);
+    const action = validateAction(input, { ...context, allowReviewerImage: true });
+    assert.equal(action.kind, 'reviewer-image');
+    assert.equal(action.imageSHA256, 'b'.repeat(64));
+  });
+
   it('rejects extra fields, unsafe identifiers, and inconsistent kinds', () => {
     const base = { kind: 'image-select', reviewer: 'Barbara', sku: 'AB-123', packageId: 'pkg', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const context = { id: 'id', environment: 'test', sessionId: 's', now: new Date() };

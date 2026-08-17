@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -29,6 +30,10 @@ type execNormalizer struct{ bin string }
 func (normalizer execNormalizer) Normalize(ctx context.Context, source, destination string) error {
 	output, err := exec.CommandContext(ctx, normalizer.bin, "-in", source, "-out", destination).CombinedOutput()
 	if err != nil {
+		var exitError *exec.ExitError
+		if errors.As(err, &exitError) && exitError.ExitCode() == 3 {
+			return &reviewactions.InvalidImageError{Err: fmt.Errorf("%s", strings.TrimSpace(string(output)))}
+		}
 		return fmt.Errorf("%s: %v: %s", normalizer.bin, err, output)
 	}
 	return nil

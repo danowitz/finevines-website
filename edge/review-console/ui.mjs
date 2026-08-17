@@ -67,7 +67,18 @@ button { cursor: pointer; }
 .compare-select { background: #7d263b; color: #fff; }
 .modal-close { border: 1px solid #fff8; color: #fff; background: transparent; border-radius: 8px; padding: 9px 13px; }
 .source { color: #f1d8a8; overflow-wrap: anywhere; }
-@media (max-width: 700px) { .shell { padding: 14px; } .mast { align-items: start; flex-direction: column; } .candidate { grid-template-rows: 210px auto; } .candidate img { height: 210px; } }
+.google-search { display: inline-flex; align-items: center; min-height: 40px; padding: 9px 13px; border: 1px solid #bca993; border-radius: 8px; color: #6f2035; background: #fffaf2; font-weight: 750; text-decoration: none; white-space: nowrap; }
+.google-search:hover, .google-search:focus-visible { border-color: #7d263b; outline: 3px solid #7d263b1f; }
+.paste-zone { margin-top: 14px; padding: 16px; border: 2px dashed #bca993; border-radius: 11px; background: #fffcf7; outline: none; }
+.paste-zone:focus { border-color: #7d263b; box-shadow: 0 0 0 3px #7d263b1f; }
+.paste-prompt { margin: 0; color: #594940; font-weight: 700; text-align: center; }
+.paste-note { display: block; margin-top: 5px; color: #78665a; font-size: 12px; text-align: center; }
+.paste-preview { display: grid; grid-template-columns: minmax(140px, 240px) 1fr; gap: 16px; align-items: center; }
+.paste-preview img { width: 100%; height: 250px; object-fit: contain; background: #fff; border-radius: 8px; }
+.paste-preview .paste-note { text-align: left; }
+.paste-buttons { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 12px; }
+.paste-error { margin: 9px 0 0; color: #a12222; font-size: 13px; font-weight: 700; }
+@media (max-width: 700px) { .shell { padding: 14px; } .mast { align-items: start; flex-direction: column; } .candidate { grid-template-rows: 210px auto; } .candidate img { height: 210px; } .paste-preview { grid-template-columns: 1fr; } }
 `;
 
 const FAVICON_BASE64 = 'AAABAAEAEBAAAAEAGABoAwAAFgAAACgAAAAQAAAAIAAAAAEAGAAAAAAAAAAAABMLAAATCwAAAAAAAAAAAAD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Apdj9/P3///////////////////////////////////+n3NSx4Nn///////////+ui838+/3////////////////////////////////0+/p6yr96yr/5/fz///////+zktD///////////////////////////////////+q3dbE5+O85N+w4Nn///////+jfMfDqdrHr93Hr93Hr93Hr93Eqtvz7ff////7/f16yr/////+//54yb79/v7///+ngMnQvOLVwuXVwuXVwuXVwuXSvuP28fn///+14tus3tf///////+q3da24tz///+zktD///////////////////////////////91yLz7/v3////////6/f11yLz///+rh8v07/j39Pr39Pr39Pr39Pr38/r6+vy44tyo3NX///////////////+p3da34ty3mNOvjM6zktCzktCzktCzktCwjc7Q0+Ws3tfy+fj////////////////1+vmt39j///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAFDoAACGDQAABwMAAAAAAAAIfwAAAIAAACBIAAAeRQAAk5EAAOO+AACUDgAAAAAAAAh/AAAAgAAAAHAAAKEO';
@@ -88,7 +99,6 @@ const el = (tag, attrs = {}, children = []) => {
 const status = document.querySelector('#summary');
 const list = document.querySelector('#wine-list');
 const reviewer = document.querySelector('#reviewer');
-const search = document.querySelector('#search');
 
 function imageUrl(candidate) {
   return '/api/packages/' + encodeURIComponent(state.package.packageId) + '/images/' + encodeURIComponent(candidate.candidateId);
@@ -145,10 +155,32 @@ function choose(wine, candidate, card) {
   card.closest('.wine').querySelector('.primary').disabled = false;
 }
 
-async function submit(wine, candidateId, card) {
+function selectedReviewer() {
   const name = reviewer.value.trim();
-  if (!name) { reviewer.focus(); reviewer.setCustomValidity('Enter your name before submitting.'); reviewer.reportValidity(); return; }
-  reviewer.setCustomValidity('');
+  if (name) {
+    reviewer.setCustomValidity('');
+    return name;
+  }
+  reviewer.focus();
+  reviewer.setCustomValidity('Select your name before submitting.');
+  reviewer.reportValidity();
+  return '';
+}
+
+function finishQueue(wine, card, data) {
+  const previewUrl = card.querySelector('.paste-zone')?.dataset.previewUrl;
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  card.remove();
+  state.selected.delete(wine.sku);
+  const remaining = document.querySelectorAll('.wine').length;
+  status.textContent = wine.displayIdentity + ' queued · ' + remaining + ' wine' + (remaining === 1 ? '' : 's') + ' remaining';
+  if (!remaining) list.append(el('div', { class: 'empty', text: 'All review decisions have been queued.' }));
+  poll(data.id, status);
+}
+
+async function submit(wine, candidateId, card) {
+  const name = selectedReviewer();
+  if (!name) return;
   const kind = candidateId ? 'image-select' : 'no-image';
   const body = {
     kind, reviewer: name, sku: wine.sku, packageId: state.package.packageId,
@@ -162,12 +194,86 @@ async function submit(wine, candidateId, card) {
   output.textContent = data.dispatched ? 'Queued. The deployment has been started.' : 'Queued. The nightly processor will pick it up.';
   output.className = 'status good';
   card.querySelectorAll('button').forEach((button) => button.disabled = true);
-  card.remove();
-  state.selected.delete(wine.sku);
-  const remaining = document.querySelectorAll('.wine').length;
-  status.textContent = wine.displayIdentity + ' queued · ' + remaining + ' wine' + (remaining === 1 ? '' : 's') + ' remaining';
-  if (!remaining) list.append(el('div', { class: 'empty', text: 'All review decisions have been queued.' }));
-  poll(data.id, status);
+  finishQueue(wine, card, data);
+}
+
+async function submitPasted(wine, file, card, button, output) {
+  const name = selectedReviewer();
+  if (!name) return;
+  button.disabled = true;
+  output.textContent = 'Saving and queueing the pasted image…';
+  output.className = 'paste-error';
+  const body = new FormData();
+  body.set('reviewer', name);
+  body.set('sku', wine.sku);
+  body.set('packageId', state.package.packageId);
+  body.set('targetCatalogCommit', state.package.catalogCommit);
+  body.set('wineRevision', wine.wineRevision);
+  body.set('image', file, file.name || 'pasted-image');
+  const res = await fetch('/api/reviewer-images', { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': state.package.csrfToken }, body });
+  const data = await res.json();
+  if (!res.ok) {
+    output.textContent = data.error || 'Could not queue the pasted image.';
+    output.className = 'paste-error';
+    button.disabled = false;
+    return;
+  }
+  finishQueue(wine, card, data);
+}
+
+function showPastedImage(wine, card, zone, file) {
+  if (zone.dataset.previewUrl) URL.revokeObjectURL(zone.dataset.previewUrl);
+  const previewUrl = URL.createObjectURL(file);
+  zone.dataset.previewUrl = previewUrl;
+  const image = el('img', { src: previewUrl, alt: 'Pasted image for ' + wine.displayIdentity });
+  const clear = el('button', { class: 'secondary', type: 'button', text: 'Clear' });
+  const use = el('button', { class: 'primary', type: 'button', text: 'Use this image' });
+  const output = el('p', { class: 'paste-error', text: '' });
+  clear.addEventListener('click', (event) => {
+    event.stopPropagation();
+    URL.revokeObjectURL(previewUrl);
+    delete zone.dataset.previewUrl;
+    renderPastePrompt(wine, card, zone);
+  });
+  use.addEventListener('click', (event) => { event.stopPropagation(); submitPasted(wine, file, card, use, output); });
+  zone.replaceChildren(el('div', { class: 'paste-preview' }, [image, el('div', {}, [
+    el('strong', { text: 'Keep this pasted image?' }),
+    el('span', { class: 'paste-note', text: 'Your selection is treated as the correct bottle image.' }),
+    el('div', { class: 'paste-buttons' }, [clear, use]), output,
+  ])]));
+}
+
+function renderPastePrompt(wine, card, zone) {
+  zone.replaceChildren(
+    el('p', { class: 'paste-prompt', text: 'Click here, then press Control V to paste your image.' }),
+    el('span', { class: 'paste-note', text: 'JPEG, PNG, or WebP · maximum 10 MB' }),
+  );
+  zone.onclick = () => zone.focus();
+}
+
+function pasteZone(wine, card) {
+  const zone = el('div', { class: 'paste-zone', tabindex: '0', role: 'group', 'aria-label': 'Paste an image for ' + wine.displayIdentity });
+  renderPastePrompt(wine, card, zone);
+  zone.addEventListener('paste', (event) => {
+    const files = [...(event.clipboardData?.files || [])];
+    const item = [...(event.clipboardData?.items || [])].find((value) => value.kind === 'file' && value.type.startsWith('image/'));
+    const file = files.find((value) => value.type.startsWith('image/')) || item?.getAsFile();
+    if (!file) {
+      zone.replaceChildren(el('p', { class: 'paste-error', text: 'The clipboard does not contain an image. Copy the image itself, then try again.' }));
+      return;
+    }
+    event.preventDefault();
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      zone.replaceChildren(el('p', { class: 'paste-error', text: 'Paste a JPEG, PNG, or WebP image.' }));
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      zone.replaceChildren(el('p', { class: 'paste-error', text: 'The pasted image must be 10 MB or smaller.' }));
+      return;
+    }
+    showPastedImage(wine, card, zone, file);
+  });
+  return zone;
 }
 
 async function poll(id, output) {
@@ -185,7 +291,10 @@ async function poll(id, output) {
 function renderWine(wine) {
   const title = el('h2', { text: wine.displayIdentity });
   const meta = el('div', { class: 'wine-meta', text: 'SKU ' + wine.sku + ' · ' + wine.candidates.length + ' candidate' + (wine.candidates.length === 1 ? '' : 's') });
-  const head = el('div', { class: 'wine-head' }, [el('div', {}, [title, meta])]);
+  const searchLink = wine.searchQuery
+    ? el('a', { class: 'google-search', href: 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(wine.searchQuery), target: '_blank', rel: 'noopener noreferrer', text: 'Search Google Images' })
+    : el('span', { class: 'wine-meta', text: 'Exact search query unavailable' });
+  const head = el('div', { class: 'wine-head' }, [el('div', {}, [title, meta]), searchLink]);
   const grid = el('div', { class: 'candidates' });
   wine.candidates.forEach((candidate, index) => {
     const image = el('img', { src: imageUrl(candidate), alt: wine.displayIdentity, loading: 'lazy' });
@@ -204,15 +313,11 @@ function renderWine(wine) {
   const pick = el('button', { class: 'primary', type: 'button', disabled: 'disabled', text: 'Use selected image' });
   const none = el('button', { class: 'secondary', type: 'button', text: 'None of these' });
   const output = el('span', { class: 'status', text: '' });
-  const card = el('article', { class: 'wine', 'data-sku': wine.sku, 'data-search': (wine.displayIdentity + ' ' + wine.sku).toLowerCase() }, [head, grid, el('div', { class: 'actions' }, [pick, none, output])]);
+  const card = el('article', { class: 'wine', 'data-sku': wine.sku }, [head, grid]);
+  card.append(pasteZone(wine, card), el('div', { class: 'actions' }, [pick, none, output]));
   pick.addEventListener('click', () => submit(wine, state.selected.get(wine.sku), card));
   none.addEventListener('click', () => submit(wine, '', card));
   return card;
-}
-
-function applyFilter() {
-  const query = search.value.trim().toLowerCase();
-  document.querySelectorAll('.wine').forEach((card) => { card.hidden = query && !card.dataset.search.includes(query); });
 }
 
 async function start() {
@@ -228,7 +333,6 @@ async function start() {
   else wines.forEach((wine) => list.append(renderWine(wine)));
 }
 
-search.addEventListener('input', applyFilter);
 document.querySelectorAll('[data-close]').forEach((node) => node.addEventListener('click', closeModal));
 const modal = document.querySelector('#modal');
 modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
@@ -250,6 +354,6 @@ export function loginPage(message = '') {
 }
 
 export function consolePage() {
-  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><select id="reviewer" required aria-label="Your name"><option value="">Select your name</option></select><input id="search" type="search" placeholder="Search wines by name or SKU" aria-label="Search wines by name or SKU"></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
+  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><select id="reviewer" required aria-label="Your name"><option value="">Select your name</option></select></div></header><div id="summary" class="summary">Loading the current review package…</div><section id="wine-list"></section></main>
 <div id="modal" class="modal" hidden><section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div class="modal-heading"><strong id="modal-title"></strong><span id="modal-count"></span></div><button class="modal-close" type="button" data-close>Close</button></div><div id="modal-stage" class="modal-stage"></div></section></div>`, { script: true });
 }

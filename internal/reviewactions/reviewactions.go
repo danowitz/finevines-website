@@ -10,6 +10,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -43,6 +44,13 @@ type Normalizer interface {
 	Normalize(context.Context, string, string) error
 }
 
+// InvalidImageError marks bytes that the image decoder cannot read. Adapters
+// must not use it for execution, filesystem, or other retryable failures.
+type InvalidImageError struct{ Err error }
+
+func (err *InvalidImageError) Error() string { return fmt.Sprintf("invalid image: %v", err.Err) }
+func (err *InvalidImageError) Unwrap() error { return err.Err }
+
 type Action struct {
 	SchemaVersion       int    `json:"schemaVersion"`
 	ID                  string `json:"id"`
@@ -54,6 +62,10 @@ type Action struct {
 	TargetCatalogCommit string `json:"targetCatalogCommit"`
 	WineRevision        string `json:"wineRevision"`
 	CandidateID         string `json:"candidateId"`
+	ImageStorageName    string `json:"imageStorageName,omitempty"`
+	ImageSHA256         string `json:"imageSHA256,omitempty"`
+	ImageBytes          int    `json:"imageBytes,omitempty"`
+	ImageMIME           string `json:"imageMIME,omitempty"`
 	SubmittedAt         string `json:"submittedAt"`
 	CSRFSessionID       string `json:"csrfSessionId"`
 }
@@ -79,6 +91,7 @@ type PackageWine struct {
 	Slug            string      `json:"slug"`
 	WineRevision    string      `json:"wineRevision"`
 	DisplayIdentity string      `json:"displayIdentity"`
+	SearchQuery     string      `json:"searchQuery"`
 	CurrentImage    string      `json:"currentImage"`
 	Candidates      []Candidate `json:"candidates"`
 }
@@ -204,7 +217,7 @@ func validateAction(action Action, environment, fileID string) error {
 	if !uuidPattern.MatchString(action.ID) || action.ID != fileID {
 		return fmt.Errorf("invalid action id")
 	}
-	if action.Kind != "image-select" && action.Kind != "no-image" {
+	if action.Kind != "image-select" && action.Kind != "no-image" && action.Kind != "reviewer-image" {
 		return fmt.Errorf("invalid action kind")
 	}
 	if !validSegment(action.PackageID) || len(action.PackageID) > 160 || !validSKU(action.SKU) ||
@@ -217,6 +230,15 @@ func validateAction(action Action, environment, fileID string) error {
 	}
 	if action.Kind == "no-image" && action.CandidateID != "" {
 		return fmt.Errorf("no-image action names a candidate")
+	}
+	if action.Kind == "reviewer-image" {
+		validMIME := action.ImageMIME == "image/png" || action.ImageMIME == "image/jpeg" || action.ImageMIME == "image/webp"
+		if action.CandidateID != "" || !validSegment(action.ImageStorageName) || !strings.HasPrefix(action.ImageStorageName, action.ID+".") ||
+			!hashPattern.MatchString(action.ImageSHA256) || action.ImageBytes <= 0 || action.ImageBytes > 10*1024*1024 || !validMIME {
+			return fmt.Errorf("reviewer image has invalid metadata")
+		}
+	} else if action.ImageStorageName != "" || action.ImageSHA256 != "" || action.ImageBytes != 0 || action.ImageMIME != "" {
+		return fmt.Errorf("non-reviewer action has image metadata")
 	}
 	if _, err := time.Parse(time.RFC3339, action.SubmittedAt); err != nil {
 		return fmt.Errorf("invalid submittedAt")
@@ -257,7 +279,7 @@ func validateManifest(manifest Manifest, action Action) (PackageWine, Candidate,
 		if wine.WineRevision != action.WineRevision {
 			return PackageWine{}, Candidate{}, fmt.Errorf("action does not match package wine revision")
 		}
-		if action.Kind == "no-image" {
+		if action.Kind == "no-image" || action.Kind == "reviewer-image" {
 			return wine, Candidate{}, nil
 		}
 		for _, candidate := range wine.Candidates {
@@ -354,6 +376,9 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 		if result.Wines[index].ImageReviewActionID == action.ID {
 			decision.Status, decision.Reason = "prepared", "the catalog already contains this review action"
 			decision.ImageSHA256 = candidate.SHA256
+			if action.Kind == "reviewer-image" {
+				decision.ImageSHA256 = action.ImageSHA256
+			}
 			result.Decisions = append(result.Decisions, decision)
 			continue
 		}
@@ -370,7 +395,14 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			result.Decisions = append(result.Decisions, decision)
 			continue
 		}
-		candidateData, err := input.Store.Download(ctx, path.Join(prefix, "packages", action.PackageID, "images", candidate.StorageName))
+		candidatePath := path.Join(prefix, "packages", action.PackageID, "images", candidate.StorageName)
+		imageSource := model.ImageScrapedWeb
+		if action.Kind == "reviewer-image" {
+			candidate = Candidate{StorageName: action.ImageStorageName, SHA256: action.ImageSHA256, Bytes: action.ImageBytes, MIME: action.ImageMIME}
+			candidatePath = path.Join(prefix, "uploads", action.ImageStorageName)
+			imageSource = model.ImageReviewerSupplied
+		}
+		candidateData, err := input.Store.Download(ctx, candidatePath)
 		if err != nil {
 			return result, err
 		}
@@ -380,7 +412,14 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			result.Decisions = append(result.Decisions, decision)
 			continue
 		}
-		if err := applyImage(ctx, input, &result.Wines[index], candidateData, candidate, action.ID); err != nil {
+		if err := applyImage(ctx, input, &result.Wines[index], candidateData, candidate, action.ID, imageSource); err != nil {
+			var invalidImage *InvalidImageError
+			if errors.As(err, &invalidImage) {
+				decision.Reason = "selected image could not be decoded"
+				logf("reviewactions: rejected action %s: %v", action.ID, err)
+				result.Decisions = append(result.Decisions, decision)
+				continue
+			}
 			return result, err
 		}
 		decision.Status, decision.Reason, decision.ImageSHA256 = "prepared", "selected image prepared for deployment", candidate.SHA256
@@ -389,7 +428,7 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 	return result, nil
 }
 
-func applyImage(ctx context.Context, input PrepareInput, wine *model.Wine, data []byte, candidate Candidate, actionID string) error {
+func applyImage(ctx context.Context, input PrepareInput, wine *model.Wine, data []byte, candidate Candidate, actionID, imageSource string) error {
 	if err := os.MkdirAll(input.ImageDir, 0o755); err != nil {
 		return err
 	}
@@ -452,7 +491,7 @@ func applyImage(ctx context.Context, input PrepareInput, wine *model.Wine, data 
 	os.Remove(backup)
 	os.Remove(filepath.Join(input.ImageDir, wine.Slug+".svg"))
 	wine.ImagePath = path.Join(filepath.ToSlash(input.ImageDir), wine.Slug+".jpg")
-	wine.ImageSource, wine.ImageSourceURL = model.ImageScrapedWeb, candidate.SourceURL
+	wine.ImageSource, wine.ImageSourceURL = imageSource, candidate.SourceURL
 	wine.ImageReviewStatus = ""
 	wine.ImageReviewedAt = input.Now.UTC().Format(time.RFC3339)
 	wine.ImageReviewActionID = actionID

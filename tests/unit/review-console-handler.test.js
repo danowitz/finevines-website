@@ -12,7 +12,7 @@ function fixture({ dispatch = async () => {} } = {}) {
     ['_review/test/packages/pkg-1/manifest.json', JSON.stringify({
       schemaVersion: 1, packageId: 'pkg-1', environment: 'test', catalogCommit: 'abcdef1', createdAt: '2026-08-10T00:00:00Z', expiresAt: '2026-09-10T00:00:00Z',
       reviewers: [{ name: 'Barb Fultz', role: 'Back Office' }, { name: 'Connie Molitor', role: 'Executive' }],
-      wines: [{ sku: '500740*', displayIdentity: 'Producer Wine 2022', wineRevision: 'a'.repeat(64), candidates: [{ candidateId: 'c1', storageName: 'c1.png', mime: 'image/png', bytes: candidate.length, width: 400, height: 800 }] }],
+      wines: [{ sku: '500740*', displayIdentity: 'Producer Wine 2022', searchQuery: 'Producer Wine 2022 exact query', wineRevision: 'a'.repeat(64), candidates: [{ candidateId: 'c1', storageName: 'c1.png', mime: 'image/png', bytes: candidate.length, width: 400, height: 800 }] }],
     })],
     ['_review/test/packages/pkg-1/images/c1.png', candidate],
   ]);
@@ -24,7 +24,7 @@ function fixture({ dispatch = async () => {} } = {}) {
   };
   const config = { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', password: 'correct horse', sessionSecret: 'session-secret' };
   const handle = createReviewConsole({ config, storage, dispatch, now: () => new Date('2026-08-11T20:00:00Z'), uuid: (() => { let n = 0; return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`; })() });
-  return { handle, writes };
+  return { handle, writes, files };
 }
 
 async function login(handle) {
@@ -109,10 +109,15 @@ describe('review console handler', () => {
     assert.match(markup, /class="modal-dialog"/);
     const app = await handle(new Request('https://review.finevines.biz/app.js', { headers: { cookie } }));
     const script = await app.text();
+    assert.doesNotThrow(() => new Function(script));
     assert.match(script, /Remove from comparison/);
     assert.match(script, /event\.target === modal/);
     assert.match(script, /card\.remove\(\)/);
-    assert.match(markup, /Search wines by name or SKU/);
+    assert.doesNotMatch(markup, /Search wines by name or SKU/);
+    assert.match(script, /Click here, then press Control V to paste your image\./);
+    assert.match(script, /google\.com\/search\?tbm=isch/);
+    assert.match(script, /encodeURIComponent\(wine\.searchQuery\)/);
+    assert.match(script, /clipboardData/);
     const css = await (await handle(new Request('https://review.finevines.biz/app.css'))).text();
     assert.match(css, /\.modal-stage\s*\{[^}]*display:\s*flex;/s);
     assert.match(css, /\.modal-stage\s*\{[^}]*overflow-x:\s*auto;/s);
@@ -195,6 +200,75 @@ describe('review console handler', () => {
     const { id } = await queued.json();
     const pending = await handle(new Request(`https://review.finevines.biz/api/actions/${id}`, { headers: { cookie } }));
     assert.equal((await pending.json()).status, 'queued');
+  });
+
+  it('immutably stores and queues a reviewer-pasted image in dependency order', async () => {
+    const { handle, writes, files } = fixture();
+    const cookie = await login(handle);
+    const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+    const csrf = (await current.json()).csrfToken;
+    const form = new FormData();
+    form.set('reviewer', 'Barb Fultz');
+    form.set('sku', '500740*');
+    form.set('packageId', 'pkg-1');
+    form.set('targetCatalogCommit', 'abcdef1');
+    form.set('wineRevision', 'a'.repeat(64));
+    const png = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64'));
+    form.set('image', new Blob([png], { type: 'image/png' }), 'pasted.png');
+    const res = await handle(new Request('https://review.finevines.biz/api/reviewer-images', {
+      method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'x-csrf-token': csrf }, body: form,
+    }));
+    assert.equal(res.status, 202);
+    assert.deepEqual(writes.map((path) => path.replace(/00000000-0000-4000-8000-\d{12}/, '<id>')), [
+      '_review/test/uploads/<id>.png', '_review/test/actions/<id>.json', '_review/test/pending/<id>.json',
+    ]);
+    const actionPath = writes.find((path) => path.includes('/actions/'));
+    const action = JSON.parse(files.get(actionPath));
+    assert.equal(action.kind, 'reviewer-image');
+    assert.equal(action.imageMIME, 'image/png');
+    assert.equal(action.imageBytes, png.byteLength);
+    assert.match(action.imageSHA256, /^[a-f0-9]{64}$/);
+    assert.equal(action.candidateId, '');
+  });
+
+  it('rejects unsafe reviewer-pasted image requests before writing anything', async () => {
+    const { handle, writes } = fixture();
+    const cookie = await login(handle);
+    const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+    const csrf = (await current.json()).csrfToken;
+    const submit = async (bytes, type = 'image/png', origin = 'https://review.finevines.biz') => {
+      const form = new FormData();
+      for (const [key, value] of Object.entries({ reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64) })) form.set(key, value);
+      form.set('image', new Blob([bytes], { type }), 'pasted.bin');
+      return handle(new Request('https://review.finevines.biz/api/reviewer-images', { method: 'POST', headers: { cookie, origin, 'x-csrf-token': csrf }, body: form }));
+    };
+    assert.equal((await submit(new Uint8Array([1, 2, 3]), 'image/png')).status, 415);
+    assert.equal((await submit(new Uint8Array([0x89, 0x50, 0x4e, 0x47]), 'image/png', 'https://evil.example')).status, 403);
+    assert.equal((await submit(new Uint8Array(10 * 1024 * 1024 + 1), 'image/png')).status, 413);
+    const missingCSRF = new FormData();
+    missingCSRF.set('image', new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])], { type: 'image/png' }));
+    assert.equal((await handle(new Request('https://review.finevines.biz/api/reviewer-images', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz' }, body: missingCSRF }))).status, 403);
+    assert.deepEqual(writes, []);
+  });
+
+  it('rejects truncated image containers before writing anything', async () => {
+    const { handle, writes } = fixture();
+    const cookie = await login(handle);
+    const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+    const csrf = (await current.json()).csrfToken;
+    const submit = async (bytes) => {
+      const form = new FormData();
+      for (const [key, value] of Object.entries({ reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64) })) form.set(key, value);
+      form.set('image', new Blob([bytes]), 'pasted.bin');
+      return handle(new Request('https://review.finevines.biz/api/reviewer-images', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'x-csrf-token': csrf }, body: form }));
+    };
+    const corrupt = [
+      [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52],
+      [0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46],
+      [0x52, 0x49, 0x46, 0x46, 12, 0, 0, 0, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38, 0x20],
+    ];
+    for (const bytes of corrupt) assert.equal((await submit(new Uint8Array(bytes))).status, 415);
+    assert.deepEqual(writes, []);
   });
 
   it('rejects a reviewer who is not on the package roster', async () => {
