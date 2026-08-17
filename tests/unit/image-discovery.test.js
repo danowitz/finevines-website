@@ -5,31 +5,35 @@ import {
   validateImageDiscoveryCredentials,
 } from '../../tools/labelfetch/image-discovery.mjs';
 
-test('combined discovery requires both provider credentials before any request', () => {
+test('the retired Google Custom Search provider is not accepted', () => {
   assert.throws(
-    () => validateImageDiscoveryCredentials('brave-serper', { braveKey: 'brave' }),
-    /Serper image credentials are missing/,
+    () => validateImageDiscoveryCredentials('google', { googleKey: 'key', googleCx: 'cx' }),
+    /unknown image search provider: google/,
   );
 });
 
-test('preflight and pipeline factory exercise both combined endpoints', async () => {
+test('the retired Serper provider is not accepted', () => {
+  assert.throws(
+    () => validateImageDiscoveryCredentials('serper'),
+    /unknown image search provider: serper/,
+  );
+});
+
+test('preflight and pipeline factory exercise the Brave image endpoint', async () => {
   const endpoints = [];
   const discover = createImageDiscovery({
-    name: 'brave-serper',
+    name: 'brave',
     braveKey: 'brave',
-    serperKey: 'serper',
     fetchImpl: async (url) => {
       endpoints.push(String(url));
-      return String(url).includes('brave.com')
-        ? { ok: true, status: 200, json: async () => ({ results: [] }) }
-        : { ok: true, status: 200, json: async () => ({ images: [] }) };
+      return { ok: true, status: 200, json: async () => ({ results: [] }) };
     },
   });
 
   const result = await discover('wine');
-  assert.equal(result.complete, true);
-  assert.deepEqual(endpoints.sort(), [
+  assert.equal(result.status, 'ok');
+  assert.equal(result.searched, true);
+  assert.deepEqual(endpoints, [
     'https://api.search.brave.com/res/v1/images/search?q=wine&country=US&search_lang=en&count=15&safesearch=strict',
-    'https://google.serper.dev/images',
   ]);
 });

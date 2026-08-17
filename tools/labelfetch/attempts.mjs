@@ -26,6 +26,8 @@ export const RETRY_DAYS = 30;
 // A miss is meaningful only for the matcher that produced it. Increment this
 // whenever discovery or identity selection changes enough that old misses need
 // one controlled replay. Newly recorded misses then back off normally again.
+// This durable ledger version predates the current Brave-only provider. Keep the legacy value
+// until the matching algorithm changes; renaming it alone would replay old misses.
 export const MATCHER_VERSION = 'google-image-consensus-v1';
 
 // The only outcomes a record may carry.

@@ -55,9 +55,10 @@ values below.
 `enrichcollections`, and the image stage (reads bottle labels and sweeps for watermarks).
 The hosted image-review click path is local and deterministic; it makes no AI call:
 - `OPENAI_API_KEY` — an API key from OpenAI's platform console. GRIT can help set up the account.
-- `FINEVINES_GOOGLE_VISION_KEY` — optional Google Cloud key restricted to the Cloud Vision API. The adapter remains available for bounded experiments, but scheduled workflows do not inject this key because the 2026-08-14 frozen comparison produced zero incremental recoveries from 46 requests.
-- `FINEVINES_SERPER_KEY` — Serper Google Images API key. The comparison workflow combines its browser-like Google results with Brave before local consensus; keep it in GitHub Actions secrets, never `.env` in source control.
 - `FINEVINES_OPENAI_MODEL` — optional; leave blank and the tool picks a sensible default.
+
+**Bottle-image search** — used by the automated image-discovery stage:
+- `FINEVINES_BRAVE_SEARCH_KEY` — Brave Image Search API key for the independent image index.
 
 **Mail relay (SMTP)** — needed only for `notify`, the nightly digest email. Not used by anything you run by
 hand. Fine Vines sends through smtp.com's relay; these come from that account:

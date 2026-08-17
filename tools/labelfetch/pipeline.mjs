@@ -14,14 +14,12 @@ import { binPath, envOrFile, openaiKey } from './env.mjs';
 import { loadAttempts, isDue, recordAttempt, saveAttempts, shouldRecordAttempt } from './attempts.mjs';
 import { buildProducerLookup, expectedProducer } from './catalog-producer.mjs';
 import { deriveProducer } from './producerguess.mjs';
-import { googleImageSearchProfile } from './google-images.mjs';
 import { createImageDiscovery, IMAGE_DISCOVERY_PROVIDERS, validateImageDiscoveryCredentials } from './image-discovery.mjs';
 import { catalogImageName, imageSearchQuery, uniqueImageTargets } from './image-query.mjs';
 import { downloadCandidates } from './candidate-downloads.mjs';
 import { candidateWindow } from './candidate-window.mjs';
 import { passedSlugs, reportSlugs, unresolvedSlugs, withoutPassed } from './comparison-progress.mjs';
 import { createBottleSelector } from './bottle-selector.mjs';
-import { createWebMatchExpander } from './web-match-expander.mjs';
 import { reusableStagedRecord } from './staged-record.mjs';
 import { buildCatalogImageDonors, reusableCatalogImage } from './catalog-image-reuse.mjs';
 import {
@@ -60,8 +58,7 @@ const OMIT_QUERY_VINTAGE = has('omit-query-vintage');
 const CATALOG_REUSE = !has('no-catalog-reuse');
 const TRACE = has('trace');
 const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
-const SEARCH_PROFILE_NAME = opt('search-profile', 'baseline');
-const SEARCH_PROVIDER = opt('search-provider', 'google');
+const SEARCH_PROVIDER = opt('search-provider', 'brave');
 const MODEL = opt('label-model', process.env.FINEVINES_LABEL_MODEL || 'gpt-4.1-nano');
 const EXCLUDE_PASSED_REPORT = opt('exclude-passed-report', '');
 const REPLAY_REPORT = opt('replay-report', '');
@@ -86,13 +83,6 @@ if (!SUPPORTED_LABEL_MODELS.has(MODEL)) {
 }
 if (LABEL_REASONING_EFFORT && !REASONING_EFFORTS.has(LABEL_REASONING_EFFORT)) {
   console.error(`unsupported label reasoning effort: ${LABEL_REASONING_EFFORT}`);
-  process.exit(2);
-}
-let searchProfile;
-try {
-  searchProfile = googleImageSearchProfile(SEARCH_PROFILE_NAME);
-} catch (error) {
-  console.error(error.message);
   process.exit(2);
 }
 const RECORD_ATTEMPTS = !CANARY && (!opt('slug') || has('record-attempts'));
@@ -226,7 +216,6 @@ if (!wines.length) {
     await mkdir('out-bottle', { recursive: true });
     await writeFile('out-bottle/image-canary.json', JSON.stringify({
       generatedAt: new Date().toISOString(),
-      searchProfile: SEARCH_PROFILE_NAME,
       searchProvider: SEARCH_PROVIDER,
       labelModel: MODEL,
       labelReasoningEffort: LABEL_REASONING_EFFORT,
@@ -246,24 +235,16 @@ if (!wines.length) {
   process.exit(0);
 }
 
-const googleKey = await envOrFile('FINEVINES_GOOGLE_CSE_KEY');
-const googleCx = await envOrFile('FINEVINES_GOOGLE_CSE_CX');
 const braveKey = await envOrFile('FINEVINES_BRAVE_SEARCH_KEY');
-const serperKey = await envOrFile('FINEVINES_SERPER_KEY');
-const googleVisionKey = await envOrFile('FINEVINES_GOOGLE_VISION_KEY');
 try {
-  validateImageDiscoveryCredentials(SEARCH_PROVIDER, { googleKey, googleCx, braveKey, serperKey });
+  validateImageDiscoveryCredentials(SEARCH_PROVIDER, { braveKey });
 } catch (error) {
   console.error(`${error.message}; no wine was searched and no miss was recorded`);
   process.exit(2);
 }
 const imageDiscover = createImageDiscovery({
   name: SEARCH_PROVIDER,
-  googleKey,
-  googleCx,
   braveKey,
-  serperKey,
-  googleSearchParams: searchProfile,
 });
 const visionKey = await openaiKey();
 const producerLookup = buildProducerLookup(catalog);
@@ -285,22 +266,12 @@ const selector = createBottleSelector({
     return boundedReader(...readerArgs);
   },
 });
-const expandWebMatches = createWebMatchExpander({
-  apiKey: googleVisionKey,
-  prepareSeedVariants: async (seed) => [
-    { kind: 'whole-bottle', bytes: await readFile(seed.file) },
-    { kind: 'label-crop', bytes: await local.prepareForReading(seed) },
-  ],
-});
-
 await mkdir(OUT_DIR, { recursive: true });
 await mkdir(CANDIDATE_DIR, { recursive: true });
 const manifest = (await exists(MANIFEST)) ? JSON.parse(await readFile(MANIFEST, 'utf8')) : {};
 
 console.log(`${SEARCH_PROVIDER} image discovery: ready`);
-if (SEARCH_PROVIDER === 'google') console.log(`google image search profile: ${SEARCH_PROFILE_NAME}`);
 console.log(`identity reader: ${visionKey ? `${MODEL}${LABEL_REASONING_EFFORT ? ` (${LABEL_REASONING_EFFORT} effort)` : ''}, three-image primary batch plus targeted miss-only reads (ten-image ceiling)` : 'unavailable - grouped wines will stay due'}`);
-console.log(`label reverse-search expansion: ${googleVisionKey ? 'Google Cloud Vision Web Detection ready (whole bottle + label crop)' : 'disabled - FINEVINES_GOOGLE_VISION_KEY is missing'}`);
 console.log(`processing up to ${WINE_CONCURRENCY} wines concurrently`);
 
 function fail(rec, stage, reason) {
@@ -341,7 +312,6 @@ async function processWine(wine) {
       vintage: OMIT_QUERY_VINTAGE ? '' : identity.vintage,
     }),
     funnel: {
-      googleSearched: false,
       searchResults: 0,
       sourcePolicyBlocked: 0,
       permittedCandidates: 0,
@@ -357,10 +327,6 @@ async function processWine(wine) {
       identityAnchors: 0,
       explicitConflicts: 0,
       publishableAnchors: 0,
-      webExpansionRequests: 0,
-      webExpansionCandidates: 0,
-      webExpansionBlocked: 0,
-      webExpansionDownloaded: 0,
       outcome: 'pending',
       recoveryScope: QUALITY_RECOVERY ? 'quality' : CANDIDATE_RECOVERY ? 'candidate' : '',
       queryVintageOmitted: OMIT_QUERY_VINTAGE,
@@ -405,7 +371,6 @@ async function processWine(wine) {
     discovery: null,
     downloads: null,
     selector: null,
-    webExpansion: null,
   } : null;
   if (trace) rec.debugTrace = trace;
   const discovery = await imageDiscover(rec.query);
@@ -423,7 +388,7 @@ async function processWine(wine) {
     permittedCandidates: discovery.items,
   };
   Object.assign(rec.funnel, {
-    googleSearched: SEARCH_PROVIDER === 'google' && discovery.searched,
+    searched: discovery.searched,
     searchProvider: SEARCH_PROVIDER,
     labelModel: MODEL,
     labelReasoningEffort: LABEL_REASONING_EFFORT,
@@ -475,46 +440,6 @@ async function processWine(wine) {
     return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete };
   }
 
-  // Reverse-image expansion is a bounded rescue for a verified anchor or a
-  // conflict-free repeated-design hypothesis. It is optional: an unavailable
-  // Web Detection API leaves the original selector verdict intact and visible.
-  if (!result.pick && result.expansionSeeds?.length && googleVisionKey) {
-    const expansion = await expandWebMatches(result.expansionSeeds);
-    Object.assign(rec.funnel, {
-      webExpansionStatus: expansion.status,
-      webExpansionRequests: expansion.requests || 0,
-      webExpansionCandidates: expansion.items?.length || 0,
-      webExpansionBlocked: expansion.blocked || 0,
-      webExpansionError: expansion.error || '',
-    });
-    if (trace) trace.webExpansion = expansion;
-    if (expansion.items?.length) {
-      const expandedDownloads = await downloadCandidates({
-        items: expansion.items,
-        directory: join(CANDIDATE_DIR, wine.slug),
-        convert: convertToPng,
-        idPrefix: 'web-match',
-        filePrefix: 'web-match',
-      });
-      rec.funnel.webExpansionDownloaded = expandedDownloads.candidates.length;
-      if (trace) trace.webExpansion.downloads = expandedDownloads.trace;
-      if (expandedDownloads.candidates.length) {
-        candidates.push(...expandedDownloads.candidates);
-        try {
-          result = await selector.select(identity, candidates);
-          if (trace) trace.selectorAfterWebExpansion = result.trace || null;
-        } catch (error) {
-          if (error instanceof ReaderUnavailableError) {
-            fail(rec, 'identity-reader-unavailable', `identity reader unavailable after Web Detection: ${error.message}`);
-            return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete };
-          }
-          fail(rec, 'selector-error', `selector failed after Web Detection: ${String(error?.message || error).split('\n')[0]}`);
-          return { wine, rec, evaluated: 0, unevaluated: candidates.length, discoveryComplete };
-        }
-      }
-    }
-  }
-
   Object.assign(rec.funnel, result.diagnostics || {});
   if (result.reviewCandidates?.length) rec.alternates = result.reviewCandidates;
   if (!result.pick) {
@@ -545,12 +470,10 @@ async function processWine(wine) {
   rec.image = result.pick.url;
   rec.size = `${result.pick.width || 0}x${result.pick.height || 0}`;
   rec.label = result.anchorLabels?.[0] || '';
-  rec.verifiedBy = result.pick.trustedFullMatch
-    ? 'verified pixel anchor + exact visual copy'
-    : `${MODEL} transcription + local identity rules`;
+  rec.verifiedBy = `${MODEL} transcription + local identity rules`;
   // Import requires this explicit machine-readable verdict. The selector only
-  // returns a pick after either blind label transcription or an exact visual
-  // copy of already-verified pixels anchors a repeated bottle design. Source
+  // returns a pick after blind label transcription anchors a repeated bottle
+  // design. Source
   // titles rank candidates but never prove the image itself.
   rec.selectionIdentityVerified = true;
   rec.matchingImages = result.matchingImages;
@@ -651,7 +574,6 @@ if (CANARY) {
   await mkdir('out-bottle', { recursive: true });
   await writeFile('out-bottle/image-canary.json', JSON.stringify({
     generatedAt: new Date().toISOString(),
-    searchProfile: SEARCH_PROFILE_NAME,
     searchProvider: SEARCH_PROVIDER,
     labelModel: MODEL,
     labelReasoningEffort: LABEL_REASONING_EFFORT,
