@@ -105,7 +105,7 @@ The environment-controlled delivery mechanism for review incident email. Local d
 _Avoid_: Test email to production recipients, mocked production configuration
 
 **Reviewer invitation**:
-An explicitly authorized production activation email containing one reviewer's unique temporary password. It expires after seventy-two hours, becomes invalid after the first password change, and is rotated immediately when resent. Invitations are never sent by local tests, `.biz` development deployments, or ordinary builds, and their credentials never enter logs, artifacts, or the repository.
+An explicitly authorized production activation email containing one reviewer's unique temporary password. It expires after seventy-two hours, is consumed by the first successful sign-in, forces an immediate password change before review access, and is rotated immediately when resent. If that onboarding session is lost before the change completes, an administrator resends a rotated invitation. Invitations are never sent by local tests, `.biz` development deployments, or ordinary builds, and their credentials never enter logs, artifacts, or the repository.
 _Avoid_: Deployment side effect, shared password, reusable invitation
 
 **Invitation-pending account**:

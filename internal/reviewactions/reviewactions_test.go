@@ -273,11 +273,16 @@ func TestPrepareRecognizesActionAlreadyCommittedBeforeReceiptRetry(t *testing.T)
 	wines[0].ImageReviewActionID = id
 	wines[0].ImagePath = "assets/img/wines/producer-wine-2022.jpg"
 	wines[0].ImageSource = model.ImageScrapedWeb
-	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Now()})
+	imageDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(imageDir, "producer-wine-2022.jpg"), []byte("already-deployed"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: imageDir, Now: time.Now()})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.Decisions[0].Status != "prepared" || !strings.Contains(result.Decisions[0].Reason, "already contains") {
+	if result.Decisions[0].Status != "prepared" || !strings.Contains(result.Decisions[0].Reason, "already contains") ||
+		result.Decisions[0].DeployedImagePath == "" || result.Decisions[0].DeployedImageSHA256 == "" {
 		t.Fatalf("decision = %#v", result.Decisions[0])
 	}
 }
@@ -451,6 +456,9 @@ func TestPrepareEmitsACompletionDecisionAfterReceiptSQLCrash(t *testing.T) {
 	}
 	if _, ok := store.files["_review/test/pending/"+id+".json"]; ok {
 		t.Fatal("receipt recovery retained the pending marker")
+	}
+	if err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: result.Decisions, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "retry", Now: time.Now(), Fetcher: fetcherFunc(func(context.Context, string) ([]byte, error) { return deployed, nil })}); err != nil {
+		t.Fatalf("receipt recovery did not converge through finalization: %v", err)
 	}
 }
 

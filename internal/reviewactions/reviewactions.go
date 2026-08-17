@@ -410,7 +410,6 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			}
 			recovered := receipt.Decision
 			recovered.Status = "prepared"
-			recovered.Reason = "recovering SQL completion from durable deployment receipt"
 			result.Decisions = append(result.Decisions, recovered)
 			continue
 		}
@@ -461,6 +460,13 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			if action.Kind == "reviewer-image" {
 				decision.ImageSHA256 = action.ImageSHA256
 			}
+			decision.DeployedImagePath = path.Join("assets/img/wines", result.Wines[index].Slug+".jpg")
+			deployedData, err := os.ReadFile(filepath.Join(input.ImageDir, result.Wines[index].Slug+".jpg"))
+			if err != nil {
+				return result, fmt.Errorf("read previously prepared image: %w", err)
+			}
+			deployedSum := sha256.Sum256(deployedData)
+			decision.DeployedImageSHA256 = hex.EncodeToString(deployedSum[:])
 			result.Decisions = append(result.Decisions, decision)
 			continue
 		}

@@ -178,10 +178,6 @@ jobs:
       FINEVINES_REVIEW_STORAGE_KEY: ${{ secrets.FINEVINES_REVIEW_STORAGE_KEY }}
       FINEVINES_REVIEW_STORAGE_ENDPOINT: ${{ secrets.FINEVINES_REVIEW_STORAGE_ENDPOINT }}
       FINEVINES_BRAVE_SEARCH_KEY: ${{ secrets.FINEVINES_BRAVE_SEARCH_KEY }}
-      FINEVINES_SERPER_KEY: ${{ secrets.FINEVINES_SERPER_KEY }}
-      FINEVINES_GOOGLE_CSE_KEY: ${{ secrets.FINEVINES_GOOGLE_CSE_KEY }}
-      FINEVINES_GOOGLE_CSE_CX: ${{ secrets.FINEVINES_GOOGLE_CSE_CX }}
-      FINEVINES_GOOGLE_VISION_KEY: ${{ secrets.FINEVINES_GOOGLE_VISION_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - uses: actions/checkout@v4
@@ -211,9 +207,9 @@ jobs:
         run: |
           mkdir -p .run
           node tools/review-console/queue.mjs export-recovery --environment test --action-id "${{ github.event.client_payload.action_id }}" --output .run/rejected-candidates.json
-          node tools/labelfetch/autonomous.mjs --apply --review-recovery --slug "${{ github.event.client_payload.slug }}" --no-catalog-reuse --search-provider brave-serper --rejected-candidates .run/rejected-candidates.json --trace --budget-minutes 120
+          node tools/labelfetch/autonomous.mjs --apply --review-recovery --slug "${{ github.event.client_payload.slug }}" --no-catalog-reuse --search-provider brave --rejected-candidates .run/rejected-candidates.json --trace --budget-minutes 120
           if ! node -e 'const fs=require("fs"); const v=JSON.parse(fs.readFileSync(".run/review-draft.json")); process.exit(v.wines?.some(w=>w.slug===process.argv[1]&&w.candidates?.length)?0:1)' "${{ github.event.client_payload.slug }}"; then
-            node tools/labelfetch/autonomous.mjs --apply --review-recovery --slug "${{ github.event.client_payload.slug }}" --no-catalog-reuse --search-provider brave-serper --rejected-candidates .run/rejected-candidates.json --omit-query-vintage --trace --budget-minutes 120
+            node tools/labelfetch/autonomous.mjs --apply --review-recovery --slug "${{ github.event.client_payload.slug }}" --no-catalog-reuse --search-provider brave --rejected-candidates .run/rejected-candidates.json --omit-query-vintage --trace --budget-minutes 120
           fi
       - name: Publish only the new review evidence
         run: node tools/labelfetch/publish-review-package.mjs --environment test
