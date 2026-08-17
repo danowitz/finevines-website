@@ -280,6 +280,9 @@ Actions). The repo is public, so the pipeline workflow deliberately has no
 | `FINEVINES_REVIEW_STORAGE_ZONE` | Dedicated private review zone (no Pull Zone) |
 | `FINEVINES_REVIEW_STORAGE_KEY` | Dedicated review-zone password |
 | `FINEVINES_REVIEW_STORAGE_ENDPOINT` | Dedicated review-zone regional host |
+| `FINEVINES_REVIEW_DATABASE_URL` | Bunny Database libSQL URL for review state |
+| `FINEVINES_REVIEW_DATABASE_TOKEN` | Full-access Bunny Database token |
+| `FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN` | Fine-grained, repository-only token used to wake the review processor |
 | `FINEVINES_BUNNY_API_KEY` | Account API key (purge, Edge Scripting) |
 | `FINEVINES_BUNNY_PULL_ZONE_ID` | Both pull zone IDs, comma-separated |
 | `FINEVINES_BUNNY_SCRIPT_ID` | Redirect middleware's Edge Script ID |
@@ -295,16 +298,18 @@ Actions). The repo is public, so the pipeline workflow deliberately has no
 | `FINEVINES_REVIEW_PRODUCTION_SESSION_SECRET` | Production console cookie-signing secret |
 
 The Edge Scripts themselves have separate Bunny environment secrets for the
-review password, session signing key, storage key, and narrowly scoped GitHub
-dispatch token. They are never placed in source or sent to the browser. See
+session signing key, storage key, Bunny Database token, and narrowly scoped
+GitHub dispatch token. They are never placed in source or sent to the browser. See
 `docs/operations.md` for the exact production and test activation checklist.
 
 Also required once: **Settings → Actions → General → Workflow permissions** set
 to **Read and write**, so the bot commit can push.
 
-The review console's GitHub PAT is **not** a repository secret. It lives as a
-Bunny Edge Script secret: fine-grained, this repo only, Actions: write for
-`repository_dispatch` and nothing else.
+The review console's GitHub PAT is staged through the encrypted repository
+secret `FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN`; the provisioner copies it into
+the Bunny Edge Script secret `GITHUB_DISPATCH_TOKEN`. It is fine-grained,
+limited to this repository, and grants Contents: write only (the permission
+GitHub requires for `repository_dispatch`).
 
 ## Building
 

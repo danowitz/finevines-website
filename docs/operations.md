@@ -277,7 +277,7 @@ middleware serves. No operator action is ever required.
 There is no decision-file download. After signing in, the reviewer selects a
 candidate and the protected Edge Script writes one immutable action to Bunny.
 It immediately dispatches GitHub Actions; if dispatch is unavailable, the
-nightly pipeline sees the same pending action. Production builds, deploys,
+five-minute recovery schedule sees the same pending action. Production builds, deploys,
 commits, refreshes the queue, and writes the receipt. The page polls that receipt
 and does not say "deployed" early. Test performs the same validation and build
 but writes an honest `validated` receipt without changing a live site.
@@ -295,6 +295,7 @@ between environments.
 | `GITHUB_REPOSITORY` | `danowitz/finevines-website` | same |
 | `BUNNY_STORAGE_ENDPOINT` | dedicated review zone's regional endpoint | same |
 | `BUNNY_STORAGE_ZONE` | dedicated private review zone | same |
+| `BUNNY_DATABASE_URL` | provisioned Bunny Database libSQL URL | same |
 
 Store `REVIEW_SESSION_SECRET` (32+ random characters),
 `BUNNY_STORAGE_KEY`, and the database authentication token as Bunny
@@ -306,6 +307,16 @@ the independent recovery path. Never substitute a broad operator or desktop
 token. The token must be fine-grained,
 limited to this repository, with only **Contents: write** because that is the
 permission GitHub requires for repository dispatch.
+
+The transactional state service is **Bunny Database**, not Turso or another
+external libSQL host. Create one database named `finevines-review` under
+**Edge Platform -> Database**, use a U.S. primary region, and generate a
+full-access token. Store its values in the repository secrets
+`FINEVINES_REVIEW_DATABASE_URL` and `FINEVINES_REVIEW_DATABASE_TOKEN`.
+The URL must use Bunny's `libsql://*.lite.bunnydb.net` endpoint. The provisioner
+copies the URL and token into both Edge Scripts; the action processor reads the
+same repository secrets. Tokens are displayed only once, so rotate and replace
+both bindings together if one is lost or exposed.
 
 The review storage zone must be separate from the website storage zone and must
 have **no Pull Zone or public hostname attached**. Add
@@ -321,8 +332,9 @@ and error caching remain disabled. These are authentication requirements, not
 performance preferences.
 
 In GitHub, create environments `review-test` and `review-production`. Store
-distinct review passwords and session secrets in the repository secrets named
-`FINEVINES_REVIEW_{TEST,PRODUCTION}_{PASSWORD,SESSION_SECRET}`. Run the
+distinct session secrets in the repository secrets named
+`FINEVINES_REVIEW_{TEST,PRODUCTION}_SESSION_SECRET`; reviewer passwords live
+only as salted hashes in Bunny Database. Run the
 idempotent `review-console-provision.yml` once to reconcile the two scripts,
 their private configuration, Pull Zones, DNS, and certificates. Deployments
 resolve the script by its unique fixed name and use the existing Bunny account

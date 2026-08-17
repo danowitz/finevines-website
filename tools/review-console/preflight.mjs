@@ -3,6 +3,7 @@ import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import process from 'node:process';
 import { sendRepositoryDispatch } from '../../edge/review-console/github-repository-dispatch.mjs';
+import { requireBunnyDatabaseUrl } from './bunny-database.mjs';
 
 const REQUIRED = [
   'FINEVINES_BUNNY_API_KEY', 'FINEVINES_REVIEW_STORAGE_ENDPOINT', 'FINEVINES_REVIEW_STORAGE_ZONE',
@@ -21,6 +22,7 @@ function values(environment) {
   }
   if (result.FINEVINES_REVIEW_TEST_SESSION_SECRET.length < 32 || result.FINEVINES_REVIEW_PRODUCTION_SESSION_SECRET.length < 32) throw new Error('review session secrets must contain at least 32 characters');
   if (!Number.isInteger(Number(result.FINEVINES_SMTP_PORT))) throw new Error('FINEVINES_SMTP_PORT must be an integer');
+  result.FINEVINES_REVIEW_DATABASE_URL = requireBunnyDatabaseUrl(result.FINEVINES_REVIEW_DATABASE_URL);
   return result;
 }
 

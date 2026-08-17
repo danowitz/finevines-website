@@ -7,6 +7,7 @@ const complete = Object.fromEntries([
   'FINEVINES_REVIEW_DATABASE_URL', 'FINEVINES_REVIEW_DATABASE_TOKEN', 'FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN',
   'FINEVINES_SMTP_HOST', 'FINEVINES_SMTP_PORT', 'FINEVINES_SMTP_USER', 'FINEVINES_SMTP_PASS', 'FINEVINES_NOTIFY_FROM',
 ].map((name) => [name, name === 'FINEVINES_SMTP_PORT' ? '587' : name === 'FINEVINES_REVIEW_STORAGE_ENDPOINT' ? 'https://storage.example' : 'configured-value']));
+complete.FINEVINES_REVIEW_DATABASE_URL = 'libsql://finevines-review.lite.bunnydb.net/';
 complete.FINEVINES_REVIEW_TEST_SESSION_SECRET = 't'.repeat(32);
 complete.FINEVINES_REVIEW_PRODUCTION_SESSION_SECRET = 'p'.repeat(32);
 
@@ -26,5 +27,14 @@ test('review preflight proves storage, database, and an actual harmless processi
 test('review preflight fails before any network call when one credential is absent', async () => {
   let called = false;
   await assert.rejects(runReviewPreflight({ environment: { ...complete, FINEVINES_SMTP_PASS: '' }, fetchImpl: async () => { called = true; return new Response(); } }), /FINEVINES_SMTP_PASS/);
+  assert.equal(called, false);
+});
+
+test('review preflight rejects a non-Bunny transactional database before any network call', async () => {
+  let called = false;
+  await assert.rejects(runReviewPreflight({
+    environment: { ...complete, FINEVINES_REVIEW_DATABASE_URL: 'libsql://example.turso.io' },
+    fetchImpl: async () => { called = true; return new Response(); },
+  }), /must use Bunny Database/);
   assert.equal(called, false);
 });
