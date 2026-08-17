@@ -68,6 +68,13 @@ func (invalidImageNormalizer) Normalize(context.Context, string, string) error {
 	return &InvalidImageError{Err: errors.New("decode failed")}
 }
 
+type deadlineNormalizer struct{}
+
+func (deadlineNormalizer) Normalize(ctx context.Context, _, _ string) error {
+	<-ctx.Done()
+	return ctx.Err()
+}
+
 type fetcherFunc func(context.Context, string) ([]byte, error)
 
 func (fetcher fetcherFunc) Fetch(ctx context.Context, target string) ([]byte, error) {
@@ -127,10 +134,11 @@ func TestPrepareAppliesExactCandidateButKeepsPendingUntilFinalize(t *testing.T) 
 
 func TestPrepareDefersClaimedWorkAfterGracefulDeadline(t *testing.T) {
 	store, wines, id := fixture(t)
-	result, err := Prepare(context.Background(), PrepareInput{
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	result, err := Prepare(ctx, PrepareInput{
 		Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines,
 		ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC),
-		Deadline: time.Now().Add(-time.Second),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -143,6 +151,25 @@ func TestPrepareDefersClaimedWorkAfterGracefulDeadline(t *testing.T) {
 	}
 	if _, ok := store.files["_review/test/pending/"+id+".json"]; !ok {
 		t.Fatal("deferred work lost its pending marker")
+	}
+}
+
+func TestPrepareCancelsAndDefersAnActionThatStallsMidNormalization(t *testing.T) {
+	store, wines, id := fixture(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+	result, err := Prepare(ctx, PrepareInput{
+		Store: store, Normalizer: deadlineNormalizer{}, Environment: "test", Wines: wines,
+		ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Decisions) != 1 || result.Decisions[0].ID != id || result.Decisions[0].Status != "deferred" {
+		t.Fatalf("decisions = %#v", result.Decisions)
+	}
+	if result.Wines[0].ImageReviewActionID != "" {
+		t.Fatal("cancelled normalization mutated the catalog")
 	}
 }
 
@@ -403,6 +430,27 @@ func TestFinalizeRetryAcceptsTheExistingCompletionProof(t *testing.T) {
 	}
 	if uploads != 1 {
 		t.Fatalf("receipt uploads = %d, events %#v", uploads, store.events)
+	}
+}
+
+func TestPrepareEmitsACompletionDecisionAfterReceiptSQLCrash(t *testing.T) {
+	store, wines, id := fixture(t)
+	deployed := []byte("normalized-deployed-image")
+	sum := sha256.Sum256(deployed)
+	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Reviewer: "barb.fultz@finevines.com", SKU: "500740*", Kind: "image-select", PackageID: "pkg-1", CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", PreparedAt: "2026-08-15T02:00:00Z", DeployedImagePath: "assets/img/wines/producer-wine-2022.jpg", DeployedImageSHA256: hex.EncodeToString(sum[:])}
+	if err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "first", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC), Fetcher: fetcherFunc(func(context.Context, string) ([]byte, error) { return deployed, nil })}); err != nil {
+		t.Fatal(err)
+	}
+	store.files["_review/test/pending/"+id+".json"] = append([]byte(nil), store.files["_review/test/actions/"+id+".json"]...)
+	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Now()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Decisions) != 1 || result.Decisions[0].ID != id || result.Decisions[0].Status != "prepared" || result.Decisions[0].DeployedImageSHA256 != decision.DeployedImageSHA256 {
+		t.Fatalf("recovery decisions = %#v", result.Decisions)
+	}
+	if _, ok := store.files["_review/test/pending/"+id+".json"]; ok {
+		t.Fatal("receipt recovery retained the pending marker")
 	}
 }
 

@@ -104,6 +104,17 @@ describe('review queue command', () => {
     assert.equal((await state.actionStatus(deferred.id, 'test')).status, 'queued');
   });
 
+  it('releases unfinished processing claims after an operational failure', async () => {
+    const state = await fixture();
+    const selected = action('00000000-0000-4000-8000-000000000065', '8'.repeat(64));
+    await state.queue(selected);
+    const claims = await tempFile('claims.json');
+    await runQueueCommand({ args: ['claim', '--environment', 'test', '--output', claims], state, now: () => new Date('2026-08-16T13:00:00Z') });
+    const result = await runQueueCommand({ args: ['release', '--environment', 'test', '--action-ids', claims, '--reason', 'simulated deployment outage'], state });
+    assert.equal(result.released, 1);
+    assert.equal((await state.actionStatus(selected.id, 'test')).status, 'queued');
+  });
+
   it('refuses to manufacture completion from a prepared decision without matching durable proof', async () => {
     const state = await fixture();
     const prepared = action('00000000-0000-4000-8000-000000000064', '7'.repeat(64));

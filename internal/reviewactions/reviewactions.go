@@ -156,7 +156,6 @@ type PrepareInput struct {
 	Now         time.Time
 	Log         func(string, ...any)
 	ActionIDs   map[string]struct{}
-	Deadline    time.Time
 }
 
 type PrepareResult struct {
@@ -363,6 +362,12 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 	for i, wine := range result.Wines {
 		bySKU[wine.SKU] = i
 	}
+	deferAction := func(id string) {
+		result.Decisions = append(result.Decisions, Decision{
+			SchemaVersion: 1, ID: id, Environment: input.Environment, Status: "deferred",
+			Reason: "processor yielded before the deployment time reserve", PreparedAt: input.Now.UTC().Format(time.RFC3339),
+		})
+	}
 	for _, name := range files {
 		if !strings.HasSuffix(name, ".json") {
 			continue
@@ -378,24 +383,43 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			}
 		}
 		result.Pending++
-		if !input.Deadline.IsZero() && !time.Now().Before(input.Deadline) {
-			result.Decisions = append(result.Decisions, Decision{
-				SchemaVersion: 1, ID: id, Environment: input.Environment, Status: "deferred",
-				Reason: "processor yielded before the deployment time reserve", PreparedAt: input.Now.UTC().Format(time.RFC3339),
-			})
+		if ctx.Err() != nil {
+			deferAction(id)
 			continue
 		}
 		receiptPath := path.Join(prefix, "receipts", name)
-		if receipt, err := input.Store.Download(ctx, receiptPath); err != nil {
+		if receiptData, err := input.Store.Download(ctx, receiptPath); err != nil {
+			if ctx.Err() != nil {
+				deferAction(id)
+				continue
+			}
 			return result, err
-		} else if len(receipt) > 0 {
+		} else if len(receiptData) > 0 {
+			var receipt Receipt
+			if err := strictJSON(receiptData, &receipt); err != nil || receipt.ID != id || receipt.Environment != input.Environment || receipt.Status != "completed" ||
+				!commitPattern.MatchString(receipt.CatalogCommit) || !deployedPathPattern.MatchString(receipt.DeployedImagePath) ||
+				!hashPattern.MatchString(receipt.DeployedImageSHA256) || receipt.DeploymentTarget == "" || receipt.VerifiedImageURL == "" || receipt.RunID == "" {
+				return result, fmt.Errorf("reviewactions: receipt %s has invalid completion evidence", id)
+			}
 			if err := input.Store.Delete(ctx, path.Join(prefix, "pending", name)); err != nil {
+				if ctx.Err() != nil {
+					deferAction(id)
+					continue
+				}
 				return result, err
 			}
+			recovered := receipt.Decision
+			recovered.Status = "prepared"
+			recovered.Reason = "recovering SQL completion from durable deployment receipt"
+			result.Decisions = append(result.Decisions, recovered)
 			continue
 		}
 		actionData, err := input.Store.Download(ctx, path.Join(prefix, "actions", name))
 		if err != nil {
+			if ctx.Err() != nil {
+				deferAction(id)
+				continue
+			}
 			return result, err
 		}
 		decision := Decision{SchemaVersion: 1, ID: id, Environment: input.Environment, Status: "rejected", Reason: "invalid action", PreparedAt: input.Now.UTC().Format(time.RFC3339)}
@@ -407,6 +431,10 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 		decision.Reviewer, decision.SKU, decision.Kind, decision.PackageID, decision.CandidateID, decision.SubmittedAt = action.Reviewer, action.SKU, action.Kind, action.PackageID, action.CandidateID, action.SubmittedAt
 		manifestData, err := input.Store.Download(ctx, path.Join(prefix, "packages", action.PackageID, "manifest.json"))
 		if err != nil {
+			if ctx.Err() != nil {
+				deferAction(id)
+				continue
+			}
 			return result, err
 		}
 		var manifest Manifest
@@ -455,6 +483,10 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 		}
 		candidateData, err := input.Store.Download(ctx, candidatePath)
 		if err != nil {
+			if ctx.Err() != nil {
+				deferAction(id)
+				continue
+			}
 			return result, err
 		}
 		sum := sha256.Sum256(candidateData)
@@ -464,6 +496,10 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			continue
 		}
 		if err := applyImage(ctx, input, &result.Wines[index], candidateData, candidate, action.ID, imageSource); err != nil {
+			if ctx.Err() != nil {
+				deferAction(id)
+				continue
+			}
 			var invalidImage *InvalidImageError
 			if errors.As(err, &invalidImage) {
 				decision.Reason = "selected image could not be decoded"

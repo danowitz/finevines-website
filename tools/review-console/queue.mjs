@@ -61,6 +61,13 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
     return { command: 'claim', claimed: result.actionIds.length, remaining: result.remaining, output: value.output };
   }
 
+  if (value.command === 'release') {
+    if (!value['action-ids']) throw new Error('release requires --action-ids');
+    const actionIds = JSON.parse(await readFile(value['action-ids'], 'utf8'));
+    const result = await state.releaseClaims(environment, actionIds, value.reason || 'processor stopped before completion');
+    return { command: 'release', ...result };
+  }
+
   if (value.command === 'reconcile') {
     if (!value.decisions) throw new Error('reconcile requires --decisions');
     const records = await decisions(value.decisions);
@@ -188,7 +195,7 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
     return { command: 'migrate', scanned: names.length, ...values };
   }
 
-  throw new Error('usage: queue.mjs <publish|claim|reconcile|complete|notify|sync-accounts|invite|pending-recoveries|export-recovery|resolve-recovery|migrate> --environment <name> [command options]');
+  throw new Error('usage: queue.mjs <publish|claim|release|reconcile|complete|notify|sync-accounts|invite|pending-recoveries|export-recovery|resolve-recovery|migrate> --environment <name> [command options]');
 }
 
 async function main() {

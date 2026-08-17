@@ -60,9 +60,15 @@ describe('review state', () => {
     await client.execute({ sql: `INSERT INTO review_actions
       (id, environment, package_id, wine_revision, sku, reviewer_email, kind, status, action_json, submitted_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, 'queued', ?, ?, ?)`, args: [prior.id, prior.environment, prior.packageId, prior.wineRevision, prior.sku, prior.reviewer, prior.kind, JSON.stringify(prior), prior.submittedAt, prior.submittedAt] });
+    const reopened = action('00000000-0000-4000-8000-000000000099', { wineRevision: '9'.repeat(64), sku: '500799*' });
+    await client.execute({ sql: `INSERT INTO review_actions
+      (id, environment, package_id, wine_revision, sku, reviewer_email, kind, status, action_json, decision_open, submitted_at, updated_at, attention_reason)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'needs_attention', ?, 1, ?, ?, 'review it again')`, args: [reopened.id, reopened.environment, reopened.packageId, reopened.wineRevision, reopened.sku, reopened.reviewer, reopened.kind, JSON.stringify(reopened), reopened.submittedAt, reopened.submittedAt] });
     const state = createReviewState({ client });
     await state.initialize();
     assert.equal((await state.actionStatus(prior.id, 'test')).status, 'queued');
+    assert.equal((await state.actionStatus(reopened.id, 'test')).status, 'needs_decision');
+    assert.equal((await state.packageStatus('test', [{ sku: reopened.sku, wineRevision: reopened.wineRevision }])).counts.needsDecision, 1);
     await state.transition(prior.id, 'queued', 'needs_attention', 'manual review');
     assert.equal((await state.recoverAction(prior.id, 'reopen', 'show it again')).status, 'needs_decision');
   });

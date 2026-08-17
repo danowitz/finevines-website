@@ -29,8 +29,8 @@ jobs:
   drain:
     if: ${{ github.event.action != 'review-recovery' && github.event.action != 'review-console-preflight' }}
     runs-on: ubuntu-latest
-    # Preparation yields at 30 minutes, reserving 15 minutes for the single
-    # build/deploy/finalize transaction before this emergency ceiling.
+    # Preparation yields at 20 minutes, reserving the remainder for the single
+    # build/deploy/finalize transaction and failure cleanup before this ceiling.
     timeout-minutes: 45
     env:
       FINEVINES_REVIEW_ENVIRONMENT: test
@@ -103,7 +103,7 @@ jobs:
           cp data/wines.json .run/wines-before.json
       - name: Prepare claimed review actions
         if: ${{ steps.claim.outputs.claimed != '0' }}
-        run: ./finevines reviewapply -environment test -max-prepare-duration 30m -action-ids .run/review-claims.json -decisions .run/review-decisions.json -applied .run/queue-applied.json
+        run: ./finevines reviewapply -environment test -max-prepare-duration 20m -action-ids .run/review-claims.json -decisions .run/review-decisions.json -applied .run/queue-applied.json
       - name: Isolate action-specific failures
         id: reconcile
         if: ${{ steps.claim.outputs.claimed != '0' }}
@@ -151,6 +151,18 @@ jobs:
       - name: Mark verified actions complete
         if: ${{ steps.reconcile.outputs.prepared != '0' }}
         run: node tools/review-console/queue.mjs complete --environment test --decisions .run/review-decisions.json
+      - name: Release unfinished claims after an operational failure
+        if: ${{ failure() && steps.claim.outputs.claimed != '0' }}
+        run: node tools/review-console/queue.mjs release --environment test --action-ids .run/review-claims.json --reason "workflow stopped before verified completion"
+      - name: Continue immediately after an operational failure
+        if: ${{ failure() && steps.claim.outputs.claimed != '0' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" --input - <<'JSON'
+          {"event_type":"review-console-continue","client_payload":{"environment":"test","reason":"operational-retry"}}
+          JSON
       - name: Deliver review incident and invitation notifications
         if: ${{ always() }}
         run: node tools/review-console/queue.mjs notify --environment test --recipient joel@gritautomation.com --from "$FINEVINES_NOTIFY_FROM"

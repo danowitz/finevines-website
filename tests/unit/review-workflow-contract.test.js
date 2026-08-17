@@ -10,7 +10,8 @@ describe('hosted review workflow contract', () => {
     assert.match(workflow, /cron: '\*\/5 \* \* \* \*'/);
     assert.match(workflow, /workflow_dispatch:/);
     assert.match(workflow, /group: finevines-catalog-deploy/);
-    assert.match(workflow, /timeout-minutes: 90/);
+    assert.match(workflow, /timeout-minutes: 45/);
+    assert.match(workflow, /max-prepare-duration 20m/);
     assert.equal(workflow.match(/node tools\/review-console\/queue\.mjs claim/g)?.length, 1);
     assert.match(workflow, /reviewapply -environment test[^\n]*-action-ids \.run\/review-claims\.json/);
     assert.match(workflow, /review-console-continue/);

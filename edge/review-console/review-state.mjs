@@ -37,6 +37,9 @@ export function createReviewState({ client, now = () => new Date() }) {
     await client.execute(actionTable);
     const schema = await client.execute(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'review_actions'`);
     if (!String(rowValue(schema.rows[0], 'sql') || '').includes('needs_decision')) {
+      const priorColumns = await client.execute('PRAGMA table_info(review_actions)');
+      const hadDecisionOpen = priorColumns.rows.some((row) => String(rowValue(row, 'name')) === 'decision_open');
+      const migratedStatus = hadDecisionOpen ? `CASE WHEN status = 'needs_attention' AND decision_open = 1 THEN 'needs_decision' ELSE status END` : 'status';
       await client.execute('PRAGMA foreign_keys = OFF');
       try {
         await client.batch([
@@ -44,7 +47,7 @@ export function createReviewState({ client, now = () => new Date() }) {
           `INSERT INTO review_actions_next
             (id, environment, package_id, wine_revision, sku, reviewer_email, kind, status, action_json,
              submitted_at, started_at, completed_at, updated_at, attention_reason)
-           SELECT id, environment, package_id, wine_revision, sku, reviewer_email, kind, status, action_json,
+           SELECT id, environment, package_id, wine_revision, sku, reviewer_email, kind, ${migratedStatus}, action_json,
              submitted_at, started_at, completed_at, updated_at, attention_reason FROM review_actions`,
           'DROP TABLE review_actions',
           'ALTER TABLE review_actions_next RENAME TO review_actions',
@@ -80,6 +83,7 @@ export function createReviewState({ client, now = () => new Date() }) {
         eligible INTEGER NOT NULL DEFAULT 1,
         password_hash TEXT,
         temporary_expires_at TEXT,
+        invitation_used_at TEXT,
         must_change INTEGER NOT NULL DEFAULT 1,
         credential_version INTEGER NOT NULL DEFAULT 0,
         updated_at TEXT NOT NULL
@@ -126,6 +130,10 @@ export function createReviewState({ client, now = () => new Date() }) {
       `CREATE INDEX IF NOT EXISTS review_recoveries_pending
         ON review_recoveries(environment, status, requested_at, action_id)`,
     ], 'write');
+    const reviewerColumns = await client.execute('PRAGMA table_info(reviewer_accounts)');
+    if (!reviewerColumns.rows.some((row) => String(rowValue(row, 'name')) === 'invitation_used_at')) {
+      await client.execute('ALTER TABLE reviewer_accounts ADD COLUMN invitation_used_at TEXT');
+    }
   }
 
   async function activeFor(action) {
@@ -437,6 +445,24 @@ export function createReviewState({ client, now = () => new Date() }) {
     return { actionIds, remaining: Number(rowValue(remainingResult.rows[0], 'total')) };
   }
 
+  async function releaseClaims(environment, actionIds, detail = 'processor stopped before completion') {
+    const ids = [...new Set(Array.isArray(actionIds) ? actionIds : [])].filter((id) => /^[0-9a-f-]{36}$/i.test(id));
+    if (!ids.length) return { released: 0 };
+    const stamp = now().toISOString();
+    let released = 0;
+    for (const id of ids) {
+      const result = await client.batch([
+        { sql: `UPDATE review_actions SET status = 'queued', started_at = NULL, updated_at = ?, attention_reason = ''
+            WHERE id = ? AND environment = ? AND status = 'processing'
+              AND NOT EXISTS (SELECT 1 FROM review_recoveries WHERE action_id = review_actions.id AND status = 'pending')`, args: [stamp, id, environment] },
+        { sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
+            SELECT ?, 'queued', ?, ? WHERE changes() = 1`, args: [id, stamp, detail] },
+      ], 'write');
+      released += Number(result[0].rowsAffected || 0);
+    }
+    return { released };
+  }
+
   async function enqueueNotification(message) {
     const stamp = now().toISOString();
     await client.execute({
@@ -590,6 +616,7 @@ export function createReviewState({ client, now = () => new Date() }) {
       eligible: Boolean(Number(rowValue(row, 'eligible'))),
       passwordHash: rowValue(row, 'password_hash') ? String(rowValue(row, 'password_hash')) : '',
       temporaryExpiresAt: rowValue(row, 'temporary_expires_at') ? String(rowValue(row, 'temporary_expires_at')) : '',
+      invitationUsedAt: rowValue(row, 'invitation_used_at') ? String(rowValue(row, 'invitation_used_at')) : '',
       mustChangePassword: Boolean(Number(rowValue(row, 'must_change'))),
       credentialVersion: Number(rowValue(row, 'credential_version')),
     };
@@ -607,7 +634,7 @@ export function createReviewState({ client, now = () => new Date() }) {
 
   async function setReviewerInvitation(email, passwordHash, expiresAt) {
     const result = await client.execute({
-      sql: `UPDATE reviewer_accounts SET password_hash = ?, temporary_expires_at = ?, must_change = 1,
+      sql: `UPDATE reviewer_accounts SET password_hash = ?, temporary_expires_at = ?, invitation_used_at = NULL, must_change = 1,
         credential_version = credential_version + 1, updated_at = ? WHERE email = ? AND eligible = 1`,
       args: [passwordHash, expiresAt, now().toISOString(), email],
     });
@@ -625,10 +652,21 @@ export function createReviewState({ client, now = () => new Date() }) {
     return reviewerAccount(email);
   }
 
+  async function consumeReviewerInvitation(email, credentialVersion) {
+    const stamp = now().toISOString();
+    const result = await client.execute({
+      sql: `UPDATE reviewer_accounts SET invitation_used_at = ?, updated_at = ?
+        WHERE email = ? AND credential_version = ? AND eligible = 1 AND must_change = 1 AND invitation_used_at IS NULL`,
+      args: [stamp, stamp, email, credentialVersion],
+    });
+    if (result.rowsAffected !== 1) return null;
+    return reviewerAccount(email);
+  }
+
   return {
-    initialize, queue, importLegacyAction, counts, packageStatus, actionStatus, pendingActionPayloads, transition, claim,
+    initialize, queue, importLegacyAction, counts, packageStatus, actionStatus, pendingActionPayloads, transition, claim, releaseClaims,
     scheduleRecovery, pendingRecoveries, resolveRecovery, recoverAction,
     enqueueNotification, scanIncidents, claimNotifications, completeNotification,
-    syncReviewerAccounts, listReviewerAccounts, reviewerAccount, setReviewerInvitation, setReviewerPassword,
+    syncReviewerAccounts, listReviewerAccounts, reviewerAccount, setReviewerInvitation, setReviewerPassword, consumeReviewerInvitation,
   };
 }

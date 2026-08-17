@@ -139,13 +139,15 @@ func runReviewApply(cfg config.Config, args []string) error {
 	if err != nil {
 		return fmt.Errorf("reviewapply: action ids: %w", err)
 	}
-	var deadline time.Time
+	prepareContext := context.Background()
+	var cancel context.CancelFunc
 	if *maxPrepareDuration > 0 {
-		deadline = time.Now().Add(*maxPrepareDuration)
+		prepareContext, cancel = context.WithTimeout(prepareContext, *maxPrepareDuration)
+		defer cancel()
 	}
-	result, err := reviewactions.Prepare(context.Background(), reviewactions.PrepareInput{
+	result, err := reviewactions.Prepare(prepareContext, reviewactions.PrepareInput{
 		Store: store, Normalizer: execNormalizer{bin: normalizer}, Environment: *environment,
-		Wines: wines, ImageDir: *imageDirectory, Now: time.Now().UTC(), Log: log.Printf, ActionIDs: actionIDs, Deadline: deadline,
+		Wines: wines, ImageDir: *imageDirectory, Now: time.Now().UTC(), Log: log.Printf, ActionIDs: actionIDs,
 	})
 	if err != nil {
 		return fmt.Errorf("reviewapply: %w", err)

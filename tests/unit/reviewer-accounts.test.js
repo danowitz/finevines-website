@@ -53,7 +53,7 @@ describe('reviewer accounts', () => {
     const temporary = await accounts.authenticate('barb.fultz@finevines.com', 'Random-Launch-Password-7x!');
     assert.equal(temporary.mustChangePassword, true);
     assert.equal(temporary.credentialVersion, 1);
-    assert.ok(await accounts.authenticate('barb.fultz@finevines.com', 'Random-Launch-Password-7x!'), 'temporary password remains usable until the required password change completes');
+    assert.equal(await accounts.authenticate('barb.fultz@finevines.com', 'Random-Launch-Password-7x!'), null, 'temporary password is single-use for sign-in');
     await accounts.changePassword(temporary, 'Random-Launch-Password-7x!', 'A-new-private-password-92!');
     assert.equal(await accounts.authenticate('barb.fultz@finevines.com', 'Random-Launch-Password-7x!'), null);
     const permanent = await accounts.authenticate('barb.fultz@finevines.com', 'A-new-private-password-92!');
