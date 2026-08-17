@@ -1,5 +1,6 @@
 import process from 'node:process';
 import { requireBunnyDatabaseUrl } from './bunny-database.mjs';
+import { shouldDeferCertificate } from './certificate-policy.mjs';
 
 const API = 'https://api.bunny.net';
 const repository = 'danowitz/finevines-website';
@@ -49,7 +50,10 @@ async function bunny(path, { method = 'GET', body, acceptable = [] } = {}) {
   });
   if (!response.ok && !acceptable.includes(response.status)) {
     const detail = (await response.text()).slice(0, 1_000);
-    throw new Error(`${method} ${path} returned ${response.status}: ${detail}`);
+    const error = new Error(`${method} ${path} returned ${response.status}: ${detail}`);
+    error.status = response.status;
+    error.detail = detail;
+    throw error;
   }
   if (response.status === 204 || response.status === 404) return null;
   const text = await response.text();
@@ -155,13 +159,22 @@ async function ensureDnsRecord(config, pullZone) {
   });
 }
 
-async function requestCertificate(host) {
+async function requestCertificate(config) {
   for (let attempt = 1; attempt <= 6; attempt += 1) {
     try {
-      await bunny(`/pullzone/loadFreeCertificate?hostname=${encodeURIComponent(host)}&useOnlyHttp01=false`);
-      return;
+      await bunny(`/pullzone/loadFreeCertificate?hostname=${encodeURIComponent(config.host)}&useOnlyHttp01=false`);
+      return 'ready';
     } catch (error) {
-      if (attempt === 6) throw error;
+      if (shouldDeferCertificate({
+        environment: config.name,
+        status: error.status,
+        detail: error.detail,
+      })) {
+        console.warn(`production: certificate deferred until ${config.host} points to Bunny`);
+        return 'deferred';
+      }
+      const transient = error.status === 429 || error.status >= 500;
+      if (!transient || attempt === 6) throw error;
       await new Promise((resolve) => setTimeout(resolve, 10_000));
     }
   }
@@ -188,6 +201,6 @@ for (const config of environments) {
   });
   await ensureHostname(pullZone.Id, config.host);
   await ensureDnsRecord(config, pullZone);
-  await requestCertificate(config.host);
+  await requestCertificate(config);
   console.log(`${config.name}: script ${script.Id}, pull zone ${pullZone.Id}, host ${config.host}`);
 }
