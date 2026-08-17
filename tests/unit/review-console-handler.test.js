@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { before, describe, it } from 'node:test';
 import { createReviewConsole } from '../../edge/review-console/handler.mjs';
+import { ActiveWineLockError } from '../../edge/review-console/review-state.mjs';
 
 before(() => { globalThis.crypto ??= webcrypto; });
 
@@ -17,13 +18,24 @@ function fixture({ dispatch = async () => {} } = {}) {
     ['_review/test/packages/pkg-1/images/c1.png', candidate],
   ]);
   const writes = [];
+  const activeWines = new Map();
   const storage = {
     get: async (path) => files.get(path),
     getBytes: async (path) => files.get(path),
     putImmutable: async (path, body) => { if (files.has(path)) throw new Error('exists'); files.set(path, body); writes.push(path); },
   };
+  const state = {
+    initialize: async () => {},
+    queue: async (action) => {
+      const key = `${action.environment}:${action.wineRevision}`;
+      const active = activeWines.get(key);
+      if (active) throw new ActiveWineLockError({ sku: action.sku, actionId: active });
+      activeWines.set(key, action.id);
+      return { id: action.id, status: 'queued' };
+    },
+  };
   const config = { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', password: 'correct horse', sessionSecret: 'session-secret' };
-  const handle = createReviewConsole({ config, storage, dispatch, now: () => new Date('2026-08-11T20:00:00Z'), uuid: (() => { let n = 0; return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`; })() });
+  const handle = createReviewConsole({ config, storage, state, dispatch, now: () => new Date('2026-08-11T20:00:00Z'), uuid: (() => { let n = 0; return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`; })() });
   return { handle, writes, files };
 }
 
@@ -89,7 +101,7 @@ describe('review console handler', () => {
     assert.equal(res.status, 200);
     const broken = createReviewConsole({
       config: { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', password: 'correct horse', sessionSecret: 'session-secret' },
-      storage: { get: async () => { throw new Error('storage offline'); } }, dispatch: async () => {}, now: () => new Date('2026-08-11T20:00:00Z'),
+      storage: { get: async () => { throw new Error('storage offline'); } }, state: { initialize: async () => {}, queue: async () => {} }, dispatch: async () => {}, now: () => new Date('2026-08-11T20:00:00Z'),
     });
     const token = await login(broken);
     const failed = await broken(new Request('https://review.finevines.biz/api/current', { headers: { cookie: token } }));
@@ -146,7 +158,7 @@ describe('review console handler', () => {
     assert.deepEqual(writes.map((p) => p.replace(/00000000-0000-4000-8000-\d{12}/, '<id>')), ['_review/test/actions/<id>.json', '_review/test/pending/<id>.json']);
   });
 
-  it('retains two simultaneous submissions as four independent immutable objects', async () => {
+  it('atomically accepts only one of two simultaneous same-wine submissions', async () => {
     const { handle, writes } = fixture();
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
@@ -154,10 +166,10 @@ describe('review console handler', () => {
     const action = { kind: 'image-select', reviewer: 'Barb Fultz', sku: '500740*', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: 'c1' };
     const request = () => new Request('https://review.finevines.biz/api/actions', { method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(action) });
     const responses = await Promise.all([handle(request()), handle(request())]);
-    assert.deepEqual(responses.map((response) => response.status), [202, 202]);
-    assert.equal(new Set(writes).size, 4);
+    assert.deepEqual(responses.map((response) => response.status).sort(), [202, 409]);
+    assert.equal(new Set(writes).size, 3);
     assert.equal(writes.filter((path) => path.includes('/actions/')).length, 2);
-    assert.equal(writes.filter((path) => path.includes('/pending/')).length, 2);
+    assert.equal(writes.filter((path) => path.includes('/pending/')).length, 1);
   });
 
   it('keeps the immutable pending action when immediate GitHub dispatch fails', async () => {

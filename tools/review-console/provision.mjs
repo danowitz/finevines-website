@@ -33,6 +33,9 @@ const accountKey = required('FINEVINES_BUNNY_API_KEY');
 const storageEndpoint = required('FINEVINES_REVIEW_STORAGE_ENDPOINT').replace(/\/$/, '');
 const storageZone = required('FINEVINES_REVIEW_STORAGE_ZONE');
 const storageKey = required('FINEVINES_REVIEW_STORAGE_KEY');
+const databaseUrl = required('FINEVINES_REVIEW_DATABASE_URL');
+const databaseToken = required('FINEVINES_REVIEW_DATABASE_TOKEN');
+const dispatchToken = required('FINEVINES_REVIEW_GITHUB_DISPATCH_TOKEN');
 
 async function bunny(path, { method = 'GET', body, acceptable = [] } = {}) {
   const response = await fetch(`${API}${path}`, {
@@ -174,11 +177,14 @@ for (const config of environments) {
     GITHUB_REPOSITORY: repository,
     BUNNY_STORAGE_ENDPOINT: storageEndpoint,
     BUNNY_STORAGE_ZONE: storageZone,
+    BUNNY_DATABASE_URL: databaseUrl,
   });
   await upsertSecrets(script, {
     REVIEW_PASSWORD: password,
     REVIEW_SESSION_SECRET: sessionSecret,
     BUNNY_STORAGE_KEY: storageKey,
+    BUNNY_DATABASE_AUTH_TOKEN: databaseToken,
+    GITHUB_DISPATCH_TOKEN: dispatchToken,
   });
   await ensureHostname(pullZone.Id, config.host);
   await ensureDnsRecord(config, pullZone);

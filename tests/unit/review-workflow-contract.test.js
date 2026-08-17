@@ -42,5 +42,7 @@ describe('hosted review workflow contract', () => {
     assert.match(provisioner, /CacheControlMaxAgeOverride: -1/);
     assert.match(provisioner, /CacheControlPublicMaxAgeOverride: -1/);
     assert.match(provisioner, /EnableRequestCoalescing: false/);
+    assert.match(provisioner, /BUNNY_DATABASE_URL/);
+    assert.match(provisioner, /BUNNY_DATABASE_AUTH_TOKEN/);
   });
 });

@@ -1,5 +1,6 @@
 import { csrfToken, issueSession, protectedHeaders, readCookie, validateAction, verifySession } from './core.mjs';
 import { inspectReviewerImage, ReviewerImageError } from './reviewer-image.mjs';
+import { ActiveWineLockError } from './review-state.mjs';
 import { APP_CSS, APP_JS, FAVICON, consolePage, loginPage } from './ui.mjs';
 
 const response = (body, init = {}) => new Response(body, { ...init, headers: protectedHeaders(init.headers) });
@@ -38,18 +39,22 @@ async function equalSecret(left, right) {
   for (let i = 0; i < aa.length; i++) mismatch |= aa[i] ^ bb[i];
   return mismatch === 0;
 }
-export function createReviewConsole({ config, storage, dispatch, now = () => new Date(), uuid = () => crypto.randomUUID() }) {
+export function createReviewConsole({ config, storage, state, dispatch, now = () => new Date(), uuid = () => crypto.randomUUID() }) {
+  if (!state?.initialize || !state?.queue) throw new Error('review console requires review state');
   const prefix = `_review/${config.environment}`;
   const cookieName = config.cookieName;
   const loginWindowMs = 10 * 60_000;
   const loginBlockMs = 15 * 60_000;
   let loginFailures = [];
   let loginBlockedUntil = 0;
+  const stateReady = state.initialize();
 
   async function queueAction(id, action, upload) {
     if (upload) await storage.putImmutable(`${prefix}/uploads/${action.imageStorageName}`, upload.bytes, action.imageMIME);
     const encoded = JSON.stringify(action);
     await storage.putImmutable(`${prefix}/actions/${id}.json`, encoded, 'application/json');
+    await stateReady;
+    await state.queue(action);
     await storage.putImmutable(`${prefix}/pending/${id}.json`, encoded, 'application/json');
     let dispatched = true;
     try { await dispatch(id, config.environment); } catch { dispatched = false; }
@@ -150,7 +155,7 @@ export function createReviewConsole({ config, storage, dispatch, now = () => new
         actionTarget(manifest, action);
         return json(await queueAction(id, action, inspected), 202);
       } catch (error) {
-        return json({ error: error.message }, error instanceof ReviewerImageError ? error.status : 400);
+        return json({ error: error.message }, error instanceof ReviewerImageError ? error.status : error instanceof ActiveWineLockError ? 409 : 400);
       }
     }
 
@@ -165,7 +170,7 @@ export function createReviewConsole({ config, storage, dispatch, now = () => new
         actionTarget(manifest, action);
         return json(await queueAction(id, action), 202);
       } catch (error) {
-        return json({ error: error.message }, 400);
+        return json({ error: error.message }, error instanceof ActiveWineLockError ? 409 : 400);
       }
     }
 
