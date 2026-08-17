@@ -166,6 +166,34 @@ func TestSyncCheckpointsFailureAndHonorsCooldown(t *testing.T) {
 	}
 }
 
+func TestSyncCheckpointsInvalidDraftWithoutFailingTheRun(t *testing.T) {
+	wines := []model.Wine{{Slug: "alpha-pinot-2022", Name: "Pinot", Producer: "Alpha Estate", Region: "Burgundy", Varietal: "Pinot Noir", Country: "France", StockQty: 12}}
+	path := filepath.Join(t.TempDir(), "collection-editorial.json")
+	if err := Save(path, Empty()); err != nil {
+		t.Fatal(err)
+	}
+	draft := usefulDraft()
+	draft.Paragraphs[0] = "Burgundy has a long history — and this draft must be deferred."
+	researcher := &recordingResearcher{draft: draft}
+
+	report, err := Sync(context.Background(), path, wines, researcher, Options{Limit: 1, Now: fixedNow})
+	if err != nil {
+		t.Fatalf("invalid research output should be checkpointed, not fail the run: %v", err)
+	}
+	if report.Attempted != 1 || report.Failed != 1 {
+		t.Fatalf("report = %+v", report)
+	}
+	loaded, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	failed := researcher.assignments[0].Candidate
+	entry, ok := loaded.raw(failed.Kind, failed.Slug)
+	if !ok || entry.Publishable() || entry.RetryAfter != "2026-09-14" || entry.LastError == "" {
+		t.Fatalf("invalid draft was not saved as a retry-only checkpoint: %+v", entry)
+	}
+}
+
 func usefulDraft() Draft {
 	return Draft{
 		Publishable: true, Changed: true, Eyebrow: "A closer look", Heading: "A useful heading",

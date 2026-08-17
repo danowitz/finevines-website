@@ -173,6 +173,10 @@ func Sync(ctx context.Context, path string, wines []model.Wine, researcher Resea
 			// Keep still-valid copy visible while a changed identity is retried.
 			if exists && existing.Publishable() {
 				entry = existing
+			} else {
+				// Validation can fail after draft fields have been copied into entry.
+				// Persist only retry metadata, never the rejected editorial itself.
+				entry = Entry{Kind: candidate.Kind, Slug: candidate.Slug, Name: candidate.Name, Mode: "generated", Fingerprint: candidate.Fingerprint}
 			}
 			entry.RetryFingerprint = candidate.Fingerprint
 			entry.RetryAfter = now.AddDate(0, 0, 30).Format("2006-01-02")
