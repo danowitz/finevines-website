@@ -3,6 +3,116 @@
   "entries": [
     {
       "kind": "region",
+      "slug": "abruzzo",
+      "name": "Abruzzo",
+      "mode": "generated",
+      "fingerprint": "326e704546100d499f4630816807bdd0d6fa6dc6ae1634d25a4dc39b3272a827",
+      "retryFingerprint": "326e704546100d499f4630816807bdd0d6fa6dc6ae1634d25a4dc39b3272a827",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/abruzzo\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "alentejo",
+      "name": "Alentejo",
+      "mode": "generated",
+      "fingerprint": "e399ad3be7c73adcf14193213be60200ef1935e6418c539f640f883512da09c3",
+      "retryFingerprint": "e399ad3be7c73adcf14193213be60200ef1935e6418c539f640f883512da09c3",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/alentejo\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "alsace",
+      "name": "Alsace",
+      "mode": "generated",
+      "fingerprint": "f2c4955a3882dda8dec19649a260ffd598e40bbe4f7ff90c610dc5f9ca122aa0",
+      "retryFingerprint": "f2c4955a3882dda8dec19649a260ffd598e40bbe4f7ff90c610dc5f9ca122aa0",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/alsace\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "arbois-jura",
+      "name": "Arbois Jura",
+      "mode": "generated",
+      "fingerprint": "a7808f1429db65adb3a30dbcd98c1b57def9cbd0808bed44514120bb9f021fb3",
+      "retryFingerprint": "a7808f1429db65adb3a30dbcd98c1b57def9cbd0808bed44514120bb9f021fb3",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/arbois-jura\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "bairrada",
+      "name": "Bairrada",
+      "mode": "generated",
+      "fingerprint": "adc14b0f1eadb93c4e3b83c3db30de453b0904ad342188bc6bad7e7e45d71f99",
+      "retryFingerprint": "adc14b0f1eadb93c4e3b83c3db30de453b0904ad342188bc6bad7e7e45d71f99",
+      "retryAfter": "2026-09-16",
+      "lastError": "research JSON must contain exactly two paragraphs"
+    },
+    {
+      "kind": "region",
+      "slug": "beaujolais",
+      "name": "Beaujolais",
+      "mode": "generated",
+      "fingerprint": "94cbaa80f30b34d454a8c8d161a3f81143ac7c33969fd8b2ba55451af430bdb5",
+      "retryFingerprint": "94cbaa80f30b34d454a8c8d161a3f81143ac7c33969fd8b2ba55451af430bdb5",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/beaujolais\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "bergerac",
+      "name": "Bergerac",
+      "mode": "generated",
+      "fingerprint": "9c7415099fff58176f596657f4811909d42b219ed810dc90027d4b9cfb8c2fbf",
+      "retryFingerprint": "9c7415099fff58176f596657f4811909d42b219ed810dc90027d4b9cfb8c2fbf",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/bergerac\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "bierzo",
+      "name": "Bierzo",
+      "mode": "generated",
+      "fingerprint": "c6ed873f3b6c394cb36bb649abd7ad811d77399a4df8c481938eaeb3b49facf2",
+      "retryFingerprint": "c6ed873f3b6c394cb36bb649abd7ad811d77399a4df8c481938eaeb3b49facf2",
+      "retryAfter": "2026-09-16",
+      "lastError": "invalid character '[' looking for beginning of object key string"
+    },
+    {
+      "kind": "region",
+      "slug": "bordeaux",
+      "name": "Bordeaux",
+      "mode": "generated",
+      "fingerprint": "aa3d70e4cabdb82c3614d055912fdb01d51310df4f3892eaa45232c74f96efee",
+      "retryFingerprint": "aa3d70e4cabdb82c3614d055912fdb01d51310df4f3892eaa45232c74f96efee",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/bordeaux\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "bordeaux-left-bank",
+      "name": "Bordeaux Left Bank",
+      "mode": "generated",
+      "fingerprint": "aeb319ed9b62f8d0027512238caef0e7b37794d522a5e4b5bfb97a7461bdc217",
+      "retryFingerprint": "aeb319ed9b62f8d0027512238caef0e7b37794d522a5e4b5bfb97a7461bdc217",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/bordeaux-left-bank\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "burgenland",
+      "name": "Burgenland",
+      "mode": "generated",
+      "fingerprint": "692e49373464d5cb843d30d72b942e43628801144aacabe27c08270d6d5721dc",
+      "retryFingerprint": "692e49373464d5cb843d30d72b942e43628801144aacabe27c08270d6d5721dc",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/burgenland\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
       "slug": "burgundy",
       "name": "Burgundy",
       "mode": "curated",
@@ -31,9 +141,18 @@
         }
       ],
       "related": [
-        {"slug": "chablis", "label": "Chablis"},
-        {"slug": "maconnais", "label": "Mâconnais"},
-        {"slug": "cote-chalonnaise", "label": "Côte Chalonnaise"}
+        {
+          "slug": "chablis",
+          "label": "Chablis"
+        },
+        {
+          "slug": "maconnais",
+          "label": "Mâconnais"
+        },
+        {
+          "slug": "cote-chalonnaise",
+          "label": "Côte Chalonnaise"
+        }
       ],
       "sources": [
         {
@@ -45,6 +164,418 @@
           "url": "https://www.bourgogne-wines.com/"
         }
       ]
+    },
+    {
+      "kind": "region",
+      "slug": "calatayud",
+      "name": "Calatayud",
+      "mode": "generated",
+      "fingerprint": "c690bc80a6a1806b4dbaa0bf91b443560db83643125088bf2b63bfc8b800f664",
+      "retryFingerprint": "c690bc80a6a1806b4dbaa0bf91b443560db83643125088bf2b63bfc8b800f664",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/calatayud\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "california",
+      "name": "California",
+      "mode": "generated",
+      "fingerprint": "e2616cbd387c6ae01f3a27449f2e8ecce1b4533dd142de694e24bd9e8198fcf9",
+      "retryFingerprint": "e2616cbd387c6ae01f3a27449f2e8ecce1b4533dd142de694e24bd9e8198fcf9",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/california\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "california-napa-valley-sonoma-coast",
+      "name": "California Napa Valley/sonoma Coast",
+      "mode": "generated",
+      "fingerprint": "be9b9060c7a6ebaa0736639df3d36e76d2c7070be4b810f920fa6f3e06fa5169",
+      "retryFingerprint": "be9b9060c7a6ebaa0736639df3d36e76d2c7070be4b810f920fa6f3e06fa5169",
+      "retryAfter": "2026-09-16",
+      "lastError": "research JSON has 212 words; expected 120 to 190"
+    },
+    {
+      "kind": "region",
+      "slug": "california-sonoma-county",
+      "name": "California - Sonoma County",
+      "mode": "generated",
+      "fingerprint": "d1c22ab346d8d2d499a156efffd200c753b21a7d2e3c26f923ca341f045acc7a",
+      "retryFingerprint": "d1c22ab346d8d2d499a156efffd200c753b21a7d2e3c26f923ca341f045acc7a",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/california-sonoma-county\" source label contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "campo-de-borja",
+      "name": "Campo de Borja",
+      "mode": "generated",
+      "fingerprint": "66128a2c1bd3a3db9d0369ebcd1bd8e09aac038dfc6cfe67d64a0d8e82d3957a",
+      "retryFingerprint": "66128a2c1bd3a3db9d0369ebcd1bd8e09aac038dfc6cfe67d64a0d8e82d3957a",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/campo-de-borja\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "central-otago",
+      "name": "Central Otago",
+      "mode": "generated",
+      "fingerprint": "c0c9f16ab294f2cbfb6a3c4e5450b7b306e971277d75d91d8d915d180a431736",
+      "retryFingerprint": "c0c9f16ab294f2cbfb6a3c4e5450b7b306e971277d75d91d8d915d180a431736",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/central-otago\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "chablis",
+      "name": "Chablis",
+      "mode": "generated",
+      "fingerprint": "a7a581b1514559c5ccc8c4f5c77bb218d0f72587cb001da03d367dce84ce9eec",
+      "retryFingerprint": "a7a581b1514559c5ccc8c4f5c77bb218d0f72587cb001da03d367dce84ce9eec",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/chablis\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "champagne",
+      "name": "Champagne",
+      "mode": "generated",
+      "fingerprint": "d932ba8785a5f1ad782d3693d7bd740bc03193102aafea4332d0f5694960177e",
+      "retryFingerprint": "d932ba8785a5f1ad782d3693d7bd740bc03193102aafea4332d0f5694960177e",
+      "retryAfter": "2026-09-16",
+      "lastError": "research JSON has 204 words; expected 120 to 190"
+    },
+    {
+      "kind": "region",
+      "slug": "cote-de-beaune",
+      "name": "Côte de Beaune",
+      "mode": "generated",
+      "fingerprint": "12ee0e7ca3efa55a487c3b86950a05c50639fd4dc099a27c5c13e3cfeb775db1",
+      "retryFingerprint": "12ee0e7ca3efa55a487c3b86950a05c50639fd4dc099a27c5c13e3cfeb775db1",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/cote-de-beaune\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "cote-de-nuits",
+      "name": "Côte de Nuits",
+      "mode": "generated",
+      "fingerprint": "5d7dd556750f5cbe4a966fe57c41fdb5d3450718a9e05faf5374147e108f4923",
+      "retryFingerprint": "5d7dd556750f5cbe4a966fe57c41fdb5d3450718a9e05faf5374147e108f4923",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/cote-de-nuits\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "douro",
+      "name": "Douro",
+      "mode": "generated",
+      "fingerprint": "245507d26079843a813cc51bb7db5b1bc760430bcbfbb6aaaf7b2c910df1258a",
+      "retryFingerprint": "245507d26079843a813cc51bb7db5b1bc760430bcbfbb6aaaf7b2c910df1258a",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/douro\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "galilee",
+      "name": "Galilee",
+      "mode": "generated",
+      "fingerprint": "cbb469df7ea922db590d85416ab1b382ab60c56a4ad4c658a0777782ca8ad0d1",
+      "retryFingerprint": "cbb469df7ea922db590d85416ab1b382ab60c56a4ad4c658a0777782ca8ad0d1",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/galilee\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "golan-heights",
+      "name": "Golan Heights",
+      "mode": "generated",
+      "fingerprint": "6116edaed172e2baca8c0072289914acc23f992f8b4c02ca7f125add0880d1a2",
+      "retryFingerprint": "6116edaed172e2baca8c0072289914acc23f992f8b4c02ca7f125add0880d1a2",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/golan-heights\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "jura-arbois",
+      "name": "Jura, Arbois",
+      "mode": "generated",
+      "fingerprint": "bf693823a71317d551538fb06091bac7efde63e7f5ab6a8bc8cb746ee3678c05",
+      "retryFingerprint": "bf693823a71317d551538fb06091bac7efde63e7f5ab6a8bc8cb746ee3678c05",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/jura-arbois\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "la-mancha",
+      "name": "La Mancha",
+      "mode": "generated",
+      "fingerprint": "63e1f737f7ac5375918a8123ef7da822c1d0c237186aaffcef5b7d64e3aa1a63",
+      "retryFingerprint": "63e1f737f7ac5375918a8123ef7da822c1d0c237186aaffcef5b7d64e3aa1a63",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/la-mancha\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "loire-valley",
+      "name": "Loire Valley",
+      "mode": "generated",
+      "fingerprint": "5a5ac1c49fe10ce54fa2c4001208d0685860ed130aaf833a4285837a2496c373",
+      "retryFingerprint": "5a5ac1c49fe10ce54fa2c4001208d0685860ed130aaf833a4285837a2496c373",
+      "retryAfter": "2026-09-16",
+      "lastError": "research JSON has 199 words; expected 120 to 190"
+    },
+    {
+      "kind": "region",
+      "slug": "maconnais",
+      "name": "Mâconnais",
+      "mode": "generated",
+      "fingerprint": "37e7a9875293eda3224102e926ac61848a18b6097f60e4e06e50146c5f5edd1e",
+      "retryFingerprint": "37e7a9875293eda3224102e926ac61848a18b6097f60e4e06e50146c5f5edd1e",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/maconnais\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "marlborough",
+      "name": "Marlborough",
+      "mode": "generated",
+      "fingerprint": "c8bf8395bd00bb8fe3c9096235216fcb710d6535ab94c526a394ecdc94332697",
+      "retryFingerprint": "c8bf8395bd00bb8fe3c9096235216fcb710d6535ab94c526a394ecdc94332697",
+      "retryAfter": "2026-09-16",
+      "lastError": "research JSON must contain exactly two paragraphs"
+    },
+    {
+      "kind": "region",
+      "slug": "mendoza",
+      "name": "Mendoza",
+      "mode": "generated",
+      "fingerprint": "c6404a46bcddaf1bdb52617dff3a19f81e5a897ac78c69860fee05e81b763f49",
+      "retryFingerprint": "c6404a46bcddaf1bdb52617dff3a19f81e5a897ac78c69860fee05e81b763f49",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/mendoza\" source label contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "mezcal",
+      "name": "Mezcal",
+      "mode": "generated",
+      "fingerprint": "37e11fb6d65a5d3ff797ca91c6b6194d60a50947a14477fc486cb97f12930644",
+      "retryFingerprint": "37e11fb6d65a5d3ff797ca91c6b6194d60a50947a14477fc486cb97f12930644",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/mezcal\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "minho",
+      "name": "Minho",
+      "mode": "generated",
+      "fingerprint": "8758459c859a814c9bbe9abfdacab8fac24b7e81dec06cd4e8d618a1abf05626",
+      "retryFingerprint": "8758459c859a814c9bbe9abfdacab8fac24b7e81dec06cd4e8d618a1abf05626",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/minho\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "napa-valley",
+      "name": "Napa Valley",
+      "mode": "generated",
+      "fingerprint": "c0623a2dcfb064cc70c1c2d6145c8d9d5d1dfa444d3062adb9f34c3d9c41f991",
+      "retryFingerprint": "c0623a2dcfb064cc70c1c2d6145c8d9d5d1dfa444d3062adb9f34c3d9c41f991",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/napa-valley\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "northern-rhone",
+      "name": "Northern Rhône",
+      "mode": "generated",
+      "fingerprint": "47bf8d5367dd6f069bed0542f5577566547fb2ae97f36c87d2dd76018a755a82",
+      "retryFingerprint": "47bf8d5367dd6f069bed0542f5577566547fb2ae97f36c87d2dd76018a755a82",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/northern-rhone\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "oregon",
+      "name": "Oregon",
+      "mode": "generated",
+      "fingerprint": "20f0acbb24ae354092e54a8dcb8ac990dc7b4cf33b8b1cab82b332384c8e1fcf",
+      "retryFingerprint": "20f0acbb24ae354092e54a8dcb8ac990dc7b4cf33b8b1cab82b332384c8e1fcf",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/oregon\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "penedes",
+      "name": "Penedes",
+      "mode": "generated",
+      "fingerprint": "2a9a6d78d7870c3c016e9b282034b99293e8e0f37cd3f762a530d9bd615df7ab",
+      "retryFingerprint": "2a9a6d78d7870c3c016e9b282034b99293e8e0f37cd3f762a530d9bd615df7ab",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/penedes\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "piedmont",
+      "name": "Piedmont",
+      "mode": "generated",
+      "fingerprint": "5914c3789eb60411cb652b58c2a29b7f5cbf5ed3b95e75a404e93479fd0c768e",
+      "retryFingerprint": "5914c3789eb60411cb652b58c2a29b7f5cbf5ed3b95e75a404e93479fd0c768e",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/piedmont\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "priorat",
+      "name": "Priorat",
+      "mode": "generated",
+      "fingerprint": "53ad9812006b4340c390a8c80df58ee9243e3e59cc1284491768699f9ca548c1",
+      "retryFingerprint": "53ad9812006b4340c390a8c80df58ee9243e3e59cc1284491768699f9ca548c1",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/priorat\" source label contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "pritchard-hill",
+      "name": "Pritchard Hill",
+      "mode": "generated",
+      "fingerprint": "aa3932a9f0d6b0778201f9810ec2ddbfc319d780964af0b74f3e5a0b7da6eef3",
+      "retryFingerprint": "aa3932a9f0d6b0778201f9810ec2ddbfc319d780964af0b74f3e5a0b7da6eef3",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/pritchard-hill\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "rheingau",
+      "name": "Rheingau",
+      "mode": "generated",
+      "fingerprint": "413941c281200c30eaf7838f607bcd1a214cc08af1d61720860289c882f6ef1c",
+      "retryFingerprint": "413941c281200c30eaf7838f607bcd1a214cc08af1d61720860289c882f6ef1c",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/rheingau\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "rhone-valley",
+      "name": "Rhône Valley",
+      "mode": "generated",
+      "fingerprint": "f504807e8f719376a5ad181a90cddf6a103e53c3318cd3896236e9a6fd21eecc",
+      "retryFingerprint": "f504807e8f719376a5ad181a90cddf6a103e53c3318cd3896236e9a6fd21eecc",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/rhone-valley\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "rias-baixas",
+      "name": "Rias Baixas",
+      "mode": "generated",
+      "fingerprint": "a63c1f468158fe230f5553859ef778f7ba1a72c3bdaed71c25d14efd608bcd59",
+      "eyebrow": "Rías Baixas, Spain",
+      "heading": "Albariño from Rías Baixas",
+      "paragraphs": [
+        "Rías Baixas is a Spanish Denominación de Origen located in Galicia’s northwest, primarily spanning the province of Pontevedra and parts of A Coruña. It is managed by the Conselho Regulador, a public legal entity supervised by the Xunta de Galicia, that enforces strict standards for vineyard registration, production area, and winemaking under its regulatory guidelines ([mapa.gob.es](https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/detalle/vcprd/dop_rias-baixas?utm_source=openai)). The region is divided into several subzones including Val do Salnés, Condado do Tea, O Rosal, Ribeira do Ulla, and Soutomaior, each with distinct microclimates and soils shaping the wines that bear the Rías Baixas name ([turismoriasbaixas.com](https://www.turismoriasbaixas.com/en/descubre/rias-baixas-top-their-game/wine-tourism/gold-producing-strains?utm_source=openai)).",
+        "Albariño is the signature white grape of Rías Baixas, accounting for over 90 percent of plantings in the region ([en.wikipedia.org](https://en.wikipedia.org/wiki/R%C3%ADas_Baixas_DO?utm_source=openai)). Its expression here reflects the maritime Atlantic climate, yielding wines with vibrant acidity, floral and stone‑fruit aromas, and a sense of drive and freshness ([museovinogalicia.xunta.gal](https://museovinogalicia.xunta.gal/es/el-vino/uvas-y-vinos-de-galicia/albarino?utm_source=openai)). Albariño reaches its fullest sense of place in Rías Baixas, where rainfall, moderating temperatures, and mineral soils combine to highlight the grape’s clarity and regional character ([riasbaixaswines.com](https://www.riasbaixaswines.com/?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Rías Baixas regulatory authority (Xunta de Galicia)",
+          "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad‑diferenciada/dop‑igp/detalle/vcprd/dop_rias‑baixas"
+        },
+        {
+          "label": "Mapa de subzonas y variedad Albariño",
+          "url": "https://www.turismoriasbaixas.com/en/descubre/rias‑baixas‑top‑their‑game/wine‑tourism/gold‑producing‑strains"
+        },
+        {
+          "label": "Albariño grape in Rías Baixas",
+          "url": "https://www.museovinogalicia.xunta.gal/es/el‑vino/uvas‑y‑vinos‑de‑galicia/albarino"
+        },
+        {
+          "label": "DO overview and grape proportions",
+          "url": "https://en.wikipedia.org/wiki/R%C3%ADas_Baixas_DO"
+        }
+      ],
+      "reviewedAt": "2026-08-17"
+    },
+    {
+      "kind": "region",
+      "slug": "ribera-del-duero",
+      "name": "Ribera Del Duero",
+      "mode": "generated",
+      "fingerprint": "606e467f9552d36ca8c24848c69335762ebdc80c0b194537e7eb9d93795e36fa",
+      "retryFingerprint": "606e467f9552d36ca8c24848c69335762ebdc80c0b194537e7eb9d93795e36fa",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/ribera-del-duero\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "rioja",
+      "name": "Rioja",
+      "mode": "generated",
+      "fingerprint": "5964259152e5ad2d5dfa58ae2d2bef885658242c14658665a94c8ec873ca06c3",
+      "retryFingerprint": "5964259152e5ad2d5dfa58ae2d2bef885658242c14658665a94c8ec873ca06c3",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/rioja\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "southern-rhone",
+      "name": "Southern Rhône",
+      "mode": "generated",
+      "fingerprint": "6b779c1b5717cf77951bb0c02c1b688518005e8f95f03750c8aec63e5223f4d5",
+      "retryFingerprint": "6b779c1b5717cf77951bb0c02c1b688518005e8f95f03750c8aec63e5223f4d5",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/southern-rhone\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "toro",
+      "name": "Toro",
+      "mode": "generated",
+      "fingerprint": "be16b66e629db874de7ae11c2fe77a312eaa35971dd8ff9e285ec899b61e42b6",
+      "retryFingerprint": "be16b66e629db874de7ae11c2fe77a312eaa35971dd8ff9e285ec899b61e42b6",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/toro\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "tuscany",
+      "name": "Tuscany",
+      "mode": "generated",
+      "fingerprint": "9fe54e4c2d5f86d91ad7562c7a751a2583b80fc7f5ab266aee7453177c7cd495",
+      "retryFingerprint": "9fe54e4c2d5f86d91ad7562c7a751a2583b80fc7f5ab266aee7453177c7cd495",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/tuscany\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "valencia",
+      "name": "Valencia",
+      "mode": "generated",
+      "fingerprint": "204aba146794914be255e2094d9ca0b71037dd67334334dda5fefb966bc35fba",
+      "retryFingerprint": "204aba146794914be255e2094d9ca0b71037dd67334334dda5fefb966bc35fba",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/valencia\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "veneto",
+      "name": "Veneto",
+      "mode": "generated",
+      "fingerprint": "6a68ff94c9659a78cd6ef97d30ae94dac9d98f8c9518f0fde7b9181109302ce9",
+      "retryFingerprint": "6a68ff94c9659a78cd6ef97d30ae94dac9d98f8c9518f0fde7b9181109302ce9",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/veneto\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "region",
+      "slug": "wachau",
+      "name": "Wachau",
+      "mode": "generated",
+      "fingerprint": "4d87dfbccb3c1aa53070360c02e1b37fd7b08a19c4e0340297cd0fefba6f2482",
+      "retryFingerprint": "4d87dfbccb3c1aa53070360c02e1b37fd7b08a19c4e0340297cd0fefba6f2482",
+      "retryAfter": "2026-09-16",
+      "lastError": "collection editorial \"region/wachau\" contains a prohibited dash or invalid UTF-8"
     }
   ]
 }
