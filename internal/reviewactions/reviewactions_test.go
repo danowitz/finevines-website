@@ -68,6 +68,12 @@ func (invalidImageNormalizer) Normalize(context.Context, string, string) error {
 	return &InvalidImageError{Err: errors.New("decode failed")}
 }
 
+type fetcherFunc func(context.Context, string) ([]byte, error)
+
+func (fetcher fetcherFunc) Fetch(ctx context.Context, target string) ([]byte, error) {
+	return fetcher(ctx, target)
+}
+
 func fixture(t *testing.T) (*memoryStore, []model.Wine, string) {
 	t.Helper()
 	wines := []model.Wine{{ID: "wine-1", SKU: "500740*", Slug: "producer-wine-2022", Producer: "Producer", Name: "Wine", Vintage: "2022", ImagePath: "assets/img/wines/producer-wine-2022.svg", ImageSource: model.ImageGeneratedLabel, SourceHash: "source"}}
@@ -109,6 +115,10 @@ func TestPrepareAppliesExactCandidateButKeepsPendingUntilFinalize(t *testing.T) 
 	}
 	if result.Wines[0].ImageReviewActionID != id {
 		t.Fatalf("image review action id = %q", result.Wines[0].ImageReviewActionID)
+	}
+	if result.Decisions[0].DeployedImagePath != "assets/img/wines/producer-wine-2022.jpg" ||
+		result.Decisions[0].DeployedImageSHA256 == "" {
+		t.Fatalf("deployment evidence = %#v", result.Decisions[0])
 	}
 	if _, err := os.Stat(filepath.Join(filepath.Dir(result.Wines[0].ImagePath), filepath.Base(result.Wines[0].ImagePath))); err != nil {
 		t.Fatalf("normalized image missing: %v", err)
@@ -284,8 +294,12 @@ func TestPrepareRecordsNoImageAndPreventsRepeatedPresentation(t *testing.T) {
 
 func TestFinalizeUploadsReceiptBeforeDeletingPending(t *testing.T) {
 	store, _, id := fixture(t)
-	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Reviewer: "Barbara", SKU: "AB-1", Kind: "image-select", PackageID: "pkg-1", CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", PreparedAt: "2026-08-15T02:00:00Z"}
-	err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "123", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC)})
+	deployed := []byte("normalized-deployed-image")
+	sum := sha256.Sum256(deployed)
+	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Reviewer: "barb.fultz@finevines.com", SKU: "AB-1", Kind: "image-select", PackageID: "pkg-1", CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", PreparedAt: "2026-08-15T02:00:00Z", DeployedImagePath: "assets/img/wines/producer-wine-2022.jpg", DeployedImageSHA256: hex.EncodeToString(sum[:])}
+	fetched := ""
+	fetcher := fetcherFunc(func(_ context.Context, target string) ([]byte, error) { fetched = target; return deployed, nil })
+	err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "123", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC), Fetcher: fetcher})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -298,24 +312,51 @@ func TestFinalizeUploadsReceiptBeforeDeletingPending(t *testing.T) {
 	if err := json.Unmarshal(store.files["_review/test/receipts/"+id+".json"], &receipt); err != nil {
 		t.Fatal(err)
 	}
-	if receipt.Status != "deployed" {
+	if receipt.Status != "completed" {
 		t.Fatalf("receipt status = %q", receipt.Status)
+	}
+	if receipt.VerifiedImageURL != fetched || !strings.Contains(fetched, "review-action="+id) {
+		t.Fatalf("verified image URL = %q, fetched %q", receipt.VerifiedImageURL, fetched)
 	}
 }
 
-func TestFinalizeCanRecordHonestValidationOnlyReceipt(t *testing.T) {
+func TestFinalizeHashMismatchPreservesPendingWork(t *testing.T) {
 	store, _, id := fixture(t)
-	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Reviewer: "Barbara", SKU: "AB-1", Kind: "image-select", PackageID: "pkg-1", CandidateID: "candidate-1", SubmittedAt: "2026-08-15T01:00:00Z", PreparedAt: "2026-08-15T02:00:00Z"}
-	err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, PreparedStatus: "validated", CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "validation-only", RunID: "123", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC)})
-	if err != nil {
+	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Kind: "image-select", DeployedImagePath: "assets/img/wines/producer-wine-2022.jpg", DeployedImageSHA256: strings.Repeat("a", 64)}
+	err := Finalize(context.Background(), FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "123", Now: time.Now(), Fetcher: fetcherFunc(func(context.Context, string) ([]byte, error) { return []byte("wrong"), nil })})
+	if err == nil || !strings.Contains(err.Error(), "hash mismatch") {
+		t.Fatalf("Finalize error = %v", err)
+	}
+	if _, ok := store.files["_review/test/pending/"+id+".json"]; !ok {
+		t.Fatal("hash mismatch deleted pending work")
+	}
+	if len(store.events) != 0 {
+		t.Fatalf("hash mismatch wrote receipt events: %#v", store.events)
+	}
+}
+
+func TestFinalizeRetryAcceptsTheExistingCompletionProof(t *testing.T) {
+	store, _, id := fixture(t)
+	deployed := []byte("normalized-deployed-image")
+	sum := sha256.Sum256(deployed)
+	decision := Decision{SchemaVersion: 1, ID: id, Environment: "test", Status: "prepared", Kind: "image-select", DeployedImagePath: "assets/img/wines/producer-wine-2022.jpg", DeployedImageSHA256: hex.EncodeToString(sum[:])}
+	input := FinalizeInput{Store: store, Environment: "test", Decisions: []Decision{decision}, CatalogCommit: strings.Repeat("a", 40), DeploymentTarget: "https://finevines.biz", RunID: "first", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC), Fetcher: fetcherFunc(func(context.Context, string) ([]byte, error) { return deployed, nil })}
+	if err := Finalize(context.Background(), input); err != nil {
 		t.Fatal(err)
 	}
-	var receipt Receipt
-	if err := json.Unmarshal(store.files["_review/test/receipts/"+id+".json"], &receipt); err != nil {
-		t.Fatal(err)
+	input.RunID = "retry"
+	input.Now = input.Now.Add(time.Hour)
+	if err := Finalize(context.Background(), input); err != nil {
+		t.Fatalf("idempotent retry failed: %v", err)
 	}
-	if receipt.Status != "validated" {
-		t.Fatalf("receipt status = %q", receipt.Status)
+	uploads := 0
+	for _, event := range store.events {
+		if strings.HasPrefix(event, "upload:_review/test/receipts/") {
+			uploads++
+		}
+	}
+	if uploads != 1 {
+		t.Fatalf("receipt uploads = %d, events %#v", uploads, store.events)
 	}
 }
 

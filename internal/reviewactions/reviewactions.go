@@ -28,9 +28,10 @@ import (
 const schemaVersion = 1
 
 var (
-	uuidPattern   = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
-	hashPattern   = regexp.MustCompile(`^[a-f0-9]{64}$`)
-	commitPattern = regexp.MustCompile(`^[a-f0-9]{7,64}$`)
+	uuidPattern         = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
+	hashPattern         = regexp.MustCompile(`^[a-f0-9]{64}$`)
+	commitPattern       = regexp.MustCompile(`^[a-f0-9]{7,64}$`)
+	deployedPathPattern = regexp.MustCompile(`^assets/img/wines/[A-Za-z0-9._-]+\.jpg$`)
 )
 
 type Store interface {
@@ -42,6 +43,10 @@ type Store interface {
 
 type Normalizer interface {
 	Normalize(context.Context, string, string) error
+}
+
+type DeploymentFetcher interface {
+	Fetch(context.Context, string) ([]byte, error)
 }
 
 // InvalidImageError marks bytes that the image decoder cannot read. Adapters
@@ -114,19 +119,21 @@ type Manifest struct {
 }
 
 type Decision struct {
-	SchemaVersion int    `json:"schemaVersion"`
-	ID            string `json:"id"`
-	Environment   string `json:"environment"`
-	Status        string `json:"status"`
-	Reason        string `json:"reason,omitempty"`
-	Reviewer      string `json:"reviewer"`
-	SKU           string `json:"sku"`
-	Kind          string `json:"kind"`
-	PackageID     string `json:"packageId"`
-	CandidateID   string `json:"candidateId,omitempty"`
-	ImageSHA256   string `json:"imageSha256,omitempty"`
-	SubmittedAt   string `json:"submittedAt"`
-	PreparedAt    string `json:"preparedAt"`
+	SchemaVersion       int    `json:"schemaVersion"`
+	ID                  string `json:"id"`
+	Environment         string `json:"environment"`
+	Status              string `json:"status"`
+	Reason              string `json:"reason,omitempty"`
+	Reviewer            string `json:"reviewer"`
+	SKU                 string `json:"sku"`
+	Kind                string `json:"kind"`
+	PackageID           string `json:"packageId"`
+	CandidateID         string `json:"candidateId,omitempty"`
+	ImageSHA256         string `json:"imageSha256,omitempty"`
+	DeployedImagePath   string `json:"deployedImagePath,omitempty"`
+	DeployedImageSHA256 string `json:"deployedImageSha256,omitempty"`
+	SubmittedAt         string `json:"submittedAt"`
+	PreparedAt          string `json:"preparedAt"`
 }
 
 type Receipt struct {
@@ -135,6 +142,7 @@ type Receipt struct {
 	DeploymentTarget string `json:"deploymentTarget"`
 	RunID            string `json:"runId"`
 	CompletedAt      string `json:"completedAt"`
+	VerifiedImageURL string `json:"verifiedImageUrl,omitempty"`
 }
 
 type PrepareInput struct {
@@ -158,11 +166,11 @@ type FinalizeInput struct {
 	Store            Store
 	Environment      string
 	Decisions        []Decision
-	PreparedStatus   string
 	CatalogCommit    string
 	DeploymentTarget string
 	RunID            string
 	Now              time.Time
+	Fetcher          DeploymentFetcher
 }
 
 func revision(w model.Wine) string {
@@ -430,7 +438,15 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			}
 			return result, err
 		}
+		deployedPath := path.Join("assets/img/wines", result.Wines[index].Slug+".jpg")
+		deployedData, err := os.ReadFile(filepath.Join(input.ImageDir, result.Wines[index].Slug+".jpg"))
+		if err != nil {
+			return result, fmt.Errorf("read normalized image: %w", err)
+		}
+		deployedSum := sha256.Sum256(deployedData)
 		decision.Status, decision.Reason, decision.ImageSHA256 = "prepared", "selected image prepared for deployment", candidate.SHA256
+		decision.DeployedImagePath = deployedPath
+		decision.DeployedImageSHA256 = hex.EncodeToString(deployedSum[:])
 		result.Decisions = append(result.Decisions, decision)
 	}
 	return result, nil
@@ -515,21 +531,34 @@ func Finalize(ctx context.Context, input FinalizeInput) error {
 	if input.Environment != "test" && input.Environment != "production" {
 		return fmt.Errorf("reviewactions: invalid environment")
 	}
-	if input.PreparedStatus == "" {
-		input.PreparedStatus = "deployed"
-	}
-	if input.PreparedStatus != "deployed" && input.PreparedStatus != "validated" {
-		return fmt.Errorf("reviewactions: invalid prepared-action receipt status")
-	}
 	if !commitPattern.MatchString(input.CatalogCommit) || input.DeploymentTarget == "" || input.RunID == "" {
 		return fmt.Errorf("reviewactions: finalization evidence is incomplete")
 	}
 	prefix := path.Join("_review", input.Environment)
+	verifiedURLs := make(map[string]string)
+	for _, decision := range input.Decisions {
+		if decision.Status != "prepared" || decision.Kind == "no-image" {
+			continue
+		}
+		if input.Fetcher == nil || !deployedPathPattern.MatchString(decision.DeployedImagePath) || !hashPattern.MatchString(decision.DeployedImageSHA256) {
+			return fmt.Errorf("reviewactions: action %s has incomplete deployed-image evidence", decision.ID)
+		}
+		imageURL := strings.TrimRight(input.DeploymentTarget, "/") + "/" + strings.TrimLeft(decision.DeployedImagePath, "/") + "?review-action=" + decision.ID
+		deployed, err := input.Fetcher.Fetch(ctx, imageURL)
+		if err != nil {
+			return fmt.Errorf("reviewactions: fetch deployed image for %s: %w", decision.ID, err)
+		}
+		sum := sha256.Sum256(deployed)
+		if hex.EncodeToString(sum[:]) != decision.DeployedImageSHA256 {
+			return fmt.Errorf("reviewactions: deployed image hash mismatch for %s", decision.ID)
+		}
+		verifiedURLs[decision.ID] = imageURL
+	}
 	for _, decision := range input.Decisions {
 		if decision.Status == "prepared" {
-			decision.Status = input.PreparedStatus
+			decision.Status = "completed"
 		}
-		receipt := Receipt{Decision: decision, CatalogCommit: input.CatalogCommit, DeploymentTarget: input.DeploymentTarget, RunID: input.RunID, CompletedAt: input.Now.UTC().Format(time.RFC3339)}
+		receipt := Receipt{Decision: decision, CatalogCommit: input.CatalogCommit, DeploymentTarget: input.DeploymentTarget, RunID: input.RunID, CompletedAt: input.Now.UTC().Format(time.RFC3339), VerifiedImageURL: verifiedURLs[decision.ID]}
 		data, err := json.MarshalIndent(receipt, "", "  ")
 		if err != nil {
 			return err
@@ -540,10 +569,14 @@ func Finalize(ctx context.Context, input FinalizeInput) error {
 		if err != nil {
 			return err
 		}
-		if len(existing) > 0 && !bytes.Equal(existing, data) {
-			return fmt.Errorf("reviewactions: receipt %s already exists with different bytes", decision.ID)
-		}
-		if len(existing) == 0 {
+		if len(existing) > 0 {
+			var prior Receipt
+			if err := strictJSON(existing, &prior); err != nil || prior.Decision != receipt.Decision ||
+				prior.CatalogCommit != receipt.CatalogCommit || prior.DeploymentTarget != receipt.DeploymentTarget ||
+				prior.VerifiedImageURL != receipt.VerifiedImageURL {
+				return fmt.Errorf("reviewactions: receipt %s already exists with different evidence", decision.ID)
+			}
+		} else {
 			if err := input.Store.Upload(ctx, receiptPath, data); err != nil {
 				return err
 			}

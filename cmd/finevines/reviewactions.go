@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -28,6 +29,33 @@ var imgnormCandidates = []string{"imgnorm", "imgnorm.exe"}
 var reviewActionIDPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
 
 type execNormalizer struct{ bin string }
+
+type deploymentFetcher struct{ client *http.Client }
+
+func (fetcher deploymentFetcher) Fetch(ctx context.Context, target string) ([]byte, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Set("Cache-Control", "no-cache")
+	response, err := fetcher.client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("GET %s returned %s", target, response.Status)
+	}
+	const maximum = 20 * 1024 * 1024
+	data, err := io.ReadAll(io.LimitReader(response.Body, maximum+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(data) > maximum {
+		return nil, fmt.Errorf("GET %s exceeded %d bytes", target, maximum)
+	}
+	return data, nil
+}
 
 func (normalizer execNormalizer) Normalize(ctx context.Context, source, destination string) error {
 	output, err := exec.CommandContext(ctx, normalizer.bin, "-in", source, "-out", destination).CombinedOutput()
@@ -161,7 +189,6 @@ func runReviewFinalize(cfg config.Config, args []string) error {
 	decisionsPath := fs.String("decisions", ".run/review-decisions.json", "run-local prepared decision log")
 	target := fs.String("target", cfg.SiteBaseURL, "deployed site URL recorded in receipts")
 	runID := fs.String("run-id", os.Getenv("GITHUB_RUN_ID"), "workflow run identifier recorded in receipts")
-	preparedStatus := fs.String("prepared-status", "deployed", "receipt status for prepared actions: deployed or validated")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -182,8 +209,8 @@ func runReviewFinalize(cfg config.Config, args []string) error {
 		return fmt.Errorf("reviewfinalize: %w", err)
 	}
 	if err := reviewactions.Finalize(context.Background(), reviewactions.FinalizeInput{
-		Store: store, Environment: *environment, Decisions: decisions, PreparedStatus: *preparedStatus, CatalogCommit: commit,
-		DeploymentTarget: *target, RunID: *runID, Now: time.Now().UTC(),
+		Store: store, Environment: *environment, Decisions: decisions, CatalogCommit: commit,
+		DeploymentTarget: *target, RunID: *runID, Now: time.Now().UTC(), Fetcher: deploymentFetcher{client: http.DefaultClient},
 	}); err != nil {
 		return fmt.Errorf("reviewfinalize: %w", err)
 	}
