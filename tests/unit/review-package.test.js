@@ -37,7 +37,7 @@ describe('hosted review package', () => {
   });
 
   it('builds only reviewable bottle candidates and removes local paths from the public manifest', async () => {
-    const records = { one: { slug: wine.slug, ok: false, alternates: [
+    const records = { one: { slug: wine.slug, query: 'Producer Wine 2022 exact search', ok: false, alternates: [
       { file: 'good.png', page: 'https://producer.example/wine', width: 400, height: 800, repeatedDesign: true },
       { file: 'scene.png', page: 'https://example/scene', why: 'no clean background — a photographed scene' },
     ] } };
@@ -46,6 +46,7 @@ describe('hosted review package', () => {
     assert.equal(draft.wines[0].candidates.length, 1);
     assert.deepEqual(draft.wines[0].candidates[0].badges, ['repeated design']);
     assert.equal(draft.wines[0].wineRevision, wineRevision(wine));
+    assert.equal(draft.wines[0].searchQuery, 'Producer Wine 2022 exact search');
   });
 
   it('does not put an explicitly rejected candidate set back into the next review package', async () => {
@@ -92,7 +93,7 @@ describe('hosted review package', () => {
 
   it('publishes immutable image bytes and manifest before moving current.json', async () => {
     const storage = memoryStorage();
-    const draft = await buildReviewDraft({ catalog: [wine], manifest: { one: { slug: wine.slug, ok: false, alternates: [{ file: 'good.png', page: 'https://producer.example/wine' }] } }, fileExists: () => true, readBytes: async () => png });
+    const draft = await buildReviewDraft({ catalog: [wine], manifest: { one: { slug: wine.slug, query: 'Producer Wine 2022', ok: false, alternates: [{ file: 'good.png', page: 'https://producer.example/wine' }] } }, fileExists: () => true, readBytes: async () => png });
     const result = await publishReviewPackage({ environment: 'test', catalogCommit: 'a'.repeat(40), catalog: [wine], draft, reviewers, storage, readBytes: async () => png, now: () => new Date('2026-08-15T00:00:00Z') });
     assert.equal(result.wines, 1);
     const current = JSON.parse(storage.files.get('_review/test/current.json'));
@@ -112,9 +113,21 @@ describe('hosted review package', () => {
     });
     priorCandidate.sha256 = (await import('node:crypto')).createHash('sha256').update(new Uint8Array([1, 2, 3])).digest('hex');
     storage.files.set('_review/test/packages/old-package/manifest.json', JSON.stringify(previous));
-    const result = await publishReviewPackage({ environment: 'test', catalogCommit: 'c'.repeat(40), catalog: [wine], draft: { schemaVersion: 1, wines: [] }, reviewers, storage, readBytes: async () => { throw new Error('not local'); }, now: () => new Date('2026-08-16T00:00:00Z') });
+    const result = await publishReviewPackage({ environment: 'test', catalogCommit: 'c'.repeat(40), catalog: [wine], draft: { schemaVersion: 1, searchQueries: { [wine.sku]: 'Producer Wine 2022 original query' }, wines: [] }, reviewers, storage, readBytes: async () => { throw new Error('not local'); }, now: () => new Date('2026-08-16T00:00:00Z') });
     assert.equal(result.carried, 1);
     assert.equal(result.wines, 1);
+    const current = JSON.parse(storage.files.get('_review/test/current.json'));
+    const manifest = JSON.parse(storage.files.get(`_review/test/packages/${current.packageId}/manifest.json`));
+    assert.equal(manifest.wines[0].searchQuery, 'Producer Wine 2022 original query');
+  });
+
+  it('refuses to publish a review card when its original discovery query is unavailable', async () => {
+    const storage = memoryStorage();
+    const draft = await buildReviewDraft({ catalog: [wine], manifest: { one: { slug: wine.slug, ok: false, alternates: [{ file: 'good.png' }] } }, fileExists: () => true, readBytes: async () => png });
+    await assert.rejects(
+      publishReviewPackage({ environment: 'test', catalogCommit: 'c'.repeat(40), catalog: [wine], draft, reviewers, storage, readBytes: async () => png }),
+      /missing its original discovery query/,
+    );
   });
 
   it('publishes an empty successor so the final reviewed wine disappears from the console', async () => {

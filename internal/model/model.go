@@ -25,6 +25,7 @@ const (
 	ImageOldSite          = "old-site"          // FineVines' own photo, harvested from the old finevines.com
 	ImageScrapedWeb       = "scraped-web"       // real bottle/label image found via web search
 	ImageScrapedGoogle    = "scraped-google"    // real image via Google image-search fallback
+	ImageReviewerSupplied = "reviewer-supplied" // image explicitly selected and pasted by an authorized catalog reviewer
 	// ImageLabelScan marks a flat label scan wearing a wine's image slot — the
 	// old finevines.com photographed LABELS, not bottles (audit 2026-08-04:
 	// 468 of 492 old-site images), and some scraped finds are the same. A scan
@@ -98,7 +99,7 @@ func ParseFieldSource(s string) FieldSource {
 // participates in MetadataScore consistently.
 func ImageFieldSource(imageSource string) FieldSource {
 	switch imageSource {
-	case ImageProducerSupplied, ImageOldSite, ImageScrapedWeb, ImageScrapedGoogle:
+	case ImageProducerSupplied, ImageOldSite, ImageScrapedWeb, ImageScrapedGoogle, ImageReviewerSupplied:
 		return SourceFound
 	case "":
 		return SourceMissing

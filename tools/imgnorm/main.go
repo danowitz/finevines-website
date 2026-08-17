@@ -28,6 +28,7 @@ import (
 	"os"
 
 	"github.com/gritautomation/finevines-website/internal/imgcheck"
+	_ "golang.org/x/image/webp"
 )
 
 func main() {
@@ -53,7 +54,8 @@ func main() {
 	src, _, err := image.Decode(f)
 	f.Close()
 	if err != nil {
-		fail(err)
+		fmt.Fprintln(os.Stderr, "imgnorm:", err)
+		os.Exit(3)
 	}
 
 	// Reuse the detector that verified this image, so normalisation is framed

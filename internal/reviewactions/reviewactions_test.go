@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"sort"
@@ -61,6 +62,12 @@ type failingNormalizer struct{}
 
 func (failingNormalizer) Normalize(context.Context, string, string) error { return os.ErrInvalid }
 
+type invalidImageNormalizer struct{}
+
+func (invalidImageNormalizer) Normalize(context.Context, string, string) error {
+	return &InvalidImageError{Err: errors.New("decode failed")}
+}
+
 func fixture(t *testing.T) (*memoryStore, []model.Wine, string) {
 	t.Helper()
 	wines := []model.Wine{{ID: "wine-1", SKU: "500740*", Slug: "producer-wine-2022", Producer: "Producer", Name: "Wine", Vintage: "2022", ImagePath: "assets/img/wines/producer-wine-2022.svg", ImageSource: model.ImageGeneratedLabel, SourceHash: "source"}}
@@ -105,6 +112,35 @@ func TestPrepareAppliesExactCandidateButKeepsPendingUntilFinalize(t *testing.T) 
 	}
 	if _, err := os.Stat(filepath.Join(filepath.Dir(result.Wines[0].ImagePath), filepath.Base(result.Wines[0].ImagePath))); err != nil {
 		t.Fatalf("normalized image missing: %v", err)
+	}
+}
+
+func TestPrepareAppliesReviewerSuppliedImageWithoutSourceProvenance(t *testing.T) {
+	store, wines, id := fixture(t)
+	var action Action
+	if err := json.Unmarshal(store.files["_review/test/actions/"+id+".json"], &action); err != nil {
+		t.Fatal(err)
+	}
+	bytes := []byte("reviewer-pasted-image")
+	sum := sha256.Sum256(bytes)
+	action.Kind, action.CandidateID = "reviewer-image", ""
+	action.ImageStorageName = id + ".png"
+	action.ImageSHA256 = hex.EncodeToString(sum[:])
+	action.ImageBytes = len(bytes)
+	action.ImageMIME = "image/png"
+	data, _ := json.Marshal(action)
+	store.files["_review/test/actions/"+id+".json"], store.files["_review/test/pending/"+id+".json"] = data, data
+	store.files["_review/test/uploads/"+action.ImageStorageName] = bytes
+
+	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Decisions[0].Status != "prepared" || result.Decisions[0].ImageSHA256 != action.ImageSHA256 {
+		t.Fatalf("decision = %#v", result.Decisions[0])
+	}
+	if result.Wines[0].ImageSource != model.ImageReviewerSupplied || result.Wines[0].ImageSourceURL != "" {
+		t.Fatalf("wine image = %#v", result.Wines[0])
 	}
 }
 
@@ -185,7 +221,7 @@ func TestPrepareRejectsCandidateHashMismatch(t *testing.T) {
 	}
 }
 
-func TestPrepareRestoresInterruptedReplacementBackupBeforeRetry(t *testing.T) {
+func TestPrepareRetriesOperationalNormalizationFailureAndRestoresInterruptedReplacementBackup(t *testing.T) {
 	store, wines, _ := fixture(t)
 	imageDir := t.TempDir()
 	backup := filepath.Join(imageDir, wines[0].Slug+".jpg.review-backup")
@@ -194,11 +230,22 @@ func TestPrepareRestoresInterruptedReplacementBackupBeforeRetry(t *testing.T) {
 	}
 	_, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: failingNormalizer{}, Environment: "test", Wines: wines, ImageDir: imageDir, Now: time.Now()})
 	if err == nil {
-		t.Fatal("Prepare succeeded with failing normalizer")
+		t.Fatal("Prepare succeeded with an operational normalizer failure")
 	}
 	data, readErr := os.ReadFile(filepath.Join(imageDir, wines[0].Slug+".jpg"))
 	if readErr != nil || string(data) != "previous-image" {
 		t.Fatalf("restored destination = %q, err %v", data, readErr)
+	}
+}
+
+func TestPrepareRejectsTypedInvalidImageWithoutPoisoningBatch(t *testing.T) {
+	store, wines, _ := fixture(t)
+	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: invalidImageNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Now()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Decisions) != 1 || result.Decisions[0].Status != "rejected" || !strings.Contains(result.Decisions[0].Reason, "decoded") {
+		t.Fatalf("decisions = %#v", result.Decisions)
 	}
 }
 

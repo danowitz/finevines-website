@@ -58,10 +58,14 @@ function sourceHost(value) {
 
 export async function buildReviewDraft({ catalog, manifest, fileExists, readBytes }) {
   const bySlug = new Map(catalog.map((wine) => [wine.slug, wine]));
+  const searchQueries = {};
   const wines = [];
   for (const record of Object.values(manifest || {})) {
     const wine = bySlug.get(record.slug);
-    if (!wine || !wineNeedsReview(wine)) continue;
+    if (!wine) continue;
+    const searchQuery = clean(record.query);
+    if (searchQuery && clean(wine.sku)) searchQueries[clean(wine.sku)] = searchQuery;
+    if (!wineNeedsReview(wine)) continue;
     const raw = [
       ...(record.ok && record.file ? [{ ...record, why: '', accepted: true }] : []),
       ...(record.alternates || []),
@@ -95,11 +99,12 @@ export async function buildReviewDraft({ catalog, manifest, fileExists, readByte
     wines.push({
       sku: clean(wine.sku), slug: clean(wine.slug),
       displayIdentity: [wine.producer, wine.name, wine.vintage].map(clean).filter(Boolean).join(' · '),
+      searchQuery,
       wineRevision: wineRevision(wine), currentImage: clean(wine.imagePath), candidates,
     });
   }
   wines.sort((left, right) => left.displayIdentity.localeCompare(right.displayIdentity));
-  return { schemaVersion: 1, wines };
+  return { schemaVersion: 1, searchQueries, wines };
 }
 
 function publicCandidate(candidate) {
@@ -131,11 +136,15 @@ export async function publishReviewPackage({ environment, catalogCommit, catalog
     if (incoming.has(wine.sku) || revisions.get(wine.sku) !== wine.wineRevision) continue;
     incoming.set(wine.sku, {
       ...wine,
+      searchQuery: clean(wine.searchQuery) || clean(draft.searchQueries?.[wine.sku]),
       candidates: wine.candidates.map((candidate) => ({ ...candidate, storagePackageId: previous.packageId })),
     });
     carried++;
   }
   const wines = [...incoming.values()].sort((left, right) => left.displayIdentity.localeCompare(right.displayIdentity));
+  for (const wine of wines) {
+    if (!clean(wine.searchQuery)) throw new Error(`review wine ${wine.sku} is missing its original discovery query`);
+  }
   // Once a package exists, publish an empty successor too. Otherwise the last
   // reviewed wine would remain in current.json forever even though the catalog
   // revision proves it has already been handled.
