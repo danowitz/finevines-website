@@ -19,9 +19,11 @@ import (
 	"strings"
 
 	"github.com/gritautomation/finevines-website/internal/catalog"
+	"github.com/gritautomation/finevines-website/internal/collectioneditorial"
 	"github.com/gritautomation/finevines-website/internal/label"
 	"github.com/gritautomation/finevines-website/internal/model"
 	"github.com/gritautomation/finevines-website/internal/salesforce"
+	"github.com/gritautomation/finevines-website/internal/taxonomy"
 )
 
 // redirectsJSONName is both the file redirects.Save writes at the repo root
@@ -48,12 +50,13 @@ type site struct {
 	// hot-sellers — was written before this field existed, none of them need
 	// to change: Wines being active-only excludes Delisted wines BY
 	// CONSTRUCTION rather than by each consumer remembering to filter.
-	Delisted []model.Wine
-	News     []model.NewsPost
-	Team     []model.TeamMember
-	Content  model.SiteContent
-	Regions  map[string]model.RegionEditorial
-	BaseURL  string
+	Delisted   []model.Wine
+	News       []model.NewsPost
+	Team       []model.TeamMember
+	Content    model.SiteContent
+	Editorials collectioneditorial.Library
+	Taxonomy   taxonomy.Catalog
+	BaseURL    string
 	// NoIndex is true whenever BaseURL is NOT the production host (see
 	// isProductionHost in sitemap.go) — i.e. for every staging/CDN hostname
 	// this site has ever been deployed to, plus any unset/malformed value.
@@ -731,15 +734,16 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 		return err
 	}
 	tmpl, err := template.New("").Funcs(template.FuncMap{
-		"paragraphs": paragraphs,
-		"excerpt":    excerpt,
-		"hasPrefix":  strings.HasPrefix,
-		"comma":      comma,
-		"spaceJoin":  spaceJoin,
-		"avail":      availability,
-		"initials":   initials,
-		"spellnum":   spellNum,
-		"lower":      strings.ToLower,
+		"paragraphs":  paragraphs,
+		"excerpt":     excerpt,
+		"hasPrefix":   strings.HasPrefix,
+		"comma":       comma,
+		"spaceJoin":   spaceJoin,
+		"naturalList": naturalList,
+		"avail":       availability,
+		"initials":    initials,
+		"spellnum":    spellNum,
+		"lower":       strings.ToLower,
 		// inc/last exist for breadcrumb rendering: schema.org positions are
 		// 1-based while range indices are 0-based, and the final crumb is the
 		// current page, which must render as text rather than a self-link.
@@ -761,11 +765,9 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	if err := copyTree(assetsDir, filepath.Join(distDir, "assets")); err != nil {
 		return err
 	}
-	for slug, editorial := range s.Regions {
-		for _, image := range editorial.Images {
-			if _, err := os.Stat(filepath.Join(distDir, filepath.FromSlash(image.Path))); err != nil {
-				return fmt.Errorf("region %q editorial image %q: %w", slug, image.Path, err)
-			}
+	for _, image := range s.Editorials.ImageReferences() {
+		if _, err := os.Stat(filepath.Join(distDir, filepath.FromSlash(image.Path))); err != nil {
+			return fmt.Errorf("%s %q editorial image %q: %w", image.Kind, image.Slug, image.Path, err)
 		}
 	}
 	// Fingerprint the fixed CSS/JS AFTER the tree copy (it renames the copies
@@ -797,7 +799,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	}
 	// dist/redirects.json = old-site crawl map ∪ lifecycle map. See
 	// mergeRedirects for the missing-file tolerance and conflict rule.
-	if err := mergeRedirects(distDir, redirectsJSONName, filepath.Join(dataDir, "lifecycle-redirects.json")); err != nil {
+	if err := mergeRedirectsWith(distDir, s.Taxonomy.Redirects(), redirectsJSONName, filepath.Join(dataDir, "lifecycle-redirects.json")); err != nil {
 		return err
 	}
 
@@ -815,6 +817,7 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	// values are rendered below; no homepage URL is derived independently.
 	cards := portfolioCards(s.Wines)
 	collections := collectionsByKind(cards)
+	intersections := buildIntersections(cards)
 
 	pages := []struct {
 		rel, tmpl string
@@ -925,11 +928,16 @@ func Run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string) error 
 	// cards the portfolio shows. They render after the portfolio because they
 	// are the same catalog cut a different way — and before the detail pages,
 	// which link up into them.
-	collectionPaths, err := renderCollections(tmpl, distDir, s, collections)
+	collectionPaths, err := renderCollections(tmpl, distDir, s, collections, intersections)
 	if err != nil {
 		return err
 	}
 	paths = append(paths, collectionPaths...)
+	intersectionPaths, err := renderIntersections(tmpl, distDir, s, intersections, collections["region"])
+	if err != nil {
+		return err
+	}
+	paths = append(paths, intersectionPaths...)
 	// Which collections actually exist, so a wine page never links one that doesn't.
 	published := newPublishedCollections(collections)
 
@@ -1935,11 +1943,15 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load site content: %w", err)
 	}
-	regions, err := model.LoadRegionEditorials(filepath.Join(dataDir, "regions.json"))
+	editorials, err := collectioneditorial.Load(filepath.Join(dataDir, "collection-editorial.json"))
 	if err != nil {
-		return nil, fmt.Errorf("load region editorial: %w", err)
+		return nil, fmt.Errorf("load collection editorial: %w", err)
 	}
-	cleaned := usableWines(wines)
+	taxonomyCatalog, err := taxonomy.Load(filepath.Join(dataDir, "taxonomy.json"))
+	if err != nil {
+		return nil, fmt.Errorf("load taxonomy: %w", err)
+	}
+	cleaned := usableWines(taxonomyCatalog.Normalize(wines))
 	// Unavailable wines keep a published detail page (their search ranking
 	// survives the stock-out) but appear on NO browse surface: s.Wines is
 	// active-only, so the portfolio, facets, catalog index, search, featured
@@ -1952,7 +1964,7 @@ func loadSite(dataDir, baseURL, gaID string) (*site, error) {
 		}
 		active = append(active, w)
 	}
-	s := &site{Wines: active, Delisted: delisted, Content: content, Regions: regions, BaseURL: baseURL, GAID: gaID, NoIndex: !isProductionHost(baseURL)}
+	s := &site{Wines: active, Delisted: delisted, Content: content, Editorials: editorials, Taxonomy: taxonomyCatalog, BaseURL: baseURL, GAID: gaID, NoIndex: !isProductionHost(baseURL)}
 	// hot-sellers.json is optional: written by `finevines enrich` against a
 	// live org (mock/dev runs don't have it), and the homepage simply omits
 	// its sales-driven section when it's absent.
@@ -2263,7 +2275,17 @@ func renderNotFound(tmpl *template.Template, distDir string, data notFoundPage) 
 // — tests included — can point it at arbitrary fixture locations instead of
 // planting files at the process's real working directory.
 func mergeRedirects(distDir string, sources ...string) error {
+	return mergeRedirectsWith(distDir, nil, sources...)
+}
+
+func mergeRedirectsWith(distDir string, generated map[string]string, sources ...string) error {
 	merged := map[string]string{}
+	// Generated taxonomy aliases are safe defaults. Explicit crawl and
+	// lifecycle records are curated operational knowledge, so sources retain
+	// the established later-wins precedence when a key overlaps a default.
+	for source, target := range generated {
+		merged[source] = target
+	}
 	for _, src := range sources {
 		data, err := os.ReadFile(src)
 		if errors.Is(err, fs.ErrNotExist) {

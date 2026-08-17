@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "aliases": {
+    "region": {},
+    "producer": {},
+    "varietal": {}
+  },
+  "regions": [
+    {"name": "Burgundy"},
+    {"name": "Côte de Nuits", "parent": "Burgundy"},
+    {"name": "Napa Valley"},
+    {"name": "Rhône Valley"}
+  ]
+}

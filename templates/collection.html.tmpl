@@ -33,11 +33,11 @@
   "@type": "CollectionPage",
   "name": {{.Name}},
   "url": {{printf "%s%s" .BaseURL .Path}},
-  "description": {{.Lede}},
+  "description": {{.Description}},
   "mainEntity": {
     "@type": "ItemList",
     "numberOfItems": {{len .Cards}},
-    "itemListElement": [{{range $i, $c := .Cards}}{{if $i}}, {{end}}{"@type": "ListItem", "position": {{inc $i}}, "url": {{printf "%s/wines/%s/" $.BaseURL $c.Slug}}, "name": {{spaceJoin $c.Producer $c.Name}}}{{end}}]
+    "itemListElement": [{{range $i, $c := .Cards}}{{if $i}}, {{end}}{"@type": "ListItem", "position":{{inc $i}}, "url": {{printf "%s/wines/%s/" $.BaseURL $c.Slug}}, "name": {{spaceJoin $c.Producer $c.Name}}}{{end}}]
   }
 }
 </script>
@@ -48,10 +48,8 @@
 {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
-  "itemListElement": [
-    {"@type": "ListItem", "position": 1, "name": "Portfolio", "item": {{printf "%s/portfolio/" .BaseURL}}},
-    {"@type": "ListItem", "position": 2, "name": {{.Kind.Plural}}, "item": {{printf "%s%s" .BaseURL .IndexURL}}},
-    {"@type": "ListItem", "position": 3, "name": {{.Name}}, "item": {{printf "%s%s" .BaseURL .Path}}}
+  "itemListElement": [{{range $i, $crumb := .Crumbs}}{{if $i}},{{end}}
+    {"@type": "ListItem", "position": {{inc $i}}, "name": {{$crumb.Name}}, "item": {{printf "%s%s" $.BaseURL $crumb.URL}}}{{end}}
   ]
 }
 </script>
@@ -61,11 +59,7 @@
 <main>
   <section class="page-hero page-hero-plain">
     <div class="wrap">
-      <nav class="crumbs" aria-label="Breadcrumb">
-        <a href="/portfolio/">Portfolio</a>
-        <span aria-hidden="true">/</span>
-        <a href="{{.IndexURL}}">{{.Kind.Plural}}</a>
-      </nav>
+      <nav class="crumbs" aria-label="Breadcrumb">{{range $i, $crumb := .Crumbs}}{{if $i}}<span aria-hidden="true">/</span>{{end}}{{if lt (inc $i) (len $.Crumbs)}}<a href="{{$crumb.URL}}">{{$crumb.Name}}</a>{{else}}<span aria-current="page">{{$crumb.Name}}</span>{{end}}{{end}}</nav>
       <span class="eyebrow">{{.Kind.Singular}}</span>
       <h1>{{.Name}}</h1>
       <p class="lede">{{.Lede}}</p>
@@ -73,23 +67,31 @@
   </section>
 
   {{with .Editorial}}
-  <section class="wrap region-editorial" aria-labelledby="region-editorial-title">
-    <div class="region-editorial-copy">
+  <section class="wrap collection-editorial" aria-labelledby="collection-editorial-title">
+    <div class="collection-editorial-copy">
       <span class="eyebrow">{{.Eyebrow}}</span>
-      <h2 id="region-editorial-title">{{.Heading}}</h2>
+      <h2 id="collection-editorial-title">{{.Heading}}</h2>
       {{range .Paragraphs}}<p>{{.}}</p>{{end}}
     </div>
-    {{with .Images}}<div class="region-editorial-gallery">
-      {{range .}}<figure>
-        <img src="/{{.Path}}" alt="{{.Alt}}" loading="lazy">
-        <figcaption>{{.Caption}} <a href="{{.SourceURL}}" rel="external">{{.Credit}}, {{.License}}</a></figcaption>
+    {{with .Images}}<div class="collection-editorial-gallery">
+      {{range .}}<figure class="{{if .Curated}}is-curated{{else}}is-bottle{{end}}">
+        {{if .Href}}<a href="{{.Href}}"><img src="/{{.Path}}" alt="{{.Alt}}" loading="lazy"></a>{{else}}<img src="/{{.Path}}" alt="{{.Alt}}" loading="lazy">{{end}}
+        <figcaption>{{.Caption}}{{if .SourceURL}} <a href="{{.SourceURL}}" rel="external">{{.Credit}}, {{.License}}</a>{{end}}</figcaption>
       </figure>{{end}}
     </div>{{end}}
-    {{with $.RelatedRegions}}<nav class="region-neighbours" aria-labelledby="region-neighbours-title">
-      <h3 id="region-neighbours-title">Explore related regions</h3>
+    {{with $.Peers}}<nav class="collection-peers" aria-labelledby="collection-peers-title">
+      <h3 id="collection-peers-title">Explore related {{$.Kind.Plural | lower}}</h3>
       <ul>{{range .}}<li><a href="{{.URL}}">{{.Name}}</a></li>{{end}}</ul>
     </nav>{{end}}
-    {{with .Sources}}<p class="region-editorial-sources">Sources: {{range $i, $source := .}}{{if $i}} · {{end}}<a href="{{$source.URL}}" rel="external">{{$source.Label}}</a>{{end}}</p>{{end}}
+    {{with $.RegionHierarchy}}<nav class="collection-peers" aria-labelledby="region-hierarchy-title">
+      <h3 id="region-hierarchy-title">Explore the regional hierarchy</h3>
+      <ul>{{range .}}<li><a href="{{.URL}}">{{.Name}}</a></li>{{end}}</ul>
+    </nav>{{end}}
+    {{with $.Intersections}}<nav class="collection-peers" aria-labelledby="collection-intersections-title">
+      <h3 id="collection-intersections-title">Explore focused selections</h3>
+      <ul>{{range .}}<li><a href="{{.URL}}">{{.Name}} <span>({{.Count}})</span></a></li>{{end}}</ul>
+    </nav>{{end}}
+    {{with .Sources}}<p class="collection-editorial-sources">Sources: {{range $i, $source := .}}{{if $i}} · {{end}}<a href="{{$source.URL}}" rel="external">{{$source.Label}}</a>{{end}}</p>{{end}}
   </section>
   {{end}}
 

@@ -37,13 +37,14 @@ flowchart LR
     CDN --> SITE["finevines.com"]
 ```
 
-The four commands in the dependency-free Go program are:
+The core commands in the dependency-free Go program are:
 
 ```text
-finevines enrich     Salesforce -> data/wines.json + assets/img/wines/*   (network, incremental, checkpointed)
-finevines build      data + templates + assets -> dist/*                  (local, deterministic, no network)
-finevines redirects  old-site crawl -> redirects.json                     (--publish uses Bunny Edge Scripting)
-finevines deploy     dist/* -> Bunny.net Storage Zone + CDN cache purge   (network, hash-diff upload)
+finevines enrich             Salesforce -> data/wines.json + assets/img/wines/* (network, incremental)
+finevines enrichcollections  catalog -> data/collection-editorial.json        (network, incremental)
+finevines build              data + templates + assets -> dist/*               (local, deterministic)
+finevines redirects          old-site crawl -> redirects.json                  (--publish uses Bunny Edge Scripting)
+finevines deploy             dist/* -> Bunny.net Storage Zone + CDN purge      (network, hash-diff upload)
 ```
 
 ## 1. The website itself
@@ -192,7 +193,14 @@ Each run, in this order:
    pending pointer remains until the post-deploy receipt exists.
 2. **`finevines enrich`** pulls the live Salesforce roster. Unchanged wines are
    skipped by their `sourceHash`, so nothing is re-sent to OpenAI.
-3. **`tools/labelfetch/cistage.sh`** sources bottle photographs for wines that
+3. **`finevines enrichcollections`** maintains region, producer, and varietal
+   editorial. It researches new collections first, then material catalog
+   changes, and only then pages whose annual review is due. It processes at
+   most 50 pages per run, checkpoints each attempt in
+   `data/collection-editorial.json`, and waits 30 days before retrying a failed
+   identity. A review can confirm that existing copy is still accurate without
+   rewriting it. Curated entries are never overwritten.
+4. **`tools/labelfetch/cistage.sh`** sources bottle photographs for wines that
    have none and are due per `data/image-attempts.json` (a 30-day backoff after a
    failed search) — **up to 150 wines and 120 minutes per night**, whichever comes
    first. The cap is what makes the stage converge: each night records its
@@ -219,21 +227,29 @@ Each run, in this order:
    resumes the normal 30-day backoff. An `imported` ledger record never hides a
    catalog row whose photograph was later withdrawn—the missing catalog image
    makes that row due again.
-4. **`finevines build`** renders `dist/`.
-5. **`finevines deploy`** uploads the changed files to Bunny.net and purges both
+5. **`finevines build`** renders `dist/`. Every live collection gets a
+   catalog-derived introduction, representative available bottle imagery, and
+   related collection links even before researched editorial is ready.
+   `data/taxonomy.json` canonicalizes known Salesforce spelling variants and
+   defines regional parents, so aliases do not create competing pages and child
+   regions receive both visible and structured hierarchy links. The build also
+   publishes useful region-and-varietal selections automatically when the live
+   catalog has at least six wines from at least two producers. Thin combinations
+   are not emitted.
+6. **`finevines deploy`** uploads the changed files to Bunny.net and purges both
    pull zones.
-6. **A bot commit** returns `data/`, the imported photographs under
+7. **A bot commit** returns `data/`, the imported photographs under
    `assets/img/wines/`, and `.bunny-manifest.json` to `master` with the message
    `pipeline: nightly run [skip ci]`. The repo remains the source of truth and
    every automated change is auditable in git history.
-7. **The rolling review package is published** to protected Bunny storage. On a
+8. **The rolling review package is published** to protected Bunny storage. On a
    reviewer-triggered run, still-current unresolved wines are carried forward
    and the wine just handled disappears from the console.
-8. **`finevines reviewfinalize`** writes a durable receipt naming the deployed
+9. **`finevines reviewfinalize`** writes a durable receipt naming the deployed
    catalog commit and workflow run, then removes the action's pending pointer.
    If any earlier step fails, no success receipt is written and the next run
    retries automatically.
-9. **`finevines notify`** emails a digest through the client's SMTP relay — but
+10. **`finevines notify`** emails a digest through the client's SMTP relay — but
    only if the run changed something. It lists new wines, delistings, rewritten
    notes, newly imported photographs (with thumbnails and their source URLs),
    corrections applied, and the portfolio's coverage figures, each linking to
@@ -326,7 +342,7 @@ workflow* button on the Actions tab.
 
 `deploy.bat` (repo root) remains the **local fallback** for when GitHub Actions
 is unavailable or a run needs to be reproduced on a workstation. It runs
-`enrich`, then `build`, then `deploy`, stopping at the first error. It does not
+`enrich`, then `enrichcollections`, then `build`, then `deploy`, stopping at the first error. It does not
 drain the review queue, source images, or send a digest — those are pipeline-only
 steps. **Commit `data/` and `.bunny-manifest.json` after running it**, or the
 next pipeline run will diff against stale state and re-upload the whole site.
