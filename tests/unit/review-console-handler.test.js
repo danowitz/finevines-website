@@ -118,6 +118,12 @@ describe('review console handler', () => {
     assert.equal(favicon.status, 200);
     assert.equal(favicon.headers.get('content-type'), 'image/x-icon');
     assert.ok((await favicon.arrayBuffer()).byteLength > 0);
+
+    const robots = await handle(new Request('https://review.finevines.biz/robots.txt'));
+    assert.equal(robots.status, 200);
+    assert.match(robots.headers.get('content-type'), /^text\/plain/);
+    assert.match(robots.headers.get('x-robots-tag'), /noindex/);
+    assert.equal(await robots.text(), 'User-agent: *\nDisallow: /\n');
   });
 
   it('hides protected routes and candidate data before login', async () => {
