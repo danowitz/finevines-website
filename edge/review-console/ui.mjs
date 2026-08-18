@@ -16,7 +16,9 @@ button { cursor: pointer; }
 .login-card input:focus { border-color: #7d263b; box-shadow: 0 0 0 3px #7d263b1f; }
 .login-submit { width: 100%; min-height: 48px; margin-top: 14px; border: 0; border-radius: 9px; background: #7d263b; color: #fff; font-weight: 800; box-shadow: 0 8px 18px #7d263b33; }
 .login-submit:hover { background: #681f31; }
+.login-link { display: inline-block; margin-top: 14px; color: #7d263b; font-size: 14px; font-weight: 700; }
 .login-message { margin: 0 0 16px; padding: 11px 13px; border-left: 4px solid #a12222; border-radius: 7px; background: #fff1f0; color: #8a1d1d; font-size: 14px; line-height: 1.4; }
+.login-message.success { border-left-color: #376b4a; background: #eef8f1; color: #245238; }
 .login-note { margin: 18px 0 0; color: #78665a; font-size: 12px; line-height: 1.45; text-align: center; }
 .shell { width: min(1500px, 100%); margin: 0 auto; padding: 24px; }
 .mast { display: flex; gap: 24px; align-items: end; justify-content: space-between; margin-bottom: 20px; }
@@ -438,14 +440,24 @@ function documentPage(body, { script = false, bodyClass = '' } = {}) {
 <body${bodyClass ? ` class="${bodyClass}"` : ''}>${body}${script ? '<script src="/app.js" defer></script>' : ''}</body></html>`;
 }
 
-export function loginPage(message = '', brandLogo = '/favicon.ico') {
+export function loginPage(message = '', brandLogo = '/favicon.ico', success = false) {
+  const feedback = message ? `<p class="login-message${success ? ' success' : ''}" role="alert">${escapeHtml(message)}</p>` : '';
+  return documentPage(`<main class="login-shell"><header class="login-brand"><img class="login-logo" src="${escapeHtml(brandLogo)}" alt="FineVines"><p>Sign in for catalog review</p></header><section class="login-card">${feedback}<form method="post" action="/login"><label for="email">Email address</label><input id="email" name="email" type="email" required autocomplete="username" autofocus placeholder="you@example.com"><label for="password">Password</label><input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password"><button class="login-submit" type="submit">Sign in</button></form><a class="login-link" href="/forgot-password">Forgot password?</a><p class="login-note">Private review workspace · Authorized users only</p></section></main>`, { bodyClass: 'login-page' });
+}
+
+export function forgotPasswordPage(message = '', brandLogo = '/favicon.ico') {
+  const feedback = message ? `<p class="login-message success" role="status">${escapeHtml(message)}</p>` : '';
+  return documentPage(`<main class="login-shell"><header class="login-brand"><img class="login-logo" src="${escapeHtml(brandLogo)}" alt="FineVines"><h1>Reset your password</h1><p>Enter your review account email address.</p></header><section class="login-card">${feedback}<form method="post" action="/forgot-password"><label for="email">Email address</label><input id="email" name="email" type="email" required autocomplete="username" autofocus placeholder="you@example.com"><button class="login-submit" type="submit">Send reset link</button></form><a class="login-link" href="/">Back to sign in</a></section></main>`, { bodyClass: 'login-page' });
+}
+
+export function resetPasswordPage(message = '', brandLogo = '/favicon.ico') {
   const feedback = message ? `<p class="login-message" role="alert">${escapeHtml(message)}</p>` : '';
-  return documentPage(`<main class="login-shell"><header class="login-brand"><img class="login-logo" src="${escapeHtml(brandLogo)}" alt="FineVines"><p>Sign in for catalog review</p></header><section class="login-card">${feedback}<form method="post" action="/login"><label for="email">Email address</label><input id="email" name="email" type="email" required autocomplete="username" autofocus placeholder="you@example.com"><label for="password">Password</label><input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password"><button class="login-submit" type="submit">Sign in</button></form><p class="login-note">Private review workspace · Authorized users only</p></section></main>`, { bodyClass: 'login-page' });
+  return documentPage(`<main class="login-shell"><header class="login-brand"><img class="login-logo" src="${escapeHtml(brandLogo)}" alt="FineVines"><h1>Choose a new password</h1><p>Use at least 8 characters.</p></header><section class="login-card">${feedback}<form method="post" action="/reset-password"><label for="new-password">New password</label><input id="new-password" name="newPassword" type="password" required minlength="8" autocomplete="new-password"><label for="confirm-password">Confirm new password</label><input id="confirm-password" name="confirmPassword" type="password" required minlength="8" autocomplete="new-password"><button class="login-submit" type="submit">Reset password</button></form><a class="login-link" href="/">Back to sign in</a></section></main>`, { bodyClass: 'login-page' });
 }
 
 export function changePasswordPage(csrf, message = '', brandLogo = '/favicon.ico') {
   const feedback = message ? `<p class="login-message" role="alert">${escapeHtml(message)}</p>` : '';
-  return documentPage(`<main class="login-shell"><header class="login-brand"><img class="login-logo" src="${escapeHtml(brandLogo)}" alt="FineVines"><h1>Choose your password</h1><p>Your temporary password must be replaced before you can review images.</p></header><section class="login-card">${feedback}<form method="post" action="/change-password"><input type="hidden" name="csrf" value="${escapeHtml(csrf)}"><label for="current-password">Temporary password</label><input id="current-password" name="currentPassword" type="password" required autocomplete="current-password"><label for="new-password">New password</label><input id="new-password" name="newPassword" type="password" required minlength="8" autocomplete="new-password"><button class="login-submit" type="submit">Save password</button></form></section></main>`, { bodyClass: 'login-page' });
+  return documentPage(`<main class="login-shell"><header class="login-brand"><img class="login-logo" src="${escapeHtml(brandLogo)}" alt="FineVines"><h1>Choose your password</h1><p>Your temporary password must be replaced before you can review images.</p></header><section class="login-card">${feedback}<form method="post" action="/change-password"><input type="hidden" name="csrf" value="${escapeHtml(csrf)}"><label for="current-password">Temporary password</label><input id="current-password" name="currentPassword" type="password" required autocomplete="current-password"><label for="new-password">New password</label><input id="new-password" name="newPassword" type="password" required minlength="8" autocomplete="new-password"><label for="confirm-password">Confirm new password</label><input id="confirm-password" name="confirmPassword" type="password" required minlength="8" autocomplete="new-password"><button class="login-submit" type="submit">Save password</button></form></section></main>`, { bodyClass: 'login-page' });
 }
 
 export function consolePage(reviewer) {

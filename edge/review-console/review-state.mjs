@@ -116,10 +116,28 @@ export function createReviewState({ client, now = () => new Date() }) {
         available_at TEXT NOT NULL,
         claimed_at TEXT,
         sent_at TEXT,
-        attempts INTEGER NOT NULL DEFAULT 0
+        attempts INTEGER NOT NULL DEFAULT 0,
+        sensitive INTEGER NOT NULL DEFAULT 0
       )`,
       `CREATE INDEX IF NOT EXISTS review_notifications_pending
         ON review_notifications(status, available_at, id)`,
+      `CREATE TABLE IF NOT EXISTS reviewer_password_resets (
+        token_hash TEXT PRIMARY KEY,
+        email TEXT NOT NULL REFERENCES reviewer_accounts(email),
+        credential_version INTEGER NOT NULL,
+        requested_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        consumed_at TEXT
+      )`,
+      `CREATE INDEX IF NOT EXISTS reviewer_password_resets_email
+        ON reviewer_password_resets(email, requested_at)`,
+      `CREATE TABLE IF NOT EXISTS review_rate_limits (
+        bucket_key TEXT PRIMARY KEY,
+        window_started_at TEXT NOT NULL,
+        attempts INTEGER NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS review_rate_limits_window
+        ON review_rate_limits(window_started_at)`,
       `CREATE TABLE IF NOT EXISTS review_recoveries (
         action_id TEXT PRIMARY KEY REFERENCES review_actions(id),
         environment TEXT NOT NULL,
@@ -138,6 +156,14 @@ export function createReviewState({ client, now = () => new Date() }) {
     const reviewerColumns = await client.execute('PRAGMA table_info(reviewer_accounts)');
     if (!reviewerColumns.rows.some((row) => String(rowValue(row, 'name')) === 'invitation_used_at')) {
       await client.execute('ALTER TABLE reviewer_accounts ADD COLUMN invitation_used_at TEXT');
+    }
+    const notificationColumns = await client.execute('PRAGMA table_info(review_notifications)');
+    if (!notificationColumns.rows.some((row) => String(rowValue(row, 'name')) === 'sensitive')) {
+      await client.execute('ALTER TABLE review_notifications ADD COLUMN sensitive INTEGER NOT NULL DEFAULT 0');
+    }
+    const resetColumns = await client.execute('PRAGMA table_info(reviewer_password_resets)');
+    if (!resetColumns.rows.some((row) => String(rowValue(row, 'name')) === 'credential_version')) {
+      await client.execute('ALTER TABLE reviewer_password_resets ADD COLUMN credential_version INTEGER NOT NULL DEFAULT -1');
     }
   }
 
@@ -532,9 +558,9 @@ export function createReviewState({ client, now = () => new Date() }) {
   async function enqueueNotification(message) {
     const stamp = now().toISOString();
     await client.execute({
-      sql: `INSERT INTO review_notifications (dedupe_key, recipient, subject, text_body, available_at)
-        VALUES (?, ?, ?, ?, ?) ON CONFLICT(dedupe_key) DO NOTHING`,
-      args: [message.dedupeKey, message.to, message.subject, message.text, stamp],
+      sql: `INSERT INTO review_notifications (dedupe_key, recipient, subject, text_body, available_at, sensitive)
+        VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(dedupe_key) DO NOTHING`,
+      args: [message.dedupeKey, message.to, message.subject, message.text, stamp, message.sensitive ? 1 : 0],
     });
   }
 
@@ -641,7 +667,9 @@ export function createReviewState({ client, now = () => new Date() }) {
 
   async function completeNotification(id) {
     const result = await client.execute({
-      sql: `UPDATE review_notifications SET status = 'sent', sent_at = ? WHERE id = ? AND status = 'sending'`,
+      sql: `UPDATE review_notifications SET status = 'sent', sent_at = ?,
+        text_body = CASE WHEN sensitive = 1 THEN '[sensitive notification delivered and redacted]' ELSE text_body END
+        WHERE id = ? AND status = 'sending'`,
       args: [now().toISOString(), id],
     });
     if (result.rowsAffected !== 1) throw new Error(`notification ${id} is not sending`);
@@ -718,6 +746,80 @@ export function createReviewState({ client, now = () => new Date() }) {
     return reviewerAccount(email);
   }
 
+  async function createReviewerPasswordReset(email, tokenHash, expiresAt) {
+    const stamp = now().toISOString();
+    const cooldown = new Date(now().getTime() - 5 * 60_000).toISOString();
+    const result = await client.batch([
+      {
+        sql: `INSERT INTO reviewer_password_resets (token_hash, email, credential_version, requested_at, expires_at)
+          SELECT ?, email, credential_version, ?, ? FROM reviewer_accounts
+          WHERE email = ? AND eligible = 1 AND password_hash IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM reviewer_password_resets WHERE email = ? AND requested_at > ?)`,
+        args: [tokenHash, stamp, expiresAt, email, email, cooldown],
+      },
+      {
+        sql: `UPDATE reviewer_password_resets SET consumed_at = ?
+          WHERE email = ? AND token_hash <> ? AND consumed_at IS NULL
+            AND EXISTS (SELECT 1 FROM reviewer_password_resets WHERE token_hash = ? AND requested_at = ?)`,
+        args: [stamp, email, tokenHash, tokenHash, stamp],
+      },
+    ], 'write');
+    return Number(result[0].rowsAffected || 0) === 1;
+  }
+
+  async function reviewerPasswordReset(tokenHash) {
+    const result = await client.execute({
+      sql: `SELECT r.email FROM reviewer_password_resets r
+        JOIN reviewer_accounts a ON a.email = r.email
+        WHERE r.token_hash = ? AND r.consumed_at IS NULL AND r.expires_at > ?
+          AND a.eligible = 1 AND a.credential_version = r.credential_version`,
+      args: [tokenHash, now().toISOString()],
+    });
+    return result.rows.length === 1;
+  }
+
+  async function consumeReviewerPasswordReset(tokenHash, passwordHash) {
+    const stamp = now().toISOString();
+    const result = await client.batch([
+      {
+        sql: `UPDATE reviewer_accounts SET password_hash = ?, temporary_expires_at = NULL,
+          invitation_used_at = NULL, must_change = 0, credential_version = credential_version + 1, updated_at = ?
+          WHERE eligible = 1 AND EXISTS (SELECT 1 FROM reviewer_password_resets r
+            WHERE r.token_hash = ? AND r.email = reviewer_accounts.email AND r.credential_version = reviewer_accounts.credential_version
+              AND r.consumed_at IS NULL AND r.expires_at > ?)`,
+        args: [passwordHash, stamp, tokenHash, stamp],
+      },
+      {
+        sql: `UPDATE reviewer_password_resets SET consumed_at = ?
+          WHERE token_hash = ? AND consumed_at IS NULL AND expires_at > ? AND changes() = 1`,
+        args: [stamp, tokenHash, stamp],
+      },
+      {
+        sql: `UPDATE reviewer_password_resets SET consumed_at = ?
+          WHERE email = (SELECT email FROM reviewer_password_resets WHERE token_hash = ? AND consumed_at = ?)
+            AND token_hash <> ? AND consumed_at IS NULL`,
+        args: [stamp, tokenHash, stamp, tokenHash],
+      },
+    ], 'write');
+    return Number(result[0].rowsAffected || 0) === 1 && Number(result[1].rowsAffected || 0) === 1;
+  }
+
+  async function consumeRateLimit(bucketKey, limit, windowMs) {
+    if (!bucketKey || !Number.isInteger(limit) || limit < 1 || !Number.isInteger(windowMs) || windowMs < 1) throw new Error('rate limit configuration is invalid');
+    const stamp = now().toISOString();
+    const cutoff = new Date(now().getTime() - windowMs).toISOString();
+    const result = await client.batch([
+      { sql: 'DELETE FROM review_rate_limits WHERE window_started_at <= ?', args: [cutoff] },
+      {
+        sql: `INSERT INTO review_rate_limits (bucket_key, window_started_at, attempts) VALUES (?, ?, 1)
+          ON CONFLICT(bucket_key) DO UPDATE SET attempts = attempts + 1
+          RETURNING attempts`,
+        args: [bucketKey, stamp],
+      },
+    ], 'write');
+    return Number(rowValue(result[1].rows[0], 'attempts')) <= limit;
+  }
+
   async function consumeReviewerInvitation(email, credentialVersion) {
     const stamp = now().toISOString();
     const result = await client.execute({
@@ -734,5 +836,6 @@ export function createReviewState({ client, now = () => new Date() }) {
     scheduleRecovery, pendingRecoveries, resolveRecovery, recoverAction,
     enqueueNotification, scanIncidents, claimNotifications, completeNotification,
     syncReviewerAccounts, listReviewerAccounts, reviewerAccount, setReviewerInvitation, setReviewerPassword, consumeReviewerInvitation,
+    createReviewerPasswordReset, reviewerPasswordReset, consumeReviewerPasswordReset, consumeRateLimit,
   };
 }

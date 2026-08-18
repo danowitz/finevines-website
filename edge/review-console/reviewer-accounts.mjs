@@ -42,6 +42,16 @@ function defaultTemporaryPassword() {
   return `${b64(bytes).replaceAll('+', 'A').replaceAll('/', 'B').replaceAll('=', '')}!7x`;
 }
 
+function defaultResetToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return b64(bytes).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
+
+async function resetTokenHash(token) {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(String(token || ''))));
+  return b64(digest).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
+
 function publicAccount(account) {
   return {
     email: account.email,
@@ -72,7 +82,8 @@ function exactReviewUrl(value) {
   return normalized;
 }
 
-export function createReviewerAccounts({ state, mailer, reviewUrl, now = () => new Date(), temporaryPassword = defaultTemporaryPassword }) {
+export function createReviewerAccounts({ state, mailer, reviewUrl, now = () => new Date(), temporaryPassword = defaultTemporaryPassword, resetToken = defaultResetToken,
+  resetResponseDelay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)), monotonicNow = () => performance.now() }) {
   if (!state?.syncReviewerAccounts || !state?.reviewerAccount) throw new Error('reviewer accounts require review state');
   if (!mailer?.send) throw new Error('reviewer accounts require a mailer');
   const reviewerOrigin = exactReviewUrl(reviewUrl);
@@ -129,6 +140,35 @@ export function createReviewerAccounts({ state, mailer, reviewUrl, now = () => n
     return authenticatedAccount(updated);
   }
 
+  async function requestPasswordReset(email) {
+    const startedAt = monotonicNow();
+    try {
+      const normalized = String(email || '').trim().toLowerCase();
+      const token = resetToken();
+      const tokenHash = await resetTokenHash(token);
+      const expiresAt = new Date(now().getTime() + 60 * 60_000).toISOString();
+      if (await state.createReviewerPasswordReset(normalized, tokenHash, expiresAt)) {
+        const resetUrl = `${reviewerOrigin}/reset-password?token=${encodeURIComponent(token)}`;
+        await mailer.send({
+          dedupeKey: `reviewer-password-reset:${tokenHash}`,
+          to: normalized,
+          subject: 'Reset your Fine Vines review password',
+          text: `Fine Vines image review password reset\n\nReset your password: ${resetUrl}\n\nThis link expires in 60 minutes and can be used only once. If you did not request it, no action is required.`,
+          sensitive: true,
+        });
+      }
+    } finally {
+      await resetResponseDelay(Math.max(0, 300 - (monotonicNow() - startedAt)));
+    }
+  }
+
+  async function resetPassword(token, newPassword) {
+    const tokenHash = await resetTokenHash(token);
+    if (!await state.reviewerPasswordReset(tokenHash)) throw new Error('reset link is invalid or expired');
+    const updated = await state.consumeReviewerPasswordReset(tokenHash, await hashPassword(newPassword));
+    if (!updated) throw new Error('reset link is invalid or expired');
+  }
+
   async function authorizeSession(email, credentialVersion) {
     const account = await state.reviewerAccount(String(email || '').trim().toLowerCase());
     return Boolean(account?.eligible && !account.mustChangePassword && account.credentialVersion === credentialVersion);
@@ -139,5 +179,5 @@ export function createReviewerAccounts({ state, mailer, reviewUrl, now = () => n
     return account?.eligible && account.credentialVersion === credentialVersion ? authenticatedAccount(account) : null;
   }
 
-  return { sync, list, activate, authenticate, changePassword, authorizeSession, sessionIdentity };
+  return { sync, list, activate, authenticate, changePassword, requestPasswordReset, resetPassword, authorizeSession, sessionIdentity };
 }

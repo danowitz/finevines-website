@@ -27,6 +27,7 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY, queu
   const activeWines = new Map();
   const queuedActions = [];
   const accountCalls = [];
+  const rateLimits = new Map();
   const storage = {
     get: async (path) => files.get(path),
     getBytes: async (path) => files.get(path),
@@ -71,6 +72,11 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY, queu
       return { id, status: action.status };
     },
     pendingRecoveries: async () => [],
+    consumeRateLimit: async (bucket, limit) => {
+      const attempts = (rateLimits.get(bucket) || 0) + 1;
+      rateLimits.set(bucket, attempts);
+      return attempts <= limit;
+    },
   };
   const accounts = {
     authenticate: async (email, password) => email === identity.email && password === 'correct horse' ? identity : null,
@@ -85,6 +91,8 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY, queu
     sync: async (roster) => accountCalls.push(['sync', roster]),
     list: async () => [{ email: 'barb.fultz@finevines.com', name: 'Barb Fultz', role: 'Back Office', source: 'salesforce', status: 'active' }],
     activate: async (email) => accountCalls.push(['activate', email]),
+    requestPasswordReset: async (email) => accountCalls.push(['request-password-reset', email]),
+    resetPassword: async (token, newPassword) => accountCalls.push(['reset-password', token, newPassword]),
   };
   const config = { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', sessionSecret: 'session-secret', incidentRecipient: 'joel@gritautomation.com' };
   const handle = createReviewConsole({ config, storage, state, accounts, dispatch, now: () => new Date('2026-08-11T20:00:00Z'), uuid: (() => { let n = 0; return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`; })() });
@@ -105,6 +113,7 @@ describe('review console handler', () => {
     assert.equal(page.status, 200);
     assert.match(markup, /<link rel="stylesheet" href="\/app\.css">/);
     assert.match(markup, /<link rel="icon" href="\/favicon\.ico"/);
+    assert.match(markup, /href="\/forgot-password"/);
     assert.match(markup, /class="login-shell"/);
     assert.match(markup, /class="login-logo"/);
     assert.match(markup, />Sign in for catalog review<\/p>/);
@@ -125,6 +134,94 @@ describe('review console handler', () => {
     assert.match(robots.headers.get('content-type'), /^text\/plain/);
     assert.match(robots.headers.get('x-robots-tag'), /noindex/);
     assert.equal(await robots.text(), 'User-agent: *\nDisallow: /\n');
+  });
+
+  it('offers a non-enumerating, confirmed, single-use password reset flow', async () => {
+    const { handle, accountCalls } = fixture();
+    const requestPage = await handle(new Request('https://review.finevines.biz/forgot-password'));
+    const requestMarkup = await requestPage.text();
+    assert.match(requestMarkup, /name="email"/);
+
+    const requested = await handle(new Request('https://review.finevines.biz/forgot-password', {
+      method: 'POST', headers: { origin: 'https://review.finevines.biz' },
+      body: new URLSearchParams({ email: 'unknown@example.com' }),
+    }));
+    assert.equal(requested.status, 200);
+    assert.match(await requested.text(), /If an eligible account exists, a reset link has been sent/);
+    assert.deepEqual(accountCalls.at(-1), ['request-password-reset', 'unknown@example.com']);
+
+    const exchange = await handle(new Request('https://review.finevines.biz/reset-password?token=reset-token-92'));
+    assert.equal(exchange.status, 303);
+    assert.equal(exchange.headers.get('location'), '/reset-password');
+    assert.equal(exchange.headers.get('referrer-policy'), 'no-referrer');
+    assert.match(exchange.headers.get('set-cookie'), /fv_review_test_reset=reset-token-92;.*HttpOnly.*Secure.*SameSite=Strict/);
+    const resetCookie = exchange.headers.get('set-cookie').split(';')[0];
+    const resetPage = await handle(new Request('https://review.finevines.biz/reset-password', { headers: { cookie: resetCookie } }));
+    const resetMarkup = await resetPage.text();
+    assert.doesNotMatch(resetMarkup, /reset-token-92/);
+    assert.match(resetMarkup, /name="newPassword"/);
+    assert.match(resetMarkup, /name="confirmPassword"/);
+
+    const mismatch = await handle(new Request('https://review.finevines.biz/reset-password', {
+      method: 'POST', headers: { origin: 'https://review.finevines.biz', cookie: resetCookie },
+      body: new URLSearchParams({ newPassword: 'Replacement-password-92!', confirmPassword: 'different-password' }),
+    }));
+    assert.equal(mismatch.status, 400);
+    assert.match(await mismatch.text(), /New passwords do not match/);
+    assert.notEqual(accountCalls.at(-1)?.[0], 'reset-password');
+
+    const reset = await handle(new Request('https://review.finevines.biz/reset-password', {
+      method: 'POST', headers: { origin: 'https://review.finevines.biz', cookie: resetCookie },
+      body: new URLSearchParams({ newPassword: 'Replacement-password-92!', confirmPassword: 'Replacement-password-92!' }),
+    }));
+    assert.equal(reset.status, 303);
+    assert.equal(reset.headers.get('location'), '/?password-reset=success');
+    assert.match(reset.headers.get('set-cookie'), /fv_review_test_reset=; Max-Age=0/);
+    assert.deepEqual(accountCalls.at(-1), ['reset-password', 'reset-token-92', 'Replacement-password-92!']);
+  });
+
+  it('silently rate limits password reset requests from one client', async () => {
+    const { handle, accountCalls } = fixture();
+    for (let index = 0; index < 6; index += 1) {
+      const response = await handle(new Request('https://review.finevines.biz/forgot-password', {
+        method: 'POST',
+        headers: { origin: 'https://review.finevines.biz', 'bunnycdn-client-ip': '192.0.2.10' },
+        body: new URLSearchParams({ email: `person-${index}@example.com` }),
+      }));
+      assert.equal(response.status, 200);
+      assert.match(await response.text(), /If an eligible account exists/);
+    }
+    assert.equal(accountCalls.filter(([kind]) => kind === 'request-password-reset').length, 5);
+
+    const fallback = fixture();
+    for (let index = 0; index < 6; index += 1) {
+      await fallback.handle(new Request('https://review.finevines.biz/forgot-password', {
+        method: 'POST',
+        headers: { origin: 'https://review.finevines.biz', 'x-forwarded-for': `192.0.2.${index}` },
+        body: new URLSearchParams({ email: `fallback-${index}@example.com` }),
+      }));
+    }
+    assert.equal(fallback.accountCalls.filter(([kind]) => kind === 'request-password-reset').length, 5, 'caller-controlled forwarding headers cannot rotate the bucket');
+  });
+
+  it('rate limits password reset submissions before expensive password hashing', async () => {
+    const { handle, accountCalls } = fixture();
+    for (let index = 0; index < 5; index += 1) {
+      const response = await handle(new Request('https://review.finevines.biz/reset-password', {
+        method: 'POST',
+        headers: { origin: 'https://review.finevines.biz', 'bunnycdn-client-ip': '192.0.2.20', cookie: `fv_review_test_reset=token-${index}` },
+        body: new URLSearchParams({ newPassword: 'Replacement-password-92!', confirmPassword: 'Replacement-password-92!' }),
+      }));
+      assert.equal(response.status, 303);
+    }
+    const blocked = await handle(new Request('https://review.finevines.biz/reset-password', {
+      method: 'POST',
+      headers: { origin: 'https://review.finevines.biz', 'bunnycdn-client-ip': '192.0.2.20', cookie: 'fv_review_test_reset=token-6' },
+      body: new URLSearchParams({ newPassword: 'Replacement-password-92!', confirmPassword: 'Replacement-password-92!' }),
+    }));
+    assert.equal(blocked.status, 429);
+    assert.match(await blocked.text(), /reset link is invalid or expired/);
+    assert.equal(accountCalls.filter(([kind]) => kind === 'reset-password').length, 5);
   });
 
   it('hides protected routes and candidate data before login', async () => {
@@ -354,10 +451,19 @@ describe('review console handler', () => {
     const markup = await formPage.text();
     assert.match(markup, /Choose your password/);
     assert.match(markup, /minlength="8"/);
+    assert.match(markup, /name="currentPassword"/);
+    assert.match(markup, /name="newPassword"/);
+    assert.match(markup, /name="confirmPassword"/);
     const csrf = markup.match(/name="csrf" value="([^"]+)"/)[1];
+    const mismatch = await handle(new Request('https://review.finevines.biz/change-password', {
+      method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz' },
+      body: new URLSearchParams({ csrf, currentPassword: 'correct horse', newPassword: 'A-new-private-password-92!', confirmPassword: 'different-password' }),
+    }));
+    assert.equal(mismatch.status, 400);
+    assert.match(await mismatch.text(), /New passwords do not match/);
     const changed = await handle(new Request('https://review.finevines.biz/change-password', {
       method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz' },
-      body: new URLSearchParams({ csrf, currentPassword: 'correct horse', newPassword: 'A-new-private-password-92!' }),
+      body: new URLSearchParams({ csrf, currentPassword: 'correct horse', newPassword: 'A-new-private-password-92!', confirmPassword: 'A-new-private-password-92!' }),
     }));
     assert.equal(changed.status, 303);
     assert.equal(changed.headers.get('location'), '/');

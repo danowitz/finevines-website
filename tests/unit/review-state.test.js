@@ -201,6 +201,46 @@ describe('review state', () => {
     assert.match(messages[0].subject, /recovered/);
   });
 
+  it('redacts a password reset link after the sensitive notification is delivered', async () => {
+    const client = createClient({ url: 'file::memory:' }); clients.push(client);
+    const state = createReviewState({ client, now: () => new Date('2026-08-16T12:00:00.000Z') });
+    await state.initialize();
+    await state.enqueueNotification({
+      dedupeKey: 'password-reset:barb:1',
+      to: 'barb.fultz@finevines.com',
+      subject: 'Reset your Fine Vines review password',
+      text: 'Use https://review.finevines.com/reset-password?token=private-token',
+      sensitive: true,
+    });
+
+    const [message] = await state.claimNotifications();
+    assert.match(message.text, /private-token/);
+    await state.completeNotification(message.id);
+
+    const stored = await client.execute({
+      sql: 'SELECT status, sensitive, text_body FROM review_notifications WHERE id = ?',
+      args: [message.id],
+    });
+    assert.equal(stored.rows[0].status, 'sent');
+    assert.equal(Number(stored.rows[0].sensitive), 1);
+    assert.equal(stored.rows[0].text_body, '[sensitive notification delivered and redacted]');
+  });
+
+  it('enforces password-flow limits transactionally across console instances', async () => {
+    const client = createClient({ url: 'file::memory:' }); clients.push(client);
+    let clock = new Date('2026-08-16T12:00:00.000Z');
+    const first = createReviewState({ client, now: () => new Date(clock) });
+    const second = createReviewState({ client, now: () => new Date(clock) });
+    await first.initialize();
+    for (let attempt = 0; attempt < 4; attempt += 1) assert.equal(await first.consumeRateLimit('reset:hashed-client', 5, 600_000), true);
+    assert.equal(await second.consumeRateLimit('reset:hashed-client', 5, 600_000), true);
+    assert.equal(await second.consumeRateLimit('reset:hashed-client', 5, 600_000), false);
+    clock = new Date('2026-08-16T12:10:00.001Z');
+    assert.equal(await second.consumeRateLimit('reset:new-client', 5, 600_000), true);
+    const remaining = await client.execute('SELECT bucket_key FROM review_rate_limits');
+    assert.deepEqual(remaining.rows.map(({ bucket_key: bucket }) => bucket), ['reset:new-client'], 'expired buckets are pruned opportunistically');
+  });
+
   it('keeps a rejected candidate set locked through rediscovery and supports explicit recovery outcomes', async () => {
     const state = stateAt();
     await state.initialize();

@@ -1,12 +1,19 @@
 import { csrfToken, issueSession, protectedHeaders, readCookie, validateAction, verifySession } from './core.mjs';
 import { inspectReviewerImage, ReviewerImageError } from './reviewer-image.mjs';
 import { ActiveWineLockError } from './review-state.mjs';
-import { APP_CSS, APP_JS, FAVICON, changePasswordPage, consolePage, loginPage } from './ui.mjs';
+import { APP_CSS, APP_JS, FAVICON, changePasswordPage, consolePage, forgotPasswordPage, loginPage, resetPasswordPage } from './ui.mjs';
 
 const response = (body, init = {}) => new Response(body, { ...init, headers: protectedHeaders(init.headers) });
 const json = (value, status = 200) => response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+const encoder = new TextEncoder();
 
 const safeSegment = (value) => /^[A-Za-z0-9._-]{1,180}$/.test(value || '');
+
+function confirmedPassword(form) {
+  const password = form.get('newPassword');
+  if (password !== form.get('confirmPassword')) throw new Error('New passwords do not match.');
+  return password;
+}
 
 async function loadPackage(storage, prefix, packageId) {
   if (!safeSegment(packageId)) throw new Error('invalid package');
@@ -47,9 +54,23 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
   const cookieName = config.cookieName;
   const loginWindowMs = 10 * 60_000;
   const loginBlockMs = 15 * 60_000;
+  const resetWindowMs = 10 * 60_000;
+  const resetLimit = 5;
   let loginFailures = [];
   let loginBlockedUntil = 0;
   const stateReady = state.initialize();
+  const resetCookieName = `${cookieName}_reset`;
+  const rateLimitKey = crypto.subtle.importKey('raw', encoder.encode(config.sessionSecret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+
+  async function allowPasswordFlowAttempt(request, flow) {
+    // Only the header supplied by Bunny is trusted. Falling back to forwarding
+    // headers supplied by the caller would let an attacker rotate the bucket.
+    const source = request.headers.get('bunnycdn-client-ip') || 'unknown';
+    const signature = await crypto.subtle.sign('HMAC', await rateLimitKey, encoder.encode(`${flow}:${source}`));
+    const bucket = `${flow}:${btoa(String.fromCharCode(...new Uint8Array(signature)))}`;
+    await stateReady;
+    return state.consumeRateLimit(bucket, resetLimit, resetWindowMs);
+  }
 
   async function queueAction(id, action, upload) {
     await stateReady;
@@ -85,6 +106,45 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
       return response('User-agent: *\nDisallow: /\n', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
     }
 
+    if (request.method === 'GET' && url.pathname === '/forgot-password') {
+      return response(forgotPasswordPage('', brandLogo), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+    if (request.method === 'POST' && url.pathname === '/forgot-password') {
+      if (request.headers.get('origin') !== config.origin) return response(forgotPasswordPage('Invalid request.', brandLogo), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      const form = await request.formData();
+      if (await allowPasswordFlowAttempt(request, 'request')) {
+        try { await accounts.requestPasswordReset(form.get('email')); } catch {}
+      }
+      return response(forgotPasswordPage('If an eligible account exists, a reset link has been sent.', brandLogo), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+    if (request.method === 'GET' && url.pathname === '/reset-password') {
+      const queryToken = url.searchParams.get('token');
+      if (queryToken !== null) {
+        if (!/^[A-Za-z0-9_-]{8,256}$/.test(queryToken)) return response(resetPasswordPage('This reset link is invalid or expired.', brandLogo), { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Referrer-Policy': 'no-referrer' } });
+        return response(null, { status: 303, headers: {
+          Location: '/reset-password',
+          'Referrer-Policy': 'no-referrer',
+          'Set-Cookie': `${resetCookieName}=${queryToken}; Max-Age=600; Path=/reset-password; HttpOnly; Secure; SameSite=Strict`,
+        } });
+      }
+      return response(resetPasswordPage('', brandLogo), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+    if (request.method === 'POST' && url.pathname === '/reset-password') {
+      const form = await request.formData();
+      const tokenValue = readCookie(request.headers.get('cookie'), resetCookieName);
+      if (request.headers.get('origin') !== config.origin) return response(resetPasswordPage('Invalid request.', brandLogo), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      try {
+        const newPassword = confirmedPassword(form);
+        if (!await allowPasswordFlowAttempt(request, 'reset')) {
+          return response(resetPasswordPage('This reset link is invalid or expired.', brandLogo), { status: 429, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Retry-After': '600' } });
+        }
+        await accounts.resetPassword(tokenValue, newPassword);
+        return response(null, { status: 303, headers: { Location: '/?password-reset=success', 'Set-Cookie': `${resetCookieName}=; Max-Age=0; Path=/reset-password; HttpOnly; Secure; SameSite=Strict` } });
+      } catch (error) {
+        return response(resetPasswordPage(error.message, brandLogo), { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      }
+    }
+
     if (request.method === 'POST' && url.pathname === '/login') {
       const clock = now().getTime();
       if (clock < loginBlockedUntil) return response(loginPage('Too many attempts. Try again later.', brandLogo), { status: 429, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Retry-After': String(Math.ceil((loginBlockedUntil - clock) / 1000)) } });
@@ -110,7 +170,8 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
     const reviewer = session ? await accounts.sessionIdentity(session.reviewerEmail, session.credentialVersion) : null;
     if (!session || !reviewer) {
       if (url.pathname !== '/') return response('Not found', { status: 404 });
-      return response(loginPage('', brandLogo), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      const resetMessage = url.searchParams.get('password-reset') === 'success' ? 'Password updated. You can sign in.' : '';
+      return response(loginPage(resetMessage, brandLogo, Boolean(resetMessage)), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
 
     if (reviewer.mustChangePassword) {
@@ -123,7 +184,8 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
         const form = await request.formData();
         if (form.get('csrf') !== tokenValue) return response(changePasswordPage(tokenValue, 'Invalid request.', brandLogo), { status: 403, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
         try {
-          const updated = await accounts.changePassword(reviewer, form.get('currentPassword'), form.get('newPassword'));
+          const newPassword = confirmedPassword(form);
+          const updated = await accounts.changePassword(reviewer, form.get('currentPassword'), newPassword);
           const next = await issueSession({ secret: config.sessionSecret, environment: config.environment, sessionId: uuid(),
             reviewerEmail: updated.email, credentialVersion: updated.credentialVersion, mustChangePassword: false, now: now() });
           return response(null, { status: 303, headers: { Location: '/', 'Set-Cookie': `${cookieName}=${next}; Max-Age=43200; Path=/; HttpOnly; Secure; SameSite=Strict` } });

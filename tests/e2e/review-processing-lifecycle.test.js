@@ -448,12 +448,14 @@ test('real browser covers onboarding, modal choice, conflict, counters, and inci
   const state = createReviewState({ client, now: clock });
   await state.initialize();
   let passwordSequence = 0;
+  const sentMail = [];
   const accounts = createReviewerAccounts({
     state,
-    mailer: { send: async () => {} },
+    mailer: { send: async (message) => { sentMail.push(message); } },
     reviewUrl: 'https://review.finevines.biz',
     now: clock,
     temporaryPassword: () => `Temporary-review-pass-${++passwordSequence}-92!`,
+    resetToken: () => 'browser-reset-token-95',
   });
   const roster = [
     { name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' },
@@ -524,10 +526,27 @@ test('real browser covers onboarding, modal choice, conflict, counters, and inci
     assert.match(reviewerPage.url(), /\/change-password$/);
     await reviewerPage.type('#current-password', 'Temporary-review-pass-1-92!');
     await reviewerPage.type('#new-password', 'Private-review-password-93!');
+    await reviewerPage.type('#confirm-password', 'Private-review-password-93!');
     await Promise.all([reviewerPage.waitForNavigation(), reviewerPage.click('button[type=submit]')]);
     assert.equal(new URL(reviewerPage.url()).pathname, '/', `${await reviewerPage.$eval('body', (node) => node.innerText)}\n${JSON.stringify(hosted.requests.slice(-3))}`);
     await reviewerPage.waitForFunction(() => document.querySelector('.wine') || !document.querySelector('#summary')?.textContent.includes('Loading'), { timeout: 10_000 });
     assert.ok(await reviewerPage.$('.wine[data-sku="SKU-A"]'), await reviewerPage.$eval('body', (node) => node.innerText));
+
+    await reviewerPage.goto(`${hosted.origin}/forgot-password`, { waitUntil: 'domcontentloaded' });
+    await reviewerPage.type('#email', roster[0].email);
+    await Promise.all([reviewerPage.waitForNavigation(), reviewerPage.click('button[type=submit]')]);
+    assert.match(await reviewerPage.$eval('body', (node) => node.innerText), /If an eligible account exists/);
+    const resetMail = sentMail.find(({ subject }) => subject === 'Reset your Fine Vines review password');
+    assert.match(resetMail?.text || '', /browser-reset-token-95/);
+    await reviewerPage.goto(`${hosted.origin}/reset-password?token=browser-reset-token-95`, { waitUntil: 'domcontentloaded' });
+    await reviewerPage.type('#new-password', 'Reset-private-password-95!');
+    await reviewerPage.type('#confirm-password', 'Reset-private-password-95!');
+    await Promise.all([reviewerPage.waitForNavigation(), reviewerPage.click('button[type=submit]')]);
+    assert.match(await reviewerPage.$eval('body', (node) => node.innerText), /Password updated/);
+    await reviewerPage.type('#email', roster[0].email);
+    await reviewerPage.type('#password', 'Reset-private-password-95!');
+    await Promise.all([reviewerPage.waitForNavigation(), reviewerPage.click('button[type=submit]')]);
+    await reviewerPage.waitForSelector('.wine[data-sku="SKU-A"]');
 
     await supportPage.goto(hosted.origin, { waitUntil: 'domcontentloaded' });
     await supportPage.type('#email', roster[1].email);
@@ -570,7 +589,7 @@ test('real browser covers onboarding, modal choice, conflict, counters, and inci
     await supportPage.waitForFunction(() => !document.querySelector('.incident'));
     assert.equal((await state.actionStatus(actionId, 'test')).status, 'needs_decision');
     trace.evidence = {
-      onboarding: { reviewer: roster[0].email, forcedPasswordChange: true, resultingPath: '/' },
+      onboarding: { reviewer: roster[0].email, forcedPasswordChange: true, passwordReset: true, resultingPath: '/' },
       modal: { opened: true, comparedCandidates: 2, backdropClosed: true, selectionApplied: true },
       sameWineConflict: { sku: 'SKU-A', visibleToReviewer: roster[1].email },
       independentWine: { sku: 'SKU-B', queued: true },

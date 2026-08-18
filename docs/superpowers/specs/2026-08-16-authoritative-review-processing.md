@@ -70,6 +70,7 @@ An accepted image becomes **Completed** only after it is decoded, normalized, co
 48. As a developer, I want `.biz` to become development-only after cutover, so that future experiments cannot mutate production review state.
 49. As a developer, I want complete saved traces for every local transition, so that failures can be diagnosed from evidence rather than guesses.
 50. As a release owner, I want a mandatory local end-to-end acceptance gate, so that `.biz` changes only after the entire behavior is proven without live side effects.
+51. As an eligible reviewer, I want a non-disclosing emailed password-reset link, so that I can recover access without administrator intervention.
 
 ## Implementation Decisions
 
@@ -87,6 +88,8 @@ An accepted image becomes **Completed** only after it is decoded, normalized, co
 - Production passwords are slow-hashed server-side. A random temporary password is single-use, expires after seventy-two hours, and forces password change before review access. Resend rotates the credential.
 - Local-only test accounts may use `password`; production accounts may not.
 - Production invitations are an explicit activation operation and never a deploy/build side effect.
+- Password recovery returns the same public response for every email address. Eligible active accounts receive a random, hashed, single-use link that expires after sixty minutes; successful reset revokes existing sessions. Any intervening password change, invitation rotation, or eligibility change invalidates the link. Reset-request and reset-submission limits are enforced transactionally per HMAC-derived client bucket, and known/unknown request timing is normalized.
+- The reset-link query token is exchanged immediately through a no-referrer redirect for a short-lived, HttpOnly, Secure, SameSite=Strict cookie; reset forms never render the bearer token.
 - Local and development email use a non-delivering adapter. Incident delivery routes to `joel@gritautomation.com` while `.biz` is the pre-production target and `barb@finevines.com` after `.com` cutover. Reviewer invitations go to their individual account emails.
 - The browser refreshes authoritative state immediately after mutations and every ten seconds only when `document.visibilityState` is visible and the window has focus. It refreshes immediately on visibility/focus return.
 - Same-wine stale submissions return a conflict response and refresh the card. Different-wine actions remain independent.
@@ -108,6 +111,7 @@ An accepted image becomes **Completed** only after it is decoded, normalized, co
 - Unit tests remain appropriate for cryptographic/session primitives, image-integrity validation, state transition guards, candidate-set identity, and adapter error classification.
 - Contract tests verify that all workflow triggers call the same queue-drain command, that the review workflow owns a single concurrency group, that the batch and time limits are present, and that the nightly catalog path cannot process review actions.
 - Browser tests exercise login, forced password change, card selection, same-wine conflicts, independent wines, focus-aware synchronization, durable counters, modal/recovery behavior, and persistent incidents.
+- Password-recovery tests cover non-enumerating responses, transactional abuse limits, token expiry and single use, credential-rotation invalidation, session revocation, confirmation mismatch, sensitive-notification redaction, and the complete browser reset/login path.
 - Processor tests exercise action-specific isolation, operational abort/retry, idempotency, continuation, receipt ordering, and deployed-image hash mismatch.
 - Notification tests use a local capture adapter and assert no network delivery, recipient routing, incident deduplication, escalation, recovery, invitation expiry, and credential rotation.
 - The mandatory local end-to-end suite proves two concurrent reviewers, immediate-trigger failure plus scheduled recovery, fifty-action batching plus continuation, forty-five-minute yielding, invalid-image isolation, operational preservation, exact fetch-back verification, rejected-candidate rediscovery, and complete saved traces.
@@ -116,7 +120,7 @@ An accepted image becomes **Completed** only after it is decoded, normalized, co
 
 ## Out of Scope
 
-- Public account signup, self-service email password reset, social login, or customer-facing review access.
+- Public account signup, social login, or customer-facing review access.
 - Giving Sales Rep users review access unless the business explicitly changes reviewer eligibility.
 - Replacing Salesforce as the reviewer-roster authority.
 - Replacing Bunny as the current hosting and immutable-image storage provider.
