@@ -116,6 +116,37 @@ function publicCandidate(candidate) {
   return publicValue;
 }
 
+function recoveryCatalog(catalog) {
+  const bySlug = new Map();
+  for (const wine of catalog) {
+    const slug = clean(wine.slug);
+    const sku = clean(wine.sku);
+    if (!slug || !sku) continue;
+    const existing = bySlug.get(slug) || { slug, rows: [], currentImages: [] };
+    existing.rows.push({ sku, wineRevision: wineRevision(wine) });
+    const imagePath = clean(wine.imagePath);
+    if (imagePath && !existing.currentImages.includes(imagePath)) existing.currentImages.push(imagePath);
+    if (imagePath && !existing.currentImage) {
+      existing.sku = sku;
+      existing.wineRevision = wineRevision(wine);
+      existing.displayIdentity = [wine.producer, wine.name, wine.vintage].map(clean).filter(Boolean).join(' · ');
+      existing.currentImage = imagePath;
+      existing.imageSource = clean(wine.imageSource);
+    }
+    bySlug.set(slug, existing);
+  }
+  return [...bySlug.values()]
+    .filter((wine) => wine.currentImage)
+    .map((wine) => ({
+      ...wine,
+      skus: wine.rows.map(({ sku }) => sku).sort((left, right) => left.localeCompare(right)),
+      wineRevisions: wine.rows.sort((left, right) => left.sku.localeCompare(right.sku)),
+      currentImages: wine.currentImages.sort((left, right) => left.localeCompare(right)),
+    }))
+    .map(({ rows, ...wine }) => wine)
+    .sort((left, right) => left.displayIdentity.localeCompare(right.displayIdentity));
+}
+
 // Packages published before searchQuery existed cannot recover the historical
 // discovery text. Preserve those review decisions by migrating their displayed
 // producer/name/vintage identity into a one-time Google query. New draft cards
@@ -154,18 +185,20 @@ export async function publishReviewPackage({ environment, catalogCommit, catalog
     carried++;
   }
   const wines = [...incoming.values()].sort((left, right) => left.displayIdentity.localeCompare(right.displayIdentity));
+  const catalogWines = recoveryCatalog(catalog);
   for (const wine of wines) {
     if (!clean(wine.searchQuery)) throw new Error(`review wine ${wine.sku} is missing its original discovery query`);
   }
   // Once a package exists, publish an empty successor too. Otherwise the last
   // reviewed wine would remain in current.json forever even though the catalog
   // revision proves it has already been handled.
-  if (!wines.length && !current?.packageId) return { published: false, packageId: '', wines: 0, carried: 0 };
+  if (!wines.length && !catalogWines.length && !current?.packageId) return { published: false, packageId: '', wines: 0, carried: 0 };
 
   const created = now();
   const base = {
     schemaVersion: 1, environment, catalogCommit,
     createdAt: created.toISOString(), expiresAt: new Date(created.getTime() + 30 * 86400_000).toISOString(), reviewers: reviewerRoster,
+    catalogWines,
     wines: wines.map((wine) => ({ ...wine, candidates: wine.candidates.map(publicCandidate) })),
   };
   const digest = hash(JSON.stringify(base));

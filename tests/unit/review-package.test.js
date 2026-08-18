@@ -117,6 +117,26 @@ describe('hosted review package', () => {
     assert.ok(storage.files.has(`_review/test/packages/${current.packageId}/images/${manifest.wines[0].candidates[0].storageName}`));
   });
 
+  it('publishes one searchable recovery target for every pictured public wine', async () => {
+    const storage = memoryStorage();
+    const pictured = {
+      ...wine, id: 'pictured-1', sku: 'PHOTO-1', slug: 'pictured-wine-2021', name: 'Pictured Wine', vintage: '2021',
+      imagePath: 'assets/img/wines/pictured-wine-2021.jpg', imageSource: 'scraped-web', imageSourceUrl: 'https://producer.example/pictured.jpg',
+    };
+    const sibling = { ...pictured, id: 'pictured-2', sku: 'PHOTO-1*', imageReviewStatus: 'needs-review' };
+    const draft = await buildReviewDraft({ catalog: [wine], manifest: { one: { slug: wine.slug, query: 'Producer Wine 2022', alternates: [{ file: 'good.png', page: 'https://producer.example/wine' }] } }, fileExists: () => true, readBytes: async () => png });
+    await publishReviewPackage({ environment: 'test', catalogCommit: 'a'.repeat(40), catalog: [wine, pictured, sibling], draft, reviewers, storage, readBytes: async () => png, now: () => new Date('2026-08-15T00:00:00Z') });
+    const current = JSON.parse(storage.files.get('_review/test/current.json'));
+    const manifest = JSON.parse(storage.files.get(`_review/test/packages/${current.packageId}/manifest.json`));
+    assert.deepEqual(manifest.catalogWines.find(({ slug }) => slug === 'pictured-wine-2021'), {
+      sku: 'PHOTO-1', skus: ['PHOTO-1', 'PHOTO-1*'], slug: 'pictured-wine-2021',
+      displayIdentity: 'Producer · Pictured Wine · 2021', currentImage: 'assets/img/wines/pictured-wine-2021.jpg',
+      currentImages: ['assets/img/wines/pictured-wine-2021.jpg'], imageSource: 'scraped-web', wineRevision: wineRevision(pictured),
+      wineRevisions: [{ sku: 'PHOTO-1', wineRevision: wineRevision(pictured) }, { sku: 'PHOTO-1*', wineRevision: wineRevision(sibling) }],
+    });
+    assert.deepEqual(manifest.catalogWines.find(({ slug }) => slug === wine.slug)?.skus, [wine.sku], 'generated images remain replaceable');
+  });
+
   it('carries unresolved candidates forward only while the catalog revision still matches', async () => {
     const priorCandidate = { candidateId: 'old', storageName: 'old.png', sha256: 'hash', bytes: 3, mime: 'image/png', width: 1, height: 1 };
     const previous = { schemaVersion: 1, packageId: 'old-package', environment: 'test', catalogCommit: 'b'.repeat(40), wines: [{ sku: wine.sku, displayIdentity: 'Old', wineRevision: wineRevision(wine), candidates: [priorCandidate] }] };

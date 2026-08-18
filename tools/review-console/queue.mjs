@@ -89,7 +89,7 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
     }
     return {
       command: 'reconcile', decisions: records.length,
-      prepared: records.filter(({ status }) => status === 'prepared').length,
+      prepared: records.filter(({ status, catalogMutated }) => status === 'prepared' || catalogMutated === true).length,
       deferred: records.filter(({ status }) => status === 'deferred').length,
       finalizable: records.filter(({ status }) => status === 'prepared' || status === 'rediscover').length,
       needsAttention, recoveries,

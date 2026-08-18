@@ -18,6 +18,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -31,7 +32,7 @@ var (
 	uuidPattern         = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
 	hashPattern         = regexp.MustCompile(`^[a-f0-9]{64}$`)
 	commitPattern       = regexp.MustCompile(`^[a-f0-9]{7,64}$`)
-	deployedPathPattern = regexp.MustCompile(`^assets/img/wines/[A-Za-z0-9._-]+\.jpg$`)
+	deployedPathPattern = regexp.MustCompile(`^assets/img/wines/[A-Za-z0-9._-]+\.(?:jpg|svg)$`)
 )
 
 type Store interface {
@@ -57,24 +58,32 @@ func (err *InvalidImageError) Error() string { return fmt.Sprintf("invalid image
 func (err *InvalidImageError) Unwrap() error { return err.Err }
 
 type Action struct {
-	SchemaVersion       int         `json:"schemaVersion"`
-	ID                  string      `json:"id"`
-	Environment         string      `json:"environment"`
-	Reviewer            string      `json:"reviewer"`
-	SKU                 string      `json:"sku"`
-	Kind                string      `json:"kind"`
-	PackageID           string      `json:"packageId"`
-	TargetCatalogCommit string      `json:"targetCatalogCommit"`
-	WineRevision        string      `json:"wineRevision"`
-	CandidateID         string      `json:"candidateId"`
-	ImageStorageName    string      `json:"imageStorageName,omitempty"`
-	ImageSHA256         string      `json:"imageSHA256,omitempty"`
-	ImageBytes          int         `json:"imageBytes,omitempty"`
-	ImageMIME           string      `json:"imageMIME,omitempty"`
-	WineSlug            string      `json:"wineSlug,omitempty"`
-	RejectedCandidates  []Candidate `json:"rejectedCandidates,omitempty"`
-	SubmittedAt         string      `json:"submittedAt"`
-	CSRFSessionID       string      `json:"csrfSessionId"`
+	SchemaVersion       int               `json:"schemaVersion"`
+	ID                  string            `json:"id"`
+	Environment         string            `json:"environment"`
+	Reviewer            string            `json:"reviewer"`
+	SKU                 string            `json:"sku"`
+	Kind                string            `json:"kind"`
+	PackageID           string            `json:"packageId"`
+	TargetCatalogCommit string            `json:"targetCatalogCommit"`
+	WineRevision        string            `json:"wineRevision"`
+	CandidateID         string            `json:"candidateId"`
+	ImageStorageName    string            `json:"imageStorageName,omitempty"`
+	ImageSHA256         string            `json:"imageSHA256,omitempty"`
+	ImageBytes          int               `json:"imageBytes,omitempty"`
+	ImageMIME           string            `json:"imageMIME,omitempty"`
+	WineSlug            string            `json:"wineSlug,omitempty"`
+	Reason              string            `json:"reason,omitempty"`
+	WineRevisions       []WineRevisionRef `json:"wineRevisions,omitempty"`
+	PreviousImagePaths  []string          `json:"previousImagePaths,omitempty"`
+	RejectedCandidates  []Candidate       `json:"rejectedCandidates,omitempty"`
+	SubmittedAt         string            `json:"submittedAt"`
+	CSRFSessionID       string            `json:"csrfSessionId"`
+}
+
+type WineRevisionRef struct {
+	SKU          string `json:"sku"`
+	WineRevision string `json:"wineRevision"`
 }
 
 type Candidate struct {
@@ -103,6 +112,18 @@ type PackageWine struct {
 	Candidates      []Candidate `json:"candidates"`
 }
 
+type CatalogWine struct {
+	SKU             string            `json:"sku"`
+	SKUs            []string          `json:"skus"`
+	Slug            string            `json:"slug"`
+	WineRevision    string            `json:"wineRevision"`
+	WineRevisions   []WineRevisionRef `json:"wineRevisions"`
+	DisplayIdentity string            `json:"displayIdentity"`
+	CurrentImage    string            `json:"currentImage"`
+	CurrentImages   []string          `json:"currentImages"`
+	ImageSource     string            `json:"imageSource"`
+}
+
 type Reviewer struct {
 	Name  string `json:"name"`
 	Email string `json:"email,omitempty"`
@@ -117,6 +138,7 @@ type Manifest struct {
 	CreatedAt     string        `json:"createdAt"`
 	ExpiresAt     string        `json:"expiresAt"`
 	Reviewers     []Reviewer    `json:"reviewers"`
+	CatalogWines  []CatalogWine `json:"catalogWines,omitempty"`
 	Wines         []PackageWine `json:"wines"`
 }
 
@@ -136,6 +158,7 @@ type Decision struct {
 	DeployedImageSHA256 string `json:"deployedImageSha256,omitempty"`
 	SubmittedAt         string `json:"submittedAt"`
 	PreparedAt          string `json:"preparedAt"`
+	CatalogMutated      bool   `json:"catalogMutated,omitempty"`
 }
 
 type Receipt struct {
@@ -148,20 +171,22 @@ type Receipt struct {
 }
 
 type PrepareInput struct {
-	Store       Store
-	Normalizer  Normalizer
-	Environment string
-	Wines       []model.Wine
-	ImageDir    string
-	Now         time.Time
-	Log         func(string, ...any)
-	ActionIDs   map[string]struct{}
+	Store         Store
+	Normalizer    Normalizer
+	Environment   string
+	Wines         []model.Wine
+	ImageDir      string
+	Now           time.Time
+	Log           func(string, ...any)
+	ActionIDs     map[string]struct{}
+	FallbackLabel func(model.Wine) []byte
 }
 
 type PrepareResult struct {
-	Wines     []model.Wine `json:"-"`
-	Decisions []Decision   `json:"decisions"`
-	Pending   int          `json:"pending"`
+	Wines              []model.Wine `json:"-"`
+	Decisions          []Decision   `json:"decisions"`
+	Pending            int          `json:"pending"`
+	ObsoleteImagePaths []string     `json:"-"`
 }
 
 type FinalizeInput struct {
@@ -176,7 +201,8 @@ type FinalizeInput struct {
 }
 
 func validateCompletedReceipt(receipt Receipt, id, environment string) error {
-	if receipt.ID != id || receipt.Environment != environment || receipt.Status != "completed" ||
+	verifiedStatus := receipt.Status == "completed" || receipt.Status == "rediscover" && receipt.CatalogMutated
+	if receipt.ID != id || receipt.Environment != environment || !verifiedStatus ||
 		!commitPattern.MatchString(receipt.CatalogCommit) || !deployedPathPattern.MatchString(receipt.DeployedImagePath) ||
 		!hashPattern.MatchString(receipt.DeployedImageSHA256) || receipt.DeploymentTarget == "" ||
 		receipt.VerifiedImageURL == "" || receipt.RunID == "" || receipt.CompletedAt == "" {
@@ -239,7 +265,7 @@ func validateAction(action Action, environment, fileID string) error {
 	if !uuidPattern.MatchString(action.ID) || action.ID != fileID {
 		return fmt.Errorf("invalid action id")
 	}
-	if action.Kind != "image-select" && action.Kind != "no-image" && action.Kind != "reviewer-image" {
+	if action.Kind != "image-select" && action.Kind != "no-image" && action.Kind != "reviewer-image" && action.Kind != "image-reopen" {
 		return fmt.Errorf("invalid action kind")
 	}
 	if !validSegment(action.PackageID) || len(action.PackageID) > 160 || !validSKU(action.SKU) ||
@@ -262,7 +288,12 @@ func validateAction(action Action, environment, fileID string) error {
 				return fmt.Errorf("no-image action has invalid rejected candidate")
 			}
 		}
-	} else if action.WineSlug != "" || len(action.RejectedCandidates) != 0 {
+	} else if action.Kind == "image-reopen" {
+		if !validSegment(action.WineSlug) || action.CandidateID != "" || len(action.RejectedCandidates) != 0 ||
+			strings.TrimSpace(action.Reason) == "" || len(action.Reason) > 240 || !validRevisionRefs(action.WineRevisions) || len(action.PreviousImagePaths) == 0 {
+			return fmt.Errorf("image-reopen action has invalid recovery identity")
+		}
+	} else if action.WineSlug != "" || action.Reason != "" || len(action.WineRevisions) != 0 || len(action.PreviousImagePaths) != 0 || len(action.RejectedCandidates) != 0 {
 		return fmt.Errorf("rejected candidates require no-image")
 	}
 	if action.Kind == "reviewer-image" {
@@ -278,6 +309,43 @@ func validateAction(action Action, environment, fileID string) error {
 		return fmt.Errorf("invalid submittedAt")
 	}
 	return nil
+}
+
+func validRevisionRefs(refs []WineRevisionRef) bool {
+	if len(refs) == 0 {
+		return false
+	}
+	previous := ""
+	for _, ref := range refs {
+		if !validSKU(ref.SKU) || !hashPattern.MatchString(ref.WineRevision) || ref.SKU <= previous {
+			return false
+		}
+		previous = ref.SKU
+	}
+	return true
+}
+
+func sameRevisionRefs(left, right []WineRevisionRef) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for index := range left {
+		if left[index] != right[index] {
+			return false
+		}
+	}
+	return true
+}
+
+func revisionRefsForSlug(wines []model.Wine, slug string) []WineRevisionRef {
+	refs := make([]WineRevisionRef, 0)
+	for _, wine := range wines {
+		if wine.Slug == slug {
+			refs = append(refs, WineRevisionRef{SKU: wine.SKU, WineRevision: revision(wine)})
+		}
+	}
+	sort.Slice(refs, func(left, right int) bool { return refs[left].SKU < refs[right].SKU })
+	return refs
 }
 
 func validateManifest(manifest Manifest, action Action) (PackageWine, Candidate, error) {
@@ -306,6 +374,19 @@ func validateManifest(manifest Manifest, action Action) (PackageWine, Candidate,
 	submitted, _ := time.Parse(time.RFC3339, action.SubmittedAt)
 	if submitted.Before(created) || submitted.After(expires) {
 		return PackageWine{}, Candidate{}, fmt.Errorf("action was submitted outside package lifetime")
+	}
+	if action.Kind == "image-reopen" {
+		for _, wine := range manifest.CatalogWines {
+			if wine.SKU != action.SKU {
+				continue
+			}
+			if wine.WineRevision != action.WineRevision || wine.Slug != action.WineSlug || strings.TrimSpace(wine.CurrentImage) == "" ||
+				!sameRevisionRefs(wine.WineRevisions, action.WineRevisions) || !slices.Equal(wine.CurrentImages, action.PreviousImagePaths) {
+				return PackageWine{}, Candidate{}, fmt.Errorf("action does not match catalog wine revision")
+			}
+			return PackageWine{SKU: wine.SKU, Slug: wine.Slug, WineRevision: wine.WineRevision, DisplayIdentity: wine.DisplayIdentity, CurrentImage: wine.CurrentImage}, Candidate{}, nil
+		}
+		return PackageWine{}, Candidate{}, fmt.Errorf("package has no matching catalog wine")
 	}
 	for _, wine := range manifest.Wines {
 		if wine.SKU != action.SKU {
@@ -348,6 +429,76 @@ func validateManifest(manifest Manifest, action Action) (PackageWine, Candidate,
 		return PackageWine{}, Candidate{}, fmt.Errorf("candidate does not belong to package wine")
 	}
 	return PackageWine{}, Candidate{}, fmt.Errorf("package has no matching wine")
+}
+
+func imageReferencedOutside(wines []model.Wine, targets map[int]bool, imagePath string) bool {
+	target, err := filepath.Abs(filepath.FromSlash(imagePath))
+	if err != nil {
+		return true
+	}
+	for index, wine := range wines {
+		if targets[index] || strings.TrimSpace(wine.ImagePath) == "" {
+			continue
+		}
+		candidate, candidateErr := filepath.Abs(filepath.FromSlash(wine.ImagePath))
+		if candidateErr == nil && filepath.Clean(candidate) == filepath.Clean(target) {
+			return true
+		}
+	}
+	return false
+}
+
+func imageWithinDirectory(imagePath, imageDirectory string) (string, error) {
+	root, err := filepath.Abs(imageDirectory)
+	if err != nil {
+		return "", err
+	}
+	target, err := filepath.Abs(filepath.FromSlash(imagePath))
+	if err != nil {
+		return "", err
+	}
+	relative, err := filepath.Rel(root, target)
+	if err != nil {
+		return "", err
+	}
+	if relative == "." || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) || filepath.IsAbs(relative) {
+		return "", fmt.Errorf("image %q is outside %q", imagePath, imageDirectory)
+	}
+	return target, nil
+}
+
+func obsoleteImagesForRecovery(wines []model.Wine, targetSlug string, previousPaths []string, imageDirectory string) ([]string, error) {
+	targetRows := make(map[int]bool)
+	for wineIndex := range wines {
+		if wines[wineIndex].Slug == targetSlug {
+			targetRows[wineIndex] = true
+		}
+	}
+	obsolete := make(map[string]bool)
+	fallbackPath, err := filepath.Abs(filepath.Join(imageDirectory, targetSlug+".svg"))
+	if err != nil {
+		return nil, err
+	}
+	for _, oldPath := range previousPaths {
+		oldPath = strings.TrimSpace(oldPath)
+		if oldPath == "" || imageReferencedOutside(wines, targetRows, oldPath) {
+			continue
+		}
+		resolved, err := imageWithinDirectory(oldPath, imageDirectory)
+		if err != nil {
+			return nil, fmt.Errorf("refusing unsafe recovery image path: %w", err)
+		}
+		if filepath.Clean(resolved) == filepath.Clean(fallbackPath) {
+			continue
+		}
+		obsolete[resolved] = true
+	}
+	paths := make([]string, 0, len(obsolete))
+	for obsoletePath := range obsolete {
+		paths = append(paths, obsoletePath)
+	}
+	sort.Strings(paths)
+	return paths, nil
 }
 
 func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
@@ -466,6 +617,24 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			continue
 		}
 		if result.Wines[index].ImageReviewActionID == action.ID {
+			if action.Kind == "image-reopen" {
+				obsolete, obsoleteErr := obsoleteImagesForRecovery(result.Wines, action.WineSlug, action.PreviousImagePaths, input.ImageDir)
+				if obsoleteErr != nil {
+					return result, obsoleteErr
+				}
+				result.ObsoleteImagePaths = append(result.ObsoleteImagePaths, obsolete...)
+				fallbackPath := filepath.Join(input.ImageDir, result.Wines[index].Slug+".svg")
+				fallbackData, readErr := os.ReadFile(fallbackPath)
+				if readErr != nil {
+					return result, fmt.Errorf("read previously prepared fallback: %w", readErr)
+				}
+				fallbackSum := sha256.Sum256(fallbackData)
+				decision.Status, decision.Reason, decision.CatalogMutated = "rediscover", "current image already withdrawn; fresh discovery required", true
+				decision.DeployedImagePath = path.Join("assets/img/wines", result.Wines[index].Slug+".svg")
+				decision.DeployedImageSHA256 = hex.EncodeToString(fallbackSum[:])
+				result.Decisions = append(result.Decisions, decision)
+				continue
+			}
 			decision.Status, decision.Reason = "prepared", "the catalog already contains this review action"
 			decision.ImageSHA256 = candidate.SHA256
 			if action.Kind == "reviewer-image" {
@@ -483,6 +652,51 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 		}
 		if revision(result.Wines[index]) != action.WineRevision {
 			decision.Status, decision.Reason = "conflict", "the catalog wine changed after this review package was created"
+			result.Decisions = append(result.Decisions, decision)
+			continue
+		}
+		if action.Kind == "image-reopen" {
+			if !sameRevisionRefs(revisionRefsForSlug(result.Wines, action.WineSlug), action.WineRevisions) {
+				decision.Status, decision.Reason = "conflict", "a grouped catalog row changed after this review package was created"
+				result.Decisions = append(result.Decisions, decision)
+				continue
+			}
+			if input.FallbackLabel == nil {
+				return result, fmt.Errorf("reviewactions: image recovery requires a neutral-label generator")
+			}
+			targetSlug := result.Wines[index].Slug
+			fallbackData := input.FallbackLabel(result.Wines[index])
+			if len(fallbackData) == 0 {
+				return result, fmt.Errorf("reviewactions: neutral-label generator returned no bytes")
+			}
+			if err := os.MkdirAll(input.ImageDir, 0o755); err != nil {
+				return result, err
+			}
+			fallbackFile := filepath.Join(input.ImageDir, targetSlug+".svg")
+			if err := os.WriteFile(fallbackFile, fallbackData, 0o644); err != nil {
+				return result, fmt.Errorf("write neutral fallback: %w", err)
+			}
+			targetRows := make(map[int]bool)
+			for wineIndex := range result.Wines {
+				if result.Wines[wineIndex].Slug == targetSlug {
+					targetRows[wineIndex] = true
+				}
+			}
+			obsolete, obsoleteErr := obsoleteImagesForRecovery(result.Wines, targetSlug, action.PreviousImagePaths, input.ImageDir)
+			if obsoleteErr != nil {
+				return result, obsoleteErr
+			}
+			fallbackCatalogPath := path.Join(filepath.ToSlash(input.ImageDir), targetSlug+".svg")
+			for wineIndex := range targetRows {
+				result.Wines[wineIndex].ReopenImageReview(fallbackCatalogPath)
+			}
+			result.Wines[index].ImageReviewActionID = action.ID
+			result.Wines[index].ImageReviewedAt = input.Now.UTC().Format(time.RFC3339)
+			result.ObsoleteImagePaths = append(result.ObsoleteImagePaths, obsolete...)
+			fallbackSum := sha256.Sum256(fallbackData)
+			decision.Status, decision.Reason, decision.CatalogMutated = "rediscover", "current image withdrawn; fresh discovery required", true
+			decision.DeployedImagePath = path.Join("assets/img/wines", targetSlug+".svg")
+			decision.DeployedImageSHA256 = hex.EncodeToString(fallbackSum[:])
 			result.Decisions = append(result.Decisions, decision)
 			continue
 		}
@@ -635,7 +849,8 @@ func Finalize(ctx context.Context, input FinalizeInput) error {
 	verifiedURLs := make(map[string]string)
 	existingReceipts := make(map[string]Receipt)
 	for _, decision := range input.Decisions {
-		if decision.Status != "prepared" {
+		verifyDeployment := decision.Status == "prepared" || decision.Status == "rediscover" && decision.CatalogMutated
+		if !verifyDeployment {
 			continue
 		}
 		receiptPath := path.Join(prefix, "receipts", decision.ID+".json")
@@ -652,7 +867,9 @@ func Finalize(ctx context.Context, input FinalizeInput) error {
 				return err
 			}
 			expected := decision
-			expected.Status = "completed"
+			if expected.Status == "prepared" {
+				expected.Status = "completed"
+			}
 			if prior.Decision != expected {
 				return fmt.Errorf("reviewactions: receipt %s already exists for a different decision", decision.ID)
 			}

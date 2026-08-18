@@ -263,6 +263,18 @@ describe('review state', () => {
     assert.deepEqual(packageStatus.decisions, [packageWines[0]]);
   });
 
+  it('keeps an image replacement request locked through fresh discovery without prior candidates', async () => {
+    const state = stateAt();
+    await state.initialize();
+    const replacement = {
+      ...action('00000000-0000-4000-8000-000000000086'), kind: 'image-reopen', candidateId: '', wineSlug: 'pictured-wine-2021', rejectedCandidates: [],
+    };
+    await state.queue(replacement);
+    await state.claim('test', { limit: 50, staleBefore: '2026-08-16T11:15:00.000Z' });
+    assert.deepEqual(await state.scheduleRecovery(replacement.id, 'test'), { actionId: replacement.id, slug: 'pictured-wine-2021', rejected: 0 });
+    assert.deepEqual(await state.pendingRecoveries('test'), [{ actionId: replacement.id, slug: 'pictured-wine-2021', rejectedCandidates: [] }]);
+  });
+
   it('requires reasons for reopen/exclusion and can explicitly restart failed rediscovery', async () => {
     const client = createClient({ url: 'file::memory:' }); clients.push(client);
     const state = createReviewState({ client, now: () => new Date('2026-08-16T12:00:00.000Z') }); await state.initialize();

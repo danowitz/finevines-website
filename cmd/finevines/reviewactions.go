@@ -18,9 +18,11 @@ import (
 
 	"github.com/gritautomation/finevines-website/internal/config"
 	"github.com/gritautomation/finevines-website/internal/deploy"
+	"github.com/gritautomation/finevines-website/internal/label"
 	"github.com/gritautomation/finevines-website/internal/model"
 	"github.com/gritautomation/finevines-website/internal/notify"
 	"github.com/gritautomation/finevines-website/internal/reviewactions"
+	"github.com/gritautomation/finevines-website/internal/salesforce"
 )
 
 const reviewCatalogPath = "data/wines.json"
@@ -148,12 +150,24 @@ func runReviewApply(cfg config.Config, args []string) error {
 	result, err := reviewactions.Prepare(prepareContext, reviewactions.PrepareInput{
 		Store: store, Normalizer: execNormalizer{bin: normalizer}, Environment: *environment,
 		Wines: wines, ImageDir: *imageDirectory, Now: time.Now().UTC(), Log: log.Printf, ActionIDs: actionIDs,
+		FallbackLabel: func(wine model.Wine) []byte {
+			return label.Generate(salesforce.WineRaw{
+				SKU: wine.SKU, Producer: wine.Producer, Name: wine.Name, Vintage: wine.Vintage,
+				Varietal: wine.Varietal, Region: wine.Region, Country: wine.Country,
+				Appellation: wine.Appellation, Style: wine.Style,
+			})
+		},
 	})
 	if err != nil {
 		return fmt.Errorf("reviewapply: %w", err)
 	}
 	if err := model.SaveWines(*catalogPath, result.Wines); err != nil {
 		return fmt.Errorf("reviewapply: save catalog: %w", err)
+	}
+	for _, obsoletePath := range result.ObsoleteImagePaths {
+		if err := os.Remove(obsoletePath); err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("reviewapply: catalog recovery is saved but obsolete image cleanup failed for %q: %w", obsoletePath, err)
+		}
 	}
 	if err := writeReviewJSON(*decisionsPath, result.Decisions); err != nil {
 		return fmt.Errorf("reviewapply: write decisions: %w", err)

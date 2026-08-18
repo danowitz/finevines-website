@@ -14,6 +14,12 @@ function rowValue(row, name) {
   return row?.[name] ?? row?.[Object.keys(row || {}).find((key) => key.toLowerCase() === name.toLowerCase())];
 }
 
+function validRecoveryAction(action) {
+  const candidateSetIsValid = action.kind === 'no-image' && Array.isArray(action.rejectedCandidates) && action.rejectedCandidates.length
+    || action.kind === 'image-reopen' && Array.isArray(action.rejectedCandidates) && action.rejectedCandidates.length === 0;
+  return Boolean(candidateSetIsValid) && /^[A-Za-z0-9._-]{1,180}$/.test(action.wineSlug || '');
+}
+
 export function createReviewState({ client, now = () => new Date() }) {
   if (!client?.execute || !client?.batch) throw new Error('review state requires a transactional SQL client');
 
@@ -389,7 +395,7 @@ export function createReviewState({ client, now = () => new Date() }) {
     const row = result.rows[0];
     if (!row || String(rowValue(row, 'status')) !== 'processing') throw new Error(`review action ${id} is not processing`);
     const action = JSON.parse(String(rowValue(row, 'action_json')));
-    if (action.kind !== 'no-image' || !/^[A-Za-z0-9._-]{1,180}$/.test(action.wineSlug || '') || !Array.isArray(action.rejectedCandidates) || !action.rejectedCandidates.length) {
+    if (!validRecoveryAction(action)) {
       throw new Error(`review action ${id} has no valid rejected candidate set`);
     }
     const rejected = action.rejectedCandidates.map((candidate) => ({
@@ -480,7 +486,7 @@ export function createReviewState({ client, now = () => new Date() }) {
     const row = current.rows[0];
     if (!row) throw new Error(`review action ${id} cannot be rediscovered`);
     const action = JSON.parse(String(rowValue(row, 'action_json')));
-    if (action.kind !== 'no-image' || !/^[A-Za-z0-9._-]{1,180}$/.test(action.wineSlug || '') || !Array.isArray(action.rejectedCandidates) || !action.rejectedCandidates.length) {
+    if (!validRecoveryAction(action)) {
       throw new Error(`review action ${id} has no valid rejected candidate set`);
     }
     const rejected = action.rejectedCandidates.map((candidate) => ({

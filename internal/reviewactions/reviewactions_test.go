@@ -383,6 +383,99 @@ func TestPrepareSchedulesBroaderDiscoveryForCompleteRejectedSet(t *testing.T) {
 	}
 }
 
+func TestPrepareReopensAPicturedPublicWineAndSchedulesFreshDiscovery(t *testing.T) {
+	store, wines, id := fixture(t)
+	imageDir := t.TempDir()
+	wines[0].ImagePath = filepath.Join(imageDir, wines[0].Slug+".jpg")
+	wines[0].ImageSource = model.ImageScrapedWeb
+	if err := os.WriteFile(wines[0].ImagePath, []byte("wrong-image"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	sibling := wines[0]
+	sibling.ID, sibling.SKU = "wine-2", "500741*"
+	wines = append(wines, sibling)
+
+	var action Action
+	if err := json.Unmarshal(store.files["_review/test/actions/"+id+".json"], &action); err != nil {
+		t.Fatal(err)
+	}
+	action.Kind, action.CandidateID, action.WineSlug = "image-reopen", "", wines[0].Slug
+	action.Reviewer = "joel@danowitz.com"
+	action.WineRevision = WineRevision(wines[0])
+	action.Reason = "Support reported the current catalog image as wrong."
+	action.WineRevisions = revisionRefsForSlug(wines, wines[0].Slug)
+	action.PreviousImagePaths = []string{wines[0].ImagePath}
+	manifest := Manifest{
+		SchemaVersion: 1, PackageID: action.PackageID, Environment: "test", CatalogCommit: action.TargetCatalogCommit,
+		CreatedAt: "2026-08-15T00:00:00Z", ExpiresAt: "2026-09-14T00:00:00Z",
+		CatalogWines: []CatalogWine{{SKU: action.SKU, SKUs: []string{action.SKU, sibling.SKU}, Slug: wines[0].Slug, WineRevision: action.WineRevision, WineRevisions: action.WineRevisions, CurrentImage: wines[0].ImagePath, CurrentImages: action.PreviousImagePaths}},
+	}
+	encode := func(value any) []byte {
+		data, err := json.Marshal(value)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return data
+	}
+	store.files["_review/test/actions/"+id+".json"], store.files["_review/test/pending/"+id+".json"] = encode(action), encode(action)
+	store.files["_review/test/packages/pkg-1/manifest.json"] = encode(manifest)
+	staleWines := append([]model.Wine(nil), wines...)
+	staleWines[1].Name = "Changed sibling"
+	stale, staleErr := Prepare(context.Background(), PrepareInput{
+		Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: staleWines, ImageDir: imageDir,
+		Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC), FallbackLabel: func(model.Wine) []byte { return []byte("<svg>neutral</svg>") },
+	})
+	if staleErr != nil || len(stale.Decisions) != 1 || stale.Decisions[0].Status != "conflict" {
+		t.Fatalf("stale grouped revision was not refused: %#v, %v", stale.Decisions, staleErr)
+	}
+
+	result, err := Prepare(context.Background(), PrepareInput{
+		Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: imageDir,
+		Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC), FallbackLabel: func(model.Wine) []byte { return []byte("<svg>neutral</svg>") },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Decisions) != 1 || result.Decisions[0].Status != "rediscover" || !result.Decisions[0].CatalogMutated {
+		t.Fatalf("decisions = %#v", result.Decisions)
+	}
+	for _, wine := range result.Wines {
+		if wine.ImageReviewStatus != model.ImageReviewRequired || wine.ImageSource != model.ImageGeneratedLabel || !strings.HasSuffix(wine.ImagePath, ".svg") {
+			t.Fatalf("public-wine row was not reopened: %+v", wine)
+		}
+	}
+	if result.Wines[0].ImageReviewActionID != id || result.Wines[1].ImageReviewActionID != "" {
+		t.Fatalf("revision-bound action identity was not preserved: %#v", result.Wines)
+	}
+	if len(result.ObsoleteImagePaths) != 1 || result.ObsoleteImagePaths[0] != filepath.Join(imageDir, wines[0].Slug+".jpg") {
+		t.Fatalf("obsolete images = %#v", result.ObsoleteImagePaths)
+	}
+	if data, err := os.ReadFile(filepath.Join(imageDir, wines[0].Slug+".svg")); err != nil || string(data) != "<svg>neutral</svg>" {
+		t.Fatalf("neutral fallback = %q, %v", data, err)
+	}
+	retry, err := Prepare(context.Background(), PrepareInput{
+		Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: result.Wines, ImageDir: imageDir,
+		Now: time.Date(2026, 8, 15, 2, 5, 0, 0, time.UTC), FallbackLabel: func(model.Wine) []byte { return []byte("<svg>neutral</svg>") },
+	})
+	if err != nil || len(retry.ObsoleteImagePaths) != 1 || retry.ObsoleteImagePaths[0] != wines[0].ImagePath {
+		t.Fatalf("retry did not preserve obsolete cleanup work: %#v, %v", retry.ObsoleteImagePaths, err)
+	}
+	fetchedURL := ""
+	if err := Finalize(context.Background(), FinalizeInput{
+		Store: store, Environment: "test", Decisions: result.Decisions, CatalogCommit: strings.Repeat("a", 40),
+		DeploymentTarget: "https://finevines.com", RunID: "recovery-run", Now: time.Date(2026, 8, 15, 3, 0, 0, 0, time.UTC),
+		Fetcher: fetcherFunc(func(_ context.Context, target string) ([]byte, error) {
+			fetchedURL = target
+			return []byte("<svg>neutral</svg>"), nil
+		}),
+	}); err != nil {
+		t.Fatalf("fallback deployment proof failed: %v", err)
+	}
+	if !strings.Contains(fetchedURL, ".svg?review-action="+id) {
+		t.Fatalf("fallback deployment was not fetched with an action cache buster: %q", fetchedURL)
+	}
+}
+
 func TestFinalizeUploadsReceiptBeforeDeletingPending(t *testing.T) {
 	store, _, id := fixture(t)
 	deployed := []byte("normalized-deployed-image")

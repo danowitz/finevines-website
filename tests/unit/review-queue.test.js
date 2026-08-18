@@ -190,6 +190,22 @@ describe('review queue command', () => {
     assert.equal((await state.packageStatus('test', [{ slug: 'producer-wine-2022', wineRevision: 'a'.repeat(64) }])).counts.needsDecision, 1);
   });
 
+  it('deploys a catalog-mutating image replacement before starting fresh discovery', async () => {
+    const client = createClient({ url: 'file::memory:' }); clients.push(client);
+    const state = createReviewState({ client, now: () => new Date('2026-08-16T12:00:00Z') });
+    await state.initialize();
+    const replacement = {
+      ...action('00000000-0000-4000-8000-000000000092', 'b'.repeat(64)), kind: 'image-reopen', candidateId: '', wineSlug: 'pictured-wine-2021', rejectedCandidates: [],
+    };
+    await state.queue(replacement);
+    await state.claim('test', { limit: 50, staleBefore: '2026-08-16T11:00:00Z' });
+    const decisionsFile = await tempFile('replacement-decisions.json');
+    await writeFile(decisionsFile, JSON.stringify([{ id: replacement.id, status: 'rediscover', kind: 'image-reopen', catalogMutated: true }]));
+    const reconciled = await runQueueCommand({ args: ['reconcile', '--environment', 'test', '--decisions', decisionsFile], state });
+    assert.equal(reconciled.prepared, 1);
+    assert.equal(reconciled.recoveries[0].slug, 'pictured-wine-2021');
+  });
+
   it('idempotently imports immutable legacy pending actions before claiming', async () => {
     const state = await fixture();
     const legacy = action('00000000-0000-4000-8000-000000000095', '5'.repeat(64));

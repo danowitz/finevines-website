@@ -44,6 +44,12 @@ _Avoid_: Dead-end rejection, repeat candidate set
 An administrator's explicit instruction to retry processing, reopen a wine for a new decision, run broader discovery, or temporarily exclude the wine from launch with a recorded reason. No recovery control may manufacture completion proof or mark an unverified action completed.
 _Avoid_: Mark completed, silent discard, verification bypass
 
+The Support-only **Replace a catalog image…** control creates an `image-reopen`
+recovery action for one exact wine revision. Processing removes its current
+photograph, installs the neutral fallback for every row sharing the public wine
+slug, and runs fresh discovery. A new real image still requires a normal human
+review decision.
+
 **Local review acceptance gate**:
 The mandatory end-to-end suite that must pass before the live `.biz` workflow changes. It proves individual login and forced password change, non-delivering test email, concurrent-review locks, independent wines, trigger-failure recovery, fifty-action batching and continuation, action-specific versus operational failure handling, deployed-image hash verification, durable status and incident UI, rejected-candidate rediscovery, and complete diagnostic traces.
 _Avoid_: Production smoke test, unit-tests-only approval

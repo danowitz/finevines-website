@@ -439,6 +439,43 @@ test('review UI refreshes when focused and stays quiet in a background tab', { t
   }
 });
 
+test('Support can find a pictured wine and queue its image replacement in a real browser', { timeout: 30_000 }, async () => {
+  const browser = await openBrowser();
+  const page = await browser.newPage();
+  try {
+    await page.setContent(consolePage({ name: 'Joel Danowitz', email: 'joel@danowitz.com', role: 'Support' }), { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => {
+      window.__reopenRequest = null;
+      window.fetch = async (url, init = {}) => {
+        if (url === '/api/current') return { ok: true, json: async () => ({
+          packageId: 'pkg-reopen', catalogCommit: 'abcdef1', csrfToken: 'csrf', wines: [], incidents: [], isAdministrator: true,
+          catalogWines: [{ sku: 'FV-100*', skus: ['FV-100*'], slug: 'domaine-test-chablis-2022', wineRevision: 'a'.repeat(64), wineRevisions: [{ sku: 'FV-100*', wineRevision: 'a'.repeat(64) }], displayIdentity: 'Domaine Test Chablis 2022', currentImage: 'assets/img/wines/domaine-test-chablis-2022.jpg', currentImages: ['assets/img/wines/domaine-test-chablis-2022.jpg'] }],
+          expiresAt: '2026-09-17T00:00:00Z', reviewStatus: {},
+        }) };
+        if (url === '/api/admin/accounts') return { ok: false, json: async () => ({}) };
+        if (url === '/api/admin/wines/reopen') {
+          window.__reopenRequest = JSON.parse(init.body);
+          return { ok: true, json: async () => ({ id: 'action-1', status: 'queued' }) };
+        }
+        throw new Error('unexpected fetch ' + url);
+      };
+    });
+    await page.evaluate((source) => (0, eval)(source), APP_JS);
+    await page.click('#reopen-trigger');
+    await page.type('#reopen-search', 'FV-100*');
+    await page.click('.reopen-result');
+    assert.match(await page.$eval('#reopen-selection', (node) => node.textContent), /Domaine Test Chablis 2022/);
+    await page.click('.reopen-danger');
+    await page.waitForFunction(() => window.__reopenRequest !== null);
+    assert.deepEqual(await page.evaluate(() => window.__reopenRequest), {
+      kind: 'image-reopen', sku: 'FV-100*', packageId: 'pkg-reopen', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: '', reason: 'Support reported the current catalog image as wrong.',
+    });
+    assert.match(await page.$eval('.reopen-receipt', (node) => node.textContent), /Queued/);
+  } finally {
+    await page.close(); await browser.close();
+  }
+});
+
 test('real browser covers onboarding, modal choice, conflict, counters, and incident recovery', { timeout: 90_000 }, async () => {
   const root = await mkdtemp(join(tmpdir(), 'finevines-review-browser-')); roots.push(root);
   const storage = fileStorage(join(root, 'objects'));

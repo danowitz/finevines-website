@@ -15,6 +15,7 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY, queu
     ['_review/test/packages/pkg-1/manifest.json', JSON.stringify({
       schemaVersion: 1, packageId: 'pkg-1', environment: 'test', catalogCommit: 'abcdef1', createdAt: '2026-08-10T00:00:00Z', expiresAt: '2026-09-10T00:00:00Z',
       reviewers: [{ name: 'Barb Fultz', email: 'barb.fultz@finevines.com', role: 'Back Office' }, { name: 'Connie Molitor', email: 'connie@finevines.com', role: 'Executive' }],
+      catalogWines: [{ sku: 'PHOTO-1', skus: ['PHOTO-1', 'PHOTO-1*'], slug: 'pictured-wine-2021', displayIdentity: 'Producer · Pictured Wine · 2021', currentImage: 'assets/img/wines/pictured-wine-2021.jpg', currentImages: ['assets/img/wines/pictured-wine-2021.jpg'], imageSource: 'scraped-web', wineRevision: 'c'.repeat(64), wineRevisions: [{ sku: 'PHOTO-1', wineRevision: 'c'.repeat(64) }, { sku: 'PHOTO-1*', wineRevision: 'd'.repeat(64) }] }],
       wines: [
         { sku: '500740*', slug: 'producer-wine-2022', displayIdentity: 'Producer Wine 2022', searchQuery: 'Producer Wine 2022 exact query', wineRevision: 'a'.repeat(64), candidates: [{ candidateId: 'c1', storageName: 'c1.png', sha256: '1'.repeat(64), mime: 'image/png', bytes: candidate.length, width: 400, height: 800, sourceUrl: 'https://producer.example/wine', sourceImageUrl: 'https://producer.example/wine.png' }] },
         { sku: '500741*', slug: 'producer-other-wine-2021', displayIdentity: 'Producer Other Wine 2021', searchQuery: 'Producer Other Wine 2021', wineRevision: 'b'.repeat(64), candidates: [{ candidateId: 'c2', storageName: 'c2.png', sha256: '2'.repeat(64), mime: 'image/png', bytes: candidate.length, width: 400, height: 800, sourceUrl: 'https://producer.example/other', sourceImageUrl: 'https://producer.example/other.png' }] },
@@ -568,14 +569,50 @@ describe('review console handler', () => {
     assert.deepEqual(accountCalls.at(-1), ['activate', 'barb.fultz@finevines.com']);
   });
 
+  it('lets Support queue an exact pictured wine for image replacement', async () => {
+    const { handle, queuedActions } = fixture({ identity: { ...REVIEWER_IDENTITY, role: 'Support' } });
+    const cookie = await login(handle);
+    const currentResponse = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
+    const current = await currentResponse.json();
+    assert.deepEqual(current.catalogWines.map(({ sku }) => sku), ['PHOTO-1']);
+    const response = await handle(new Request('https://review.finevines.biz/api/admin/wines/reopen', {
+      method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': current.csrfToken },
+      body: JSON.stringify({ kind: 'image-reopen', sku: 'PHOTO-1', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'c'.repeat(64), candidateId: '', reason: 'Support reported the current catalog image as wrong.' }),
+    }));
+    assert.equal(response.status, 202);
+    assert.equal(queuedActions.at(-1).kind, 'image-reopen');
+    assert.equal(queuedActions.at(-1).wineSlug, 'pictured-wine-2021');
+    assert.equal(queuedActions.at(-1).reason, 'Support reported the current catalog image as wrong.');
+    assert.equal(queuedActions.at(-1).wineRevisions.length, 2);
+  });
+
+  it('serves Support the catalog image replacement finder', async () => {
+    const { handle } = fixture({ identity: { ...REVIEWER_IDENTITY, role: 'Support' } });
+    const cookie = await login(handle);
+    const page = await handle(new Request('https://review.finevines.biz/', { headers: { cookie } }));
+    const markup = await page.text();
+    assert.match(markup, />Replace a catalog image…</);
+    assert.match(markup, /id="reopen-modal"/);
+    assert.match(markup, /Search wine, producer, vintage, SKU, or paste a Fine Vines URL/);
+    const script = await (await handle(new Request('https://review.finevines.biz/app.js', { headers: { cookie } }))).text();
+    assert.match(script, /finevines\.com/);
+    assert.match(script, /\/api\/admin\/wines\/reopen/);
+    assert.match(script, /Remove image and return to review/);
+  });
+
   it('denies administrator routes to ordinary executive and back-office reviewers', async () => {
     const { handle } = fixture();
     const cookie = await login(handle);
     const current = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
-    const csrf = (await current.json()).csrfToken;
+    const currentBody = await current.json();
+    const csrf = currentBody.csrfToken;
+    assert.deepEqual(currentBody.catalogWines, []);
     assert.equal((await handle(new Request('https://review.finevines.biz/api/admin/accounts', { headers: { cookie } }))).status, 403);
     assert.equal((await handle(new Request('https://review.finevines.biz/api/admin/accounts/barb.fultz%40finevines.com/activate', {
       method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'x-csrf-token': csrf },
+    }))).status, 403);
+    assert.equal((await handle(new Request('https://review.finevines.biz/api/admin/wines/reopen', {
+      method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': csrf }, body: '{}',
     }))).status, 403);
   });
 

@@ -415,8 +415,26 @@ processor will clean up a stale pending pointer automatically.
 
 ### Return a wine with a known-wrong image to review
 
-Use the exact SKU from `data/wines.json` (quote SKUs containing `*`) or the
-exact slug from the public wine URL:
+The preferred workflow is in the protected review console:
+
+1. Sign in with the Support account and choose **Replace a catalog image…**.
+2. Search by wine, producer, vintage, or exact SKU, or paste the public wine URL.
+3. Verify the current photograph and identity, then choose **Remove image and
+   return to review**.
+4. Keep the queued receipt. Processing replaces the wrong photograph with the
+   neutral fallback before fresh discovery begins; new candidates return on the
+   normal review cards.
+
+The console records a revision-bound review recovery action. If multiple
+Salesforce rows share that public slug, they are reopened together so the same
+card cannot immediately return under another SKU. The durable `needs-review`
+status bypasses prior search backoff and prevents enrichment or a strong
+two-source match from installing another photograph before a fresh human
+decision.
+
+The CLI remains an operator fallback when the console is unavailable. Use the
+exact SKU from `data/wines.json` (quote SKUs containing `*`) or exact slug from
+the public wine URL:
 
 ```powershell
 go run ./cmd/finevines reviewreset -sku '500740*'
@@ -424,14 +442,9 @@ go run ./cmd/finevines reviewreset -sku '500740*'
 go run ./cmd/finevines reviewreset -slug 'producer-wine-2022'
 ```
 
-The command records a review recovery action for one exact public wine. If
-multiple Salesforce rows share that public slug, they are reopened together so
-the same card cannot immediately return to review under another SKU. The
-command replaces the current photograph with the neutral SVG fallback, clears
-the old provenance and decision details, then sets `imageReviewStatus` to
-`needs-review`. That durable status bypasses any prior search backoff and
-prevents enrichment or even a strong two-source match from installing another
-photograph before a fresh human decision.
+The command performs the same catalog transition locally: it replaces the
+current photograph with the neutral SVG fallback, clears old provenance and
+decision details, and sets `imageReviewStatus` to `needs-review`.
 
 For each image referenced only by that public wine, the command first moves the
 old file out of deployable assets into `.run/reviewreset/`, writes the neutral

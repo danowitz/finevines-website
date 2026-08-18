@@ -31,6 +31,15 @@ function actionTarget(manifest, action, reviewer) {
   const expires = Date.parse(manifest.expiresAt);
   const submitted = Date.parse(action.submittedAt);
   if (![created, expires, submitted].every(Number.isFinite) || expires <= created || submitted < created || submitted > expires) throw new Error('review package has expired');
+  if (action.kind === 'image-reopen') {
+    const wine = (manifest.catalogWines || []).find((item) => item.sku === action.sku);
+    if (!wine || wine.wineRevision !== action.wineRevision || !Array.isArray(wine.wineRevisions) || !wine.wineRevisions.length || !Array.isArray(wine.currentImages) || !wine.currentImages.length) throw new Error('action does not match catalog wine');
+    action.wineSlug = wine.slug;
+    action.wineRevisions = wine.wineRevisions;
+    action.previousImagePaths = wine.currentImages;
+    action.rejectedCandidates = [];
+    return wine;
+  }
   const wine = manifest.wines.find((item) => item.sku === action.sku);
   if (!wine || wine.wineRevision !== action.wineRevision) throw new Error('action does not match wine');
   if (action.kind === 'image-select' && !wine.candidates?.some((candidate) => candidate.candidateId === action.candidateId)) throw new Error('candidate does not belong to wine');
@@ -253,6 +262,24 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
       }
     }
 
+    if (request.method === 'POST' && url.pathname === '/api/admin/wines/reopen') {
+      if (!administrator) return json({ error: 'administrator access required' }, 403);
+      if (request.headers.get('origin') !== config.origin) return json({ error: 'invalid origin' }, 403);
+      if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) return json({ error: 'content type must be application/json' }, 415);
+      if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
+      try {
+        const id = uuid();
+        const action = validateAction(await request.json(), {
+          id, environment: config.environment, sessionId: session.sessionId, reviewerEmail: reviewer.email, now: now(), allowImageReopen: true,
+        });
+        const manifest = await loadPackage(storage, prefix, action.packageId);
+        actionTarget(manifest, action, reviewer);
+        return json(await queueAction(id, action), 202);
+      } catch (error) {
+        return json({ error: error.message }, error instanceof ActiveWineLockError ? 409 : 400);
+      }
+    }
+
     if (request.method === 'GET' && url.pathname === '/api/current') {
       const current = JSON.parse(await storage.get(`${prefix}/current.json`));
       const manifest = await loadPackage(storage, prefix, current.packageId);
@@ -261,6 +288,7 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
       const incidents = await state.scanIncidents(config.environment, config.incidentRecipient);
       return json({
         ...manifest,
+        catalogWines: administrator ? (manifest.catalogWines || []) : [],
         wines: currentStatus.decisions,
         reviewStatus: { ...currentStatus.counts, oldestPendingAt: currentStatus.oldestPendingAt },
         incidents,

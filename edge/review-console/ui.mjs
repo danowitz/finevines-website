@@ -83,6 +83,21 @@ button { cursor: pointer; }
 .compare-remove { background: #eee8e1; color: #493c35; }
 .compare-select { background: #7d263b; color: #fff; }
 .modal-close { border: 1px solid #fff8; color: #fff; background: transparent; border-radius: 8px; padding: 9px 13px; }
+.reopen-dialog { width: min(920px, 100%); padding: 22px; border-radius: 14px; background: #fff; color: #251c18; }
+.reopen-head { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+.reopen-head h2 { margin: 0; font: 700 28px/1.1 Georgia, serif; }
+.reopen-head .modal-close { border-color: #bca993; color: #251c18; }
+.reopen-search { width: 100%; margin-top: 18px; padding: 13px 15px; border: 1px solid #bca993; border-radius: 9px; }
+.reopen-results { display: grid; gap: 8px; max-height: 220px; margin-top: 12px; overflow: auto; }
+.reopen-result { padding: 11px 13px; border: 1px solid #d9cfc4; border-radius: 9px; background: #faf7f2; text-align: left; }
+.reopen-result strong, .reopen-result small { display: block; }
+.reopen-result small { margin-top: 3px; color: #78665a; }
+.reopen-selection { display: grid; grid-template-columns: 180px 1fr; gap: 18px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #e4ddd5; }
+.reopen-selection img { width: 180px; height: 240px; object-fit: contain; border: 1px solid #e4ddd5; background: #fff; }
+.reopen-selection h3 { margin: 0 0 6px; font: 700 22px/1.2 Georgia, serif; }
+.reopen-selection p { color: #69594f; }
+.reopen-danger { border: 0; border-radius: 8px; padding: 11px 15px; background: #7d263b; color: #fff; font-weight: 800; }
+.reopen-receipt { margin-top: 12px; color: #12643f; font-weight: 700; }
 .source { color: #f1d8a8; overflow-wrap: anywhere; }
 .google-search { display: inline-flex; align-items: center; min-height: 40px; padding: 9px 13px; border: 1px solid #bca993; border-radius: 8px; color: #6f2035; background: #fffaf2; font-weight: 750; text-decoration: none; white-space: nowrap; }
 .google-search:hover, .google-search:focus-visible { border-color: #7d263b; outline: 3px solid #7d263b1f; }
@@ -101,7 +116,29 @@ button { cursor: pointer; }
 const FAVICON_BASE64 = 'AAABAAEAEBAAAAEAGABoAwAAFgAAACgAAAAQAAAAIAAAAAEAGAAAAAAAAAAAABMLAAATCwAAAAAAAAAAAAD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Apdj9/P3///////////////////////////////////+n3NSx4Nn///////////+ui838+/3////////////////////////////////0+/p6yr96yr/5/fz///////+zktD///////////////////////////////////+q3dbE5+O85N+w4Nn///////+jfMfDqdrHr93Hr93Hr93Hr93Eqtvz7ff////7/f16yr/////+//54yb79/v7///+ngMnQvOLVwuXVwuXVwuXVwuXSvuP28fn///+14tus3tf///////+q3da24tz///+zktD///////////////////////////////91yLz7/v3////////6/f11yLz///+rh8v07/j39Pr39Pr39Pr39Pr38/r6+vy44tyo3NX///////////////+p3da34ty3mNOvjM6zktCzktCzktCzktCwjc7Q0+Ws3tfy+fj////////////////1+vmt39j///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAFDoAACGDQAABwMAAAAAAAAIfwAAAIAAACBIAAAeRQAAk5EAAOO+AACUDgAAAAAAAAh/AAAAgAAAAHAAAKEO';
 export const FAVICON = Uint8Array.from(atob(FAVICON_BASE64), (character) => character.charCodeAt(0));
 
+export function searchCatalogWines(wines, input) {
+  const raw = String(input || '').trim();
+  if (!raw) return [];
+  try {
+    const url = new URL(raw);
+    if (['finevines.com', 'www.finevines.com'].includes(url.hostname.toLowerCase())) {
+      const slug = url.pathname.split('/').filter(Boolean).at(-1)?.toLowerCase();
+      return slug ? wines.filter((wine) => String(wine.slug || '').toLowerCase() === slug) : [];
+    }
+  } catch {}
+  const folded = (value) => String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9*]+/g, ' ').trim();
+  const needle = folded(raw);
+  const exactSku = wines.filter((wine) => (wine.skus || [wine.sku]).some((sku) => folded(sku) === needle));
+  if (exactSku.length) return exactSku;
+  const tokens = needle.split(/\s+/).filter(Boolean);
+  return wines.filter((wine) => {
+    const haystack = folded([wine.displayIdentity, wine.slug, ...(wine.skus || [wine.sku])].join(' '));
+    return tokens.every((token) => haystack.includes(token));
+  });
+}
+
 export const APP_JS = `
+const searchCatalogWines = ${searchCatalogWines.toString()};
 const state = { package: null, selected: new Map(), modal: null, refreshing: null };
 const el = (tag, attrs = {}, children = []) => {
   const node = document.createElement(tag);
@@ -117,6 +154,69 @@ const status = document.querySelector('#summary');
 const list = document.querySelector('#wine-list');
 const incidentList = document.querySelector('#incidents');
 const admin = document.querySelector('#admin');
+const reopenModal = document.querySelector('#reopen-modal');
+const reopenSearch = document.querySelector('#reopen-search');
+const reopenResults = document.querySelector('#reopen-results');
+const reopenSelection = document.querySelector('#reopen-selection');
+
+function closeReopenModal() {
+  if (!reopenModal) return;
+  reopenModal.hidden = true;
+  document.body.style.overflow = '';
+}
+
+function selectReopenWine(wine) {
+  reopenResults.replaceChildren();
+  const image = el('img', { src: 'https://finevines.com/' + String(wine.currentImage || '').replace(/^[/]+/, '') + '?catalog-revision=' + encodeURIComponent(wine.wineRevision), alt: wine.displayIdentity });
+  const submit = el('button', { class: 'reopen-danger', type: 'button', text: 'Remove image and return to review' });
+  const receipt = el('p', { class: 'reopen-receipt', role: 'status', text: '' });
+  submit.addEventListener('click', async () => {
+    submit.disabled = true;
+    submit.textContent = 'Queueing image replacement…';
+    const body = { kind: 'image-reopen', sku: wine.sku, packageId: state.package.packageId, targetCatalogCommit: state.package.catalogCommit, wineRevision: wine.wineRevision, candidateId: '', reason: 'Support reported the current catalog image as wrong.' };
+    const response = await fetch('/api/admin/wines/reopen', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': state.package.csrfToken }, body: JSON.stringify(body) });
+    const value = await response.json();
+    if (!response.ok) { receipt.textContent = value.error || 'Could not queue the image replacement.'; receipt.className = 'reopen-receipt status bad'; submit.disabled = false; submit.textContent = 'Remove image and return to review'; return; }
+    const actionReference = value.id ? ' Action ' + value.id + '.' : '';
+    receipt.textContent = 'Queued.' + actionReference + ' The current image will be replaced with a neutral label while fresh candidates are found.';
+    submit.textContent = 'Image replacement queued';
+  });
+  const skus = wine.skus || [wine.sku];
+  const details = el('div', {}, [
+    el('h3', { text: wine.displayIdentity }),
+    el('p', { text: 'SKU' + (skus.length === 1 ? ' ' : 's ') + skus.join(', ') }),
+    el('p', { text: 'This removes the current catalog photograph and sends this wine through fresh discovery before it returns to the normal review list.' }),
+    submit, receipt,
+  ]);
+  reopenSelection.replaceChildren(image, details);
+}
+
+function renderReopenResults() {
+  if (!reopenSearch || !state.package) return;
+  reopenSelection.replaceChildren();
+  const matches = searchCatalogWines(state.package.catalogWines || [], reopenSearch.value).slice(0, 20);
+  reopenResults.replaceChildren();
+  for (const wine of matches) {
+    const skus = wine.skus || [wine.sku];
+    const button = el('button', { class: 'reopen-result', type: 'button' }, [
+      el('strong', { text: wine.displayIdentity }),
+      el('small', { text: 'SKU' + (skus.length === 1 ? ' ' : 's ') + skus.join(', ') }),
+    ]);
+    button.addEventListener('click', () => selectReopenWine(wine));
+    reopenResults.append(button);
+  }
+  if (reopenSearch.value.trim() && !matches.length) reopenResults.append(el('p', { class: 'status', text: 'No pictured wine matched that search.' }));
+}
+
+function openReopenModal() {
+  if (!reopenModal) return;
+  reopenModal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  reopenSearch.value = '';
+  reopenResults.replaceChildren();
+  reopenSelection.replaceChildren();
+  reopenSearch.focus();
+}
 
 function imageUrl(candidate) {
   return '/api/packages/' + encodeURIComponent(state.package.packageId) + '/images/' + encodeURIComponent(candidate.candidateId);
@@ -422,7 +522,14 @@ async function refresh() {
 document.querySelectorAll('[data-close]').forEach((node) => node.addEventListener('click', closeModal));
 const modal = document.querySelector('#modal');
 modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
-document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
+document.querySelector('#reopen-trigger')?.addEventListener('click', openReopenModal);
+document.querySelector('[data-reopen-close]')?.addEventListener('click', closeReopenModal);
+reopenSearch?.addEventListener('input', renderReopenResults);
+reopenModal?.addEventListener('click', (event) => { if (event.target === reopenModal) closeReopenModal(); });
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') { closeModal(); closeReopenModal(); }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k' && reopenModal) { event.preventDefault(); openReopenModal(); }
+});
 const activeRefresh = () => {
   if (document.visibilityState === 'visible' && document.hasFocus()) refresh();
 };
@@ -461,6 +568,8 @@ export function changePasswordPage(csrf, message = '', brandLogo = '/favicon.ico
 }
 
 export function consolePage(reviewer) {
-  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls"><span>Signed in as ${escapeHtml(reviewer.name)}</span></div></header><div id="summary" class="summary">Loading the current review package…</div><div id="incidents" class="incidents" aria-live="polite"></div><section id="admin" class="admin"></section><section id="wine-list"></section></main>
-<div id="modal" class="modal" hidden><section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div class="modal-heading"><strong id="modal-title"></strong><span id="modal-count"></span></div><button class="modal-close" type="button" data-close>Close</button></div><div id="modal-stage" class="modal-stage"></div></section></div>`, { script: true });
+  const recoveryControl = reviewer.role === 'Support' ? '<button id="reopen-trigger" class="secondary" type="button">Replace a catalog image…</button>' : '';
+  const recoveryModal = reviewer.role === 'Support' ? `<div id="reopen-modal" class="modal" hidden><section class="reopen-dialog" role="dialog" aria-modal="true" aria-labelledby="reopen-title"><div class="reopen-head"><div><h2 id="reopen-title">Replace a catalog image</h2><p>Find a pictured wine and return it to image review.</p></div><button class="modal-close" type="button" data-reopen-close>Close</button></div><label for="reopen-search">Wine, SKU, or catalog URL</label><input id="reopen-search" class="reopen-search" type="search" placeholder="Search wine, producer, vintage, SKU, or paste a Fine Vines URL" autocomplete="off"><div id="reopen-results" class="reopen-results"></div><div id="reopen-selection" class="reopen-selection"></div></section></div>` : '';
+  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls">${recoveryControl}<span>Signed in as ${escapeHtml(reviewer.name)}</span></div></header><div id="summary" class="summary">Loading the current review package…</div><div id="incidents" class="incidents" aria-live="polite"></div><section id="admin" class="admin"></section><section id="wine-list"></section></main>
+<div id="modal" class="modal" hidden><section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div class="modal-heading"><strong id="modal-title"></strong><span id="modal-count"></span></div><button class="modal-close" type="button" data-close>Close</button></div><div id="modal-stage" class="modal-stage"></div></section></div>${recoveryModal}`, { script: true });
 }
