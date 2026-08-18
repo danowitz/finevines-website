@@ -413,6 +413,43 @@ running `pipeline.yml`; never edit or move the action JSON. A receipt under
 `_review/<environment>/receipts/<action-id>.json` is final evidence and the
 processor will clean up a stale pending pointer automatically.
 
+### Return a wine with a known-wrong image to review
+
+Use the exact SKU from `data/wines.json` (quote SKUs containing `*`) or the
+exact slug from the public wine URL:
+
+```powershell
+go run ./cmd/finevines reviewreset -sku '500740*'
+# or
+go run ./cmd/finevines reviewreset -slug 'producer-wine-2022'
+```
+
+The command records a review recovery action for one exact public wine. If
+multiple Salesforce rows share that public slug, they are reopened together so
+the same card cannot immediately return to review under another SKU. The
+command replaces the current photograph with the neutral SVG fallback, clears
+the old provenance and decision details, then sets `imageReviewStatus` to
+`needs-review`. That durable status bypasses any prior search backoff and
+prevents enrichment or even a strong two-source match from installing another
+photograph before a fresh human decision.
+
+For each image referenced only by that public wine, the command first moves the
+old file out of deployable assets into `.run/reviewreset/`, writes the neutral
+fallback, saves the catalog, and then removes the staged file. A catalog-save
+failure restores the old image. A final cleanup failure leaves it at the
+non-deployable staging path named in the error so it can be recovered or
+removed deliberately. A file still referenced by another public wine is
+retained. Paths outside the wine-image directory are refused before either
+catalog or image changes.
+
+Inspect the resulting `git diff` before committing. The command does not
+commit, push, deploy, or publish a review package. After the reset reaches
+`master`, the normal pipeline treats the neutral fallback as immediately due,
+removes the obsolete deployed photograph, and searches for fresh candidates. The
+recovery status blocks automatic import, so the wine appears in the protected
+review page when at least one new candidate passes the review-package gates. A
+search with no acceptable candidate does not manufacture a review card.
+
 ### After a bot commit lands, never use "Re-run failed jobs"
 `notify` is the last step in the pipeline, so the failure that sends an operator
 to the Actions "Re-run failed jobs" button is almost always `notify` itself —

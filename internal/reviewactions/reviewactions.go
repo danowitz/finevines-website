@@ -526,6 +526,21 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			}
 			return result, err
 		}
+		// Multiple Salesforce rows can represent one public wine slug. The site,
+		// discovery pipeline, and image importer all share one slug-named image;
+		// carry the accepted human decision across those sibling rows so the same
+		// public wine cannot immediately reappear as still needing review.
+		applied := result.Wines[index]
+		for siblingIndex := range result.Wines {
+			if siblingIndex == index || result.Wines[siblingIndex].Slug != applied.Slug {
+				continue
+			}
+			sibling := &result.Wines[siblingIndex]
+			sibling.SetImage(applied.ImagePath, applied.ImageSource, applied.ImageSourceURL)
+			sibling.ImageReviewStatus = ""
+			sibling.ImageReviewedAt = ""
+			sibling.ImageReviewActionID = ""
+		}
 		deployedPath := path.Join("assets/img/wines", result.Wines[index].Slug+".jpg")
 		deployedData, err := os.ReadFile(filepath.Join(input.ImageDir, result.Wines[index].Slug+".jpg"))
 		if err != nil {
@@ -602,16 +617,10 @@ func applyImage(ctx context.Context, input PrepareInput, wine *model.Wine, data 
 	}
 	os.Remove(backup)
 	os.Remove(filepath.Join(input.ImageDir, wine.Slug+".svg"))
-	wine.ImagePath = path.Join(filepath.ToSlash(input.ImageDir), wine.Slug+".jpg")
-	wine.ImageSource, wine.ImageSourceURL = imageSource, candidate.SourceURL
+	wine.SetImage(path.Join(filepath.ToSlash(input.ImageDir), wine.Slug+".jpg"), imageSource, candidate.SourceURL)
 	wine.ImageReviewStatus = ""
 	wine.ImageReviewedAt = input.Now.UTC().Format(time.RFC3339)
 	wine.ImageReviewActionID = actionID
-	if wine.Sources == nil {
-		wine.Sources = map[string]model.FieldSource{}
-	}
-	wine.Sources["image"] = model.ImageFieldSource(wine.ImageSource)
-	wine.MetadataScore = model.MetadataScore(wine.Sources)
 	return nil
 }
 

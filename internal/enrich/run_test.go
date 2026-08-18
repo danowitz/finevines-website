@@ -3,6 +3,8 @@ package enrich
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,6 +38,7 @@ type fakeTexts struct {
 	errs     map[string]error
 	blockIDs map[string]bool
 	release  chan struct{}
+	results  map[string]EnrichResult
 }
 
 func (f *fakeTexts) Enrich(ctx context.Context, w salesforce.WineRaw) (EnrichResult, error) {
@@ -51,11 +54,50 @@ func (f *fakeTexts) Enrich(ctx context.Context, w salesforce.WineRaw) (EnrichRes
 			return EnrichResult{}, err
 		}
 	}
+	if result, ok := f.results[w.ID]; ok {
+		return result, nil
+	}
 	return EnrichResult{
 		Description:    "FAKE description for " + w.Name,
 		SommelierNotes: "FAKE notes for " + w.Name,
 		ImagePrompt:    "FAKE prompt for " + w.Name,
 	}, nil
+}
+
+func TestRun_ReviewRecoveryCannotAcquireAnAutomaticImage(t *testing.T) {
+	dir := t.TempDir()
+	dataPath := filepath.Join(dir, "wines.json")
+	imgDir := filepath.Join(dir, "img")
+	hits := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		hits++
+		_, _ = w.Write([]byte("automatic image"))
+	}))
+	defer server.Close()
+	raw := salesforce.WineRaw{ID: "SF-RECOVER", SKU: "RV100", Producer: "Recovery Estate", Name: "Red", Vintage: "2022", StockQty: 2, ReadyToSell: true}
+	seed := model.Wine{
+		ID: raw.ID, SourceHash: "stale", SKU: raw.SKU, Producer: raw.Producer, Name: raw.Name, Vintage: raw.Vintage,
+		Slug: model.Slugify(raw.Producer, raw.Name, raw.Vintage), ImageReviewStatus: model.ImageReviewRequired,
+	}
+	if err := model.SaveWines(dataPath, []model.Wine{seed}); err != nil {
+		t.Fatal(err)
+	}
+	texts := &fakeTexts{results: map[string]EnrichResult{raw.ID: {
+		Description: "description", SommelierNotes: "notes", ImageURL: server.URL + "/wrong.jpg",
+	}}}
+	if err := Run(context.Background(), &fakeSource{roster: []salesforce.WineRaw{raw}}, texts, &fakeImages{}, nil, dataPath, imgDir, t.Logf); err != nil {
+		t.Fatal(err)
+	}
+	got, err := model.LoadWines(dataPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if hits != 0 {
+		t.Fatalf("review recovery downloaded %d automatic image(s), want 0", hits)
+	}
+	if len(got) != 1 || got[0].ImageSource != model.ImageGeneratedLabel || got[0].ImageReviewStatus != model.ImageReviewRequired {
+		t.Fatalf("review recovery did not retain a human-reviewable fallback: %+v", got)
+	}
 }
 
 func (f *fakeTexts) callList() []string {

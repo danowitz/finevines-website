@@ -12,6 +12,7 @@ import { extname, join } from 'node:path';
 import { openBrowser } from '../../tests/helpers/browser.js';
 import { binPath, envOrFile, openaiKey } from './env.mjs';
 import { loadAttempts, isDue, recordAttempt, saveAttempts, shouldRecordAttempt } from './attempts.mjs';
+import { IMAGE_REVIEW_NO_MATCH, IMAGE_REVIEW_REQUIRED } from './image-review-status.mjs';
 import { buildProducerLookup, expectedProducer } from './catalog-producer.mjs';
 import { deriveProducer } from './producerguess.mjs';
 import { createImageDiscovery, IMAGE_DISCOVERY_PROVIDERS, validateImageDiscoveryCredentials } from './image-discovery.mjs';
@@ -95,7 +96,7 @@ async function exists(file) {
 }
 
 function needsImage(wine) {
-  if (wine.imageReviewStatus === 'no-match') return false;
+  if (wine.imageReviewStatus === IMAGE_REVIEW_NO_MATCH) return false;
   return !wine.imagePath ||
     wine.imagePath.endsWith('.svg') ||
     wine.imageSource === 'generated-photo' ||
@@ -114,7 +115,10 @@ function selectWines(catalog, attempts, funnelStore) {
     if (RETRY_MISSES) {
       wines = wines.filter((wine) => funnelStore[wine.slug]?.ok === false);
     } else if (DUE_ONLY) wines = wines.filter((wine) =>
-      isDue(attempts, wine.sku, new Date(), undefined, { imageMissing: needsImage(wine) }));
+      isDue(attempts, wine.sku, new Date(), undefined, {
+        imageMissing: needsImage(wine),
+        reviewRequired: wine.imageReviewStatus === IMAGE_REVIEW_REQUIRED,
+      }));
   }
   if (CANDIDATE_RECOVERY) {
     const recoverable = recoverableCandidateSlugs(funnelStore);

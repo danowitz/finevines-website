@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { IMAGE_REVIEW_NO_MATCH } from './image-review-status.mjs';
 
 const SUBJECT_REFUSAL = /no clean background|multiple subjects|too wide|too narrow|no subject|fills the frame/i;
 const REVIEWABLE_SOURCES = new Set(['generated-label', 'generated-photo', 'label-scan', '']);
@@ -31,7 +32,7 @@ export function wineRevision(wine) {
 }
 
 export function wineNeedsReview(wine) {
-  if (wine?.imageReviewStatus === 'no-match') return false;
+  if (wine?.imageReviewStatus === IMAGE_REVIEW_NO_MATCH) return false;
   return !wine?.imagePath || wine.imagePath.endsWith('.svg') || REVIEWABLE_SOURCES.has(clean(wine.imageSource));
 }
 

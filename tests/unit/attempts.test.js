@@ -47,6 +47,11 @@ describe('which wines the image stage should try', () => {
     assert.equal(isDue(attempts, 'AB1201', NOW), false);
   });
 
+  test('a review recovery action bypasses the miss backoff immediately', () => {
+    const attempts = { AB1201: { lastAttempted: daysAgo(1), outcome: 'miss', attempts: 2, matcherVersion: MATCHER_VERSION } };
+    assert.equal(isDue(attempts, 'AB1201', NOW, RETRY_DAYS, { imageMissing: true, reviewRequired: true }), true);
+  });
+
   test('a miss from an older matcher is immediately due for one controlled replay', () => {
     const attempts = { AB1201: { lastAttempted: daysAgo(1), outcome: 'miss', attempts: 1 } };
     assert.equal(isDue(attempts, 'AB1201', NOW), true);

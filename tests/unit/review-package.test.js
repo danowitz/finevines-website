@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { buildReviewerRoster, buildReviewDraft, publishReviewPackage, wineRevision } from '../../tools/labelfetch/review-package.mjs';
+import { IMAGE_REVIEW_REQUIRED } from '../../tools/labelfetch/image-review-status.mjs';
 
 const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
 const wine = { id: 'wine-1', sku: 'AB-1', slug: 'producer-wine-2022', producer: 'Producer', name: 'Wine', vintage: '2022', imagePath: 'assets/img/wines/producer-wine-2022.svg', imageSource: 'generated-label', sourceHash: 'source' };
@@ -59,6 +60,18 @@ describe('hosted review package', () => {
       readBytes: async () => png,
     });
     assert.deepEqual(draft.wines, []);
+  });
+
+  it('puts a recovered wrong-image wine back into review when fresh candidates exist', async () => {
+    const reopened = { ...wine, imageReviewStatus: IMAGE_REVIEW_REQUIRED };
+    const draft = await buildReviewDraft({
+      catalog: [reopened],
+      manifest: { one: { slug: wine.slug, query: 'Producer Wine 2022', ok: false, alternates: [{ file: 'good.png', page: 'https://producer.example/wine' }] } },
+      fileExists: async () => true,
+      readBytes: async () => png,
+    });
+    assert.equal(draft.wines.length, 1);
+    assert.equal(draft.wines[0].sku, wine.sku);
   });
 
   it('awaits asynchronous file checks instead of trying to publish missing candidates', async () => {

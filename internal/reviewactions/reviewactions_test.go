@@ -132,6 +132,38 @@ func TestPrepareAppliesExactCandidateButKeepsPendingUntilFinalize(t *testing.T) 
 	}
 }
 
+func TestPrepareAppliesAnAcceptedImageToEveryRowForThePublicWine(t *testing.T) {
+	store, wines, id := fixture(t)
+	sibling := wines[0]
+	sibling.ID = "wine-2"
+	sibling.SKU = "500741*"
+	sibling.ImageReviewStatus = model.ImageReviewRequired
+	wines = append(wines, sibling)
+
+	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantPath := result.Wines[0].ImagePath
+	for _, wine := range result.Wines {
+		if wine.Slug != wines[0].Slug {
+			continue
+		}
+		if wine.ImageSource != model.ImageScrapedWeb || wine.ImageReviewStatus != "" {
+			t.Fatalf("slug sibling did not receive the accepted public-wine image: %+v", wine)
+		}
+		if wine.ImagePath != wantPath {
+			t.Fatalf("slug sibling image path = %q", wine.ImagePath)
+		}
+		if wine.SKU == "500740*" && wine.ImageReviewActionID != id {
+			t.Fatalf("selected revision lost its action identity: %+v", wine)
+		}
+		if wine.SKU == "500741*" && (wine.ImageReviewActionID != "" || wine.ImageReviewedAt != "") {
+			t.Fatalf("sibling revision inherited another revision's action identity: %+v", wine)
+		}
+	}
+}
+
 func TestPrepareDefersClaimedWorkAfterGracefulDeadline(t *testing.T) {
 	store, wines, id := fixture(t)
 	ctx, cancel := context.WithCancel(context.Background())

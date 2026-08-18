@@ -116,6 +116,14 @@ func ImageFieldSource(imageSource string) FieldSource {
 // enrich.Delist.
 const StatusUnavailable = "unavailable"
 
+// Image-review statuses are durable catalog instructions. NoMatch records a
+// completed human rejection; Required records a review recovery action and
+// prevents automated image import until a reviewer makes a fresh decision.
+const (
+	ImageReviewNoMatch  = "no-match"
+	ImageReviewRequired = "needs-review"
+)
+
 // Wine is one row of data/wines.json — the enrich pipeline's output and
 // build's primary input. JSON tags are the contract — do not rename existing
 // ones without a spec change; new descriptive fields are additive and
@@ -164,11 +172,11 @@ type Wine struct {
 	ImagePath      string `json:"imagePath"`
 	ImageSource    string `json:"imageSource"`
 	ImageSourceURL string `json:"imageSourceUrl,omitempty"`
-	// ImageReviewStatus records an explicit human decision when none of the
-	// available candidates match. It prevents the rolling review package from
-	// presenting the same rejected set again. ImageReviewActionID is the durable
-	// idempotency key: if deployment succeeds but receipt publication fails, the
-	// next run can prove that the same action already reached the catalog.
+	// ImageReviewStatus records either an explicit human no-match decision or a
+	// review recovery action that requires another human decision. A no-match
+	// prevents the rolling package from repeating a rejected set; needs-review
+	// prevents automated import from bypassing the reopened review. The action ID
+	// is the durable idempotency key for completed decisions.
 	ImageReviewStatus   string `json:"imageReviewStatus,omitempty"`
 	ImageReviewedAt     string `json:"imageReviewedAt,omitempty"`
 	ImageReviewActionID string `json:"imageReviewActionId,omitempty"`
@@ -189,6 +197,30 @@ type Wine struct {
 	// page entirely once this exceeds the grace period.
 	Status     string `json:"status,omitempty"`
 	DelistedAt string `json:"delistedAt,omitempty"`
+}
+
+// ReopenImageReview applies the catalog side of a review recovery action. The
+// old decision cannot remain attached to a new wine revision, while Required
+// keeps fresh discovery from bypassing the human review console.
+func (w *Wine) ReopenImageReview(fallbackPath string) {
+	w.SetImage(fallbackPath, ImageGeneratedLabel, "")
+	w.ImageReviewStatus = ImageReviewRequired
+	w.ImageReviewedAt = ""
+	w.ImageReviewActionID = ""
+}
+
+// SetImage applies the coupled image and provenance fields for one catalog row.
+// Review identity remains separate because an action is bound to one specific
+// wine revision even when several rows share the same public-slug image bytes.
+func (w *Wine) SetImage(imagePath, imageSource, imageSourceURL string) {
+	w.ImagePath = imagePath
+	w.ImageSource = imageSource
+	w.ImageSourceURL = imageSourceURL
+	if w.Sources == nil {
+		w.Sources = make(map[string]FieldSource)
+	}
+	w.Sources["image"] = ImageFieldSource(imageSource)
+	w.MetadataScore = MetadataScore(w.Sources)
 }
 
 // NewsPost is one data/news/<slug>.json file.

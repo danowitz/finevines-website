@@ -104,9 +104,10 @@ export function isDue(
   sku,
   now = new Date(),
   retryDays = RETRY_DAYS,
-  { imageMissing = false, matcherVersion = MATCHER_VERSION } = {},
+  { imageMissing = false, matcherVersion = MATCHER_VERSION, reviewRequired = false } = {},
 ) {
   const rec = attempts?.[sku];
+  if (reviewRequired) return true;
   if (!rec) return true;
   // The catalog is authoritative. An imported ledger record with no current
   // photograph means an audit or later edit withdrew the pixels; it must not

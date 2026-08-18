@@ -315,6 +315,15 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 		imageReviewStatus, imageReviewedAt, imageReviewActionID = prev.ImageReviewStatus, prev.ImageReviewedAt, prev.ImageReviewActionID
 	}
 	switch {
+	case prev != nil && prev.ImageReviewStatus == model.ImageReviewRequired:
+		// A review recovery action deliberately withdrew the prior pixels. Keep
+		// only the neutral fallback until fresh candidates receive a human
+		// decision; neither an old-site hit nor enrichment search may bypass it.
+		p, s, rerr := ResolveImage(ctx, imgs, raw, slug, res.ImagePrompt, imgDir, nil, log)
+		if rerr != nil {
+			return model.Wine{}, &resolveImageError{err: rerr}
+		}
+		imagePath, imageSource = p, s
 	case hasRealImage(prev):
 		imagePath, imageSource, imageSourceURL = prev.ImagePath, prev.ImageSource, prev.ImageSourceURL
 	default:

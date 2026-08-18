@@ -2,6 +2,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { shouldImport } from '../../tools/labelfetch/importrules.mjs';
 import { flagWatermark } from '../../tools/labelfetch/watermark.mjs';
+import { IMAGE_REVIEW_REQUIRED } from '../../tools/labelfetch/image-review-status.mjs';
 
 // A staged record as the sweep leaves it once it has actually looked: swept and
 // clean. The unswept shape is the interesting one and is spelled out in the
@@ -102,6 +103,13 @@ describe('import selection rules', () => {
     assert.equal(refused.import, false);
     assert.match(refused.reason, /production selector/i);
     assert.ok(!refused.unresolved);
+  });
+
+  test('a review recovery action cannot auto-import before a fresh human decision', () => {
+    const v = shouldImport(rec(), placeholderWine({ imageReviewStatus: IMAGE_REVIEW_REQUIRED }), {});
+    assert.equal(v.import, false);
+    assert.equal(v.stage, 'human-review-required');
+    assert.match(v.reason, /human review/i);
   });
 
   test('a pre-boolean production-selector record keeps its complete proof', () => {

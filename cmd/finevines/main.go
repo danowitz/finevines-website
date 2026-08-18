@@ -49,6 +49,8 @@ func main() {
 		runErr = runReviewApply(cfg, os.Args[2:])
 	case "reviewfinalize":
 		runErr = runReviewFinalize(cfg, os.Args[2:])
+	case "reviewreset":
+		runErr = runReviewReset(os.Args[2:])
 	case "reviewers":
 		runErr = runReviewers(cfg)
 	case "notify":
@@ -65,7 +67,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: finevines <enrich|enrichcollections|build|redirects|deploy|reviewapply|reviewfinalize|reviewers|notify|report>")
+	fmt.Fprintln(os.Stderr, "usage: finevines <enrich|enrichcollections|build|redirects|deploy|reviewapply|reviewfinalize|reviewreset|reviewers|notify|report>")
 }
 
 func runReviewers(cfg config.Config) error {

@@ -2,6 +2,7 @@
 // Extracted from import.mjs so the rules are testable and so the watermark
 // refusal cannot be forgotten by a future edit to the import loop.
 import { isWatermarked } from './watermark.mjs';
+import { IMAGE_REVIEW_REQUIRED } from './image-review-status.mjs';
 
 const PRODUCTION_SELECTOR = 'gpt-4.1-nano transcription + local identity rules';
 
@@ -44,6 +45,13 @@ export function shouldImport(rec, wine, { cleanOnly = false } = {}) {
     wine.imageSource !== 'label-scan'
   ) {
     return { import: false, stage: 'existing-photo', reason: `already has a photograph (${wine.imagePath})` };
+  }
+  if (wine.imageReviewStatus === IMAGE_REVIEW_REQUIRED) {
+    return {
+      import: false,
+      stage: 'human-review-required',
+      reason: 'review recovery requires a fresh human review before import',
+    };
   }
   // Check selector identity before the paid watermark gate so incomplete
   // records are reported honestly and never consume a sweep request.
