@@ -470,9 +470,9 @@
       "slug": "ca-stele",
       "name": "Ca'stele",
       "mode": "generated",
-      "fingerprint": "0ba625a16b9da62197f93911d36fc3d0d894d04cf81a24b4b40db2b115f2266b",
-      "retryFingerprint": "0ba625a16b9da62197f93911d36fc3d0d894d04cf81a24b4b40db2b115f2266b",
-      "retryAfter": "2026-09-16",
+      "fingerprint": "9ad9863eb48207a719446a37b32e99b2e1720a70bd2220370dabc47826967bdb",
+      "retryFingerprint": "9ad9863eb48207a719446a37b32e99b2e1720a70bd2220370dabc47826967bdb",
+      "retryAfter": "2026-09-17",
       "lastError": "research did not find enough authoritative information"
     },
     {
@@ -3964,9 +3964,9 @@
       "slug": "veneto",
       "name": "Veneto",
       "mode": "generated",
-      "fingerprint": "6a68ff94c9659a78cd6ef97d30ae94dac9d98f8c9518f0fde7b9181109302ce9",
-      "retryFingerprint": "6a68ff94c9659a78cd6ef97d30ae94dac9d98f8c9518f0fde7b9181109302ce9",
-      "retryAfter": "2026-09-16",
+      "fingerprint": "f38979eb4683c4047d4e40d10f9cec3cd680c2519537fb0579f9f486bbf3ed97",
+      "retryFingerprint": "f38979eb4683c4047d4e40d10f9cec3cd680c2519537fb0579f9f486bbf3ed97",
+      "retryAfter": "2026-09-17",
       "lastError": "collection editorial \"region/veneto\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4356,10 +4356,10 @@
       "slug": "glera",
       "name": "Glera",
       "mode": "generated",
-      "fingerprint": "d44b5c77598e9e98cc16ad766e15c90e8d14021b7a782bd25f9f591492a73557",
-      "retryFingerprint": "d44b5c77598e9e98cc16ad766e15c90e8d14021b7a782bd25f9f591492a73557",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/glera\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "9960acf5a024878d8f5bb49c2e20827892181b98197bd238f98ae8491554d442",
+      "retryFingerprint": "9960acf5a024878d8f5bb49c2e20827892181b98197bd238f98ae8491554d442",
+      "retryAfter": "2026-09-17",
+      "lastError": "collection editorial \"varietal/glera\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
