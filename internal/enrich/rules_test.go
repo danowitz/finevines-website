@@ -50,6 +50,18 @@ func TestEligible(t *testing.T) {
 		{"guarded word only as a substring stays eligible", wine(func(w *salesforce.WineRaw) {
 			w.Name = "Chateau Sampleton Rouge"
 		}), true},
+		{"Bruno Colin in product name is excluded", wine(func(w *salesforce.WineRaw) {
+			w.Name = "Domaine Bruno Colin Bourgogne Chardonnay"
+		}), false},
+		{"Alex Moreau in product name is excluded case-insensitively", wine(func(w *salesforce.WineRaw) {
+			w.Name = "DOMAINE ALEX MOREAU CHASSAGNE MONTRACHET"
+		}), false},
+		{"Bernard Moreau in producer is excluded", wine(func(w *salesforce.WineRaw) {
+			w.Producer = "Domaine Bernard Moreau et Fils"
+		}), false},
+		{"similar but different producer name remains eligible", wine(func(w *salesforce.WineRaw) {
+			w.Producer = "Domaine Bruno Collin"
+		}), true},
 		// Nameless rows (2026-08-03): a Salesforce bookkeeping row (SKU
 		// 513001, 10,000 "cases") published with an empty name/producer/slug,
 		// rendering a broken catalog page and appearing in the client digest

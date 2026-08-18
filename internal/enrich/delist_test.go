@@ -108,6 +108,23 @@ func TestDelist_WithheldAndGoneDropImmediately(t *testing.T) {
 	}
 }
 
+func TestDelist_ExcludedTradeNameDropsImmediately(t *testing.T) {
+	raw := salesforce.WineRaw{
+		ID: "SF-1", SKU: "660905", Name: "Domaine Bruno Colin Bourgogne Chardonnay",
+		StockQty: 5, ReadyToSell: true,
+	}
+	existing := []model.Wine{{ID: "SF-1", SKU: "660905", Slug: "domaine-bruno-colin-bourgogne-chardonnay-2021"}}
+
+	unavailable, drops := Delist(existing, []salesforce.WineRaw{raw}, map[string]bool{}, delistNow)
+
+	if len(unavailable) != 0 {
+		t.Errorf("hard-excluded trade name must not retain an unavailable page: %+v", unavailable)
+	}
+	if drops["/wines/domaine-bruno-colin-bourgogne-chardonnay-2021/"] != "/portfolio/" {
+		t.Errorf("hard-excluded wine must redirect to /portfolio/, got %v", drops)
+	}
+}
+
 func TestDelist_EligibleWinesAreUntouched(t *testing.T) {
 	w := model.Wine{ID: "SF-1", SKU: "AB1234", Slug: "alpha-reserve"}
 	unavailable, drops := Delist([]model.Wine{w}, nil, map[string]bool{"SF-1": true}, delistNow)

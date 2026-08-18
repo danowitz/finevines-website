@@ -22,6 +22,11 @@ import (
 // to reach the image pipeline's quarantine, which is what surfaced it.
 var nonWine = regexp.MustCompile(`(?i)\b(freight|surcharge|shipping|deposit|sample|samples|display|misc|remit|remittance|free\s+goods|in\s+lieu\s+of)\b`)
 
+// excludedTradeNames are client-directed hard exclusions. A match in either
+// the raw Salesforce product name or producer removes the wine from every
+// public surface; it is not treated as temporarily out of stock.
+var excludedTradeNames = regexp.MustCompile(`(?i)\b(bruno\s+colin|alex\s+moreau|bernard\s+moreau)\b`)
+
 // Eligible implements the confirmed web-eligibility rule (compiled constant):
 // a wine is shown on the site when at least one actual bottle is on hand, its
 // SKU does not start with "9", it is flagged ready to sell, AND it is actually
@@ -61,6 +66,7 @@ func Eligible(w salesforce.WineRaw) bool {
 func Merchandisable(w salesforce.WineRaw) bool {
 	return !strings.HasPrefix(w.SKU, "9") && w.ReadyToSell &&
 		w.SKU != "SBTL" && !nonWine.MatchString(w.Name) && !nonWine.MatchString(w.Producer) &&
+		!excludedTradeNames.MatchString(w.Name) && !excludedTradeNames.MatchString(w.Producer) &&
 		strings.TrimSpace(w.Name) != ""
 }
 
