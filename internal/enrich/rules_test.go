@@ -59,6 +59,12 @@ func TestEligible(t *testing.T) {
 		{"Bernard Moreau in producer is excluded", wine(func(w *salesforce.WineRaw) {
 			w.Producer = "Domaine Bernard Moreau et Fils"
 		}), false},
+		{"known Burno Colin source typo is excluded", wine(func(w *salesforce.WineRaw) {
+			w.Name = "Domaine Burno Colin Chassagne Montrachet"
+		}), false},
+		{"known Benard Moreau source typo is excluded", wine(func(w *salesforce.WineRaw) {
+			w.Name = "Domaine Benard Moreau Pommard Fremiers"
+		}), false},
 		{"similar but different producer name remains eligible", wine(func(w *salesforce.WineRaw) {
 			w.Producer = "Domaine Bruno Collin"
 		}), true},

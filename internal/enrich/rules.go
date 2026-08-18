@@ -24,8 +24,10 @@ var nonWine = regexp.MustCompile(`(?i)\b(freight|surcharge|shipping|deposit|samp
 
 // excludedTradeNames are client-directed hard exclusions. A match in either
 // the raw Salesforce product name or producer removes the wine from every
-// public surface; it is not treated as temporarily out of stock.
-var excludedTradeNames = regexp.MustCompile(`(?i)\b(bruno\s+colin|alex\s+moreau|bernard\s+moreau)\b`)
+// public surface; it is not treated as temporarily out of stock. The known
+// "Burno" and "Benard" Salesforce misspellings are included so those same
+// producers cannot bypass the policy through a transposed or omitted letter.
+var excludedTradeNames = regexp.MustCompile(`(?i)\b((bruno|burno)\s+colin|alex\s+moreau|(bernard|benard)\s+moreau)\b`)
 
 // Eligible implements the confirmed web-eligibility rule (compiled constant):
 // a wine is shown on the site when at least one actual bottle is on hand, its
