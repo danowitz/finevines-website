@@ -81,6 +81,9 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
     if (request.method === 'GET' && url.pathname === '/favicon.ico') {
       return response(FAVICON, { headers: { 'Content-Type': 'image/x-icon', 'Content-Length': String(FAVICON.byteLength) } });
     }
+    if (request.method === 'GET' && url.pathname === '/robots.txt') {
+      return response('User-agent: *\nDisallow: /\n', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    }
 
     if (request.method === 'POST' && url.pathname === '/login') {
       const clock = now().getTime();

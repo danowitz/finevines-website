@@ -1012,6 +1012,9 @@ func TestSitemapListsEveryPage(t *testing.T) {
 	if strings.Contains(string(sm), "<lastmod>") {
 		t.Error("sitemap must not contain lastmod (breaks determinism)")
 	}
+	if strings.Contains(string(sm), "review.finevines") {
+		t.Error("private review hosts must never appear in the public sitemap")
+	}
 }
 
 func TestRobotsTxt(t *testing.T) {
