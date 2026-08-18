@@ -65,7 +65,7 @@ import * as BunnySDK from "@bunny.net/edgescript-sdk";
 // internal/redirects.Save writes and internal/deploy uploads as an
 // ordinary site asset) — NOT baked into this script, so a redirects.json
 // refresh never requires touching or redeploying this file.
-const REDIRECT_MAP_URL = "https://finevines-biz.b-cdn.net/redirects.json";
+const REDIRECT_MAP_URL = "https://finevines-com.b-cdn.net/redirects.json";
 
 // MAP_PATH is REDIRECT_MAP_URL's path component, computed once at module
 // scope so the reentry guard in onOriginRequest (see REENTRY GUARD above)
@@ -111,7 +111,7 @@ BunnySDK.net.http
   // (docs.bunny.net/scripting/middleware/overview) — in production the
   // Pull Zone's own configured origin is used instead, so this is a
   // reasonable stand-in rather than a value this script depends on.
-  .servePullZone({ url: "https://finevines-biz.b-cdn.net" })
+  .servePullZone({ url: "https://finevines-com.b-cdn.net" })
   .onOriginRequest(async (ctx: { request: Request }) => {
     const url = new URL(ctx.request.url);
 
