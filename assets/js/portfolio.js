@@ -377,15 +377,6 @@
       meta.textContent = (w.region && w.varietal) ? (w.region + ' · ' + w.varietal) : (w.region || w.varietal);
       body.appendChild(meta);
     }
-    if (w.avail) {
-      // Pre-composed by build.go and shipped in the catalog-index — never
-      // derived here, so server- and JS-rendered cards stay identical.
-      var avail = document.createElement('span');
-      avail.className = 'avail';
-      avail.textContent = w.avail;
-      body.appendChild(avail);
-    }
-
     a.appendChild(thumb);
     a.appendChild(body);
     li.appendChild(a);

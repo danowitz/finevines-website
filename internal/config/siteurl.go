@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const productionHostname = "finevines.biz"
+const productionHostname = "finevines.com"
 
 // IsProductionSiteURL is the single source of truth for whether a build or
 // deploy targets the public FineVines site. Preview, CDN, legacy, malformed,

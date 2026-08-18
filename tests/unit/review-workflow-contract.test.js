@@ -20,17 +20,19 @@ describe('hosted review workflow contract', () => {
     assert.match(workflow, /timeout[^\n]*2m node tools\/review-console\/queue\.mjs release/);
     assert.match(workflow, /always\(\) && \(failure\(\) \|\| cancelled\(\)\)/);
     assert.equal(workflow.match(/node tools\/review-console\/queue\.mjs claim/g)?.length, 1);
-    assert.match(workflow, /reviewapply -environment test[^\n]*-action-ids \.run\/review-claims\.json/);
+    assert.match(workflow, /FINEVINES_REVIEW_ENVIRONMENT:[^\n]*client_payload\.environment/);
+    assert.match(workflow, /secrets\.FINEVINES_SITE_BASE_URL\s*==\s*'https:\/\/finevines\.com'[^\n]*'production'[^\n]*'test'/);
+    assert.match(workflow, /reviewapply -environment "\$FINEVINES_REVIEW_ENVIRONMENT"[^\n]*-action-ids \.run\/review-claims\.json/);
     assert.match(workflow, /review-console-continue/);
     assert.equal(workflow.match(/node tools\/review-console\/dispatch\.mjs/g)?.length, 3);
     assert.match(workflow, /queue\.mjs reconcile/);
     assert.match(workflow, /queue\.mjs complete/);
     assert.match(workflow, /queue\.mjs export-launch-exclusions/);
     assert.match(workflow, /\.\/finevines reviewers > \.run\/salesforce-reviewers\.json/);
-    assert.match(workflow, /sync-accounts --environment test --roster \.run\/salesforce-reviewers\.json/);
+    assert.match(workflow, /sync-accounts --environment "\$FINEVINES_REVIEW_ENVIRONMENT" --roster \.run\/salesforce-reviewers\.json/);
     assert.match(workflow, /Synchronize eligible reviewer accounts\r?\n\s+id: reviewer_sync\r?\n\s+continue-on-error: true/);
     assert.match(workflow, /invite_reviewer != '' && steps\.reviewer_sync\.outcome == 'success'/);
-    assert.doesNotMatch(workflow, /sync-accounts --environment test --roster data\/team\.json/);
+    assert.doesNotMatch(workflow, /sync-accounts --environment [^\n]* --roster data\/team\.json/);
   });
 
   it('keeps application and targeted rediscovery in one review workflow without catalog auto-import', async () => {
@@ -38,7 +40,8 @@ describe('hosted review workflow contract', () => {
     const review = await readFile('.github/workflows/review-actions.yml', 'utf8');
     assert.doesNotMatch(pipeline, /types: \[review-recovery\]|export-recovery|resolve-recovery/);
     assert.doesNotMatch(pipeline, /reviewapply|reviewfinalize|Prepare hosted review actions|Finalize hosted review receipts/);
-    assert.match(pipeline, /export-launch-exclusions[^\n]*\.run\/launch-exclusions\.json/);
+    assert.match(pipeline, /FINEVINES_REVIEW_ENVIRONMENT:[^\n]*FINEVINES_SITE_BASE_URL/);
+    assert.match(pipeline, /export-launch-exclusions --environment "\$FINEVINES_REVIEW_ENVIRONMENT"[^\n]*\.run\/launch-exclusions\.json/);
     assert.match(pipeline, /finevines build -launch-exclusions \.run\/launch-exclusions\.json/);
     assert.match(review, /export-recovery/);
     assert.match(review, /resolve-recovery/);

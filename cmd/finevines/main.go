@@ -652,5 +652,10 @@ func validateClientContentForDeploy(baseURL string, content model.SiteContent) e
 			"deploy: production blocked until client confirms contact details; then set contactConfirmed in data/site.json",
 		)
 	}
+	if strings.TrimSpace(content.Testimonial.Quote) != "" && !content.TestimonialConfirmed {
+		return fmt.Errorf(
+			"deploy: production blocked until client confirms the testimonial; then set testimonialConfirmed in data/site.json or remove the draft testimonial",
+		)
+	}
 	return nil
 }

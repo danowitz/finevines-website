@@ -2,7 +2,7 @@
   card.html.tmpl — the one definition of a wine card.
 
   Dot is a cardWine (build.go): a wine group's representative row plus the
-  group-wide Vints/Avail the card presents.
+  group-wide Vints the card presents. Exact warehouse stock remains private.
 
   Three surfaces render this exact markup and MUST stay identical, or the
   catalog visibly changes shape as a visitor moves between them:
@@ -26,7 +26,6 @@
                 {{if .Producer}}<span class="producer">{{.Producer}}</span>{{end}}
                 <h3>{{.Name}}{{if .VintLabel}} <span class="vintage">{{.VintLabel}}</span>{{end}}</h3>
                 {{if or .Region .Varietal}}<span class="meta">{{.Region}}{{if and .Region .Varietal}} &middot; {{end}}{{.Varietal}}</span>{{end}}
-                {{with .Avail}}<span class="avail">{{.}}</span>{{end}}
               </div>
             </a>
           </li>{{end}}

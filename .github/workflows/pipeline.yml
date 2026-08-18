@@ -219,13 +219,16 @@ jobs:
 
       # 4. Build the static site.
       - name: Build
+        env:
+          FINEVINES_REVIEW_ENVIRONMENT: ${{ secrets.FINEVINES_SITE_BASE_URL == 'https://finevines.com' && 'production' || 'test' }}
         run: |
-          node tools/review-console/queue.mjs export-launch-exclusions --environment test --output .run/launch-exclusions.json
+          node tools/review-console/queue.mjs export-launch-exclusions --environment "$FINEVINES_REVIEW_ENVIRONMENT" --output .run/launch-exclusions.json
           ./finevines build -launch-exclusions .run/launch-exclusions.json
 
       # 5. Deploy. The manifest diff means only changed files upload; the
       #    manifest is saved only after every upload and delete succeeds, and the
-      #    purge only after that (see deploy.Run's ordering invariants).
+      #    purge succeeds before the manifest is saved (see deploy.Run's
+      #    ordering invariants).
       - name: Deploy
         run: ./finevines deploy
 

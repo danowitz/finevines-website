@@ -1019,7 +1019,7 @@ func TestSitemapListsEveryPage(t *testing.T) {
 
 func TestRobotsTxt(t *testing.T) {
 	dist := t.TempDir()
-	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.biz", ""); err != nil {
+	if err := Run("testdata", "../../assets", "../../templates", dist, "https://finevines.com", ""); err != nil {
 		t.Fatal(err)
 	}
 	robots, err := os.ReadFile(filepath.Join(dist, "robots.txt"))
@@ -1029,7 +1029,7 @@ func TestRobotsTxt(t *testing.T) {
 	for _, want := range []string{
 		"User-agent: *",
 		"Allow: /",
-		"Sitemap: https://finevines.biz/sitemap.xml",
+		"Sitemap: https://finevines.com/sitemap.xml",
 	} {
 		if !strings.Contains(string(robots), want) {
 			t.Errorf("robots.txt missing %q", want)
@@ -1042,7 +1042,7 @@ func TestRobotsTxt(t *testing.T) {
 
 // TestRobotsTxtNonProductionDisallowsEverything guards the pre-launch bug a
 // site audit caught: the staging hosts (the Bunny *.b-cdn.net zone and
-// the legacy finevines.com host) were served the SAME "Allow: /" + Sitemap robots.txt as
+// the development finevines.biz host) were served the SAME "Allow: /" + Sitemap robots.txt as
 // production, inviting search engines to index a build whose canonical URLs
 // point at the CDN hostname rather than the real domain. Indexability must
 // derive automatically from FINEVINES_SITE_BASE_URL — see isProductionHost —
@@ -1051,7 +1051,7 @@ func TestRobotsTxt(t *testing.T) {
 func TestRobotsTxtNonProductionDisallowsEverything(t *testing.T) {
 	for _, baseURL := range []string{
 		"https://finevines-com.b-cdn.net",
-		"https://finevines.com",
+		"https://finevines.biz",
 		"http://localhost:8080",
 	} {
 		dist := t.TempDir()
@@ -1085,7 +1085,7 @@ func TestRobotsTxtNonProductionDisallowsEverything(t *testing.T) {
 
 // TestIsProductionHost pins down the "is this the real domain" rule that
 // robots.txt, the per-page noindex meta tag, and (deliberately) the 404 page
-// all key off of: only finevines.biz and its www alias are production.
+// all key off of: only finevines.com and its www alias are production.
 // Mirrors cmd/finevines/main.go's validateClientContentForDeploy host check
 // (lowercased, trailing-dot stripped) so "production" means the same thing
 // everywhere in the codebase. Every edge case a live rollout can actually hit
@@ -1097,15 +1097,15 @@ func TestIsProductionHost(t *testing.T) {
 		baseURL string
 		want    bool
 	}{
-		{"https://finevines.biz", true},
-		{"https://www.finevines.biz", true},
-		{"https://finevines.biz/", true},
-		{"https://finevines.biz:8443", true},
-		{"http://finevines.biz", true},
-		{"https://FineVines.BIZ", true},
-		{"https://finevines.biz.", true}, // trailing-dot FQDN
+		{"https://finevines.com", true},
+		{"https://www.finevines.com", true},
+		{"https://finevines.com/", true},
+		{"https://finevines.com:8443", true},
+		{"http://finevines.com", true},
+		{"https://FineVines.COM", true},
+		{"https://finevines.com.", true}, // trailing-dot FQDN
 		{"https://finevines-com.b-cdn.net", false},
-		{"https://finevines.com", false},
+		{"https://finevines.biz", false},
 		{"http://localhost:8080", false},
 		{"http://localhost", false},
 		{"", false},
@@ -1140,7 +1140,7 @@ func TestNoIndexMetaFollowsProductionHost(t *testing.T) {
 	}
 
 	prodDist := t.TempDir()
-	if err := Run("testdata", "../../assets", "../../templates", prodDist, "https://finevines.biz", ""); err != nil {
+	if err := Run("testdata", "../../assets", "../../templates", prodDist, "https://finevines.com", ""); err != nil {
 		t.Fatal(err)
 	}
 	for _, rel := range [][]string{{"index.html"}, {"about", "index.html"}, {"contact", "index.html"}} {
@@ -1648,11 +1648,12 @@ func TestHomeHotSellersSectionIsSalesDriven(t *testing.T) {
 		t.Errorf("hot sellers not in ranked order: indexes %d, %d, %d", first, second, third)
 	}
 
-	// Availability (stock, a number we already publish) yes; sales volume no.
+	// The ranking is public curation; both sales velocity and exact warehouse
+	// depth remain private until the client explicitly approves stock display.
 	// The leak check is scoped to the section — elsewhere in the page "8.25"
 	// occurs as SVG path coordinates in the footer icons.
-	if !strings.Contains(section, `class="avail"`) {
-		t.Errorf("hot-seller cards missing availability line")
+	if strings.Contains(section, `class="avail"`) {
+		t.Errorf("hot-seller cards expose exact warehouse availability")
 	}
 	if strings.Contains(section, "8.25") {
 		t.Errorf("hot-sellers section leaks the ranking's case volume (8.25) — sales numbers must never render")
@@ -1780,7 +1781,7 @@ func TestBuild_UnavailableWineHasPageButIsHiddenFromBrowse(t *testing.T) {
 // TestBuild_VintagesCollapseToOnePortfolioCard is the Acre regression: two
 // Salesforce rows that are the same wine in different vintages (identical
 // producer and cuvée name) must render as ONE portfolio card — vintages
-// listed together, stock summed — not one card per vintage. Both vintages
+// listed together without exposing stock — not one card per vintage. Both vintages
 // keep their own detail pages; the card leads with the newest vintage.
 func TestBuild_VintagesCollapseToOnePortfolioCard(t *testing.T) {
 	data := t.TempDir()
@@ -1816,27 +1817,25 @@ func TestBuild_VintagesCollapseToOnePortfolioCard(t *testing.T) {
 	if strings.Contains(portfolio, "acre-napa-valley-cabernet-sauvignon-2018") {
 		t.Error("older vintage must not get its own card")
 	}
-	// 2. The card lists both vintages, newest first, and sums the stock:
-	// 243 + 448 bottles = 691 = 57 cases of 12 + 7.
+	// 2. The card lists both vintages, newest first, without exposing the
+	// warehouse depth behind the catalog.
 	if !strings.Contains(portfolio, `<span class="vintage">2019 · 2018</span>`) {
 		t.Error("card must list both vintages newest-first")
 	}
 	if strings.Contains(portfolio, `vintage-badge`) {
 		t.Error("portfolio cards must not explain their internal vintage grouping")
 	}
-	// html/template escapes "+" to &#43; (same as every prior build).
-	if !strings.Contains(portfolio, "691 bottles · 57 cases &#43; 7") {
-		t.Error("card availability must sum both vintages' stock")
+	if strings.Contains(portfolio, `class="avail"`) || strings.Contains(portfolio, "691 bottles") {
+		t.Error("card must not expose exact warehouse availability")
 	}
 
-	// 3. The catalog index collapses the same way: one entry, vints carrying
-	// the full vintage list for the JS filter, avail aggregated.
+	// 3. The catalog index collapses the same way: one entry with vints for the
+	// JS filter, and no private availability field.
 	idx := readFile(t, globOne(t, filepath.Join(dist, "assets", "catalog-index*.json")))
 	var entries []struct {
 		Slug    string   `json:"slug"`
 		Vintage string   `json:"vintage"`
 		Vints   []string `json:"vints"`
-		Avail   string   `json:"avail"`
 	}
 	if err := json.Unmarshal([]byte(idx), &entries); err != nil {
 		t.Fatal(err)
@@ -1854,8 +1853,8 @@ func TestBuild_VintagesCollapseToOnePortfolioCard(t *testing.T) {
 	if !reflect.DeepEqual(e.Vints, []string{"2019", "2018"}) {
 		t.Errorf("index entry vints = %v, want [2019 2018]", e.Vints)
 	}
-	if e.Avail != "691 bottles · 57 cases + 7" {
-		t.Errorf("index entry avail = %q, want the aggregated line", e.Avail)
+	if strings.Contains(idx, `"avail"`) || strings.Contains(idx, "691 bottles") {
+		t.Error("catalog index must not expose exact warehouse availability")
 	}
 
 	// 4. Both vintages keep their own detail pages.

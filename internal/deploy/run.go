@@ -31,8 +31,8 @@ var _ Uploader = (*BunnyClient)(nil)
 
 // Run executes one deploy: load the manifest saved after the previous
 // deploy, diff it against distDir (Plan), upload every changed/new file,
-// delete every file that's no longer in distDir, persist the new manifest,
-// and purge the CDN — in that order, because each step's safety depends on
+// delete every file that's no longer in distDir, purge the CDN, and persist
+// the new manifest — in that order, because each step's safety depends on
 // the one before it having fully succeeded first.
 //
 // Ordering invariants (why they matter, not just what they are):
@@ -52,11 +52,11 @@ var _ Uploader = (*BunnyClient)(nil)
 //     deletes), so if the manifest were saved anyway, the next run's diff
 //     would never re-attempt the delete and the file would be orphaned on
 //     Bunny.net forever.
-//   - Purge happens only after the manifest save, and is skipped entirely
-//     both on any failure above AND on a genuine no-op deploy (uploads and
-//     deletes both empty) — purging is a real (rate-limited, cache-cold)
-//     CDN operation and must not be triggered by a run that changed
-//     nothing.
+//   - Purge happens before the manifest save and is skipped entirely both on
+//     any failure above AND on a genuine no-op deploy (uploads and deletes
+//     both empty). If purge fails, the old manifest remains authoritative so
+//     the next run repeats the diff and retries the purge instead of silently
+//     accepting a stale CDN cache.
 //
 // Concurrency: uploads run across a bounded worker pool (workers goroutines,
 // stdlib sync.WaitGroup + a jobs channel — no unbounded goroutine spawn
@@ -96,12 +96,12 @@ func Run(ctx context.Context, client Uploader, distDir, manifestPath string, wor
 		}
 	}
 
-	if err := SaveManifest(manifestPath, newManifest); err != nil {
-		return fmt.Errorf("deploy: save manifest %s (uploads and deletes already applied — re-run to persist state): %w", manifestPath, err)
+	if err := client.Purge(ctx); err != nil {
+		return fmt.Errorf("deploy: purge failed, manifest not saved (files may be live with stale CDN cache; re-run to retry): %w", err)
 	}
 
-	if err := client.Purge(ctx); err != nil {
-		return fmt.Errorf("deploy: purge (manifest already saved — files are live, only the CDN cache is stale until purge succeeds): %w", err)
+	if err := SaveManifest(manifestPath, newManifest); err != nil {
+		return fmt.Errorf("deploy: save manifest %s (uploads, deletes, and purge already applied — re-run to persist state): %w", manifestPath, err)
 	}
 
 	log("deploy: uploaded %d, deleted %d, purged", len(uploads), len(deletes))

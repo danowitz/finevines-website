@@ -71,8 +71,8 @@ Bunny.net provides two layers:
    `finevines.com` and caches them at Bunny.net edge locations.
 
 `finevines deploy` is implemented by `internal/deploy/`. It compares the current `dist/` file hashes with
-`.bunny-manifest.json`, uploads new or changed files, deletes files that no longer belong on the site, saves the
-new manifest, and then purges the Pull Zone cache so visitors receive the new version. A no-change deployment
+`.bunny-manifest.json`, uploads new or changed files, deletes files that no longer belong on the site, purges the
+Pull Zone cache, and only then saves the new manifest. A no-change deployment
 does not upload or purge anything.
 
 The normal on-demand or scheduled entry point is `deploy.bat`:
@@ -84,12 +84,13 @@ finevines.exe deploy
 ```
 
 The batch file stops when any command fails. If enrichment or the build fails, deployment is never started. If
-a Bunny file operation fails during deployment, the manifest is not advanced and the CDN is not purged, so the
+a Bunny file operation or cache purge fails during deployment, the manifest is not advanced, so the
 next run can safely retry; some files may already have reached the storage origin before that retry. If only
-the final cache purge fails, the files are uploaded but visitors may temporarily receive cached content.
+the cache purge fails, the files are uploaded but visitors may temporarily receive cached content until the retry.
 
-Production deploys also require `contactConfirmed` to be `true` in `data/site.json`.
-This prevents candidate organization-wide contact details from reaching `finevines.com` before client approval.
+Production deploys require `contactConfirmed` to be `true` in `data/site.json` and refuse any non-empty
+testimonial unless `testimonialConfirmed` is also true. This prevents unapproved client content from reaching
+`finevines.com`; previews on `finevines.biz` remain available while approval is pending.
 A staging deploy remains available by setting `FINEVINES_SITE_BASE_URL` to the staging URL.
 
 Old-site URL preservation is a separate launch concern. `finevines redirects` creates `redirects.json`, and

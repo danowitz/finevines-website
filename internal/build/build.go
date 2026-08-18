@@ -720,9 +720,6 @@ type indexEntry struct {
 	Country  string `json:"country"`
 	Color    string `json:"color"`
 	Img      string `json:"img"`
-	// Avail is the pre-composed availability line ("74 bottles · 6 cs + 2");
-	// see availability(). Empty when out of stock.
-	Avail string `json:"avail,omitempty"`
 	// Vints is the group's full vintage list (newest first) when the card
 	// collapses more than one vintage; portfolio.js uses it for the vintage
 	// facet and the card's vintage span, falling back to Vintage when absent.
@@ -754,7 +751,6 @@ func run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string, exclus
 		"comma":       comma,
 		"spaceJoin":   spaceJoin,
 		"naturalList": naturalList,
-		"avail":       availability,
 		"initials":    initials,
 		"spellnum":    spellNum,
 		"lower":       strings.ToLower,
@@ -1235,8 +1231,6 @@ type cardWine struct {
 	model.Wine
 	// Vints is every vintage in the group, newest first, blanks dropped.
 	Vints []string
-	// Avail is the availability line summed across the whole group.
-	Avail string
 }
 
 // VintLabel is the card's vintage span: the group's vintages joined with a
@@ -1293,7 +1287,8 @@ func otherVintagesBySlug(wines []model.Wine) map[string][]vintageLink {
 // portfolioCards collapses catalog rows into one card per wine. The
 // representative row — supplying the card's link, image, and copy — is the
 // newest vintage's best-enriched row, so the card leads with the current
-// release; stock is summed across every row in the group.
+// release. Stock remains an internal commercial field and is not copied into
+// the public card model.
 func portfolioCards(wines []model.Wine) []cardWine {
 	groups := catalog.Build(wines)
 	cards := make([]cardWine, 0, len(groups))
@@ -1310,7 +1305,7 @@ func portfolioCards(wines []model.Wine) []cardWine {
 				vints = append(vints, v.Year)
 			}
 		}
-		cards = append(cards, cardWine{Wine: rep, Vints: vints, Avail: groupAvailability(g)})
+		cards = append(cards, cardWine{Wine: rep, Vints: vints})
 	}
 	return cards
 }
@@ -1566,7 +1561,6 @@ func writeCatalogIndex(distDir string, cards []cardWine) (string, error) {
 			Country:  c.Country,
 			Color:    c.Color,
 			Img:      "/" + c.ImagePath,
-			Avail:    c.Avail,
 			Vints:    vints,
 		}
 	}

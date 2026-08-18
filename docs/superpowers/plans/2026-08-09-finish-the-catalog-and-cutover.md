@@ -791,9 +791,9 @@ gh issue close 2 --comment "Confirmed against live Product2 rows. Pinned by test
 
 **Interfaces:**
 - Consumes: the confirmed producer field from Task 6.
-- Produces: producer coverage ≥ 95%, no first-word artifacts in the top 50 producers.
+- Produces: improved producer coverage and no first-word artifacts in the top 50 producers.
 
-**Acceptance from issue #8:** producer coverage ≥ 95%, no first-word artifacts (`Acclaimed`, `Acre`, …) in the top 50 producers by wine count, SKU `513001` has a real name, `go test ./...` green.
+**Acceptance from issue #8:** no first-word artifacts (`Acclaimed`, `Acre`, …) in the top 50 producers by wine count, SKU `513001` has a real name, `go test ./...` green. **Launch exception accepted 2026-08-18:** the owner accepted the current 39.5% producer coverage (1,036 of 2,620 rows populated) as non-blocking for cutover; issue #8 remains the post-launch data-quality backlog.
 
 - [ ] **Step 1: Establish whether Salesforce is actually blank**
 
@@ -881,7 +881,7 @@ console.log('513001 name:', (w.find(x=>x.sku==='513001')||{}).name);
 "
 ```
 
-Expected: coverage ≥ 95%; no `Acclaimed`/`Acre`-style artifacts in the top 50; SKU 513001 has a real name.
+Expected for launch: report coverage; no `Acclaimed`/`Acre`-style artifacts in the top 50; SKU 513001 has a real name. The 95% target is post-launch under issue #8 per the accepted 2026-08-18 exception above.
 
 - [ ] **Step 7: Rebuild, test, commit, close**
 

@@ -15,7 +15,7 @@ func TestValidateClientContentForDeploy(t *testing.T) {
 	confirmed := model.SiteContent{ContactConfirmed: true}
 	pending := model.SiteContent{}
 
-	for _, baseURL := range []string{"https://finevines.biz", "https://www.finevines.biz/"} {
+	for _, baseURL := range []string{"https://finevines.com", "https://www.finevines.com/"} {
 		if err := validateClientContentForDeploy(baseURL, confirmed); err != nil {
 			t.Errorf("confirmed production content rejected for %s: %v", baseURL, err)
 		}
@@ -31,10 +31,34 @@ func TestValidateClientContentForDeploy(t *testing.T) {
 		}
 	}
 
+	draftTestimonial := model.SiteContent{
+		ContactConfirmed: true,
+		Testimonial: model.Testimonial{
+			Quote:       "A drafted quote",
+			Attribution: "Draft customer",
+		},
+	}
+	err := validateClientContentForDeploy("https://finevines.com", draftTestimonial)
+	if err == nil {
+		t.Fatal("production accepted a testimonial that has not been explicitly confirmed")
+	}
+	for _, want := range []string{"testimonial", "testimonialConfirmed", "data/site.json"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("testimonial gate error missing %q: %v", want, err)
+		}
+	}
+	draftTestimonial.TestimonialConfirmed = true
+	if err := validateClientContentForDeploy("https://finevines.com", draftTestimonial); err != nil {
+		t.Errorf("confirmed production testimonial rejected: %v", err)
+	}
+
 	if err := validateClientContentForDeploy("https://staging.finevines.example", pending); err != nil {
 		t.Errorf("staging deploy should allow unconfirmed candidate content: %v", err)
 	}
-	if err := validateClientContentForDeploy("finevines.biz", confirmed); err == nil {
+	if err := validateClientContentForDeploy("https://finevines.biz", pending); err != nil {
+		t.Errorf("development .biz deploy should allow unconfirmed candidate content: %v", err)
+	}
+	if err := validateClientContentForDeploy("finevines.com", confirmed); err == nil {
 		t.Error("relative site base URL should be rejected")
 	}
 }

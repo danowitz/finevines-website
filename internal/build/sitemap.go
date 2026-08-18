@@ -50,9 +50,9 @@ func writeSitemap(distDir, baseURL string, paths []string) error {
 }
 
 // isProductionHost reports whether baseURL points at the real public
-// domain — finevines.biz or its www alias — the only host this build should
+// domain — finevines.com or its www alias — the only host this build should
 // ever let search engines index. It fails safe: an unset, malformed, or any
-// other host (the *.b-cdn.net staging zones, legacy finevines.com, localhost,
+// other host (finevines.biz, the *.b-cdn.net staging zones, localhost,
 // whatever) all come back false. writeRobots and every page's noindex meta
 // (see site.NoIndex in build.go) derive from this single function, so
 // indexability is never a manual pre-launch step — it flips automatically

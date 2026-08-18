@@ -27,6 +27,7 @@ type fakeUploader struct {
 
 	failPath string
 	failErr  error
+	purgeErr error
 }
 
 func (f *fakeUploader) Upload(ctx context.Context, relPath string, data []byte) error {
@@ -55,7 +56,7 @@ func (f *fakeUploader) Purge(ctx context.Context) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.purgeN++
-	return nil
+	return f.purgeErr
 }
 
 func (f *fakeUploader) uploadedKeys() []string {
@@ -238,6 +239,37 @@ func TestRun_EmptyDiffSkipsPurgeAndLogsNothingToDeploy(t *testing.T) {
 	}
 	if !found {
 		t.Errorf("expected a log line containing %q, got: %v", "nothing to deploy", *logs)
+	}
+}
+
+func TestRun_PurgeFailureLeavesOldManifestSoRetryPurgesAgain(t *testing.T) {
+	dist := t.TempDir()
+	manifestPath := filepath.Join(t.TempDir(), ".bunny-manifest.json")
+	writeRunFixtureFile(t, dist, "index.html", "new home page")
+	oldManifest := map[string]string{"index.html": sha256Hex("old home page")}
+	if err := SaveManifest(manifestPath, oldManifest); err != nil {
+		t.Fatal(err)
+	}
+
+	first := &fakeUploader{purgeErr: errors.New("simulated purge outage")}
+	err := Run(context.Background(), first, dist, manifestPath, 1, nil)
+	if err == nil || !strings.Contains(err.Error(), "manifest not saved") {
+		t.Fatalf("purge failure = %v, want retryable manifest-not-saved error", err)
+	}
+	got, err := LoadManifest(manifestPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got, oldManifest) {
+		t.Fatalf("manifest advanced despite failed purge: got %v want %v", got, oldManifest)
+	}
+
+	second := &fakeUploader{}
+	if err := Run(context.Background(), second, dist, manifestPath, 1, nil); err != nil {
+		t.Fatalf("retry failed: %v", err)
+	}
+	if second.purgeN != 1 || len(second.uploaded) != 1 {
+		t.Fatalf("retry uploaded=%v purgeN=%d, want the idempotent upload and purge retried", second.uploadedKeys(), second.purgeN)
 	}
 }
 

@@ -392,9 +392,9 @@ Step by step:
   is cleared the step logs `no wines due tonight — image stage is converged;
   nothing to do` and exits 0 on most nights, until the 30-day backoff starts
   returning wines. That is the finished state, not a fault.
-- **deploy failed** — `.bunny-manifest.json` was NOT saved and the CDN was NOT
-  purged. The next run re-diffs against the old manifest and retries exactly the
-  files that never uploaded.
+- **deploy failed** — `.bunny-manifest.json` was NOT saved. The next run
+  re-diffs against the old manifest, retries any failed file operations, and
+  retries the cache purge. Some files may already be present at the origin.
 - **commit-back was rejected twice** — a human pushed mid-run. The deploy already
   happened; the site is live and correct, but the repo has not caught up. Re-run
   the pipeline: it re-diffs and commits.
