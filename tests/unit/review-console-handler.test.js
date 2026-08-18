@@ -107,6 +107,7 @@ describe('review console handler', () => {
     assert.match(markup, /<link rel="icon" href="\/favicon\.ico"/);
     assert.match(markup, /class="login-shell"/);
     assert.match(markup, /class="login-logo"/);
+    assert.match(markup, />Sign in for catalog review<\/p>/);
     assert.doesNotMatch(markup, /<h1>Fine Vines<\/h1>/);
 
     const stylesheet = await handle(new Request('https://review.finevines.biz/app.css'));
