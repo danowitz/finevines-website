@@ -497,6 +497,16 @@
     },
     {
       "kind": "producer",
+      "slug": "camille-giroud",
+      "name": "Camille Giroud",
+      "mode": "generated",
+      "fingerprint": "b48fb61a36d37dc1b7ad9db664542d4d291bb926d4cee8fe123db21201bdd763",
+      "retryFingerprint": "b48fb61a36d37dc1b7ad9db664542d4d291bb926d4cee8fe123db21201bdd763",
+      "retryAfter": "2026-09-18",
+      "lastError": "collection editorial \"producer/camille-giroud\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "camille-saves",
       "name": "Camille Saves",
       "mode": "generated",
@@ -945,6 +955,16 @@
     },
     {
       "kind": "producer",
+      "slug": "domaine-serol",
+      "name": "Domaine Sérol",
+      "mode": "generated",
+      "fingerprint": "07ff9de095c131b80a200db201092c5a7c9fe4cbd6eb44d221a377b701988c27",
+      "retryFingerprint": "07ff9de095c131b80a200db201092c5a7c9fe4cbd6eb44d221a377b701988c27",
+      "retryAfter": "2026-09-18",
+      "lastError": "collection editorial \"producer/domaine-serol\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
       "slug": "dominique-mugneret",
       "name": "Dominique Mugneret",
       "mode": "generated",
@@ -1092,6 +1112,16 @@
       "retryFingerprint": "e6787a4bc0ebcda69847769961ef30b0252f1a9d5ba808ccb16597302a2a4ac3",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/eyrie\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "famille-bourgeois",
+      "name": "Famille Bourgeois",
+      "mode": "generated",
+      "fingerprint": "c1533185eaffbe20776b7a34c1f2c2764e979607c5a99aed86708b5ab72aab63",
+      "retryFingerprint": "c1533185eaffbe20776b7a34c1f2c2764e979607c5a99aed86708b5ab72aab63",
+      "retryAfter": "2026-09-18",
+      "lastError": "collection editorial \"producer/famille-bourgeois\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1552,6 +1582,16 @@
       "retryFingerprint": "f4097ef87335974331d687aa22f5451a6b771e7fb1e3dd07e5f13b5b6ba9dac8",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/jean-francois\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "jean-louis-chave",
+      "name": "Jean-Louis Chave",
+      "mode": "generated",
+      "fingerprint": "f998a986ed4378a5d1124e429d2f825eae59cedfdd117728051b23615cbfaf21",
+      "retryFingerprint": "f998a986ed4378a5d1124e429d2f825eae59cedfdd117728051b23615cbfaf21",
+      "retryAfter": "2026-09-18",
+      "lastError": "collection editorial \"producer/jean-louis-chave\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2016,6 +2056,16 @@
       "retryFingerprint": "be87df862e3bd536d6f2ac0b56a5530d70144ba93863511dbc5472ea176bd9b4",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/michel-bouzereau\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "michel-niellon",
+      "name": "Michel Niellon",
+      "mode": "generated",
+      "fingerprint": "75c29f5d29a7d3ad3ba2e15e897bda81a86593e4561b291ed8159d1c5ea1d1c4",
+      "retryFingerprint": "75c29f5d29a7d3ad3ba2e15e897bda81a86593e4561b291ed8159d1c5ea1d1c4",
+      "retryAfter": "2026-09-18",
+      "lastError": "collection editorial \"producer/michel-niellon\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2670,6 +2720,16 @@
       "retryFingerprint": "6c917334a2a271f5dad3ca191f01ef38775c65935c584c162fda02a73eeae912",
       "retryAfter": "2026-09-16",
       "lastError": "invalid character '[' looking for beginning of object key string"
+    },
+    {
+      "kind": "producer",
+      "slug": "royer",
+      "name": "Royer",
+      "mode": "generated",
+      "fingerprint": "a306edb0a494b4dca08887cad89b0e2c8b5d6d57f4670f6272b16b44af11bb2d",
+      "retryFingerprint": "a306edb0a494b4dca08887cad89b0e2c8b5d6d57f4670f6272b16b44af11bb2d",
+      "retryAfter": "2026-09-18",
+      "lastError": "collection editorial \"producer/royer\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -3562,10 +3622,10 @@
       "slug": "loire-valley",
       "name": "Loire Valley",
       "mode": "generated",
-      "fingerprint": "5a5ac1c49fe10ce54fa2c4001208d0685860ed130aaf833a4285837a2496c373",
-      "retryFingerprint": "5a5ac1c49fe10ce54fa2c4001208d0685860ed130aaf833a4285837a2496c373",
-      "retryAfter": "2026-09-16",
-      "lastError": "research JSON has 199 words; expected 120 to 190"
+      "fingerprint": "2ddea2e962226fd020320c20b8c8d6653838c45b28b10ab36b974bc545cd9b92",
+      "retryFingerprint": "2ddea2e962226fd020320c20b8c8d6653838c45b28b10ab36b974bc545cd9b92",
+      "retryAfter": "2026-09-18",
+      "lastError": "collection editorial \"region/loire-valley\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "region",
@@ -3682,9 +3742,9 @@
       "slug": "northern-rhone",
       "name": "Northern Rhône",
       "mode": "generated",
-      "fingerprint": "47bf8d5367dd6f069bed0542f5577566547fb2ae97f36c87d2dd76018a755a82",
-      "retryFingerprint": "47bf8d5367dd6f069bed0542f5577566547fb2ae97f36c87d2dd76018a755a82",
-      "retryAfter": "2026-09-16",
+      "fingerprint": "cb473dd884a4c5c6a059e3ca21c73076a6af3bd9c6ebab353ad34d696566a9e3",
+      "retryFingerprint": "cb473dd884a4c5c6a059e3ca21c73076a6af3bd9c6ebab353ad34d696566a9e3",
+      "retryAfter": "2026-09-18",
       "lastError": "collection editorial \"region/northern-rhone\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3762,9 +3822,9 @@
       "slug": "rhone-valley",
       "name": "Rhône Valley",
       "mode": "generated",
-      "fingerprint": "f504807e8f719376a5ad181a90cddf6a103e53c3318cd3896236e9a6fd21eecc",
-      "retryFingerprint": "f504807e8f719376a5ad181a90cddf6a103e53c3318cd3896236e9a6fd21eecc",
-      "retryAfter": "2026-09-16",
+      "fingerprint": "c64d6841d6694e7b7752f079b26e288013cce1b91b02f536394f5dd983606e3a",
+      "retryFingerprint": "c64d6841d6694e7b7752f079b26e288013cce1b91b02f536394f5dd983606e3a",
+      "retryAfter": "2026-09-18",
       "lastError": "collection editorial \"region/rhone-valley\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4316,9 +4376,9 @@
       "slug": "gamay-saint-romain",
       "name": "Gamay Saint Romain",
       "mode": "generated",
-      "fingerprint": "dc87f83e5da1d92ba70364c2761670bf419ee8ed604c25620c624da3f8d13c49",
-      "retryFingerprint": "dc87f83e5da1d92ba70364c2761670bf419ee8ed604c25620c624da3f8d13c49",
-      "retryAfter": "2026-09-16",
+      "fingerprint": "22dfecd0dff86bf846da5bd21fb490d384bf488fa7a014229e757a1851b7426a",
+      "retryFingerprint": "22dfecd0dff86bf846da5bd21fb490d384bf488fa7a014229e757a1851b7426a",
+      "retryAfter": "2026-09-18",
       "lastError": "collection editorial \"varietal/gamay-saint-romain\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4486,10 +4546,10 @@
       "slug": "marsanne",
       "name": "Marsanne",
       "mode": "generated",
-      "fingerprint": "a3f76362f0c8fcfad800e0a8f8985f0afec145b2c5a9ccb0726d34b8f3304750",
-      "retryFingerprint": "a3f76362f0c8fcfad800e0a8f8985f0afec145b2c5a9ccb0726d34b8f3304750",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/marsanne\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "7635dd9c5a730919348881b70f210ab7051d5e44361599bfe505f2e7314d7706",
+      "retryFingerprint": "7635dd9c5a730919348881b70f210ab7051d5e44361599bfe505f2e7314d7706",
+      "retryAfter": "2026-09-18",
+      "lastError": "collection editorial \"varietal/marsanne\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4750,10 +4810,10 @@
       "slug": "sauvignon-blanc",
       "name": "Sauvignon Blanc",
       "mode": "generated",
-      "fingerprint": "800d0492a90ac92aafcac1363090a18f059d1d757885ae5550aa16edb3c1d48a",
-      "retryFingerprint": "800d0492a90ac92aafcac1363090a18f059d1d757885ae5550aa16edb3c1d48a",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/sauvignon-blanc\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "6b0bd78de228f46e8df6c2f6ea1b0f54d5c0c34c908a871bbd77454c462b4830",
+      "retryFingerprint": "6b0bd78de228f46e8df6c2f6ea1b0f54d5c0c34c908a871bbd77454c462b4830",
+      "retryAfter": "2026-09-18",
+      "lastError": "research JSON has 191 words; expected 120 to 190"
     },
     {
       "kind": "varietal",
@@ -4834,10 +4894,10 @@
       "slug": "syrah",
       "name": "Syrah",
       "mode": "generated",
-      "fingerprint": "4641fdc107f48e55fc4d5e77767b7cb946fa47ff403902fa899596e5c36e7ef7",
-      "retryFingerprint": "4641fdc107f48e55fc4d5e77767b7cb946fa47ff403902fa899596e5c36e7ef7",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/syrah\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "62daada2bc1d730f2c78e4d0b7d3852d773fe52d73f0730048c65b790309f6a4",
+      "retryFingerprint": "62daada2bc1d730f2c78e4d0b7d3852d773fe52d73f0730048c65b790309f6a4",
+      "retryAfter": "2026-09-18",
+      "lastError": "collection editorial \"varietal/syrah\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
