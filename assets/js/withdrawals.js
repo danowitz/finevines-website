@@ -23,6 +23,10 @@ export function normalizeWithdrawnPaths(values) {
   return paths;
 }
 
+export function isPublicCatalogOrigin(origin) {
+  return origin === PUBLIC_ORIGIN;
+}
+
 export function maskWithdrawnImages(root, paths) {
   const images = [];
   if (root?.matches?.('img[src]')) images.push(root);
@@ -56,4 +60,4 @@ export async function applyImageWithdrawals() {
   }
 }
 
-if (typeof document !== 'undefined') applyImageWithdrawals();
+if (typeof document !== 'undefined' && isPublicCatalogOrigin(window.location.origin)) applyImageWithdrawals();

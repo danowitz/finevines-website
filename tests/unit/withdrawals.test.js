@@ -1,8 +1,14 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { canonicalImagePath, maskWithdrawnImages, normalizeWithdrawnPaths } from '../../assets/js/withdrawals.js';
+import { canonicalImagePath, isPublicCatalogOrigin, maskWithdrawnImages, normalizeWithdrawnPaths } from '../../assets/js/withdrawals.js';
 
 describe('public catalog image withdrawals', () => {
+  it('contacts the review service only from the canonical production site', () => {
+    assert.equal(isPublicCatalogOrigin('https://finevines.com'), true);
+    assert.equal(isPublicCatalogOrigin('http://127.0.0.1:8080'), false);
+    assert.equal(isPublicCatalogOrigin('https://preview.example'), false);
+  });
+
   it('recognizes only same-origin catalog image URLs', () => {
     assert.equal(canonicalImagePath('/assets/img/wines/example.jpg'), 'assets/img/wines/example.jpg');
     assert.equal(canonicalImagePath('https://finevines.com/assets/img/wines/example.jpg?version=old'), 'assets/img/wines/example.jpg');
