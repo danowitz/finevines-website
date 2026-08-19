@@ -864,10 +864,10 @@
       "slug": "david-paige",
       "name": "David Paige",
       "mode": "generated",
-      "fingerprint": "b591248a7aa6f530082db3bee24d7a86ed93613e5e574133da1bd8c4d4e6ddce",
-      "retryFingerprint": "b591248a7aa6f530082db3bee24d7a86ed93613e5e574133da1bd8c4d4e6ddce",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/david-paige\" source label contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "a0447760e68515ec8945188278d3da8d97fca557c85604779af356f65ff13fae",
+      "retryFingerprint": "a0447760e68515ec8945188278d3da8d97fca557c85604779af356f65ff13fae",
+      "retryAfter": "2026-09-18",
+      "lastError": "collection editorial \"producer/david-paige\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1612,6 +1612,16 @@
       "retryFingerprint": "7dc5748c9eb1e87f06bef1babc1be2fc5966d2ad95627883c02d3f832f5a5254",
       "retryAfter": "2026-09-16",
       "lastError": "collection editorial \"producer/jean-royer\" contains a prohibited dash or invalid UTF-8"
+    },
+    {
+      "kind": "producer",
+      "slug": "jl-chave-selection",
+      "name": "Jl Chave Selection",
+      "mode": "generated",
+      "fingerprint": "3ccedef6e22d26ed9ee12f2edfe8d7539b6281cdccd2309946b23b9eed44b66f",
+      "retryFingerprint": "3ccedef6e22d26ed9ee12f2edfe8d7539b6281cdccd2309946b23b9eed44b66f",
+      "retryAfter": "2026-09-18",
+      "lastError": "collection editorial \"producer/jl-chave-selection\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -3822,10 +3832,10 @@
       "slug": "rhone-valley",
       "name": "Rhône Valley",
       "mode": "generated",
-      "fingerprint": "c64d6841d6694e7b7752f079b26e288013cce1b91b02f536394f5dd983606e3a",
-      "retryFingerprint": "c64d6841d6694e7b7752f079b26e288013cce1b91b02f536394f5dd983606e3a",
+      "fingerprint": "229720b876e94e01dcda23e172368c73c43dac1874ceaabc9a2cdc500f17465c",
+      "retryFingerprint": "229720b876e94e01dcda23e172368c73c43dac1874ceaabc9a2cdc500f17465c",
       "retryAfter": "2026-09-18",
-      "lastError": "collection editorial \"region/rhone-valley\" contains a prohibited dash or invalid UTF-8"
+      "lastError": "research JSON has 191 words; expected 120 to 190"
     },
     {
       "kind": "region",
@@ -4646,9 +4656,9 @@
       "slug": "moscato",
       "name": "Moscato",
       "mode": "generated",
-      "fingerprint": "3e9f3f15592abe90321e7c62cca66105f388f8c7d39bc917af0b61676faaff63",
-      "retryFingerprint": "3e9f3f15592abe90321e7c62cca66105f388f8c7d39bc917af0b61676faaff63",
-      "retryAfter": "2026-09-16",
+      "fingerprint": "4bc09d1fab8b1159c432848d8e9db62225bd0b729e38b3853b3d32f1790f6aca",
+      "retryFingerprint": "4bc09d1fab8b1159c432848d8e9db62225bd0b729e38b3853b3d32f1790f6aca",
+      "retryAfter": "2026-09-18",
       "lastError": "collection editorial \"varietal/moscato\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4894,20 +4904,46 @@
       "slug": "syrah",
       "name": "Syrah",
       "mode": "generated",
-      "fingerprint": "62daada2bc1d730f2c78e4d0b7d3852d773fe52d73f0730048c65b790309f6a4",
-      "retryFingerprint": "62daada2bc1d730f2c78e4d0b7d3852d773fe52d73f0730048c65b790309f6a4",
+      "fingerprint": "763887447aca97e6ecf0ade67841e27a04323f6530500aeff2161702076445b3",
+      "retryFingerprint": "763887447aca97e6ecf0ade67841e27a04323f6530500aeff2161702076445b3",
       "retryAfter": "2026-09-18",
-      "lastError": "collection editorial \"varietal/syrah\" source label contains a prohibited dash or invalid UTF-8"
+      "lastError": "collection editorial \"varietal/syrah\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
       "slug": "syrah-grenache",
       "name": "Syrah / Grenache",
       "mode": "generated",
-      "fingerprint": "b3f936149bfec37ababa6d0ad3ae1096f44354b9a0483965d3058ffc9f103197",
-      "retryFingerprint": "b3f936149bfec37ababa6d0ad3ae1096f44354b9a0483965d3058ffc9f103197",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/syrah-grenache\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "6c029fe51183ed94592711bb3ffb7bc2982f2e7f1d0b2b239f201d222d0bb176",
+      "eyebrow": "Discover Syrah Grenache Blends",
+      "heading": "Syrah and Grenache: a classic Rhône blend with modern expression",
+      "paragraphs": [
+        "Syrah and Grenache are two of the Rhône Valley’s signature red varieties, often blended to marry structure and warmth. Syrah contributes deep color, peppery spice, darker fruit and firm tannins, while Grenache brings red fruit charm, softness, and fragrant warmth. That synergy underpins the southern Rhône tradition, where Grenache typically plays the dominant role, balanced by Syrah’s backbone for shape and length ([en.wikipedia.org](https://en.wikipedia.org/wiki/Syrah?utm_source=openai)).",
+        "In Israel’s Upper Galilee, Galil Mountain Winery includes Syrah and Grenache together in its flagship blends. The high-elevation vineyards deliver both elegance and ripeness, and their intentional blend echoes Rhône sensibilities with a local voice rooted in terroir ([galilmountain.co.il](https://www.galilmountain.co.il/en/home/a/main/?utm_source=openai)). This collection invites exploration of FineVines offerings from both Galil Mountain and the Rhône, allowing buyers to compare how the same grape pairing can express its character across different soils, climates and winemaking philosophies."
+      ],
+      "sources": [
+        {
+          "label": "Wikipedia Syrah",
+          "url": "https://en.wikipedia.org/wiki/Syrah"
+        },
+        {
+          "label": "Wikipedia Grenache",
+          "url": "https://en.wikipedia.org/wiki/Grenache"
+        },
+        {
+          "label": "Food Wine and Flavor on GSM blends",
+          "url": "https://foodwineandflavor.com/wine/wine-styles/blends/gsm-blend-grenache-syrah-mourvedre-explained/"
+        },
+        {
+          "label": "Galil Mountain Winery homepage",
+          "url": "https://www.galilmountain.co.il/en/home/a/main/"
+        },
+        {
+          "label": "Israeli wine regions (Galil)",
+          "url": "https://en.wikipedia.org/wiki/Israeli_wine"
+        }
+      ],
+      "reviewedAt": "2026-08-19"
     },
     {
       "kind": "varietal",
