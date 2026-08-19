@@ -171,6 +171,15 @@ finevines.exe
 # SAME run, never committed.
 .run/
 
+# Local document-generation scratch and QA captures. Keep the approved client
+# deliverable trackable while excluding render iterations, browser screenshots,
+# copied build trees, and local Go caches.
+tmp/
+output/*
+!output/pdf/
+output/pdf/*
+!output/pdf/FineVines-Project-Recap-and-Invoice-August-2026-FINAL.pdf
+
 # Editor workspace file (personal, not shared)
 *.code-workspace
 
