@@ -2632,6 +2632,9 @@ func TestBuild_CollectionPages(t *testing.T) {
 	if strings.Contains(alpha, "beta-cab-2020") {
 		t.Error("producer collection must not list another producer's wine")
 	}
+	if strings.Contains(alpha, "Explore related Producers") || strings.Contains(alpha, `/producers/beta-cellars/`) {
+		t.Error("producer collection must not imply a relationship to estates that merely share a region or grape")
+	}
 
 	// 2. Region and varietal collections cut the catalog the other way — across
 	// producers, which is the whole point of having them.

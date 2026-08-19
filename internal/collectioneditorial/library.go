@@ -82,10 +82,16 @@ type diskFile struct {
 // on-disk representation can evolve without leaking storage mechanics into the
 // static builder.
 type Library struct {
-	entries map[string]Entry
+	entries               map[string]Entry
+	legacyProducerEntries map[string]Entry
 }
 
-func Empty() Library { return Library{entries: map[string]Entry{}} }
+func Empty() Library {
+	return Library{
+		entries:               map[string]Entry{},
+		legacyProducerEntries: map[string]Entry{},
+	}
+}
 
 func key(kind Kind, slug string) string { return string(kind) + "/" + slug }
 
@@ -120,7 +126,46 @@ func Load(path string) (Library, error) {
 
 func (l Library) Lookup(kind Kind, slug string) (Entry, bool) {
 	entry, ok := l.entries[key(kind, slug)]
-	return entry, ok && entry.Publishable()
+	// Generated research is a draft, not publication approval. The first
+	// production batch demonstrated why that distinction matters: plausible
+	// prose can still attach the wrong estate, region, or grape to a page.
+	// A human promotes approved copy to curated mode; until then the page uses
+	// its bounded catalog-derived fallback.
+	if ok && entry.Publishable() && entry.Mode == "curated" {
+		return entry, true
+	}
+	if kind == Producer {
+		entry, ok = l.legacyProducerEntries[producerIdentity(slug)]
+		return entry, ok && entry.Publishable()
+	}
+	return Entry{}, false
+}
+
+// producerIdentity removes presentation words that commonly differ between
+// the old Drupal profile heading and the Salesforce brand. It is used only
+// after duplicate identities have been rejected while loading the archive.
+// Thus "Domaine Daniel Bouland" can safely serve "Daniel Bouland", while a
+// shared surname that names two archived estates serves neither by accident.
+func producerIdentity(value string) string {
+	parts := strings.Fields(strings.ReplaceAll(model.Slugify(value), "-", " "))
+	for len(parts) > 0 {
+		switch parts[0] {
+		case "domaine", "chateau", "champagne", "weingut", "maison", "the":
+			parts = parts[1:]
+		default:
+			goto suffix
+		}
+	}
+suffix:
+	for len(parts) > 0 {
+		switch parts[len(parts)-1] {
+		case "wine", "wines", "winery", "vineyard", "vineyards", "cellars", "estate":
+			parts = parts[:len(parts)-1]
+		default:
+			return strings.Join(parts, "-")
+		}
+	}
+	return ""
 }
 
 type ImageReference struct {

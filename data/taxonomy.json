@@ -54,12 +54,19 @@
     "producer": {
       "Anne Patent": "Anne Parent",
       "Bouland": "Daniel Bouland",
+      "BOURGEOIS sancerre ROSE": "Famille Bourgeois",
+      "Bourgeois": "Famille Bourgeois",
+      "Bourgeois/clos Henri": "Famille Bourgeois",
+      "Chave": "Jean-Louis Chave",
       "Collote": "Collotte",
       "Deiss": "Marcel Deiss",
+      "Domaine Chave": "Jean-Louis Chave",
       "Domaine Digioia-Royer": "Digioia-Royer",
+      "Domaine Rhone": "Jean-Louis Chave",
       "H Lamy": "Hubert Lamy",
       "Lamy": "Hubert Lamy",
       "Lignier-Michelot": "Lignier Michelot",
+      "Serol": "Domaine Sérol",
       "Weingut Franz Hirtzberger": "Franz Hirtzberger",
       "Weinhofmeistereri Hirtzberger": "Franz Hirtzberger"
     },
@@ -77,6 +84,11 @@
       "Grenache/syrah": "Grenache / Syrah",
       "Trincadera": "Trincadeira"
     }
+  },
+  "producerPrefixes": {
+    "Domaine Jl Chave": "Jean-Louis Chave",
+    "Jl Chave Selection": "Jean-Louis Chave",
+    "Domaine Serol": "Domaine Sérol"
   },
   "regions": [
     {"name": "Bordeaux"},

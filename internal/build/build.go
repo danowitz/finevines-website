@@ -1969,9 +1969,17 @@ func loadSite(dataDir, baseURL, gaID string, exclusions LaunchExclusions) (*site
 	if err != nil {
 		return nil, fmt.Errorf("load collection editorial: %w", err)
 	}
+	editorials, err = editorials.WithLegacyProducerProfiles(filepath.Join(dataDir, "oldsite-producers", "manifest.json"))
+	if err != nil {
+		return nil, fmt.Errorf("load legacy producer profiles: %w", err)
+	}
 	taxonomyCatalog, err := taxonomy.Load(filepath.Join(dataDir, "taxonomy.json"))
 	if err != nil {
 		return nil, fmt.Errorf("load taxonomy: %w", err)
+	}
+	taxonomyCatalog, err = taxonomyCatalog.WithLegacyProducerPrefixes(filepath.Join(dataDir, "oldsite-producers", "manifest.json"))
+	if err != nil {
+		return nil, fmt.Errorf("load legacy producer identities: %w", err)
 	}
 	cleaned := usableWines(taxonomyCatalog.Normalize(withoutExcludedWines(wines, exclusions)))
 	// Unavailable wines keep a published detail page (their search ranking

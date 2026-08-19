@@ -712,7 +712,13 @@ func renderCollections(tmpl *template.Template, distDir string, s *site, valuesB
 				if n == 1 {
 					entry, hasEntry := s.Editorials.Lookup(collectioneditorial.Kind(kind.Key), v.Slug)
 					editorial = editorialForCollection(kind, v, related, entry, hasEntry, distDir)
-					peers = peerCollections(kind, v, values, entry.Related, 6)
+					// Producer similarity is not a relationship. The former peer
+					// algorithm put unrelated estates beside one another merely
+					// because they shared a region or grape, which readers reasonably
+					// interpreted as a business or family association.
+					if kind.Key != "producer" {
+						peers = peerCollections(kind, v, values, entry.Related, 6)
+					}
 				}
 				var hierarchy, intersectionLinks []collectionLink
 				if n == 1 && kind.Key == "region" {
