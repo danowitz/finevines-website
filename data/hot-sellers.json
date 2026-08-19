@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-18T23:16:21Z",
+  "updated": "2026-08-19T02:36:47Z",
   "windowDays": 30,
   "wines": [
     {
@@ -16,15 +16,15 @@
     },
     {
       "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
-      "cases": 89.5
+      "cases": 90
+    },
+    {
+      "slug": "domaine-dezat-cellier-des-marnes-sancerre-blanc-2025",
+      "cases": 54.25
     },
     {
       "slug": "le-vignerons-de-florensac-picpoul-de-pinet-2025",
       "cases": 52.58334
-    },
-    {
-      "slug": "domaine-dezat-cellier-des-marnes-sancerre-blanc-2025",
-      "cases": 52.25
     }
   ]
 }
