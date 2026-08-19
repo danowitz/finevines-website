@@ -1,11 +1,11 @@
-# Fine Vines wine-catalog imagery — briefing for ChatGPT
+# FineVines wine-catalog imagery — briefing for ChatGPT
 
 Paste everything below into ChatGPT. It is self-contained: it assumes no access
 to the repository, the site, or any prior conversation.
 
 ---
 
-I'm rebuilding the website for Fine Vines, a licensed wholesale wine and
+I'm rebuilding the website for FineVines, a licensed wholesale wine and
 spirits distributor in Illinois. It's a static site generated from their
 Salesforce catalog: about 2,640 product rows, which collapse to roughly 1,900
 distinct wines once vintages of the same wine are grouped into one listing.

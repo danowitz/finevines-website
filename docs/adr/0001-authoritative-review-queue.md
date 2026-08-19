@@ -5,7 +5,7 @@
 
 ## Context
 
-Fine Vines is completing real launch-catalog image review on `review.finevines.biz` before moving the same catalog to `finevines.com`. The existing design separates test and production action processors, treats an Edge-to-GitHub dispatch as the primary execution path, and stores coordination in object storage. That left accepted `.biz` actions without a reliable consumer when the dispatch credential was absent and cannot provide an atomic per-wine lock for simultaneous reviewers.
+FineVines is completing real launch-catalog image review on `review.finevines.biz` before moving the same catalog to `finevines.com`. The existing design separates test and production action processors, treats an Edge-to-GitHub dispatch as the primary execution path, and stores coordination in object storage. That left accepted `.biz` actions without a reliable consumer when the dispatch credential was absent and cannot provide an atomic per-wine lock for simultaneous reviewers.
 
 ## Decision
 

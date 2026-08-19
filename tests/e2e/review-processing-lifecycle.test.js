@@ -446,16 +446,30 @@ test('Support can find a pictured wine and queue its image replacement in a real
     await page.setContent(consolePage({ name: 'Joel Danowitz', email: 'joel@danowitz.com', role: 'Support' }), { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => {
       window.__reopenRequest = null;
+      window.__reopenRequests = [];
+      window.__reopenAttempts = 0;
+      window.__catalogCommit = 'abcdef1';
+      window.__currentRequests = 0;
+      window.__reopenStatusChecks = 0;
+      window.__reviewFocused = true;
+      Object.defineProperty(document, 'hasFocus', { value: () => window.__reviewFocused });
       window.fetch = async (url, init = {}) => {
-        if (url === '/api/current') return { ok: true, json: async () => ({
-          packageId: 'pkg-reopen', catalogCommit: 'abcdef1', csrfToken: 'csrf', wines: [], incidents: [], isAdministrator: true,
+        if (url === '/api/current') { window.__currentRequests += 1; return { ok: true, json: async () => ({
+          packageId: 'pkg-reopen', catalogCommit: window.__catalogCommit, csrfToken: 'csrf', wines: [], incidents: [], isAdministrator: true,
           catalogWines: [{ sku: 'FV-100*', skus: ['FV-100*'], slug: 'domaine-test-chablis-2022', wineRevision: 'a'.repeat(64), wineRevisions: [{ sku: 'FV-100*', wineRevision: 'a'.repeat(64) }], displayIdentity: 'Domaine Test Chablis 2022', currentImage: 'assets/img/wines/domaine-test-chablis-2022.jpg', currentImages: ['assets/img/wines/domaine-test-chablis-2022.jpg'] }],
           expiresAt: '2026-09-17T00:00:00Z', reviewStatus: {},
-        }) };
+        }) }; }
         if (url === '/api/admin/accounts') return { ok: false, json: async () => ({}) };
         if (url === '/api/admin/wines/reopen') {
           window.__reopenRequest = JSON.parse(init.body);
-          return { ok: true, json: async () => ({ id: 'action-1', status: 'queued' }) };
+          window.__reopenRequests.push(window.__reopenRequest);
+          window.__reopenAttempts += 1;
+          if (window.__reopenAttempts === 1) return { ok: false, status: 502, json: async () => ({ error: 'upstream response failed after acceptance' }) };
+          return { ok: true, status: 202, json: async () => ({ id: window.__reopenRequest.requestId, status: 'needs_decision', existing: true, dispatched: false }) };
+        }
+        if (url.startsWith('/api/actions/')) {
+          window.__reopenStatusChecks += 1;
+          return { ok: true, json: async () => ({ id: url.split('/').at(-1), status: window.__reopenStatusChecks === 1 ? 'queued' : 'needs_decision' }) };
         }
         throw new Error('unexpected fetch ' + url);
       };
@@ -467,10 +481,28 @@ test('Support can find a pictured wine and queue its image replacement in a real
     assert.match(await page.$eval('#reopen-selection', (node) => node.textContent), /Domaine Test Chablis 2022/);
     await page.click('.reopen-danger');
     await page.waitForFunction(() => window.__reopenRequest !== null);
-    assert.deepEqual(await page.evaluate(() => window.__reopenRequest), {
-      kind: 'image-reopen', sku: 'FV-100*', packageId: 'pkg-reopen', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: '', reason: 'Support reported the current catalog image as wrong.',
-    });
-    assert.match(await page.$eval('.reopen-receipt', (node) => node.textContent), /Queued/);
+    const submitted = await page.evaluate(() => window.__reopenRequest);
+    assert.match(submitted.requestId, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    delete submitted.requestId;
+    assert.deepEqual(submitted, { kind: 'image-reopen', sku: 'FV-100*', packageId: 'pkg-reopen', targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: '', reason: 'Support reported the current catalog image as wrong.' });
+    await page.waitForFunction(() => !document.querySelector('.reopen-danger').disabled);
+    assert.match(await page.$eval('.reopen-receipt', (node) => node.textContent), /upstream response failed/i);
+    await page.evaluate(() => { window.__catalogCommit = 'fedcba9'; window.dispatchEvent(new Event('focus')); });
+    await page.waitForFunction(() => window.__currentRequests >= 2);
+    await page.click('.reopen-danger');
+    await page.waitForFunction(() => window.__reopenAttempts === 2);
+    assert.deepEqual(await page.evaluate(() => window.__reopenRequests[1]), await page.evaluate(() => window.__reopenRequests[0]));
+    await page.waitForFunction(() => window.__reopenStatusChecks === 1);
+    await page.evaluate(() => { window.__reviewFocused = false; });
+    await new Promise((resolveWait) => setTimeout(resolveWait, 2_700));
+    assert.equal(await page.evaluate(() => window.__reopenStatusChecks), 1, 'background polling must pause');
+    await page.click('[data-reopen-close]');
+    await page.evaluate(() => { window.__reviewFocused = true; window.dispatchEvent(new Event('focus')); });
+    await page.waitForFunction(() => window.__reopenStatusChecks === 2);
+    const receipt = await page.$eval('#reopen-action-status', (node) => node.textContent);
+    assert.match(receipt, /Current image removed/);
+    assert.doesNotMatch(receipt, /11111111/);
+    assert.equal(await page.evaluate(() => window.__reopenStatusChecks), 2);
   } finally {
     await page.close(); await browser.close();
   }
@@ -573,7 +605,7 @@ test('real browser covers onboarding, modal choice, conflict, counters, and inci
     await reviewerPage.type('#email', roster[0].email);
     await Promise.all([reviewerPage.waitForNavigation(), reviewerPage.click('button[type=submit]')]);
     assert.match(await reviewerPage.$eval('body', (node) => node.innerText), /If an eligible account exists/);
-    const resetMail = sentMail.find(({ subject }) => subject === 'Reset your Fine Vines review password');
+    const resetMail = sentMail.find(({ subject }) => subject === 'Reset your FineVines review password');
     assert.match(resetMail?.text || '', /browser-reset-token-95/);
     await reviewerPage.goto(`${hosted.origin}/reset-password?token=browser-reset-token-95`, { waitUntil: 'domcontentloaded' });
     await reviewerPage.type('#new-password', 'Reset-private-password-95!');

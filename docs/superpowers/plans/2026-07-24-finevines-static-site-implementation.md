@@ -1,8 +1,8 @@
-# Fine Vines Static Site Implementation Plan
+# FineVines Static Site Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the confirmed-scope Fine Vines site: a single Go binary (`finevines.exe`) with `enrich` / `build` / `redirects` / `deploy` subcommands, plus two Claude skills (`finevines-news`, `finevines-team`), culminating in a launched finevines.com.
+**Goal:** Build the confirmed-scope FineVines site: a single Go binary (`finevines.exe`) with `enrich` / `build` / `redirects` / `deploy` subcommands, plus two Claude skills (`finevines-news`, `finevines-team`), culminating in a launched finevines.com.
 
 **Architecture:** One Go module compiled to a single Windows `.exe`. `enrich` reads Salesforce (OAuth client-credentials), roster-diffs against `data/wines.json`, enriches new/changed wines with Claude (text) and Imagen 4 (bottle photo, deterministic SVG label as fallback). `build` is a pure function `data/*.json → dist/`. `deploy` hash-diff-uploads `dist/` to a Bunny.net Storage Zone and purges the Pull Zone. `redirects` crawls the old site and publishes a 301 map (Edge Rules if ≤20 URLs, Edge Scripting middleware otherwise). The Claude skills only write `data/news/*.json` / `data/team.json` — they never touch Salesforce or the enrich pipeline.
 
@@ -17,7 +17,7 @@
 - **Redirect mechanism decision (2026-07-24):** crawl-gated — Bunny **Edge Rules** if the discovered old-URL map has ≤20 entries (hard platform cap), Bunny **Edge Scripting** middleware otherwise.
 - **Images are generated, never scraped.** The label fallback is wine-branded, **never Fine-Vines-branded**. Producer-supplied images (`imageSource: "producer-supplied"`) are never overwritten by `enrich`.
 - **Claude API usage:** official Go SDK (`anthropic-sdk-go`), model `claude-opus-4-8`, no `thinking` parameter (defaults off on Opus 4.8; enrichment copy doesn't need it), no `temperature`/`top_p`/`top_k` (rejected with 400 on Opus 4.8).
-- **Brand voice:** elegant, editorial, old-world wine trade. Tagline: `Pouring elegance with a sommelier's touch`. About-page copy keeps Fine Vines' existing voice ("A service company, first and last..."). No corporate-tech phrasing.
+- **Brand voice:** elegant, editorial, old-world wine trade. Tagline: `Pouring elegance with a sommelier's touch`. About-page copy keeps FineVines' existing voice ("A service company, first and last..."). No corporate-tech phrasing.
 - **Real team roster** (seed `data/team.json` with these, no placeholders): George Molitor (Founder & President), Connie Molitor (Operations), Jeff Barbour, Trish Earley, Tim Freehan, Heather Malpass, Richie Ribando, Dan Pilkey, Steven Fladung (all Sales), Barbara Fultz (Office Manager).
 - **Secrets** only via environment variables / git-ignored `.env`. Never committed.
 - **`build` is deterministic:** same input → byte-identical `dist/` (no timestamps in output).
@@ -29,16 +29,16 @@
 2. **Source interface:** spec §4 sketches `Roster() []RosterEntry; Fetch(id)`. Because the wine fields are small, one paginated SOQL query returns *all* raw fields for the whole catalog in a handful of round trips, and the hash is computed locally. The implemented interface is `Roster(ctx) ([]WineRaw, error)` — 1 + N/2000 requests instead of 1 + N. Swappability for a future QuickBooks-direct source is preserved.
 3. **Label generator "port":** spec §5 says port `build.js`'s `label()`/`bottle3d()`. That file no longer exists (see CLAUDE.md — do not search for it). The generator is **re-implemented in Go** using (a) the spec's taxonomy (frames: double/single/oval/deco/minimal; crests: ring/medallion/shield/fleuron/fan) and (b) the rendered inline SVGs inside the surviving `index.html` proposal as the visual reference.
 
-### Client-side action items (request from George / Fine Vines NOW — they gate Phases D–F and Launch, not Phases A–C)
+### Client-side action items (request from George / FineVines NOW — they gate Phases D–F and Launch, not Phases A–C)
 
 | # | Item | Gates | Who |
 |---|------|-------|-----|
-| C1 | Salesforce: admin creates a **connected app** with *Client Credentials Flow* enabled, run-as **integration user** with read access to the product/inventory object; deliver Consumer Key + Secret + My Domain URL. Confirm the object & field API names holding SKU, producer, name, vintage, varietal, region, appellation, style, stock qty (the QuickBooks-synced fields). | Task 11 checkpoint, Task 16 | Fine Vines SF admin |
-| C2 | **Gemini API key** (Google AI Studio) on a billing-enabled account — initial run ≈ $200–400 at Imagen 4 Standard $0.04/image. | Task 14 | Fine Vines (or GRIT, billed through) |
-| C3 | **Anthropic API key** for text enrichment (initial run ≈ $75–150 at Opus 4.8 rates) — separate from the Claude Code subscription Barbara will use for the skills. | Task 13 | Fine Vines (or GRIT) |
-| C4 | **Bunny.net account**: one Storage Zone + one Pull Zone (staging), later a production pair; API key + storage AccessKey. | Tasks 17–20, Launch | GRIT sets up, Fine Vines pays |
-| C5 | **DNS access** for finevines.com (registrar/DNS host login or delegated access). | Launch | Fine Vines |
-| C6 | Current-site inventory aid: any known inbound links / old URLs George wants preserved (marketing emails, printed materials). | Task 19 | Fine Vines |
+| C1 | Salesforce: admin creates a **connected app** with *Client Credentials Flow* enabled, run-as **integration user** with read access to the product/inventory object; deliver Consumer Key + Secret + My Domain URL. Confirm the object & field API names holding SKU, producer, name, vintage, varietal, region, appellation, style, stock qty (the QuickBooks-synced fields). | Task 11 checkpoint, Task 16 | FineVines SF admin |
+| C2 | **Gemini API key** (Google AI Studio) on a billing-enabled account — initial run ≈ $200–400 at Imagen 4 Standard $0.04/image. | Task 14 | FineVines (or GRIT, billed through) |
+| C3 | **Anthropic API key** for text enrichment (initial run ≈ $75–150 at Opus 4.8 rates) — separate from the Claude Code subscription Barbara will use for the skills. | Task 13 | FineVines (or GRIT) |
+| C4 | **Bunny.net account**: one Storage Zone + one Pull Zone (staging), later a production pair; API key + storage AccessKey. | Tasks 17–20, Launch | GRIT sets up, FineVines pays |
+| C5 | **DNS access** for finevines.com (registrar/DNS host login or delegated access). | Launch | FineVines |
+| C6 | Current-site inventory aid: any known inbound links / old URLs George wants preserved (marketing emails, printed materials). | Task 19 | FineVines |
 
 ---
 
@@ -668,7 +668,7 @@ Run: `go run ./tools/extractfonts` from repo root. Expected: several `assets/fon
 Design tokens transcribed from the proposal's `<style>` (open `index.html` and copy the real values — colors, type scale). Structure:
 
 ```css
-/* Fine Vines design system — tokens transcribed from the approved proposal. */
+/* FineVines design system — tokens transcribed from the approved proposal. */
 :root {
   --wine: #5e1224;        /* deep burgundy — replace with the exact value from index.html */
   --cream: #f5efe4;       /* page background — ditto */
@@ -687,7 +687,7 @@ Design tokens transcribed from the proposal's `<style>` (open `index.html` and c
 
 The full stylesheet is written here (not generated) — port the proposal's visual language: cream background, burgundy accents, generous serif headings, thin gold rules. Keep it under ~400 lines; no framework.
 
-- [ ] **Step 3: Seed `data/team.json`** with the confirmed roster (Global Constraints list), roles as given, emails in whatever format Fine Vines uses (`first@finevines.com` placeholder pattern is acceptable **only until C1 contact confirms real addresses** — mark with a `note` field `"confirm email"` so the team skill surfaces it).
+- [ ] **Step 3: Seed `data/team.json`** with the confirmed roster (Global Constraints list), roles as given, emails in whatever format FineVines uses (`first@finevines.com` placeholder pattern is acceptable **only until C1 contact confirms real addresses** — mark with a `note` field `"confirm email"` so the team skill surfaces it).
 
 - [ ] **Step 4: Verify** — fonts exist (`ls assets/fonts`), `python -m http.server` or open a scratch HTML linking site.css to eyeball tokens. No Go tests for this task (assets).
 
@@ -729,7 +729,7 @@ func TestRunGeneratesHomeAndContact(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		"<title>Fine Vines",
+		"<title>FineVines",
 		"Pouring elegance with a sommelier", // tagline present
 		`rel="canonical" href="https://finevines.com/"`,
 		`href="/assets/css/site.css"`,
@@ -866,7 +866,7 @@ func copyTree(src, dst string) error {
 
 (`jsonUnmarshal` = thin wrapper over `encoding/json` — add the import; helper exists so error messages can carry the filename later.)
 
-- [ ] **Step 4: Write templates.** `base.html.tmpl` defines `head` (charset, viewport, `<title>`, meta description, canonical using `.BaseURL`, css link), `header` (logo text "Fine Vines", nav: Portfolio / News & Events / About / Contact), `footer` (tagline, license line, contact info). `home.html.tmpl` defines `home`: hero with tagline `Pouring elegance with a sommelier's touch`, intro copy in brand voice, featured-region links into the portfolio, latest 3 news posts. `contact.html.tmpl`: address, phone, email, wholesale-inquiry framing (voice: old-world wine trade, no web forms — this is a licensed distributor's trade contact page).
+- [ ] **Step 4: Write templates.** `base.html.tmpl` defines `head` (charset, viewport, `<title>`, meta description, canonical using `.BaseURL`, css link), `header` (logo text "FineVines", nav: Portfolio / News & Events / About / Contact), `footer` (tagline, license line, contact info). `home.html.tmpl` defines `home`: hero with tagline `Pouring elegance with a sommelier's touch`, intro copy in brand voice, featured-region links into the portfolio, latest 3 news posts. `contact.html.tmpl`: address, phone, email, wholesale-inquiry framing (voice: old-world wine trade, no web forms — this is a licensed distributor's trade contact page).
 
 - [ ] **Step 5: Verify** — `go test ./internal/build/` → PASS. Also `go run ./cmd/finevines build` still errors (wired in Task 9 — fine).
 
@@ -926,7 +926,7 @@ func TestWineDetailPages(t *testing.T) {
 		data := winePage{
 			page: page{
 				site:        s,
-				Title:       fmt.Sprintf("%s %s %s — Fine Vines", w.Producer, w.Name, w.Vintage),
+				Title:       fmt.Sprintf("%s %s %s — FineVines", w.Producer, w.Name, w.Vintage),
 				Description: firstNonEmpty(w.Description, w.Producer+" "+w.Name),
 				Path:        "/wines/" + w.Slug + "/",
 			},
@@ -955,7 +955,7 @@ func TestWineDetailPages(t *testing.T) {
   "offers": {
     "@type": "Offer",
     "availability": "https://schema.org/InStock",
-    "seller": {"@type": "Organization", "name": "Fine Vines Ltd."}
+    "seller": {"@type": "Organization", "name": "FineVines Ltd."}
   }
 }
 </script>
@@ -994,7 +994,7 @@ type indexEntry struct {
 }
 ```
 
-Marshal with `json.Marshal` (compact — this file is fetched by browsers; ~5–10k wines ≈ 1–2 MB, acceptable and cacheable; note in code comment that if it grows past ~3 MB, gzip via Bunny handles it). The portfolio page's template data must embed Task 5's `page` struct (title e.g. "Portfolio — Fine Vines", path `/portfolio/`) alongside the facet groups and wine list — define a `portfolioPage` type embedding `page` (same pattern as `homePage`/`winePage`), so `head`/`header`/`footer` resolve. Portfolio template: facet sidebar (`<details>` groups per facet, checkbox per distinct value — computed in Go, sorted), pre-rendered `<ul class="wine-grid">` of every wine (server-rendered = the SEO surface), `<script src="/assets/js/portfolio.js" defer>`.
+Marshal with `json.Marshal` (compact — this file is fetched by browsers; ~5–10k wines ≈ 1–2 MB, acceptable and cacheable; note in code comment that if it grows past ~3 MB, gzip via Bunny handles it). The portfolio page's template data must embed Task 5's `page` struct (title e.g. "Portfolio — FineVines", path `/portfolio/`) alongside the facet groups and wine list — define a `portfolioPage` type embedding `page` (same pattern as `homePage`/`winePage`), so `head`/`header`/`footer` resolve. Portfolio template: facet sidebar (`<details>` groups per facet, checkbox per distinct value — computed in Go, sorted), pre-rendered `<ul class="wine-grid">` of every wine (server-rendered = the SEO surface), `<script src="/assets/js/portfolio.js" defer>`.
 
 - [ ] **Step 3: Write `assets/js/portfolio.js`** (~120 lines, no framework):
 
@@ -1057,13 +1057,13 @@ Marshal with `json.Marshal` (compact — this file is fetched by browsers; ~5–
 - Modify: `internal/build/build.go`, `internal/build/build_test.go`
 
 **Interfaces:**
-- Produces: `dist/news/index.html` (posts newest-first), `dist/news/<slug>/index.html` per post (indexable, own title/meta/canonical — the whole point of the News skill's SEO value), `dist/about/index.html` (team grid from `team.json` + Fine Vines' own About copy).
+- Produces: `dist/news/index.html` (posts newest-first), `dist/news/<slug>/index.html` per post (indexable, own title/meta/canonical — the whole point of the News skill's SEO value), `dist/about/index.html` (team grid from `team.json` + FineVines' own About copy).
 
 - [ ] **Step 1: Extend tests** — assert: news landing lists the fixture post title linking to `/news/spring-portfolio-tasting/`; the post page exists with `<title>Spring Portfolio Tasting` and an `Article` JSON-LD block (`"@type": "NewsArticle"`, `datePublished`); about page contains both fixture team members' names and roles.
 
-- [ ] **Step 2: Run to verify failure**, then implement — same `renderPage` pattern, honoring Task 5's template-data contract: **every page's data embeds the `page` struct**. The news landing embeds `page` (title "News & Events — Fine Vines", path `/news/`) with the posts list; each news post embeds `page` (title = post title, description = a body excerpt, path `/news/<slug>/`) plus its `NewsPost` (define a `newsPostPage` type like `winePage`); the about page embeds `page` (title "About — Fine Vines", path `/about/`) — it does NOT pass bare `s`, because `head`/`header`/`footer` need `.Title`/`.Path`. The per-post unique title/meta/canonical IS the SEO point of the news skill, so this is required, not optional. Post body: the skill writes plain paragraphs separated by blank lines; convert in Go with a tiny helper `paragraphs(body string) []string` (split on `\n\n`) exposed to the template via `template.FuncMap` — **no** markdown engine (YAGNI; the news skill writes prose paragraphs).
+- [ ] **Step 2: Run to verify failure**, then implement — same `renderPage` pattern, honoring Task 5's template-data contract: **every page's data embeds the `page` struct**. The news landing embeds `page` (title "News & Events — FineVines", path `/news/`) with the posts list; each news post embeds `page` (title = post title, description = a body excerpt, path `/news/<slug>/`) plus its `NewsPost` (define a `newsPostPage` type like `winePage`); the about page embeds `page` (title "About — FineVines", path `/about/`) — it does NOT pass bare `s`, because `head`/`header`/`footer` need `.Title`/`.Path`. The per-post unique title/meta/canonical IS the SEO point of the news skill, so this is required, not optional. Post body: the skill writes plain paragraphs separated by blank lines; convert in Go with a tiny helper `paragraphs(body string) []string` (split on `\n\n`) exposed to the template via `template.FuncMap` — **no** markdown engine (YAGNI; the news skill writes prose paragraphs).
 
-- [ ] **Step 3: About copy.** Use Fine Vines' existing About text verbatim (from the current site / proposal — the "A service company, first and last..." copy). This is a durable decision: do not rewrite it. Store it directly in `about.html.tmpl`.
+- [ ] **Step 3: About copy.** Use FineVines' existing About text verbatim (from the current site / proposal — the "A service company, first and last..." copy). This is a durable decision: do not rewrite it. Store it directly in `about.html.tmpl`.
 
 - [ ] **Step 4: Verify** — `go test ./internal/build/` → PASS.
 - [ ] **Step 5: Commit** — `git commit -am "feat: news landing, per-post pages, and about page with team roster"`
@@ -1201,7 +1201,7 @@ func TestGenerateMatchesGolden(t *testing.T) {
 
 func TestGenerateNeverBrandsFineVines(t *testing.T) {
 	svg := string(Generate(fixture))
-	if strings.Contains(strings.ToLower(svg), "fine vines") {
+	if strings.Contains(strings.ToLower(svg), "finevines") {
 		t.Fatal("labels must be wine-branded, never Fine-Vines-branded (spec §5)")
 	}
 	for _, want := range []string{"Hubert Lamy", "2021", "<svg"} {
@@ -1480,7 +1480,7 @@ func NewTextEnricher(apiKey string, opts ...option.RequestOption) *TextEnricher 
 	return &TextEnricher{client: anthropic.NewClient(append([]option.RequestOption{option.WithAPIKey(apiKey)}, opts...)...)}
 }
 
-const textSystem = `You write catalog copy for Fine Vines, a licensed Illinois
+const textSystem = `You write catalog copy for FineVines, a licensed Illinois
 wholesale wine distributor. Voice: elegant, editorial, old-world wine trade —
 never corporate-tech. You will receive the known facts about one wine. Write:
 1. "description": a 2–3 sentence tasting description for the trade.
@@ -1724,7 +1724,7 @@ func runEnrich(cfg config.Config) error {
 ```json
 {
   "name": "finevines",
-  "owner": { "name": "Fine Vines" },
+  "owner": { "name": "FineVines" },
   "plugins": [
     { "name": "finevines-news", "source": "./plugins/finevines-news",
       "description": "Post news & events to finevines.com" },
@@ -1736,9 +1736,9 @@ func runEnrich(cfg config.Config) error {
 
 (Before committing, diff this structure against one of the working GRIT marketplace repos and match its exact field set — the format must load in Barbara's Claude Code, not just look right.)
 
-- [ ] **Step 2: Write `SKILL.md`** — frontmatter `name: finevines-news`, `description: Use when posting a tasting, new arrival, or event to the Fine Vines website — interviews for the details, writes the post in the Fine Vines voice, and offers to publish.` Body instructs Claude to:
+- [ ] **Step 2: Write `SKILL.md`** — frontmatter `name: finevines-news`, `description: Use when posting a tasting, new arrival, or event to the FineVines website — interviews for the details, writes the post in the FineVines voice, and offers to publish.` Body instructs Claude to:
   1. Interview conversationally for: title, date (default today), category (`Events` / `New Arrivals` / `News`), location if an event, and the substance (2–5 short paragraphs). One question at a time; Barbara is the user — plain language, no jargon.
-  2. Write the body in the Fine Vines voice: elegant, editorial, old-world wine trade; tagline energy without repeating the tagline; never invent facts not given in the interview.
+  2. Write the body in the FineVines voice: elegant, editorial, old-world wine trade; tagline energy without repeating the tagline; never invent facts not given in the interview.
   3. Compute `slug` (lowercase, hyphens, from the title), write `data/news/<slug>.json` with exactly the keys `title, date, category, body, image (optional), slug` — `date` as `YYYY-MM-DD`, `body` paragraphs separated by blank lines.
   4. Show the drafted JSON, get approval, then offer: *"Publish now? I'll run `finevines build` and `finevines deploy`."* — on yes, run `./finevines.exe build` then `./finevines.exe deploy` from the repo root and report the summary lines.
   5. Never touch `data/wines.json`, Salesforce, or anything else.
@@ -1754,7 +1754,7 @@ func runEnrich(cfg config.Config) error {
 **Files:**
 - Create: `plugins/finevines-team/.claude-plugin/plugin.json`, `plugins/finevines-team/skills/finevines-team/SKILL.md`
 
-- [ ] **Step 1: Write `SKILL.md`** — frontmatter `name: finevines-team`, `description: Use when adding, removing, or editing a team member on the Fine Vines About page.` Body: read `data/team.json`; for **add**: ask for name, role, email, optional photo (if a photo file is provided, copy it to `assets/img/team/<slugified-name>.jpg` and set `photoPath`), optional note; for **remove**: confirm by name, delete the entry; for **edit**: show current entry, apply the change. Always show the resulting JSON diff, get approval, write the file (array order = roster order; new members append), then offer the same build-and-deploy step as the news skill. Never touch any other file.
+- [ ] **Step 1: Write `SKILL.md`** — frontmatter `name: finevines-team`, `description: Use when adding, removing, or editing a team member on the FineVines About page.` Body: read `data/team.json`; for **add**: ask for name, role, email, optional photo (if a photo file is provided, copy it to `assets/img/team/<slugified-name>.jpg` and set `photoPath`), optional note; for **remove**: confirm by name, delete the entry; for **edit**: show current entry, apply the change. Always show the resulting JSON diff, get approval, write the file (array order = roster order; new members append), then offer the same build-and-deploy step as the news skill. Never touch any other file.
 
 - [ ] **Step 2: Verify** — same live-session dry run: add a fake member, see them render on `/about/` after `finevines build`, remove them.
 
@@ -1774,7 +1774,7 @@ func runEnrich(cfg config.Config) error {
 
 ```bat
 @echo off
-REM Fine Vines nightly/on-demand pipeline. Run from the repo root.
+REM FineVines nightly/on-demand pipeline. Run from the repo root.
 finevines.exe enrich || goto :fail
 finevines.exe build || goto :fail
 finevines.exe deploy || goto :fail
@@ -1785,7 +1785,7 @@ echo FAILED — see output above. The site was NOT updated.
 exit /b 1
 ```
 
-- [ ] **Step 2: `docs/operations.md`** — written for the Fine Vines machine, not for developers: install location, `.env` setup (every key, where each credential comes from — cross-reference C1–C4), how to run `deploy.bat` manually, Task Scheduler setup (nightly 2:00 AM, "run whether user is logged on or not", working directory = repo root), what the summary output means, what to do when it fails (call GRIT), and the rule that `data/news/` + `data/team.json` are Barbara's via the skills while `data/wines.json` is machine-owned.
+- [ ] **Step 2: `docs/operations.md`** — written for the FineVines machine, not for developers: install location, `.env` setup (every key, where each credential comes from — cross-reference C1–C4), how to run `deploy.bat` manually, Task Scheduler setup (nightly 2:00 AM, "run whether user is logged on or not", working directory = repo root), what the summary output means, what to do when it fails (call GRIT), and the rule that `data/news/` + `data/team.json` are Barbara's via the skills while `data/wines.json` is machine-owned.
 
 - [ ] **Step 3: Build the release exe** — `$env:GOOS="windows"; $env:GOARCH="amd64"; go build -ldflags "-s -w" -o finevines.exe ./cmd/finevines` — confirm single-file, no DLLs, runs on a clean Windows box (or at minimum a clean directory).
 
@@ -1797,7 +1797,7 @@ exit /b 1
 
 *This task is a checklist executed with the client, not code. Blocked on C1–C5 complete and Tasks 1–23 done.*
 
-- [ ] **Step 1: Full staging rehearsal** — on the Fine Vines machine (or GRIT's, pointed at staging zones): real `finevines enrich` over the **full** catalog (5–10k wines; expect hours; checkpointing means interruptions are safe). Monitor the label-fallback rate — if >15% of images fall back, review a sample of Imagen rejections before launch (prompt tweak in Task 13's system prompt is the lever).
+- [ ] **Step 1: Full staging rehearsal** — on the FineVines machine (or GRIT's, pointed at staging zones): real `finevines enrich` over the **full** catalog (5–10k wines; expect hours; checkpointing means interruptions are safe). Monitor the label-fallback rate — if >15% of images fall back, review a sample of Imagen rejections before launch (prompt tweak in Task 13's system prompt is the lever).
 - [ ] **Step 2: `finevines build` + manual QA** — spot-check ~20 wine pages across regions (copy quality, no invented facts — compare against SF fields; images present; diacritics render), portfolio facets with the real distribution, news, about (real roster, real emails per C1 contact), mobile viewport, Lighthouse pass on home + one wine page (target: no red).
 - [ ] **Step 3: `finevines redirects`** — regenerate against the live old site, resolve every unmatched path (override or deliberate 404), publish to staging, verify a sample of 301s incl. any URLs George supplied (C6).
 - [ ] **Step 4: `finevines deploy`** to staging; full-site click-through on the staging URL.

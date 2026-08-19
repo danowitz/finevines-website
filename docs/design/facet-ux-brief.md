@@ -1,14 +1,14 @@
-# Design brief — Portfolio filter sidebar at scale (Fine Vines)
+# Design brief — Portfolio filter sidebar at scale (FineVines)
 
 **For:** Claw Design
-**From:** GRIT (Fine Vines website rebuild)
+**From:** GRIT (FineVines website rebuild)
 **Deliverable:** visual + interaction design for the portfolio's filter sidebar, handling very long value lists. HTML/CSS mockup or Figma both fine.
 
 ---
 
 ## Context
 
-Fine Vines is a wholesale wine/liquor distributor. We rebuilt their public catalog
+FineVines is a wholesale wine/liquor distributor. We rebuilt their public catalog
 (`/portfolio/`) as a fast static site: the browser downloads one compact JSON index of
 ~2,665 wines and does all filtering, sorting, search, and pagination in-page (no server).
 The current sidebar filters work correctly — the problem is purely **visual/UX at scale**.

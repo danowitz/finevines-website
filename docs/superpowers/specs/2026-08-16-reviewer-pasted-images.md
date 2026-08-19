@@ -2,7 +2,7 @@
 
 ## Outcome
 
-An authorized Fine Vines reviewer can open Google Images from an individual wine card, paste a known-good bottle image into that same card, and queue it through the existing immutable review-action workflow.
+An authorized FineVines reviewer can open Google Images from an individual wine card, paste a known-good bottle image into that same card, and queue it through the existing immutable review-action workflow.
 
 ## Behavior
 

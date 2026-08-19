@@ -1,6 +1,6 @@
 # Domain documentation
 
-Fine Vines uses a single domain context.
+FineVines uses a single domain context.
 
 Before changing or describing the system:
 

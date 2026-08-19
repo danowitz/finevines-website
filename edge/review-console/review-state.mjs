@@ -14,6 +14,17 @@ function rowValue(row, name) {
   return row?.[name] ?? row?.[Object.keys(row || {}).find((key) => key.toLowerCase() === name.toLowerCase())];
 }
 
+function canonicalValue(value) {
+  if (Array.isArray(value)) return value.map(canonicalValue);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalValue(value[key])]));
+  return value;
+}
+
+function actionIntent(action) {
+  const { submittedAt, csrfSessionId, ...intent } = action;
+  return JSON.stringify(canonicalValue(intent));
+}
+
 function validRecoveryAction(action) {
   const candidateSetIsValid = action.kind === 'no-image' && Array.isArray(action.rejectedCandidates) && action.rejectedCandidates.length
     || action.kind === 'image-reopen' && Array.isArray(action.rejectedCandidates) && action.rejectedCandidates.length === 0;
@@ -184,7 +195,23 @@ export function createReviewState({ client, now = () => new Date() }) {
     return row ? { actionId: String(rowValue(row, 'id')), sku: String(rowValue(row, 'sku')) } : null;
   }
 
+  async function existingRequest(action) {
+    const result = await client.execute({
+      sql: `SELECT id, environment, wine_revision, sku, reviewer_email, kind, status, action_json FROM review_actions WHERE id = ?`,
+      args: [action.id],
+    });
+    const row = result.rows[0];
+    if (!row) return null;
+    let stored;
+    try { stored = JSON.parse(String(rowValue(row, 'action_json'))); } catch { throw new Error(`review request ${action.id} has invalid stored intent`); }
+    const matches = actionIntent(stored) === actionIntent(action);
+    if (!matches) throw new Error(`review request ${action.id} conflicts with an existing action`);
+    return { id: action.id, status: String(rowValue(row, 'status')), existing: true };
+  }
+
   async function queue(action, upload) {
+    const existing = await existingRequest(action);
+    if (existing) return existing;
     const stamp = now().toISOString();
     try {
       const statements = [
@@ -208,6 +235,8 @@ export function createReviewState({ client, now = () => new Date() }) {
       await client.batch(statements, 'write');
       return { id: action.id, status: 'queued' };
     } catch (error) {
+      const duplicate = await existingRequest(action);
+      if (duplicate) return duplicate;
       const active = await activeFor(action);
       if (active && active.actionId !== action.id) throw new ActiveWineLockError(active);
       throw error;
@@ -452,7 +481,8 @@ export function createReviewState({ client, now = () => new Date() }) {
     if (operation === 'reopen') {
       const stamp = now().toISOString();
       const result = await client.batch([
-        { sql: `UPDATE review_actions SET status = 'needs_decision', updated_at = ?, attention_reason = ?, launch_excluded = 0 WHERE id = ? AND status = 'needs_attention'`, args: [stamp, reason, id] },
+        { sql: `UPDATE review_actions SET status = 'needs_decision', updated_at = ?, attention_reason = ?, launch_excluded = 0
+            WHERE id = ? AND status = 'needs_attention' AND kind != 'image-reopen'`, args: [stamp, reason, id] },
         { sql: `INSERT INTO review_action_events (action_id, status, occurred_at, detail)
             SELECT ?, 'needs_decision', ?, ? WHERE changes() = 1`, args: [id, stamp, reason] },
       ], 'write');
@@ -574,6 +604,7 @@ export function createReviewState({ client, now = () => new Date() }) {
     return {
       id: String(rowValue(row, 'id')),
       actionId: String(rowValue(row, 'action_id')),
+      kind: String(rowValue(row, 'kind') || ''),
       sku: String(rowValue(row, 'sku')),
       status: String(rowValue(row, 'action_status')),
       reason: String(rowValue(row, 'reason')),
@@ -589,7 +620,7 @@ export function createReviewState({ client, now = () => new Date() }) {
     const queuedCutoff = new Date(now().getTime() - 10 * 60_000).toISOString();
     const processingCutoff = new Date(now().getTime() - 45 * 60_000).toISOString();
     const actions = await client.execute({
-      sql: `SELECT id, sku, status, submitted_at, started_at, attention_reason FROM review_actions
+      sql: `SELECT id, sku, kind, status, submitted_at, started_at, attention_reason FROM review_actions
         WHERE environment = ? AND launch_excluded = 0 AND (
           status = 'needs_attention' OR
           (status = 'queued' AND submitted_at < ?) OR
@@ -609,7 +640,11 @@ export function createReviewState({ client, now = () => new Date() }) {
         : status === 'queued' ? 'Queued for more than 10 minutes'
           : recovery ? 'Broader image discovery has not finished within 45 minutes'
             : 'Processing for more than 45 minutes';
-      const nextAction = status === 'needs_attention' ? 'Review the action and choose retry, reopen, rediscover, or temporary exclusion.' : recovery ? 'Broader image discovery will be retried; investigate the recovery workflow if this persists.' : 'The processor will retry safely; investigate the workflow if this persists.';
+      const nextAction = status === 'needs_attention'
+        ? String(rowValue(row, 'kind')) === 'image-reopen'
+          ? 'Review the action and choose retry, rediscover, or temporary exclusion.'
+          : 'Review the action and choose retry, reopen, rediscover, or temporary exclusion.'
+        : recovery ? 'Broader image discovery will be retried; investigate the recovery workflow if this persists.' : 'The processor will retry safely; investigate the workflow if this persists.';
       const existing = await client.execute({ sql: 'SELECT * FROM review_incidents WHERE id = ?', args: [id] });
       const prior = existing.rows[0];
       if (!prior || rowValue(prior, 'recovered_at')) {
@@ -623,7 +658,7 @@ export function createReviewState({ client, now = () => new Date() }) {
           { sql: `INSERT INTO review_notifications (dedupe_key, recipient, subject, text_body, available_at)
               SELECT ?, ?, ?, ?, ? FROM review_incidents WHERE id = ? AND opened_at = ?
               ON CONFLICT(dedupe_key) DO NOTHING`,
-            args: [`incident-open:${id}:${stamp}`, recipient, `Fine Vines review needs attention: ${rowValue(row, 'sku')}`, `${reason}\n\n${nextAction}`, stamp, id, stamp] },
+            args: [`incident-open:${id}:${stamp}`, recipient, `FineVines review needs attention: ${rowValue(row, 'sku')}`, `${reason}\n\n${nextAction}`, stamp, id, stamp] },
         ], 'write');
       } else if (!rowValue(prior, 'escalated_at') && now().getTime() - Date.parse(String(rowValue(prior, 'opened_at'))) >= 4 * 60 * 60_000) {
         await client.batch([
@@ -631,7 +666,7 @@ export function createReviewState({ client, now = () => new Date() }) {
           { sql: `INSERT INTO review_notifications (dedupe_key, recipient, subject, text_body, available_at)
               SELECT ?, ?, ?, ?, ? FROM review_incidents WHERE id = ? AND escalated_at = ?
               ON CONFLICT(dedupe_key) DO NOTHING`,
-            args: [`incident-escalation:${id}:${rowValue(prior, 'opened_at')}`, recipient, `Fine Vines review still blocked: ${rowValue(row, 'sku')}`, `${reason}\n\nThis incident has remained open for four hours. ${nextAction}`, stamp, id, stamp] },
+            args: [`incident-escalation:${id}:${rowValue(prior, 'opened_at')}`, recipient, `FineVines review still blocked: ${rowValue(row, 'sku')}`, `${reason}\n\nThis incident has remained open for four hours. ${nextAction}`, stamp, id, stamp] },
         ], 'write');
       } else {
         await client.execute({ sql: 'UPDATE review_incidents SET action_status = ?, reason = ?, next_action = ?, updated_at = ? WHERE id = ?', args: [status, reason, nextAction, stamp, id] });
@@ -646,10 +681,12 @@ export function createReviewState({ client, now = () => new Date() }) {
         { sql: `INSERT INTO review_notifications (dedupe_key, recipient, subject, text_body, available_at)
             SELECT ?, ?, ?, ?, ? FROM review_incidents WHERE id = ? AND recovered_at = ?
             ON CONFLICT(dedupe_key) DO NOTHING`,
-          args: [`incident-recovery:${id}:${rowValue(row, 'opened_at')}`, recipient, `Fine Vines review recovered: ${rowValue(row, 'sku')}`, `The review incident has recovered. No further action is required.`, stamp, id, stamp] },
+          args: [`incident-recovery:${id}:${rowValue(row, 'opened_at')}`, recipient, `FineVines review recovered: ${rowValue(row, 'sku')}`, `The review incident has recovered. No further action is required.`, stamp, id, stamp] },
       ], 'write');
     }
-    const current = await client.execute({ sql: 'SELECT * FROM review_incidents WHERE environment = ? AND recovered_at IS NULL ORDER BY opened_at, id', args: [environment] });
+    const current = await client.execute({ sql: `SELECT i.*, a.kind FROM review_incidents i
+      JOIN review_actions a ON a.id = i.action_id
+      WHERE i.environment = ? AND i.recovered_at IS NULL ORDER BY i.opened_at, i.id`, args: [environment] });
     return current.rows.map(incidentFrom);
   }
 
@@ -752,6 +789,28 @@ export function createReviewState({ client, now = () => new Date() }) {
     return reviewerAccount(email);
   }
 
+  async function withdrawnImagePaths(environment) {
+    const result = await client.execute({
+      sql: `SELECT action_json FROM review_actions
+        WHERE environment = ? AND kind = 'image-reopen'
+          AND status IN ('queued', 'processing', 'needs_attention')
+        ORDER BY submitted_at, id`,
+      args: [environment],
+    });
+    const paths = new Set();
+    for (const row of result.rows) {
+      let action;
+      try { action = JSON.parse(String(rowValue(row, 'action_json'))); } catch { continue; }
+      for (const value of action.previousImagePaths || []) {
+        const path = String(value || '').replace(/^\/+/, '');
+        if (!/^assets\/img\/wines\/[A-Za-z0-9][A-Za-z0-9._/-]{0,239}$/.test(path)) continue;
+        if (path.split('/').includes('..')) continue;
+        paths.add(path);
+      }
+    }
+    return [...paths].sort();
+  }
+
   async function createReviewerPasswordReset(email, tokenHash, expiresAt) {
     const stamp = now().toISOString();
     const cooldown = new Date(now().getTime() - 5 * 60_000).toISOString();
@@ -838,7 +897,7 @@ export function createReviewState({ client, now = () => new Date() }) {
   }
 
   return {
-    initialize, queue, importLegacyAction, counts, packageStatus, actionStatus, pendingActionPayloads, launchExclusions, transition, claim, releaseClaims,
+    initialize, queue, importLegacyAction, counts, packageStatus, actionStatus, withdrawnImagePaths, pendingActionPayloads, launchExclusions, transition, claim, releaseClaims,
     scheduleRecovery, pendingRecoveries, resolveRecovery, recoverAction,
     enqueueNotification, scanIncidents, claimNotifications, completeNotification,
     syncReviewerAccounts, listReviewerAccounts, reviewerAccount, setReviewerInvitation, setReviewerPassword, consumeReviewerInvitation,

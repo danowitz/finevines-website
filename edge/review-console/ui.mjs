@@ -139,7 +139,7 @@ export function searchCatalogWines(wines, input) {
 
 export const APP_JS = `
 const searchCatalogWines = ${searchCatalogWines.toString()};
-const state = { package: null, selected: new Map(), modal: null, refreshing: null };
+const state = { package: null, selected: new Map(), modal: null, refreshing: null, reopenAction: null };
 const el = (tag, attrs = {}, children = []) => {
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(attrs)) {
@@ -158,6 +158,16 @@ const reopenModal = document.querySelector('#reopen-modal');
 const reopenSearch = document.querySelector('#reopen-search');
 const reopenResults = document.querySelector('#reopen-results');
 const reopenSelection = document.querySelector('#reopen-selection');
+const reopenActionStatus = document.querySelector('#reopen-action-status');
+
+function requestUUID() {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = bytes[6] & 0x0f | 0x40;
+  bytes[8] = bytes[8] & 0x3f | 0x80;
+  const hex = [...bytes].map((value) => value.toString(16).padStart(2, '0')).join('');
+  return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20);
+}
 
 function closeReopenModal() {
   if (!reopenModal) return;
@@ -165,21 +175,102 @@ function closeReopenModal() {
   document.body.style.overflow = '';
 }
 
+function followReopenAction(actionId, receipt, queuedMessage) {
+  state.reopenAction = { id: actionId, receipt, checking: false };
+  try { sessionStorage.setItem('finevines.reopenActionId', actionId); } catch {}
+  setReopenActionMessage(queuedMessage);
+  checkReopenAction();
+}
+
+function setReopenActionMessage(message, className = '') {
+  if (reopenActionStatus) { reopenActionStatus.textContent = message; reopenActionStatus.className = className; }
+  const receipt = state.reopenAction?.receipt;
+  if (receipt?.isConnected) { receipt.textContent = message; receipt.className = 'reopen-receipt' + (className ? ' ' + className : ''); }
+  try { sessionStorage.setItem('finevines.reopenActionMessage', message); } catch {}
+}
+
+async function checkReopenAction() {
+  const tracked = state.reopenAction;
+  if (!tracked || tracked.checking || document.visibilityState !== 'visible' || !document.hasFocus()) return;
+  tracked.checking = true;
+  let terminal = false;
+  try {
+    const response = await fetch('/api/actions/' + encodeURIComponent(tracked.id), { credentials: 'same-origin' });
+    if (!response.ok) throw new Error('status unavailable');
+    const action = await response.json();
+    if (action.status === 'needs_decision') {
+      setReopenActionMessage('Current image removed. Fresh candidates are ready in the review list.', 'status good');
+      terminal = true;
+      await refresh();
+    } else if (action.status === 'needs_attention') {
+      setReopenActionMessage('The image replacement needs attention. See the review issue at the top of the page.', 'status bad');
+      terminal = true;
+      await refresh();
+    } else if (action.status === 'completed') {
+      setReopenActionMessage('Image replacement completed.', 'status good');
+      terminal = true;
+      await refresh();
+    } else {
+      setReopenActionMessage(action.status === 'processing'
+        ? 'Removing the current image and looking for fresh candidates…'
+        : 'Queued. Processing normally starts within a minute.');
+    }
+  } catch {
+    setReopenActionMessage('Queued. Waiting for the latest processing status…');
+  } finally {
+    tracked.checking = false;
+    if (terminal && state.reopenAction === tracked) {
+      state.reopenAction = null;
+      try { sessionStorage.removeItem('finevines.reopenActionId'); } catch {}
+    }
+  }
+}
+
 function selectReopenWine(wine) {
   reopenResults.replaceChildren();
   const image = el('img', { src: 'https://finevines.com/' + String(wine.currentImage || '').replace(/^[/]+/, '') + '?catalog-revision=' + encodeURIComponent(wine.wineRevision), alt: wine.displayIdentity });
   const submit = el('button', { class: 'reopen-danger', type: 'button', text: 'Remove image and return to review' });
   const receipt = el('p', { class: 'reopen-receipt', role: 'status', text: '' });
+  const requestKey = 'finevines.reopenPendingRequest.' + wine.wineRevision;
+  let pendingBody = null;
+  try {
+    const pending = JSON.parse(sessionStorage.getItem(requestKey) || 'null');
+    if (pending?.wineRevision === wine.wineRevision && /^[0-9a-f-]{36}$/i.test(pending.requestId || '')) pendingBody = pending;
+  } catch {}
   submit.addEventListener('click', async () => {
     submit.disabled = true;
     submit.textContent = 'Queueing image replacement…';
-    const body = { kind: 'image-reopen', sku: wine.sku, packageId: state.package.packageId, targetCatalogCommit: state.package.catalogCommit, wineRevision: wine.wineRevision, candidateId: '', reason: 'Support reported the current catalog image as wrong.' };
-    const response = await fetch('/api/admin/wines/reopen', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': state.package.csrfToken }, body: JSON.stringify(body) });
-    const value = await response.json();
-    if (!response.ok) { receipt.textContent = value.error || 'Could not queue the image replacement.'; receipt.className = 'reopen-receipt status bad'; submit.disabled = false; submit.textContent = 'Remove image and return to review'; return; }
-    const actionReference = value.id ? ' Action ' + value.id + '.' : '';
-    receipt.textContent = 'Queued.' + actionReference + ' The current image will be replaced with a neutral label while fresh candidates are found.';
-    submit.textContent = 'Image replacement queued';
+    const body = pendingBody || { kind: 'image-reopen', sku: wine.sku, packageId: state.package.packageId, targetCatalogCommit: state.package.catalogCommit, wineRevision: wine.wineRevision, candidateId: '', reason: 'Support reported the current catalog image as wrong.', requestId: requestUUID() };
+    pendingBody = body;
+    try { sessionStorage.setItem(requestKey, JSON.stringify(body)); } catch {}
+    try {
+      const response = await fetch('/api/admin/wines/reopen', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': state.package.csrfToken }, body: JSON.stringify(body) });
+      const value = await response.json();
+      if (!response.ok) {
+        if (response.status >= 400 && response.status < 500) {
+          try { sessionStorage.removeItem(requestKey); } catch {}
+          pendingBody = null;
+        }
+        throw new Error(value.error || 'Could not queue the image replacement.');
+      }
+      const queuedMessage = value.existing
+        ? 'This image replacement was already queued. Tracking its current status.'
+        : value.dispatched === false
+          ? 'Queued. The automatic processor will pick this up shortly.'
+          : 'Queued. Processing normally starts within a minute.';
+      receipt.textContent = queuedMessage;
+      submit.textContent = 'Image replacement queued';
+      try { sessionStorage.removeItem(requestKey); } catch {}
+      pendingBody = null;
+      followReopenAction(value.id, receipt, queuedMessage);
+    } catch (error) {
+      receipt.textContent = error instanceof TypeError
+        ? 'The request status could not be confirmed. Try again to recover the queued receipt.'
+        : error.message;
+      receipt.className = 'reopen-receipt status bad';
+      submit.disabled = false;
+      submit.textContent = 'Remove image and return to review';
+    }
   });
   const skus = wine.skus || [wine.sku];
   const details = el('div', {}, [
@@ -501,7 +592,9 @@ async function refresh() {
     for (const incident of state.package.incidents || []) {
       const controls = el('div', { class: 'actions' });
       if (state.package.isAdministrator && incident.status === 'needs_attention') {
-        for (const [operation, label] of [['retry', 'Retry safely'], ['reopen', 'Reopen choices'], ['rediscover', 'Search more broadly'], ['exclude', 'Temporarily exclude']]) {
+        const operations = [['retry', 'Retry safely'], ['rediscover', 'Search more broadly'], ['exclude', 'Temporarily exclude']];
+        if (incident.kind !== 'image-reopen') operations.splice(1, 0, ['reopen', 'Reopen choices']);
+        for (const [operation, label] of operations) {
           const button = el('button', { type: 'button', text: label });
           button.addEventListener('click', () => recoverIncident(incident, operation, button));
           controls.append(button);
@@ -531,19 +624,25 @@ document.addEventListener('keydown', (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k' && reopenModal) { event.preventDefault(); openReopenModal(); }
 });
 const activeRefresh = () => {
-  if (document.visibilityState === 'visible' && document.hasFocus()) refresh();
+  if (document.visibilityState === 'visible' && document.hasFocus()) { refresh(); checkReopenAction(); }
 };
 window.addEventListener('focus', activeRefresh);
 document.addEventListener('visibilitychange', activeRefresh);
 setInterval(activeRefresh, 10_000);
-refresh().then(() => { if (state.package?.isAdministrator) loadAccounts(); });
+try {
+  const priorMessage = sessionStorage.getItem('finevines.reopenActionMessage');
+  const priorActionId = sessionStorage.getItem('finevines.reopenActionId');
+  if (priorMessage && reopenActionStatus) reopenActionStatus.textContent = priorMessage;
+  if (priorActionId) state.reopenAction = { id: priorActionId, receipt: null, checking: false };
+} catch {}
+refresh().then(() => { if (state.package?.isAdministrator) loadAccounts(); checkReopenAction(); });
 `;
 
 const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 
 function documentPage(body, { script = false, bodyClass = '' } = {}) {
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow,noarchive,noimageindex"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fine Vines image review</title><link rel="icon" href="/favicon.ico" sizes="any"><link rel="stylesheet" href="/app.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow,noarchive,noimageindex"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FineVines image review</title><link rel="icon" href="/favicon.ico" sizes="any"><link rel="stylesheet" href="/app.css"></head>
 <body${bodyClass ? ` class="${bodyClass}"` : ''}>${body}${script ? '<script src="/app.js" defer></script>' : ''}</body></html>`;
 }
 
@@ -568,8 +667,8 @@ export function changePasswordPage(csrf, message = '', brandLogo = '/favicon.ico
 }
 
 export function consolePage(reviewer) {
-  const recoveryControl = reviewer.role === 'Support' ? '<button id="reopen-trigger" class="secondary" type="button">Replace a catalog image…</button>' : '';
-  const recoveryModal = reviewer.role === 'Support' ? `<div id="reopen-modal" class="modal" hidden><section class="reopen-dialog" role="dialog" aria-modal="true" aria-labelledby="reopen-title"><div class="reopen-head"><div><h2 id="reopen-title">Replace a catalog image</h2><p>Find a pictured wine and return it to image review.</p></div><button class="modal-close" type="button" data-reopen-close>Close</button></div><label for="reopen-search">Wine, SKU, or catalog URL</label><input id="reopen-search" class="reopen-search" type="search" placeholder="Search wine, producer, vintage, SKU, or paste a Fine Vines URL" autocomplete="off"><div id="reopen-results" class="reopen-results"></div><div id="reopen-selection" class="reopen-selection"></div></section></div>` : '';
-  return documentPage(`<main class="shell"><header class="mast"><div><h1>Fine Vines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls">${recoveryControl}<span>Signed in as ${escapeHtml(reviewer.name)}</span></div></header><div id="summary" class="summary">Loading the current review package…</div><div id="incidents" class="incidents" aria-live="polite"></div><section id="admin" class="admin"></section><section id="wine-list"></section></main>
+  const recoveryControl = reviewer.role === 'Support' ? '<button id="reopen-trigger" class="secondary" type="button">Replace a catalog image…</button><span id="reopen-action-status" role="status"></span>' : '';
+  const recoveryModal = reviewer.role === 'Support' ? `<div id="reopen-modal" class="modal" hidden><section class="reopen-dialog" role="dialog" aria-modal="true" aria-labelledby="reopen-title"><div class="reopen-head"><div><h2 id="reopen-title">Replace a catalog image</h2><p>Find a pictured wine and return it to image review.</p></div><button class="modal-close" type="button" data-reopen-close>Close</button></div><label for="reopen-search">Wine, SKU, or catalog URL</label><input id="reopen-search" class="reopen-search" type="search" placeholder="Search wine, producer, vintage, SKU, or paste a FineVines URL" autocomplete="off"><div id="reopen-results" class="reopen-results"></div><div id="reopen-selection" class="reopen-selection"></div></section></div>` : '';
+  return documentPage(`<main class="shell"><header class="mast"><div><h1>FineVines image review</h1><p>Compare the candidates, enlarge them, then choose the bottle that matches the wine.</p></div><div class="controls">${recoveryControl}<span>Signed in as ${escapeHtml(reviewer.name)}</span></div></header><div id="summary" class="summary">Loading the current review package…</div><div id="incidents" class="incidents" aria-live="polite"></div><section id="admin" class="admin"></section><section id="wine-list"></section></main>
 <div id="modal" class="modal" hidden><section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div class="modal-heading"><strong id="modal-title"></strong><span id="modal-count"></span></div><button class="modal-close" type="button" data-close>Close</button></div><div id="modal-stage" class="modal-stage"></div></section></div>${recoveryModal}`, { script: true });
 }

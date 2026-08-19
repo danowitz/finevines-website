@@ -1,6 +1,6 @@
 # Catalog image pipeline
 
-Fine Vines publishes a verified source photograph when one is available. When
+FineVines publishes a verified source photograph when one is available. When
 one is not available, the site uses a product-neutral “Product image
 unavailable” SVG. It does not invent bottle, label, closure, or packaging
 artwork.

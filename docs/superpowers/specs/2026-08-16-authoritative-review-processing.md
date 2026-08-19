@@ -6,7 +6,7 @@
 
 ## Problem Statement
 
-Fine Vines staff are performing real launch-catalog image review on `review.finevines.biz`, but the current system treats that hostname as a validation-only test environment. A reviewer click can write durable storage objects without successfully starting a GitHub Actions consumer, the browser's remaining count is not authoritative, other open reviewer screens do not synchronize, and completion is not proven by fetching the deployed image. The split between a test action workflow and the nightly production pipeline creates two operational paths, one of which currently has no reliable consumer.
+FineVines staff are performing real launch-catalog image review on `review.finevines.biz`, but the current system treats that hostname as a validation-only test environment. A reviewer click can write durable storage objects without successfully starting a GitHub Actions consumer, the browser's remaining count is not authoritative, other open reviewer screens do not synchronize, and completion is not proven by fetching the deployed image. The split between a test action workflow and the nightly production pipeline creates two operational paths, one of which currently has no reliable consumer.
 
 The launch catalog must not require a second review when the public hostname changes to `finevines.com`. Review work must be durable, autonomous, observable, concurrency-safe, recoverable, attributable to an authenticated person, and locally testable without sending email or touching live infrastructure.
 
@@ -57,7 +57,7 @@ An accepted image becomes **Completed** only after it is decoded, normalized, co
 35. As an operator, I want processing older than forty-five minutes retried safely, so that work converges after interrupted runs.
 36. As an operator, I want one deduplicated incident email and one recovery email, so that failures are visible without retry spam.
 37. As an operator, I want one escalation after four unresolved hours, so that long failures are not forgotten.
-38. As a developer, I want pre-production incident email routed to Joel, so that Fine Vines staff receive no development noise.
+38. As a developer, I want pre-production incident email routed to Joel, so that FineVines staff receive no development noise.
 39. As a production operator, I want post-cutover incident email routed to Barb, so that the business owns live exceptions.
 40. As a user receiving an invitation, I want a unique temporary password that expires after seventy-two hours, so that onboarding credentials have limited value.
 41. As an administrator, I want resending an invitation to invalidate the prior password, so that only the newest invitation works.
@@ -130,6 +130,6 @@ An accepted image becomes **Completed** only after it is decoded, normalized, co
 
 ## Further Notes
 
-- The current repository is `danowitz/finevines-website`; GitHub Actions and secrets belong to that repository, not to a Fine Vines employee's personal GitHub account.
+- The current repository is `danowitz/finevines-website`; GitHub Actions and secrets belong to that repository, not to a FineVines employee's personal GitHub account.
 - The existing protected review console, immutable action records, Go image normalization, review prepare/finalize boundary, and candidate-package publication are retained where their contracts remain valid.
 - The earlier assumption that `.biz` actions are validation-only is explicitly reversed. Work performed there before cutover is authoritative launch work.

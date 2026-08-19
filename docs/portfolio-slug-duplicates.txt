@@ -1,4 +1,4 @@
-FINE VINES — DUPLICATE CATALOG LISTINGS
+FINEVINES — DUPLICATE CATALOG LISTINGS
 73 wines currently appear more than once in the online catalog (156 item numbers total).
 Every one of them is in stock and marked ready-to-sell. They fall into three cases:
   - DIFFERENT BOTTLE SIZE: 52

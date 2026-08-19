@@ -75,13 +75,13 @@ func TestSMTPSender_SubmitsTheDigestOverSTARTTLS(t *testing.T) {
 
 	s := newTestSender(srv, "fv-user", "fv-pass")
 	msg := Message{
-		Subject: "Fine Vines catalog: 1 new wine",
+		Subject: "FineVines catalog: 1 new wine",
 		// A line starting with a dot is the classic wire hazard: unstuffed, the
 		// server reads it as the end of DATA and the rest of the digest vanishes.
 		TextBody: "One wine joined the list.\n.leading dot survives\nReply if a bottle looks wrong.\n",
 		HTMLBody: "<p>One wine joined the list.</p>",
 	}
-	if err := s.Send(context.Background(), "Fine Vines <catalog@finevines.biz>",
+	if err := s.Send(context.Background(), "FineVines <catalog@finevines.biz>",
 		[]string{"george@example.com", "barbara@example.com"}, msg); err != nil {
 		t.Fatalf("Send returned error: %v", err)
 	}
@@ -110,7 +110,7 @@ func TestSMTPSender_SubmitsTheDigestOverSTARTTLS(t *testing.T) {
 	if got := m.Header.Get("To"); !strings.Contains(got, "george@example.com") || !strings.Contains(got, "barbara@example.com") {
 		t.Errorf("To header = %q, want both recipients", got)
 	}
-	if got := m.Header.Get("From"); got != "Fine Vines <catalog@finevines.biz>" {
+	if got := m.Header.Get("From"); got != "FineVines <catalog@finevines.biz>" {
 		t.Errorf("From header = %q", got)
 	}
 	if m.Header.Get("MIME-Version") != "1.0" {
@@ -144,7 +144,7 @@ func TestSMTPSender_EncodesANonASCIISubject(t *testing.T) {
 	srv := newFakeSMTP(t, smtpBehavior{offerSTARTTLS: true})
 	s := newTestSender(srv, "u", "p")
 
-	subject := "Fine Vines catalog: Château Margaux, Côtes du Rhône"
+	subject := "FineVines catalog: Château Margaux, Côtes du Rhône"
 	if err := s.Send(context.Background(), "catalog@finevines.biz", []string{"g@example.com"},
 		Message{Subject: subject, TextBody: "x", HTMLBody: "<p>x</p>"}); err != nil {
 		t.Fatalf("Send returned error: %v", err)

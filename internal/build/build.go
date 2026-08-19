@@ -81,11 +81,12 @@ type site struct {
 	// a deploy (and the portfolio JS↔template hook contract breaks the same
 	// way). Hashing the filename makes each deploy self-busting, like the
 	// catalog-index.
-	CSSURL         string
-	NavJSURL       string
-	PortfolioJSURL string
-	FiltersJSURL   string
-	NotFoundJSURL  string
+	CSSURL           string
+	NavJSURL         string
+	WithdrawalsJSURL string
+	PortfolioJSURL   string
+	FiltersJSURL     string
+	NotFoundJSURL    string
 	// HotSellerSlugs is data/hot-sellers.json's ranking (best first), loaded
 	// by loadSite; Run resolves it against the catalog into the homepage's
 	// HotSellers section. Empty (file absent/thin) ⇒ no section.
@@ -789,6 +790,7 @@ func run(dataDir, assetsDir, templatesDir, distDir, baseURL, gaID string, exclus
 	}{
 		{"css/site.css", &s.CSSURL},
 		{"js/nav.js", &s.NavJSURL},
+		{"js/withdrawals.js", &s.WithdrawalsJSURL},
 		{"js/portfolio.js", &s.PortfolioJSURL},
 		{"js/filters.js", &s.FiltersJSURL},
 		{"js/notfound.js", &s.NotFoundJSURL},

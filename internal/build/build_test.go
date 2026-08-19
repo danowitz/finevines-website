@@ -149,6 +149,7 @@ func TestRunGeneratesHomeAndSharedChrome(t *testing.T) {
 		`aria-expanded="false"`,
 		`id="site-nav"`,
 		`src="/assets/js/nav.`,
+		`src="/assets/js/withdrawals.`,
 	} {
 		if !strings.Contains(string(home), want) {
 			t.Errorf("header nav toggle missing %q", want)

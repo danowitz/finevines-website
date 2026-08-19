@@ -1,4 +1,4 @@
-# Fine Vines Static Site — Design Spec
+# FineVines Static Site — Design Spec
 
 Status: confirmed for build. Scope: **Full build, Core** ($12,000) **+ News & Events skill** ($900).
 
@@ -27,7 +27,7 @@ If any of these come up during implementation, treat them as out of scope and fl
 
 ## 2. Architecture
 
-One dependency-free Go binary (`finevines`), compiled to a single `.exe`, run from a Windows machine at Fine Vines. Four subcommands; each is independently runnable and testable.
+One dependency-free Go binary (`finevines`), compiled to a single `.exe`, run from a Windows machine at FineVines. Four subcommands; each is independently runnable and testable.
 
 ```
 finevines enrich    Salesforce → data/wines.json + assets/img/wines/*  (network, slow, incremental)
@@ -116,8 +116,8 @@ These three JSON shapes are the seam between the Claude skills / enrich pipeline
 Provider chain per wine, first success wins, result cached by `sourceHash` so it only ever runs once per wine version:
 
 1. **AI-generated photorealistic bottle** — Claude writes a per-wine image prompt (producer, region, vintage, varietal, style → prompt), sent to an image-generation model. Store the model/provider choice as a config value (not hardcoded) since this is the newest, most likely-to-change piece.
-2. **Deterministic vector label/bottle fallback** — the Go-native SVG generator prototyped for the proposal (château-style label: frame/crest/ornament/palette system, ~10 visual treatments, wine-branded — never Fine Vines–branded). Always succeeds, zero cost, on-brand. This is the guaranteed floor: no wine ever ships with a broken image.
-3. **Producer-supplied photography** — manual override slot; if Fine Vines later supplies real photos, they drop in and `imageSource` flips to `producer-supplied`, which `enrich` should never overwrite.
+2. **Deterministic vector label/bottle fallback** — the Go-native SVG generator prototyped for the proposal (château-style label: frame/crest/ornament/palette system, ~10 visual treatments, wine-branded — never FineVines–branded). Always succeeds, zero cost, on-brand. This is the guaranteed floor: no wine ever ships with a broken image.
+3. **Producer-supplied photography** — manual override slot; if FineVines later supplies real photos, they drop in and `imageSource` flips to `producer-supplied`, which `enrich` should never overwrite.
 
 Port the label-generation logic from the proposal's prototype JS (`build.js`'s `label()`/`bottle3d()` functions) to Go, preserving the same visual system (frame styles: double/single/oval/deco/minimal; crest styles: ring/medallion/shield/fleuron/fan). This is a straight logic port, not a redesign.
 
@@ -154,7 +154,7 @@ Pure function of `data/*.json` → `dist/`. No network calls. Deterministic (sam
 
 Both live in this repo under `plugins/`, installable via `.claude-plugin/marketplace.json` as a private marketplace (same pattern as other GRIT plugins).
 
-**`finevines-news`**: interviews for title/date/location/category/body/optional image → writes `data/news/<slug>.json` in the Fine Vines voice → offers to run `build && deploy`.
+**`finevines-news`**: interviews for title/date/location/category/body/optional image → writes `data/news/<slug>.json` in the FineVines voice → offers to run `build && deploy`.
 
 **`finevines-team`**: edits only local `photoPath`/`note` metadata for a person already selected from Salesforce → offers to run `build && deploy`.
 

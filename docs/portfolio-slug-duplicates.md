@@ -1,4 +1,4 @@
-# Fine Vines — duplicate catalog listings
+# FineVines — duplicate catalog listings
 
 73 wines appear more than once in the online catalog (156 item numbers). All are in stock and ready-to-sell. Pack notation is cases/size (`12/750` = twelve 750ml bottles, `6/1500` = six 1.5L magnums).
 
@@ -682,4 +682,3 @@ _genuinely the same product twice — safe to show once_
 | 730141 | 12/750 | 55.0 | yes |
 | 730145 | 12/750 | 56.0 | yes |
 | 730140 | 12/750 | 31.9 | yes |
-

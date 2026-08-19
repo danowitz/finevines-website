@@ -19,7 +19,7 @@ const wines = [
 ];
 
 describe('catalog image replacement search', () => {
-  it('finds a pictured wine by producer, exact SKU, or Fine Vines URL', () => {
+  it('finds a pictured wine by producer, exact SKU, or FineVines URL', () => {
     assert.deepEqual(searchCatalogWines(wines, 'domaine chablis').map(({ sku }) => sku), ['FV-100*']);
     assert.deepEqual(searchCatalogWines(wines, 'FV-100*').map(({ sku }) => sku), ['FV-100*']);
     assert.deepEqual(searchCatalogWines(wines, 'https://finevines.com/wines/domaine-test-chablis-2022/').map(({ sku }) => sku), ['FV-100*']);

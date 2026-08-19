@@ -1,4 +1,4 @@
-# Salesforce catalog corrections — for the Fine Vines team
+# Salesforce catalog corrections — for the FineVines team
 
 *Prepared 2026-08-05. Everything below was found automatically while building
 the website's catalog pipeline; each item links to why it matters on the site.

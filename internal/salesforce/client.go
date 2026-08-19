@@ -89,7 +89,7 @@ const rosterSOQL = `SELECT Id, Name, Description, FV_Brand__c, FV_Vintage_Year__
  FV_Varietal__c, FV_Region__c, FV_Country__c, FV_OnHand_Qty__c, FV_Bottles_Per_Case__c,
  FV_Ready_To_Sell__c FROM Product2`
 
-// jeffBarbourUserID is a temporary client-approved exception while Fine Vines
+// jeffBarbourUserID is a temporary client-approved exception while FineVines
 // decides how to model its Sales Manager role in Salesforce. Keying the
 // exception by immutable org User ID avoids accidentally including a different
 // person with the same name. Remove this exception once Jeff has an approved

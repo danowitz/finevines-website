@@ -48,6 +48,35 @@ function action(id, { wineRevision = 'a'.repeat(64), sku = '500740*' } = {}) {
 }
 
 describe('review state', () => {
+  it('keeps reopened image paths withdrawn until the durable replacement is ready for review', async () => {
+    const state = stateAt();
+    await state.initialize();
+    const reopened = {
+      ...action('00000000-0000-4000-8000-000000000101'),
+      kind: 'image-reopen',
+      previousImagePaths: [
+        'assets/img/wines/pictured-wine-2021.jpg',
+        '/assets/img/wines/pictured-wine-2021.jpg',
+        '../private/action.json',
+      ],
+    };
+
+    await state.queue(reopened);
+    assert.deepEqual(await state.withdrawnImagePaths('test'), ['assets/img/wines/pictured-wine-2021.jpg']);
+    await state.transition(reopened.id, 'queued', 'processing', 'worker claimed action');
+    assert.deepEqual(await state.withdrawnImagePaths('test'), ['assets/img/wines/pictured-wine-2021.jpg']);
+    await state.transition(reopened.id, 'processing', 'needs_attention', 'deploy needs intervention');
+    assert.deepEqual(await state.withdrawnImagePaths('test'), ['assets/img/wines/pictured-wine-2021.jpg']);
+    await assert.rejects(state.recoverAction(reopened.id, 'reopen', 'show the original choices'), /cannot be reopened/);
+    assert.deepEqual(await state.withdrawnImagePaths('test'), ['assets/img/wines/pictured-wine-2021.jpg']);
+    await state.transition(reopened.id, 'needs_attention', 'needs_decision', 'neutral image deployed');
+    assert.deepEqual(await state.withdrawnImagePaths('test'), []);
+    assert.deepEqual(await state.queue(reopened), { id: reopened.id, status: 'needs_decision', existing: true });
+    await assert.rejects(state.queue({ ...reopened, sku: 'DIFFERENT-SKU' }), /conflicts with an existing action/);
+    await assert.rejects(state.queue({ ...reopened, reason: 'A materially different correction' }), /conflicts with an existing action/);
+    await assert.rejects(state.queue({ ...reopened, packageId: 'pkg-other' }), /conflicts with an existing action/);
+  });
+
   it('migrates the preceding transactional action schema without losing queued work', async () => {
     const client = createClient({ url: 'file::memory:' }); clients.push(client);
     await client.execute(`CREATE TABLE review_actions (
@@ -208,7 +237,7 @@ describe('review state', () => {
     await state.enqueueNotification({
       dedupeKey: 'password-reset:barb:1',
       to: 'barb.fultz@finevines.com',
-      subject: 'Reset your Fine Vines review password',
+      subject: 'Reset your FineVines review password',
       text: 'Use https://review.finevines.com/reset-password?token=private-token',
       sensitive: true,
     });

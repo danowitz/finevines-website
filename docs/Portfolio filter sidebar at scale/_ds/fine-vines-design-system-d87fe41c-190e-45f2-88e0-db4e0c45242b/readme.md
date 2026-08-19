@@ -1,6 +1,6 @@
-# Fine Vines — Design System
+# FineVines — Design System
 
-A warm, old-world wine aesthetic for **Fine Vines**, a licensed Illinois wholesale
+A warm, old-world wine aesthetic for **FineVines**, a licensed Illinois wholesale
 distributor of fine wine. This is a *visual rework* of the existing site
 (finevines.com), not a rebrand — the logo and palette are the anchor.
 
@@ -21,7 +21,7 @@ sales team carries 200+ years of combined trade experience.
 
 ---
 
-## CONTENT FUNDAMENTALS — how Fine Vines writes
+## CONTENT FUNDAMENTALS — how FineVines writes
 
 **Voice.** First-person plural, warm and confident, never salesy. *"We search for the
 best expressions of fruit and terroir in every wine we represent."* The reader is
@@ -116,7 +116,7 @@ separates sections, paired with the uppercase brass eyebrow.
 
 ## ICONOGRAPHY
 
-Fine Vines is **typographic and photographic first** — icons are deliberately scarce.
+FineVines is **typographic and photographic first** — icons are deliberately scarce.
 
 - **No brand icon font or SVG icon set existed** in the source material, so none ships here.
 - **Micro-controls** use a few restrained Unicode glyphs sized to the text: caret `▾`
@@ -135,7 +135,7 @@ Fine Vines is **typographic and photographic first** — icons are deliberately 
 
 ## VISUAL CAVEATS / SUBSTITUTIONS
 - **Fonts** are loaded from **Google Fonts CDN** (`tokens/fonts.css`) as brand-appropriate
-  choices — Fine Vines has no licensed brand fonts on file. If real font binaries exist,
+  choices — FineVines has no licensed brand fonts on file. If real font binaries exist,
   drop them in and convert to `@font-face`. *(This is why the manifest reports 0 fonts —
   the closure uses `@import`, not `@font-face`.)*
 - **Photography** (hero/banners) and **bottle-label images** are placeholders; supply real assets.
@@ -161,12 +161,12 @@ Fine Vines is **typographic and photographic first** — icons are deliberately 
 - Mounted from `window.FineVinesDesignSystem_d87fe4`. Each has `.d.ts` + `.prompt.md`.
 
 **UI Kit**
-- `ui_kits/website/` — interactive Fine Vines trade site (Home, Portfolio, Product,
+- `ui_kits/website/` — interactive FineVines trade site (Home, Portfolio, Product,
   Producer, About, News & Events, Contact). See its `README.md`.
 
 **Foundation cards** (`guidelines/cards/`) — specimen cards for the Design System tab
 (Colors, Type, Spacing, Brand).
 
-**Assets** (`assets/logo/`) — the Fine Vines wordmark.
+**Assets** (`assets/logo/`) — the FineVines wordmark.
 
 **Skill** — `SKILL.md` makes this folder usable as a downloadable Agent Skill.

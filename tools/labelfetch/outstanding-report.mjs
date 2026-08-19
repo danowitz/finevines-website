@@ -65,7 +65,7 @@ const stageButtons = [...stages].sort((a, b) => b[1] - a[1]).map(([stage, count]
 const html = `<!doctype html>
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow,noarchive">
-<title>Fine Vines outstanding bottle images</title>
+<title>FineVines outstanding bottle images</title>
 <style>
   *{box-sizing:border-box} body{margin:0;background:#f6f0e7;color:#2e211b;font:14px/1.45 system-ui,sans-serif}
   header{position:sticky;top:0;z-index:5;padding:18px 24px;background:#2b0914;color:#fff;box-shadow:0 2px 12px #0003}

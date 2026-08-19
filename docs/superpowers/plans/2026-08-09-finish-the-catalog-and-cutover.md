@@ -16,7 +16,7 @@
 - **Salesforce is authoritative for commercial fields** (SKU, producer, name, vintage, stock, price). Enrichment fills descriptive gaps only.
 - **Web-eligibility rule:** `stockQty > 0 AND SKU does not start with "9" AND FV_Ready_To_Sell__c = true`.
 - **No invented bottle, label, closure, or packaging artwork.** A wine without a verified photograph shows the neutral "Product image unavailable" SVG (`internal/label/label.go`). Watermark removal is not an allowed cleanup operation.
-- **The About page keeps Fine Vines' own copy voice** ("A service company, first and last..."). Brand voice elsewhere is elegant, editorial, old-world wine-merchant. Tagline: *Pouring elegance with a sommelier's touch*.
+- **The About page keeps FineVines' own copy voice** ("A service company, first and last..."). Brand voice elsewhere is elegant, editorial, old-world wine-merchant. Tagline: *Pouring elegance with a sommelier's touch*.
 - **`git add` in any pipeline step stays pathspec-limited.** `git add -A` sweeps the Linux helper binaries (`finevines`, `imgcheck`, `imgnorm` — no `.exe`, so not gitignored) into master.
 - **PowerShell here-strings mangle `git commit -m` in this harness.** Use `git commit -F <file>`.
 - **Parallel Claude sessions race the git index.** Re-check the current branch before committing, and commit via explicit pathspec.
@@ -691,7 +691,7 @@ Phase 3 is blocked on Task 5. Nothing in Tasks 6–7 can be verified without liv
 - Consumes: nothing.
 - Produces: working `FINEVINES_SF_BASE_URL` / `FINEVINES_SF_CLIENT_ID` / `FINEVINES_SF_CLIENT_SECRET`, and `FINEVINES_SF_MOCK` removed. Unblocks Tasks 6 and 7.
 
-This is a Salesforce-admin task on the client's side, not a code change. The full click-path is in issue #1 — hand that issue to Fine Vines' Salesforce administrator verbatim rather than paraphrasing it.
+This is a Salesforce-admin task on the client's side, not a code change. The full click-path is in issue #1 — hand that issue to FineVines' Salesforce administrator verbatim rather than paraphrasing it.
 
 - [ ] **Step 1: Send issue #1 to the Salesforce administrator**
 
@@ -956,7 +956,7 @@ Expected: FAIL — file not built.
 
 - [ ] **Step 4: Add the template and the route**
 
-Create `templates/privacy-policy.html.tmpl` following the structure of the existing `about.html.tmpl` (same header/footer partials, same container class). Keep Fine Vines' own voice; the page states what the contact form collects, that GA4 is used, and how to reach the business — **phone and email only**.
+Create `templates/privacy-policy.html.tmpl` following the structure of the existing `about.html.tmpl` (same header/footer partials, same container class). Keep FineVines' own voice; the page states what the contact form collects, that GA4 is used, and how to reach the business — **phone and email only**.
 
 Register the page in `internal/build/build.go` alongside the other static pages, and add it to the sitemap.
 
@@ -1006,7 +1006,7 @@ gh issue close 9
 
 # Phase 5 — The supplier-media ask
 
-### Task 9: Send Fine Vines the request for producer and importer photography
+### Task 9: Send FineVines the request for producer and importer photography
 
 **Files:**
 - Create: `docs/supplier-media-request.md`
@@ -1073,7 +1073,7 @@ Expected after the fix: no matches. Phone and email only — no address, no fax.
 
 - [ ] **Step 2: Set the GA4 measurement ID**
 
-The old UA-41731070-1 tag is dead. Get the GA4 measurement ID (`G-XXXXXXXXXX`) from Fine Vines, then:
+The old UA-41731070-1 tag is dead. Get the GA4 measurement ID (`G-XXXXXXXXXX`) from FineVines, then:
 
 ```bash
 gh secret set FINEVINES_GA_ID
@@ -1165,7 +1165,7 @@ gh issue comment 6 --body "Superseded in part: generated bottle artwork is retir
 
 - [ ] **Step 2: #3 — portfolio duplicate listings and filter UX**
 
-Both halves are waiting on other people: Fine Vines on the 73 duplicate listings, Claw Design on the facet UX. Chase both, or close with the current behaviour documented as the decision. Note that vintage collapse (`0d8481f`) already changed the duplicate picture — regenerate before re-sending:
+Both halves are waiting on other people: FineVines on the 73 duplicate listings, Claw Design on the facet UX. Chase both, or close with the current behaviour documented as the decision. Note that vintage collapse (`0d8481f`) already changed the duplicate picture — regenerate before re-sending:
 
 ```bash
 go run ./tools/packcheck
@@ -1173,7 +1173,7 @@ go run ./tools/packcheck
 
 - [ ] **Step 3: #5 — per-wine stock badge**
 
-Blocked on a client call: is bottle-level stock depth something Fine Vines wants public at all? Ask George. If no, close it. If yes, it needs the separate unhashed runtime feed described in the issue — the content-hashed catalog index cannot carry a live number.
+Blocked on a client call: is bottle-level stock depth something FineVines wants public at all? Ask George. If no, close it. If yes, it needs the separate unhashed runtime feed described in the issue — the content-hashed catalog index cannot carry a live number.
 
 - [ ] **Step 4: Verify the issue list is clean**
 

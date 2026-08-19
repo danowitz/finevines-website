@@ -61,7 +61,7 @@ The hosted image-review click path is local and deterministic; it makes no AI ca
 - `FINEVINES_BRAVE_SEARCH_KEY` — Brave Image Search API key for the independent image index.
 
 **Mail relay (SMTP)** — needed only for `notify`, the nightly digest email. Not used by anything you run by
-hand. Fine Vines sends through smtp.com's relay; these come from that account:
+hand. FineVines sends through smtp.com's relay; these come from that account:
 - `FINEVINES_SMTP_HOST` — the relay's submission host.
 - `FINEVINES_SMTP_PORT` — `587` for STARTTLS (the usual one) or `465` for implicit TLS. Either way the
   connection is encrypted before the password is sent; a relay that will not encrypt fails the send.
@@ -424,6 +424,16 @@ The preferred workflow is in the protected review console:
 4. Keep the queued receipt. Processing replaces the wrong photograph with the
    neutral fallback before fresh discovery begins; new candidates return on the
    normal review cards.
+
+The accepted action is also published immediately as a minimal, read-only list
+of withdrawn public image paths. FineVines.com checks that list on each page
+load and replaces a matching photograph with an **Image under review** label,
+including portfolio cards added after filtering. This normally hides the wrong
+image within seconds of a page refresh; it does not wait for the GitHub
+workflow. The background workflow remains authoritative and performs the
+durable catalog edit, file removal, deployment, and candidate discovery. If the
+public check is unavailable or JavaScript is disabled, the durable workflow is
+the fallback.
 
 The console records a revision-bound review recovery action. If multiple
 Salesforce rows share that public slug, they are reopened together so the same

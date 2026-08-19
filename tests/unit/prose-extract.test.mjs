@@ -5,10 +5,10 @@
 // occasional critic quote. This tool splits that copy into three buckets
 // (facts / producerCopy / quotes) so each can be judged and rendered on its
 // own terms rather than being blended into one undifferentiated blob and
-// silently presented as Fine Vines' own words.
+// silently presented as FineVines' own words.
 //
 // Being wrong here is silent: a village Pommard's prose landing on a 1er Cru
-// row, a critic's tasting note rendering as if Fine Vines wrote it, or a
+// row, a critic's tasting note rendering as if FineVines wrote it, or a
 // guessed soil type with no source in the page at all.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

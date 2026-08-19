@@ -1,4 +1,4 @@
-console.error('imagegen is disabled: Fine Vines does not publish invented product packaging; use verified real-photo cleanup or the neutral SVG fallback');
+console.error('imagegen is disabled: FineVines does not publish invented product packaging; use verified real-photo cleanup or the neutral SVG fallback');
 process.exit(2);
 
 // Historical implementation retained temporarily for auditability. It is

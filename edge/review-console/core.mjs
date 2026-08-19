@@ -73,7 +73,7 @@ export async function verifySession(token, { secret, environment, now }) {
 }
 
 export function validateAction(input, context) {
-  const allowed = new Set(['kind', 'sku', 'packageId', 'targetCatalogCommit', 'wineRevision', 'candidateId', 'reason', 'imageStorageName', 'imageSHA256', 'imageBytes', 'imageMIME']);
+  const allowed = new Set(['kind', 'sku', 'packageId', 'targetCatalogCommit', 'wineRevision', 'candidateId', 'reason', 'requestId', 'imageStorageName', 'imageSHA256', 'imageBytes', 'imageMIME']);
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('action must be an object');
   for (const key of Object.keys(input)) if (!allowed.has(key)) throw new Error(`unknown action field ${key}`);
   const text = (key, max, pattern = /^.{1,}$/u) => {
@@ -102,8 +102,13 @@ export function validateAction(input, context) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(action.reviewer) || action.reviewer.length > 254) throw new Error('invalid reviewer identity');
   if (kind === 'image-select' && !action.candidateId) throw new Error('image-select requires candidateId');
   if (kind === 'no-image' && action.candidateId) throw new Error('no-image cannot name a candidate');
-  if (kind === 'image-reopen') action.reason = text('reason', 240);
+  if (kind === 'image-reopen') {
+    action.reason = text('reason', 240);
+    const requestId = text('requestId', 36, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    if (requestId !== context.id) throw new Error('invalid requestId');
+  }
   else if (input.reason !== undefined) throw new Error('reason requires image-reopen');
+  if (kind !== 'image-reopen' && input.requestId !== undefined) throw new Error('requestId requires image-reopen');
   const imageFields = ['imageStorageName', 'imageSHA256', 'imageBytes', 'imageMIME'];
   if (kind === 'reviewer-image') {
     action.imageStorageName = text('imageStorageName', 180, /^[A-Za-z0-9._-]+$/);

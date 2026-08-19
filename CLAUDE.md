@@ -1,6 +1,6 @@
-# Fine Vines — Project Context
+# FineVines — Project Context
 
-Fine Vines is a licensed wholesale wine/liquor distributor in Illinois (Chicagoland). We're rebuilding their
+FineVines is a licensed wholesale wine/liquor distributor in Illinois (Chicagoland). We're rebuilding their
 website as a static, SEO-first site with a self-updating wine catalog. This file orients a fresh Claude session —
 read it first, then `docs/superpowers/specs/2026-07-03-finevines-static-site-design.md` for the full technical spec.
 
@@ -43,7 +43,7 @@ artifacts, and are complete/self-contained on their own.
   was described as a client-confirmed switch keeping allocated/embargoed/not-yet-launched inventory off the public
   catalog. It is a *formula field*: `IsActive && FV_OnHand_Qty__c > 0` (verified against the live org's
   `Product2` describe, 2026-08-09). There is no human judgement in it and nothing anyone can toggle per wine, so
-  it is near-redundant with the `stockQty > 0` clause beside it — it adds only `IsActive`. **Fine Vines has no
+  it is near-redundant with the `stockQty > 0` clause beside it — it adds only `IsActive`. **FineVines has no
   hold flag**, and (client decision, 2026-08-09) does not want one: the SKU-starts-with-`9` convention plus
   ready-to-sell *is* the whole exclusion policy, and anything else active and in stock is meant to be listed. So
   the rule above is correct as written — but note the only human-controlled lever over what appears on the site is
@@ -72,7 +72,7 @@ artifacts, and are complete/self-contained on their own.
   so enrichment is the only path (issue #8) — and the values that do exist carry human formatting
   (`LAMY, HUBERT` last-first, `serafin` lowercase), so enrichment must normalize rather than trust.
 - **Wine data AND images are search-scraped (REVERSED 2026-07-26).** The original decision was "generate, never
-  scrape" (copyright risk); the client (GRIT, for Fine Vines) has since **explicitly accepted the copyright risk**
+  scrape" (copyright risk); the client (GRIT, for FineVines) has since **explicitly accepted the copyright risk**
   and directed that both descriptive wine metadata and real bottle/label images be sourced via web search. The
   copyright call is the client's, made after the risk was flagged twice. New enrich pipeline: Salesforce stays the
   authoritative source for commercial fields (SKU, producer, name, vintage, stock, price); an OpenAI-driven
@@ -91,7 +91,7 @@ artifacts, and are complete/self-contained on their own.
   **No addresses on the site** (directed 2026-07-29): no street address, no city/ZIP, no P.O. Box, and no fax
   number anywhere — footer, contact page, JSON-LD, catalog data. Public contact is phone + email only. Guarded
   by build/model tests and the `nonWine` eligibility rule (a "REMIT TO" memo row once leaked the P.O. Box).
-- **The "About Us" page keeps Fine Vines' own existing copy voice** ("A service company, first and last...") rather
+- **The "About Us" page keeps FineVines' own existing copy voice** ("A service company, first and last...") rather
   than being rewritten from scratch.
 - **Real team roster** (confirmed, use these — not placeholders): George Molitor (Founder & President), Connie
   Molitor (Operations), Jeff Barbour, Trish Earley, Tim Freehan, Heather Malpass, Richie Ribando, Dan Pilkey, Steven

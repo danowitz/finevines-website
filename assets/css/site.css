@@ -70,7 +70,7 @@
   --ink-soft: var(--ink-500);
 
   /* Semantic aliases for the portfolio filter rail. The rail was designed
-     against the Fine Vines design-system tokens (docs/Portfolio filter sidebar
+     against the FineVines design-system tokens (docs/Portfolio filter sidebar
      at scale/), which name text and border ROLES rather than raw scale steps.
      Mapping them once here keeps that vocabulary without a second palette. */
   --cork-300: #d8c6a8;

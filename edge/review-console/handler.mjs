@@ -4,7 +4,7 @@ import { ActiveWineLockError } from './review-state.mjs';
 import { APP_CSS, APP_JS, FAVICON, changePasswordPage, consolePage, forgotPasswordPage, loginPage, resetPasswordPage } from './ui.mjs';
 
 const response = (body, init = {}) => new Response(body, { ...init, headers: protectedHeaders(init.headers) });
-const json = (value, status = 200) => response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+const json = (value, status = 200, headers = {}) => response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', ...headers } });
 const encoder = new TextEncoder();
 
 const safeSegment = (value) => /^[A-Za-z0-9._-]{1,180}$/.test(value || '');
@@ -83,7 +83,8 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
 
   async function queueAction(id, action, upload) {
     await stateReady;
-    await state.queue(action, upload);
+    const queued = await state.queue(action, upload);
+    if (queued.existing) return { id, status: queued.status, existing: true, dispatched: false };
     const encoded = JSON.stringify(action);
     // SQL is the authoritative queue. Publishing the processor-compatible
     // immutable objects is an idempotent optimization and is retried by every
@@ -113,6 +114,14 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
     }
     if (request.method === 'GET' && url.pathname === '/robots.txt') {
       return response('User-agent: *\nDisallow: /\n', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    }
+    if (request.method === 'GET' && url.pathname === '/api/public/withdrawals') {
+      await stateReady;
+      return json({ schemaVersion: 1, imagePaths: await state.withdrawnImagePaths(config.environment) }, 200, {
+        'Access-Control-Allow-Origin': config.publicOrigin || 'https://finevines.com',
+        'Cache-Control': 'no-store',
+        Vary: 'Origin',
+      });
     }
 
     if (request.method === 'GET' && url.pathname === '/forgot-password') {
@@ -268,8 +277,9 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
       if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) return json({ error: 'content type must be application/json' }, 415);
       if (request.headers.get('x-csrf-token') !== await csrfToken(config.sessionSecret, session.sessionId)) return json({ error: 'invalid csrf token' }, 403);
       try {
-        const id = uuid();
-        const action = validateAction(await request.json(), {
+        const input = await request.json();
+        const id = String(input.requestId || '');
+        const action = validateAction(input, {
           id, environment: config.environment, sessionId: session.sessionId, reviewerEmail: reviewer.email, now: now(), allowImageReopen: true,
         });
         const manifest = await loadPackage(storage, prefix, action.packageId);

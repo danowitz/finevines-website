@@ -7,7 +7,7 @@
 
 ## Outcome
 
-Fine Vines staff can resolve image exceptions in a password-protected browser
+FineVines staff can resolve image exceptions in a password-protected browser
 without exposing the review page or its candidate images to crawlers. A click
 is never treated as deployed until a durable receipt names the catalog commit
 and completed Bunny deployment.

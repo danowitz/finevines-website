@@ -115,8 +115,8 @@ export function createReviewerAccounts({ state, mailer, reviewUrl, now = () => n
     await mailer.send({
       dedupeKey: `reviewer-invitation:${normalized}:${updated.credentialVersion}`,
       to: normalized,
-      subject: 'Your Fine Vines image review invitation',
-      text: `Fine Vines image review access\n\nReview page: ${reviewerOrigin}\nUsername: ${normalized}\nTemporary password: ${password}\n\nThis temporary password expires in 72 hours. The first time you sign in, choose a new password with at least 8 characters.`,
+      subject: 'Your FineVines image review invitation',
+      text: `FineVines image review access\n\nReview page: ${reviewerOrigin}\nUsername: ${normalized}\nTemporary password: ${password}\n\nThis temporary password expires in 72 hours. The first time you sign in, choose a new password with at least 8 characters.`,
     });
   }
 
@@ -152,8 +152,8 @@ export function createReviewerAccounts({ state, mailer, reviewUrl, now = () => n
         await mailer.send({
           dedupeKey: `reviewer-password-reset:${tokenHash}`,
           to: normalized,
-          subject: 'Reset your Fine Vines review password',
-          text: `Fine Vines image review password reset\n\nReset your password: ${resetUrl}\n\nThis link expires in 60 minutes and can be used only once. If you did not request it, no action is required.`,
+          subject: 'Reset your FineVines review password',
+          text: `FineVines image review password reset\n\nReset your password: ${resetUrl}\n\nThis link expires in 60 minutes and can be used only once. If you did not request it, no action is required.`,
           sensitive: true,
         });
       }

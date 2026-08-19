@@ -1,6 +1,6 @@
-# Fine Vines — Project Context
+# FineVines — Project Context
 
-Fine Vines is a licensed wholesale wine/liquor distributor in Illinois (Chicagoland). We're rebuilding their
+FineVines is a licensed wholesale wine/liquor distributor in Illinois (Chicagoland). We're rebuilding their
 website as a static, SEO-first site with a self-updating wine catalog. This file orients a fresh Codex session —
 read it first, then `docs/superpowers/specs/2026-07-03-finevines-static-site-design.md` for the full technical spec.
 
@@ -44,7 +44,7 @@ artifacts, and are complete/self-contained on their own.
   vintage→`FV_Vintage_Year__c`, varietal→`FV_Varietal__c`, region→`FV_Region__c`, stock→`FV_OnHand_Qty__c`,
   SKU→`StockKeepingUnit`; appellation & style are search-scraped.
 - **Wine data AND images are search-scraped (REVERSED 2026-07-26).** The original decision was "generate, never
-  scrape" (copyright risk); the client (GRIT, for Fine Vines) has since **explicitly accepted the copyright risk**
+  scrape" (copyright risk); the client (GRIT, for FineVines) has since **explicitly accepted the copyright risk**
   and directed that both descriptive wine metadata and real bottle/label images be sourced via web search. New
   enrich pipeline: Salesforce stays authoritative for commercial fields (SKU, producer, name, vintage, stock,
   price); a search→extract→normalize step fills the descriptive schema and fetches real images, with a
@@ -56,7 +56,7 @@ artifacts, and are complete/self-contained on their own.
 - **Brand voice**: elegant, editorial, old-world-wine-trade tone. Avoid corporate-tech phrasing like "no developer
   on retainer" (came across as a dig, was removed). The tagline `Pouring elegance with a sommelier's touch` threads
   through the proposal's copy and cover design — keep using it if writing further client-facing material.
-- **The "About Us" page keeps Fine Vines' own existing copy voice** ("A service company, first and last...") rather
+- **The "About Us" page keeps FineVines' own existing copy voice** ("A service company, first and last...") rather
   than being rewritten from scratch.
 - **Real team roster** (confirmed, use these — not placeholders): George Molitor (Founder & President), Connie
   Molitor (Operations), Jeff Barbour, Trish Earley, Tim Freehan, Heather Malpass, Richie Ribando, Dan Pilkey, Steven

@@ -1,6 +1,6 @@
-# Fine Vines Catalog
+# FineVines Catalog
 
-Fine Vines maintains a public wine catalog whose bottle photographs may be proposed automatically or supplied by an authorized reviewer.
+FineVines maintains a public wine catalog whose bottle photographs may be proposed automatically or supplied by an authorized reviewer.
 
 ## Language
 

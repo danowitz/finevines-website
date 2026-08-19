@@ -54,9 +54,9 @@ func subject(d RunDiff) string {
 	if len(parts) == 0 {
 		// Unreachable in practice: runNotify checks Changed() first. Kept honest
 		// rather than clever, so a future caller that forgets gets a sane line.
-		return "Fine Vines catalog: no changes"
+		return "FineVines catalog: no changes"
 	}
-	return "Fine Vines catalog: " + strings.Join(parts, ", ")
+	return "FineVines catalog: " + strings.Join(parts, ", ")
 }
 
 // digestTmpl is the HTML body. Deliberately table-free, inline-styled and

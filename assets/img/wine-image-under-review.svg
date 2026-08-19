@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 960" role="img" aria-labelledby="title description">
+  <title id="title">Wine image under review</title>
+  <desc id="description">A neutral FineVines label shown while a bottle image is being replaced.</desc>
+  <rect width="720" height="960" fill="#f4efe5"/>
+  <rect x="82" y="82" width="556" height="796" rx="8" fill="#fffdf8" stroke="#b49a65" stroke-width="4"/>
+  <path d="M150 248h420M150 712h420" stroke="#b49a65" stroke-width="3"/>
+  <text x="360" y="392" text-anchor="middle" fill="#562b33" font-family="Georgia,serif" font-size="58" letter-spacing="2">FineVines</text>
+  <text x="360" y="500" text-anchor="middle" fill="#29241f" font-family="Georgia,serif" font-size="32">IMAGE UNDER REVIEW</text>
+  <text x="360" y="558" text-anchor="middle" fill="#6b6258" font-family="Arial,sans-serif" font-size="23">A new bottle image is being selected.</text>
+</svg>

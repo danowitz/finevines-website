@@ -40,6 +40,7 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY, queu
       if (queueFailure) throw queueFailure;
       const key = `${action.environment}:${action.wineRevision}`;
       const active = activeWines.get(key);
+      if (active === action.id) return { id: action.id, status: 'queued', existing: true };
       if (active) throw new ActiveWineLockError({ sku: action.sku, actionId: active });
       activeWines.set(key, action.id);
       queuedActions.push(action);
@@ -78,6 +79,7 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY, queu
       rateLimits.set(bucket, attempts);
       return attempts <= limit;
     },
+    withdrawnImagePaths: async () => ['assets/img/wines/pictured-wine-2021.jpg'],
   };
   const accounts = {
     authenticate: async (email, password) => email === identity.email && password === 'correct horse' ? identity : null,
@@ -95,7 +97,7 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY, queu
     requestPasswordReset: async (email) => accountCalls.push(['request-password-reset', email]),
     resetPassword: async (token, newPassword) => accountCalls.push(['reset-password', token, newPassword]),
   };
-  const config = { environment: 'test', origin: 'https://review.finevines.biz', cookieName: 'fv_review_test', sessionSecret: 'session-secret', incidentRecipient: 'joel@gritautomation.com' };
+  const config = { environment: 'test', origin: 'https://review.finevines.biz', publicOrigin: 'https://finevines.com', cookieName: 'fv_review_test', sessionSecret: 'session-secret', incidentRecipient: 'joel@gritautomation.com' };
   const handle = createReviewConsole({ config, storage, state, accounts, dispatch, now: () => new Date('2026-08-11T20:00:00Z'), uuid: (() => { let n = 0; return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`; })() });
   return { handle, writes, files, queuedActions, accountCalls };
 }
@@ -107,6 +109,19 @@ async function login(handle) {
 }
 
 describe('review console handler', () => {
+  it('publishes only active withdrawn image paths without requiring review authentication', async () => {
+    const { handle } = fixture();
+    const response = await handle(new Request('https://review.finevines.biz/api/public/withdrawals'));
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('access-control-allow-origin'), 'https://finevines.com');
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.deepEqual(await response.json(), {
+      schemaVersion: 1,
+      imagePaths: ['assets/img/wines/pictured-wine-2021.jpg'],
+    });
+  });
+
   it('serves a polished login document, stylesheet, and favicon before authentication', async () => {
     const { handle } = fixture();
     const page = await handle(new Request('https://review.finevines.biz/'));
@@ -118,7 +133,8 @@ describe('review console handler', () => {
     assert.match(markup, /class="login-shell"/);
     assert.match(markup, /class="login-logo"/);
     assert.match(markup, />Sign in for catalog review<\/p>/);
-    assert.doesNotMatch(markup, /<h1>Fine Vines<\/h1>/);
+    assert.match(markup, /<title>FineVines image review<\/title>/);
+    assert.doesNotMatch(markup, /Fine Vines/);
 
     const stylesheet = await handle(new Request('https://review.finevines.biz/app.css'));
     assert.equal(stylesheet.status, 200);
@@ -274,6 +290,8 @@ describe('review console handler', () => {
     const page = await handle(new Request('https://review.finevines.biz/', { headers: { cookie } }));
     assert.equal(page.status, 200);
     const markup = await page.text();
+    assert.match(markup, /<h1>FineVines image review<\/h1>/);
+    assert.doesNotMatch(markup, /Fine Vines/);
     assert.match(markup, /Compare the candidates/);
     assert.doesNotMatch(markup, /<select id="reviewer"/);
     assert.match(markup, /Barb Fultz/);
@@ -575,15 +593,20 @@ describe('review console handler', () => {
     const currentResponse = await handle(new Request('https://review.finevines.biz/api/current', { headers: { cookie } }));
     const current = await currentResponse.json();
     assert.deepEqual(current.catalogWines.map(({ sku }) => sku), ['PHOTO-1']);
-    const response = await handle(new Request('https://review.finevines.biz/api/admin/wines/reopen', {
+    const request = () => new Request('https://review.finevines.biz/api/admin/wines/reopen', {
       method: 'POST', headers: { cookie, origin: 'https://review.finevines.biz', 'content-type': 'application/json', 'x-csrf-token': current.csrfToken },
-      body: JSON.stringify({ kind: 'image-reopen', sku: 'PHOTO-1', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'c'.repeat(64), candidateId: '', reason: 'Support reported the current catalog image as wrong.' }),
-    }));
+      body: JSON.stringify({ kind: 'image-reopen', sku: 'PHOTO-1', packageId: 'pkg-1', targetCatalogCommit: 'abcdef1', wineRevision: 'c'.repeat(64), candidateId: '', reason: 'Support reported the current catalog image as wrong.', requestId: '00000000-0000-4000-8000-000000000101' }),
+    });
+    const response = await handle(request());
     assert.equal(response.status, 202);
+    const accepted = await response.json();
     assert.equal(queuedActions.at(-1).kind, 'image-reopen');
     assert.equal(queuedActions.at(-1).wineSlug, 'pictured-wine-2021');
     assert.equal(queuedActions.at(-1).reason, 'Support reported the current catalog image as wrong.');
     assert.equal(queuedActions.at(-1).wineRevisions.length, 2);
+    const recovered = await handle(request());
+    assert.equal(recovered.status, 202);
+    assert.deepEqual(await recovered.json(), { id: accepted.id, status: 'queued', existing: true, dispatched: false });
   });
 
   it('serves Support the catalog image replacement finder', async () => {
@@ -593,7 +616,7 @@ describe('review console handler', () => {
     const markup = await page.text();
     assert.match(markup, />Replace a catalog image…</);
     assert.match(markup, /id="reopen-modal"/);
-    assert.match(markup, /Search wine, producer, vintage, SKU, or paste a Fine Vines URL/);
+    assert.match(markup, /Search wine, producer, vintage, SKU, or paste a FineVines URL/);
     const script = await (await handle(new Request('https://review.finevines.biz/app.js', { headers: { cookie } }))).text();
     assert.match(script, /finevines\.com/);
     assert.match(script, /\/api\/admin\/wines\/reopen/);

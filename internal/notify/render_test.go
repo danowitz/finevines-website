@@ -31,7 +31,7 @@ func sampleDiff() RunDiff {
 
 func TestRender_SubjectCountsWhatChanged(t *testing.T) {
 	m := Render(sampleDiff(), "https://finevines.com")
-	if !strings.HasPrefix(m.Subject, "Fine Vines catalog") {
+	if !strings.HasPrefix(m.Subject, "FineVines catalog") {
 		t.Errorf("Subject = %q, want it to open with the catalog name", m.Subject)
 	}
 	for _, want := range []string{"1 new wine", "1 delisting", "1 new photograph"} {

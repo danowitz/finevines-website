@@ -13,6 +13,7 @@ const environment = process.env.REVIEW_ENVIRONMENT;
 const config = {
   environment,
   origin: process.env.REVIEW_ORIGIN,
+  publicOrigin: process.env.PUBLIC_SITE_ORIGIN || 'https://finevines.com',
   cookieName: process.env.REVIEW_COOKIE_NAME || `fv_review_${environment}`,
   sessionSecret: process.env.REVIEW_SESSION_SECRET,
   databaseUrl: process.env.BUNNY_DATABASE_URL,
@@ -24,6 +25,7 @@ if (required.length) throw new Error(`review console configuration missing: ${re
 if (!['test', 'production'].includes(environment)) throw new Error('REVIEW_ENVIRONMENT must be test or production');
 if (new URL(config.origin).origin !== config.origin) throw new Error('REVIEW_ORIGIN must be an exact HTTPS origin');
 if (!config.origin.startsWith('https://')) throw new Error('REVIEW_ORIGIN must use HTTPS');
+if (new URL(config.publicOrigin).origin !== config.publicOrigin || !config.publicOrigin.startsWith('https://')) throw new Error('PUBLIC_SITE_ORIGIN must be an exact HTTPS origin');
 if (config.sessionSecret.length < 32) throw new Error('REVIEW_SESSION_SECRET must contain at least 32 characters');
 if (!/^[A-Za-z0-9_]{1,48}$/.test(config.cookieName)) throw new Error('REVIEW_COOKIE_NAME is invalid');
 

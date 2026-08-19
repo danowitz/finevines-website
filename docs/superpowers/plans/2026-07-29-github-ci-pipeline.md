@@ -3226,7 +3226,7 @@ func sampleDiff() RunDiff {
 
 func TestRender_SubjectCountsWhatChanged(t *testing.T) {
 	m := Render(sampleDiff(), "https://finevines.com")
-	if !strings.HasPrefix(m.Subject, "Fine Vines catalog") {
+	if !strings.HasPrefix(m.Subject, "FineVines catalog") {
 		t.Errorf("Subject = %q, want it to open with the catalog name", m.Subject)
 	}
 	for _, want := range []string{"1 new wine", "1 delisting", "1 new photograph"} {
@@ -3389,9 +3389,9 @@ func subject(d RunDiff) string {
 	if len(parts) == 0 {
 		// Unreachable in practice: runNotify checks Changed() first. Kept honest
 		// rather than clever, so a future caller that forgets gets a sane line.
-		return "Fine Vines catalog: no changes"
+		return "FineVines catalog: no changes"
 	}
-	return "Fine Vines catalog: " + strings.Join(parts, ", ")
+	return "FineVines catalog: " + strings.Join(parts, ", ")
 }
 
 // digestTmpl is the HTML body. Deliberately table-free, inline-styled and
@@ -3553,7 +3553,7 @@ func TestPostmarkSender_PostsTheDocumentedShape(t *testing.T) {
 	s.BaseURL = srv.URL
 	err := s.Send(context.Background(), "catalog@finevines.biz",
 		[]string{"george@example.com", "barbara@example.com"},
-		Message{Subject: "Fine Vines catalog: 1 new wine", HTMLBody: "<p>hi</p>", TextBody: "hi"})
+		Message{Subject: "FineVines catalog: 1 new wine", HTMLBody: "<p>hi</p>", TextBody: "hi"})
 	if err != nil {
 		t.Fatalf("Send returned error: %v", err)
 	}
@@ -3570,7 +3570,7 @@ func TestPostmarkSender_PostsTheDocumentedShape(t *testing.T) {
 	if body["To"] != "george@example.com,barbara@example.com" {
 		t.Errorf("To = %v, want the comma-joined list Postmark expects", body["To"])
 	}
-	if body["Subject"] != "Fine Vines catalog: 1 new wine" || body["HtmlBody"] != "<p>hi</p>" || body["TextBody"] != "hi" {
+	if body["Subject"] != "FineVines catalog: 1 new wine" || body["HtmlBody"] != "<p>hi</p>" || body["TextBody"] != "hi" {
 		t.Errorf("body = %+v", body)
 	}
 	if body["MessageStream"] != "outbound" {
@@ -3968,7 +3968,7 @@ cp data/wines.json .run-before.json
 ./finevines.exe notify -before .run-before.json -dry
 ```
 
-Expected: the build and vet are silent; `go test ./...` is all `ok`; the `notify -dry` run prints `notify: the run changed nothing — no digest sent` (the snapshot is identical to the catalog). Then edit one wine's description in `.run-before.json` and re-run: it prints a `Subject: Fine Vines catalog: 1 rewritten note` line and the plain-text body. Delete `.run-before.json` afterwards.
+Expected: the build and vet are silent; `go test ./...` is all `ok`; the `notify -dry` run prints `notify: the run changed nothing — no digest sent` (the snapshot is identical to the catalog). Then edit one wine's description in `.run-before.json` and re-run: it prints a `Subject: FineVines catalog: 1 rewritten note` line and the plain-text body. Delete `.run-before.json` afterwards.
 
 - [ ] **Step 24: Commit**
 

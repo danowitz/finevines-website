@@ -211,7 +211,7 @@ func groupsIn(groups []group, cat string) []group {
 // writeTxt renders the email-pasteable plain-text version.
 func writeTxt(groups []group, counts map[string]int, listings int) {
 	var b strings.Builder
-	b.WriteString("FINE VINES — DUPLICATE CATALOG LISTINGS\n")
+	b.WriteString("FINEVINES — DUPLICATE CATALOG LISTINGS\n")
 	b.WriteString(fmt.Sprintf("%d wines currently appear more than once in the online catalog (%d item numbers total).\n", len(groups), listings))
 	b.WriteString("Every one of them is in stock and marked ready-to-sell. They fall into three cases:\n")
 	for _, m := range catMeta {
@@ -237,7 +237,7 @@ func writeTxt(groups []group, counts map[string]int, listings int) {
 
 func writeMd(groups []group, counts map[string]int, listings int) {
 	var b strings.Builder
-	b.WriteString("# Fine Vines — duplicate catalog listings\n\n")
+	b.WriteString("# FineVines — duplicate catalog listings\n\n")
 	b.WriteString(fmt.Sprintf("%d wines appear more than once in the online catalog (%d item numbers). ", len(groups), listings))
 	b.WriteString("All are in stock and ready-to-sell. Pack notation is cases/size (`12/750` = twelve 750ml bottles, `6/1500` = six 1.5L magnums).\n\n")
 	b.WriteString(fmt.Sprintf("- **Different bottle size:** %d · **6-pack vs 12-pack:** %d · **Pure duplicates:** %d\n\n",

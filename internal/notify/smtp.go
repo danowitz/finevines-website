@@ -39,7 +39,7 @@ const implicitTLSPort = 465
 // dial timeout and a connection deadline rather than by the client.
 const sendTimeout = 30 * time.Second
 
-// SMTPSender submits one email to an SMTP relay (smtp.com, for Fine Vines) with
+// SMTPSender submits one email to an SMTP relay (smtp.com, for FineVines) with
 // AUTH over TLS. It speaks submission directly rather than through a provider's
 // REST API, so the same code works against any relay the client moves to; the
 // price is that the MIME message is assembled here instead of by the provider.
@@ -259,7 +259,7 @@ func composeMessage(from string, to []string, m Message, now time.Time) ([]byte,
 	return b.Bytes(), nil
 }
 
-// envelopeAddress reduces "Fine Vines <catalog@finevines.com>" to the bare
+// envelopeAddress reduces "FineVines <catalog@finevines.com>" to the bare
 // address the SMTP envelope takes. A value that will not parse is passed through
 // untouched: the relay's own rejection is a better error than a guess here.
 func envelopeAddress(addr string) string {

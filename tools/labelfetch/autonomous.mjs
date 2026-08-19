@@ -110,7 +110,7 @@ async function preflight() {
     braveKey,
   });
   const health = await discover(
-    'Fine Vines wine bottle image workflow health check',
+    'FineVines wine bottle image workflow health check',
   );
   if (!health.searched || health.complete === false) {
     throw new Error(`${searchProvider} image discovery unavailable: ${health.error || 'provider health check incomplete'}`);

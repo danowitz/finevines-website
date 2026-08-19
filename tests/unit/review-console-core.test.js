@@ -62,7 +62,7 @@ describe('protected review console', () => {
   it('creates image-reopen actions only for the trusted administrator route', () => {
     const input = {
       kind: 'image-reopen', sku: '500740*', packageId: 'pkg',
-      targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: '', reason: 'Support reported the current catalog image as wrong.',
+      targetCatalogCommit: 'abcdef1', wineRevision: 'a'.repeat(64), candidateId: '', reason: 'Support reported the current catalog image as wrong.', requestId: '00000000-0000-4000-8000-000000000001',
     };
     const context = { id: '00000000-0000-4000-8000-000000000001', environment: 'production', sessionId: 'session-1', reviewerEmail: 'joel@danowitz.com', now: new Date() };
     assert.throws(() => validateAction(input, context), /invalid kind/);
