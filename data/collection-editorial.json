@@ -4255,6 +4255,7 @@
       "name": "Chardonnay",
       "mode": "generated",
       "fingerprint": "9ec9bf13659fab3c4ecf2cf8ba593b4801ed107a3de4fa87aa212e189b8e32da",
+      "retryFingerprint": "2a543d61382a9e14737c671b024c126ef76c5fd520553fd3cb0e8be5c822af06",
       "eyebrow": "Varietal Spotlight",
       "heading": "Understanding Chardonnay: Versatile and Terroir‑Driven",
       "paragraphs": [
@@ -4271,7 +4272,9 @@
           "url": "https://wineinstitute.org/our‑industry/statistics/wine‑fact‑sheets/chardonnay/"
         }
       ],
-      "reviewedAt": "2026-08-17"
+      "retryAfter": "2026-09-19",
+      "reviewedAt": "2026-08-17",
+      "lastError": "collection editorial \"varietal/chardonnay\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
