@@ -3752,9 +3752,9 @@
       "slug": "northern-rhone",
       "name": "Northern Rhône",
       "mode": "generated",
-      "fingerprint": "cb473dd884a4c5c6a059e3ca21c73076a6af3bd9c6ebab353ad34d696566a9e3",
-      "retryFingerprint": "cb473dd884a4c5c6a059e3ca21c73076a6af3bd9c6ebab353ad34d696566a9e3",
-      "retryAfter": "2026-09-18",
+      "fingerprint": "c0da3e98ccace87766b4433e902a89dd09400325b0a34bcfd863aa439bb4d9df",
+      "retryFingerprint": "c0da3e98ccace87766b4433e902a89dd09400325b0a34bcfd863aa439bb4d9df",
+      "retryAfter": "2026-09-20",
       "lastError": "collection editorial \"region/northern-rhone\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4224,10 +4224,10 @@
       "slug": "cabernet-sauvignon",
       "name": "Cabernet Sauvignon",
       "mode": "generated",
-      "fingerprint": "5023b2b8f75023a044f34715ffd1b5cd28d03ea45b0fb4aac8326da3d7a18d0a",
-      "retryFingerprint": "5023b2b8f75023a044f34715ffd1b5cd28d03ea45b0fb4aac8326da3d7a18d0a",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/cabernet-sauvignon\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "9f2c975d999c062c3827069dadd7df8ccfc9c5d049b1b18f1dd61869c54b3ea7",
+      "retryFingerprint": "9f2c975d999c062c3827069dadd7df8ccfc9c5d049b1b18f1dd61869c54b3ea7",
+      "retryAfter": "2026-09-20",
+      "lastError": "research JSON must contain exactly two paragraphs"
     },
     {
       "kind": "varietal",
@@ -4907,9 +4907,9 @@
       "slug": "syrah",
       "name": "Syrah",
       "mode": "generated",
-      "fingerprint": "763887447aca97e6ecf0ade67841e27a04323f6530500aeff2161702076445b3",
-      "retryFingerprint": "763887447aca97e6ecf0ade67841e27a04323f6530500aeff2161702076445b3",
-      "retryAfter": "2026-09-18",
+      "fingerprint": "cb7e935d2b72e3acdde5f5a4f72e895016acb615f21352d51c3f84bba47b1929",
+      "retryFingerprint": "cb7e935d2b72e3acdde5f5a4f72e895016acb615f21352d51c3f84bba47b1929",
+      "retryAfter": "2026-09-20",
       "lastError": "collection editorial \"varietal/syrah\" contains a prohibited dash or invalid UTF-8"
     },
     {
