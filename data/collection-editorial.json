@@ -701,6 +701,7 @@
       "name": "Coastal Ridge",
       "mode": "generated",
       "fingerprint": "b5429f33b2abe911a68529c82e8ff9a98e7b862b14788469118744c975b7c71d",
+      "retryFingerprint": "42c55408231e4bb726f7d9cd56b090bd05f435277e2cdb0a17252683eaef3c08",
       "eyebrow": "Producer Spotlight",
       "heading": "Coastal Ridge: California’s Accessible Wine Offering",
       "paragraphs": [
@@ -721,7 +722,9 @@
           "url": "https://en.wikipedia.org/wiki/California_wine"
         }
       ],
-      "reviewedAt": "2026-08-17"
+      "retryAfter": "2026-09-21",
+      "reviewedAt": "2026-08-17",
+      "lastError": "collection editorial \"producer/coastal-ridge\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
