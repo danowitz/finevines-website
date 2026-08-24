@@ -1,10 +1,10 @@
 {
-  "updated": "2026-08-23T08:27:07Z",
+  "updated": "2026-08-24T08:31:31Z",
   "windowDays": 30,
   "wines": [
     {
       "slug": "domaine-vacheron-sancerre-blanc-2024",
-      "cases": 119.66667999999999
+      "cases": 117.66667999999999
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
@@ -16,7 +16,7 @@
     },
     {
       "slug": "henri-bourgeois-pure-sauvignon-blanc-vin-de-pays-2025",
-      "cases": 65.08333999999999
+      "cases": 64.08333999999999
     },
     {
       "slug": "le-vignerons-de-florensac-picpoul-de-pinet-2025",
