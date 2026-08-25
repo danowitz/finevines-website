@@ -1,10 +1,10 @@
 {
-  "updated": "2026-08-24T08:31:31Z",
+  "updated": "2026-08-25T08:28:21Z",
   "windowDays": 30,
   "wines": [
     {
       "slug": "domaine-vacheron-sancerre-blanc-2024",
-      "cases": 117.66667999999999
+      "cases": 121.66667999999999
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
@@ -12,7 +12,7 @@
     },
     {
       "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
-      "cases": 75
+      "cases": 76
     },
     {
       "slug": "henri-bourgeois-pure-sauvignon-blanc-vin-de-pays-2025",
@@ -24,7 +24,7 @@
     },
     {
       "slug": "domaine-dezat-cellier-des-marnes-sancerre-blanc-2025",
-      "cases": 48.25
+      "cases": 53.25
     }
   ]
 }
