@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-25T08:28:21Z",
+  "updated": "2026-08-26T08:29:09Z",
   "windowDays": 30,
   "wines": [
     {
@@ -7,24 +7,24 @@
       "cases": 121.66667999999999
     },
     {
+      "slug": "huteau-boulanger-sancere-laetitia-ducroux-2025",
+      "cases": 102
+    },
+    {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 86.16666
+      "cases": 92.16666
     },
     {
       "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
-      "cases": 76
+      "cases": 84
     },
     {
       "slug": "henri-bourgeois-pure-sauvignon-blanc-vin-de-pays-2025",
       "cases": 64.08333999999999
     },
     {
-      "slug": "le-vignerons-de-florensac-picpoul-de-pinet-2025",
-      "cases": 53.75008
-    },
-    {
       "slug": "domaine-dezat-cellier-des-marnes-sancerre-blanc-2025",
-      "cases": 53.25
+      "cases": 55.25
     }
   ]
 }
