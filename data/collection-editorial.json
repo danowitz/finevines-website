@@ -560,9 +560,9 @@
       "slug": "charlopin",
       "name": "Charlopin",
       "mode": "generated",
-      "fingerprint": "3f6d4d2e8f1aabf563c9cc69d13a9c3779bb07a5b962bb87d0ea3c4f56cc66f2",
-      "retryFingerprint": "3f6d4d2e8f1aabf563c9cc69d13a9c3779bb07a5b962bb87d0ea3c4f56cc66f2",
-      "retryAfter": "2026-09-16",
+      "fingerprint": "ace7e37f619528b2c238f59772820fea0e2f884fe3b7ec9b029100bd235b72b4",
+      "retryFingerprint": "ace7e37f619528b2c238f59772820fea0e2f884fe3b7ec9b029100bd235b72b4",
+      "retryAfter": "2026-09-26",
       "lastError": "collection editorial \"producer/charlopin\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2199,9 +2199,9 @@
       "slug": "mount-hermon",
       "name": "Mount Hermon",
       "mode": "generated",
-      "fingerprint": "95c0971e5f1fef33a62b6f031f7c774c0b2e8b79c65c2282dc4487464feb5f3a",
-      "retryFingerprint": "95c0971e5f1fef33a62b6f031f7c774c0b2e8b79c65c2282dc4487464feb5f3a",
-      "retryAfter": "2026-09-16",
+      "fingerprint": "116e3bc9d1294052f65a815cbd15284cca092c44c43b678c8ad7c665c762f9a8",
+      "retryFingerprint": "116e3bc9d1294052f65a815cbd15284cca092c44c43b678c8ad7c665c762f9a8",
+      "retryAfter": "2026-09-26",
       "lastError": "collection editorial \"producer/mount-hermon\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3507,9 +3507,9 @@
       "slug": "cote-de-beaune",
       "name": "Côte de Beaune",
       "mode": "generated",
-      "fingerprint": "12ee0e7ca3efa55a487c3b86950a05c50639fd4dc099a27c5c13e3cfeb775db1",
-      "retryFingerprint": "12ee0e7ca3efa55a487c3b86950a05c50639fd4dc099a27c5c13e3cfeb775db1",
-      "retryAfter": "2026-09-16",
+      "fingerprint": "20d65b41c96f290af9c1bf59f761e5077f9374cbf9c2c8de9a4205e91f62e79e",
+      "retryFingerprint": "20d65b41c96f290af9c1bf59f761e5077f9374cbf9c2c8de9a4205e91f62e79e",
+      "retryAfter": "2026-09-26",
       "lastError": "collection editorial \"region/cote-de-beaune\" contains a prohibited dash or invalid UTF-8"
     },
     {
