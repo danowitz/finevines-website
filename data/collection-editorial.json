@@ -2997,9 +2997,9 @@
       "slug": "tor",
       "name": "Tor",
       "mode": "generated",
-      "fingerprint": "a041817db00691d5d117d7cb01d1cd88f29e1e92d009467a7def68e4de3cacb5",
-      "retryFingerprint": "a041817db00691d5d117d7cb01d1cd88f29e1e92d009467a7def68e4de3cacb5",
-      "retryAfter": "2026-09-16",
+      "fingerprint": "c022a26aefa74c207fc2d6b2376a606826b789410bbb7c72a08a76786fd74c59",
+      "retryFingerprint": "c022a26aefa74c207fc2d6b2376a606826b789410bbb7c72a08a76786fd74c59",
+      "retryAfter": "2026-09-27",
       "lastError": "collection editorial \"producer/tor\" contains a prohibited dash or invalid UTF-8"
     },
     {
