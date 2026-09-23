@@ -16405,9 +16405,8 @@
     "abv": "12%",
     "bottleSize": "750ml",
     "drinkWindow": "Non‑vintage, enjoy within 5 years of disgorgement",
-    "imagePath": "assets/img/wines/champagne-vazart-coquart-brut-reserve-grand-cru-blanc-de-blancs.jpg",
-    "imageSource": "scraped-web",
-    "imageSourceUrl": "https://winelibrary.com/wines/chardonnay/vazart-coquart-blanc-de-blancs-brut-reserve-52975",
+    "imagePath": "assets/img/wines/champagne-vazart-coquart-brut-reserve-grand-cru-blanc-de-blancs.svg",
+    "imageSource": "generated-label",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -16419,7 +16418,7 @@
       "drinkWindow": "found",
       "finish": "derived",
       "foodPairings": "found",
-      "image": "found",
+      "image": "derived",
       "palate": "found",
       "sommelierNotes": "derived"
     },
