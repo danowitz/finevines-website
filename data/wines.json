@@ -16197,9 +16197,8 @@
     ],
     "abv": "12%",
     "bottleSize": "750 ml",
-    "imagePath": "assets/img/wines/champagne-leclerc-briant-reserve-extra-brut.jpg",
-    "imageSource": "scraped-web",
-    "imageSourceUrl": "https://nyc.flatiron-wines.com/products/leclerc-briant-champagne-extra-brut-2019-750ml",
+    "imagePath": "assets/img/wines/champagne-leclerc-briant-reserve-extra-brut.svg",
+    "imageSource": "generated-label",
     "sources": {
       "abv": "found",
       "appellation": "derived",
@@ -16211,7 +16210,7 @@
       "drinkWindow": "missing",
       "finish": "derived",
       "foodPairings": "found",
-      "image": "found",
+      "image": "derived",
       "palate": "found",
       "sommelierNotes": "found"
     },
@@ -54651,9 +54650,8 @@
     "abv": "13.5%",
     "bottleSize": "750 ml",
     "drinkWindow": "2025‑2035",
-    "imagePath": "assets/img/wines/domaine-guy-bocard-meursault-1er-cru-les-charmes-2023.jpg",
-    "imageSource": "scraped-web",
-    "imageSourceUrl": "https://twdc.com.sg/wp-content/uploads/2023/06/Domaine-Guy-Bocard-Meursault-Charmes-1er-Cru-300x533.jpg",
+    "imagePath": "assets/img/wines/domaine-guy-bocard-meursault-1er-cru-les-charmes-2023.svg",
+    "imageSource": "generated-label",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -54665,7 +54663,7 @@
       "drinkWindow": "found",
       "finish": "found",
       "foodPairings": "derived",
-      "image": "found",
+      "image": "derived",
       "palate": "found",
       "sommelierNotes": "derived"
     },
