@@ -20,7 +20,7 @@ describe('production pipeline failure alerts', () => {
       encoding: 'utf8',
       env: {
         ...process.env,
-        FINEVINES_NOTIFY_FROM: 'FineVines Pipeline <catalog@finevines.com>',
+        FINEVINES_NOTIFY_FROM: '"FineVines Pipeline <catalog@finevines.com>"',
         FINEVINES_FAILURE_NOTIFY_TO: 'joel@gritautomation.com',
         GITHUB_REPOSITORY: 'danowitz/finevines-website',
         GITHUB_RUN_ID: '12345',
@@ -34,6 +34,7 @@ describe('production pipeline failure alerts', () => {
     });
 
     assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /^From: FineVines Pipeline <catalog@finevines\.com>$/m);
     assert.match(result.stdout, /^To: joel@gritautomation\.com$/m);
     assert.match(result.stdout, /^Subject: \[FineVines\] Production pipeline failed \(run 12345, attempt 2\)$/m);
     assert.match(result.stdout, /https:\/\/github\.com\/danowitz\/finevines-website\/actions\/runs\/12345/);

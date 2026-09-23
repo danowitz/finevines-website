@@ -119,7 +119,16 @@ func (s *SMTPSender) Send(ctx context.Context, from string, to []string, m Messa
 		}
 	}
 
-	msg, err := composeMessage(from, to, m, time.Now())
+	fromHeader, fromEnvelope := normalizedAddress(from)
+	toHeaders := make([]string, 0, len(to))
+	toEnvelopes := make([]string, 0, len(to))
+	for _, rcpt := range to {
+		header, envelope := normalizedAddress(rcpt)
+		toHeaders = append(toHeaders, header)
+		toEnvelopes = append(toEnvelopes, envelope)
+	}
+
+	msg, err := composeMessage(fromHeader, toHeaders, m, time.Now())
 	if err != nil {
 		return fmt.Errorf("smtp: %w", err)
 	}
@@ -173,15 +182,15 @@ func (s *SMTPSender) Send(ctx context.Context, from string, to []string, m Messa
 		}
 	}
 
-	if err := c.Mail(envelopeAddress(from)); err != nil {
-		return fmt.Errorf("smtp: MAIL FROM %s: %w", envelopeAddress(from), err)
+	if err := c.Mail(fromEnvelope); err != nil {
+		return fmt.Errorf("smtp: MAIL FROM %s: %w", fromEnvelope, err)
 	}
 	// One RCPT per recipient, each checked: a relay that refuses one address
 	// accepts the rest, and "digest sent" over a half-delivered send is exactly
 	// the silent failure this whole email exists to prevent.
-	for _, rcpt := range to {
-		if err := c.Rcpt(envelopeAddress(rcpt)); err != nil {
-			return fmt.Errorf("smtp: recipient %s rejected: %w", envelopeAddress(rcpt), err)
+	for _, rcpt := range toEnvelopes {
+		if err := c.Rcpt(rcpt); err != nil {
+			return fmt.Errorf("smtp: recipient %s rejected: %w", rcpt, err)
 		}
 	}
 
@@ -263,10 +272,25 @@ func composeMessage(from string, to []string, m Message, now time.Time) ([]byte,
 // address the SMTP envelope takes. A value that will not parse is passed through
 // untouched: the relay's own rejection is a better error than a guess here.
 func envelopeAddress(addr string) string {
-	if parsed, err := mail.ParseAddress(strings.TrimSpace(addr)); err == nil {
-		return parsed.Address
+	_, envelope := normalizedAddress(addr)
+	return envelope
+}
+
+// normalizedAddress removes one pair of outer shell quotes before parsing.
+// Quotes around a display name are valid RFC 5322; quotes around the entire
+// "Name <address>" value are a common secret-pasting mistake and make smtp.com
+// reject MAIL FROM with 501 5.1.7. Returning a normalized header at the same
+// time prevents the malformed value from surviving in the message itself.
+func normalizedAddress(addr string) (header, envelope string) {
+	trimmed := strings.TrimSpace(addr)
+	if len(trimmed) >= 2 && ((trimmed[0] == '"' && trimmed[len(trimmed)-1] == '"') ||
+		(trimmed[0] == '\'' && trimmed[len(trimmed)-1] == '\'')) {
+		trimmed = strings.TrimSpace(trimmed[1 : len(trimmed)-1])
 	}
-	return strings.TrimSpace(addr)
+	if parsed, err := mail.ParseAddress(trimmed); err == nil {
+		return trimmed, parsed.Address
+	}
+	return trimmed, trimmed
 }
 
 // messageID mints an addr-spec unique to this send, in the sending address's

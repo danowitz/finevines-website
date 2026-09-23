@@ -137,6 +137,29 @@ func TestSMTPSender_SubmitsTheDigestOverSTARTTLS(t *testing.T) {
 	}
 }
 
+// Secrets are sometimes pasted through a shell command with the surrounding
+// quotes preserved. Those quotes describe the shell value; they are not part of
+// the RFC 5322 address and smtp.com rejects them in MAIL FROM with 501 5.1.7.
+func TestSMTPSender_NormalizesAnOuterQuotedSender(t *testing.T) {
+	srv := newFakeSMTP(t, smtpBehavior{offerSTARTTLS: true})
+	s := newTestSender(srv, "fv-user", "fv-pass")
+
+	if err := s.Send(context.Background(), `"FineVines <catalog@finevines.biz>"`,
+		[]string{"joel@example.com"}, Message{Subject: "failure"}); err != nil {
+		t.Fatalf("Send returned error: %v", err)
+	}
+	if got := srv.envelopeFrom(); got != "catalog@finevines.biz" {
+		t.Errorf("MAIL FROM = %q, want normalized bare address", got)
+	}
+	m, err := mail.ReadMessage(strings.NewReader(srv.payload()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := m.Header.Get("From"); got != "FineVines <catalog@finevines.biz>" {
+		t.Errorf("From header = %q, want normalized address", got)
+	}
+}
+
 // A non-ASCII subject has to leave as an RFC 2047 encoded-word: raw UTF-8 in a
 // header is not legal mail, and relays that do not silently fix it up mangle the
 // producer's name in the client's inbox.

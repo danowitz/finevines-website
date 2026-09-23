@@ -8,7 +8,7 @@ import os
 import smtplib
 import ssl
 from email.message import EmailMessage
-from email.utils import parseaddr
+from email.utils import formataddr, parseaddr
 
 
 SEND_TIMEOUT_SECONDS = 30
@@ -25,10 +25,12 @@ def required(name: str) -> str:
 
 def address(name: str) -> tuple[str, str]:
     value = required(name)
-    _, envelope = parseaddr(value)
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        value = value[1:-1].strip()
+    display, envelope = parseaddr(value)
     if not envelope or "@" not in envelope:
         raise SystemExit(f"notify_failure: {name} is not a valid email address")
-    return value, envelope
+    return formataddr((display, envelope)), envelope
 
 
 def build_message() -> tuple[EmailMessage, str, str]:
