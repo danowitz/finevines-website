@@ -58,6 +58,7 @@
         {{if .PhotoPath}}<img src="/{{.PhotoPath}}" alt="Portrait of {{.Name}}">{{else}}<span class="team-monogram" aria-hidden="true">{{initials .Name}}</span>{{end}}
         <div class="name">{{.Name}}</div>
         <div class="role">{{.Role}}</div>
+        {{if .Territory}}<div class="territory"><span>Territory</span>{{.Territory}}</div>{{end}}
         <a class="email" href="mailto:{{.Email}}">{{.Email}}</a>
       </div>
       {{end}}

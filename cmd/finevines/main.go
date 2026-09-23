@@ -346,8 +346,9 @@ func runEnrich(cfg config.Config) error {
 }
 
 // mergeSalesforceTeam converts the authoritative Salesforce roster into the
-// website contract. PhotoPath and Note remain local presentation metadata and
-// survive a sync when either email or name still identifies the same person.
+// website contract. PhotoPath, Note, and Territory remain local presentation
+// metadata and survive a sync when either email or name still identifies the
+// same person.
 func mergeSalesforceTeam(users []salesforce.TeamUser, existing []model.TeamMember) []model.TeamMember {
 	byEmail := make(map[string]model.TeamMember, len(existing))
 	byName := make(map[string]model.TeamMember, len(existing))
@@ -369,6 +370,7 @@ func mergeSalesforceTeam(users []salesforce.TeamUser, existing []model.TeamMembe
 		}
 		member.PhotoPath = previous.PhotoPath
 		member.Note = previous.Note
+		member.Territory = previous.Territory
 		team = append(team, member)
 	}
 	return team

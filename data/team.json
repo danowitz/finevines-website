@@ -17,7 +17,8 @@
   {
     "name": "Daniel Pilkey",
     "role": "Sales Rep",
-    "email": "dan@finevines.com"
+    "email": "dan@finevines.com",
+    "territory": "Chicago"
   },
   {
     "name": "Frank Hofmann",
@@ -27,22 +28,26 @@
   {
     "name": "Heather Malpass",
     "role": "Sales Rep",
-    "email": "heather@finevines.com"
+    "email": "heather@finevines.com",
+    "territory": "Chicago"
   },
   {
     "name": "Richie Ribando",
     "role": "Sales Rep",
-    "email": "richie@finevines.com"
+    "email": "richie@finevines.com",
+    "territory": "Chicago"
   },
   {
     "name": "Tim Freehan",
     "role": "Sales Rep",
-    "email": "tim@finevines.com"
+    "email": "tim@finevines.com",
+    "territory": "North Shore"
   },
   {
     "name": "Trish Earley",
     "role": "Sales Rep",
-    "email": "trish@finevines.com"
+    "email": "trish@finevines.com",
+    "territory": "Western Suburbs"
   },
   {
     "name": "Barb Fultz",

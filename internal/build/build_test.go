@@ -671,6 +671,8 @@ func TestAboutPage(t *testing.T) {
 		`rel="canonical" href="https://finevines.com/about/"`,
 		"George Molitor",
 		"Founder &amp; President",
+		"Territory",
+		"Chicago",
 		// "The House" band: headline count is derived from team.json (two
 		// entries in testdata) via spellnum, never hardcoded copy.
 		"The House",

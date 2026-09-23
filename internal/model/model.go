@@ -240,6 +240,7 @@ type TeamMember struct {
 	Email     string `json:"email"`
 	PhotoPath string `json:"photoPath,omitempty"`
 	Note      string `json:"note,omitempty"`
+	Territory string `json:"territory,omitempty"`
 }
 
 // ContactInfo is the single source of truth for the public phone and email

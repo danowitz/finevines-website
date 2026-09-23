@@ -70,7 +70,7 @@ func TestMergeSalesforceTeamUsesRoleAndPreservesLocalPhotoMetadata(t *testing.T)
 	}
 	existing := []model.TeamMember{
 		{Name: "George Molitor", Email: "george@finevines.com", Role: "Founder & President", PhotoPath: "assets/img/team/george.jpg"},
-		{Name: "Dan Pilkey", Email: "dan@finevines.com", Role: "Sales", Note: "portrait requested"},
+		{Name: "Dan Pilkey", Email: "dan@finevines.com", Role: "Sales", Note: "portrait requested", Territory: "Chicago"},
 	}
 
 	got := mergeSalesforceTeam(users, existing)
@@ -80,7 +80,7 @@ func TestMergeSalesforceTeamUsesRoleAndPreservesLocalPhotoMetadata(t *testing.T)
 	if got[0].Role != "Executive" || got[0].PhotoPath != "assets/img/team/george.jpg" {
 		t.Fatalf("George = %#v", got[0])
 	}
-	if got[1].Name != "Daniel Pilkey" || got[1].Role != "Sales Rep" || got[1].Note != "portrait requested" {
+	if got[1].Name != "Daniel Pilkey" || got[1].Role != "Sales Rep" || got[1].Note != "portrait requested" || got[1].Territory != "Chicago" {
 		t.Fatalf("Daniel = %#v", got[1])
 	}
 }

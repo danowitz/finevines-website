@@ -922,6 +922,8 @@ section.wrap + section.wrap { border-top: 1px solid var(--line); padding-top: 60
 }
 .team-card .name { font-family: var(--serif-display); font-size: 23px; font-weight: 600; color: var(--ink-strong); line-height: 1.1; }
 .team-card .role { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--gold-dark); margin: 6px 0 12px; }
+.team-card .territory { font-family: var(--serif-text); font-size: 16px; color: var(--ink-700); line-height: 1.35; margin: -2px 0 14px; }
+.team-card .territory span { display: block; font-family: var(--sans); font-size: 9.5px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--vineyard-700); margin-bottom: 2px; }
 .team-card p { font-family: var(--serif-text); font-style: italic; font-size: 16px; color: var(--ink-700); line-height: 1.45; margin: 0 0 14px; max-width: none; }
 .team-card .email { font-family: var(--sans); font-size: 13px; color: var(--wine); border-top: 1px solid var(--line); padding-top: 12px; word-break: break-all; text-decoration: none; display: block; }
 @media (min-width: 1025px) {
