@@ -259,14 +259,14 @@ jobs:
       - name: Publish the test review package
         run: node tools/labelfetch/publish-review-package.mjs --environment test
 
-      # 10. Email the digest — only if the run changed something. Runs last so it
-      #    reports what actually shipped, and is NOT `if: always()`: a failed run
-      #    surfaces through GitHub's own workflow-failure email to the repo
-      #    owner. This email is for content changes, not CI health.
+      # 10. Email the digest — only if the run changed something. It reports what
+      #     actually shipped and is NOT `if: always()`: this email is for content
+      #     changes, not CI health. The independent failure-alert job owns CI
+      #     health and does not depend on this binary having built successfully.
       #
       #    DO NOT USE "Re-run failed jobs" ONCE THE COMMIT-BACK HAS LANDED.
-      #    This is the only step after it, so the failure that sends you to the
-      #    re-run button is usually this one — and a re-run is silently wrong.
+      #    This is the last success-path step, so the failure that sends you to
+      #    the re-run button is usually this one — and a re-run is silently wrong.
       #    A re-run checks out a master that ALREADY contains the bot commit, so
       #    the snapshot above captures the AFTER state, Diff finds nothing,
       #    notify takes its quiet "changed nothing" path and the job goes green
@@ -280,3 +280,32 @@ jobs:
       #    (Runbook: docs/operations.md, per Task 9.)
       - name: Send the digest
         run: ./finevines notify -before .run/wines-before.json -applied .run/queue-applied.json
+
+  # CI health is intentionally separate from the content digest and from the
+  # publisher job itself. A dependent job still starts when the publisher fails
+  # or reaches its job timeout. Python's standard library keeps the alert
+  # independent of the FineVines binary and npm dependencies, either of which
+  # may be the failed component.
+  alert-on-failure:
+    needs: run
+    if: ${{ always() && needs.run.result == 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      FINEVINES_SMTP_HOST: ${{ secrets.FINEVINES_SMTP_HOST }}
+      FINEVINES_SMTP_PORT: ${{ secrets.FINEVINES_SMTP_PORT }}
+      FINEVINES_SMTP_USER: ${{ secrets.FINEVINES_SMTP_USER }}
+      FINEVINES_SMTP_PASS: ${{ secrets.FINEVINES_SMTP_PASS }}
+      FINEVINES_NOTIFY_FROM: ${{ secrets.FINEVINES_NOTIFY_FROM }}
+      FINEVINES_FAILURE_NOTIFY_TO: joel@gritautomation.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Send a production failure alert
+        run: python tools/pipeline/notify_failure.py

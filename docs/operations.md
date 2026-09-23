@@ -60,15 +60,18 @@ The hosted image-review click path is local and deterministic; it makes no AI ca
 **Bottle-image search** — used by the automated image-discovery stage:
 - `FINEVINES_BRAVE_SEARCH_KEY` — Brave Image Search API key for the independent image index.
 
-**Mail relay (SMTP)** — needed only for `notify`, the nightly digest email. Not used by anything you run by
-hand. FineVines sends through smtp.com's relay; these come from that account:
+**Mail relay (SMTP)** — used by `notify` for the nightly content digest and by the
+pipeline's independent failure alert. FineVines sends through smtp.com's relay;
+these come from that account:
 - `FINEVINES_SMTP_HOST` — the relay's submission host.
 - `FINEVINES_SMTP_PORT` — `587` for STARTTLS (the usual one) or `465` for implicit TLS. Either way the
   connection is encrypted before the password is sent; a relay that will not encrypt fails the send.
 - `FINEVINES_SMTP_USER` / `FINEVINES_SMTP_PASS` — the relay's SMTP credentials.
-- `FINEVINES_NOTIFY_FROM` — the address the digest is sent from. It has to be one the relay is authorised to
-  send for (SPF/DKIM), and a mailbox someone reads: the digest invites a reply when a bottle photo looks wrong.
-- `FINEVINES_NOTIFY_TO` — who gets the digest, comma-separated.
+- `FINEVINES_NOTIFY_FROM` — the address both kinds of email are sent from. It has
+  to be one the relay is authorised to send for (SPF/DKIM), and a mailbox
+  someone reads: the digest invites a reply when a bottle photo looks wrong.
+- `FINEVINES_NOTIFY_TO` — who gets the digest, comma-separated. Pipeline-failure
+  alerts use the separately fixed operations recipient, `joel@gritautomation.com`.
 
 **Bunny.net (hosting)** — needed for `deploy`, and for the "publish now" option in the two Claude skills. All
 of these come from the Bunny.net account dashboard once FineVines has a Bunny.net account set up:
@@ -353,9 +356,11 @@ the password, not the unlinked hostname, is the access control.
 ### Where to look
 - **Actions tab → `pipeline`** for runs. `gh run list --workflow=pipeline.yml`
   from a terminal; `gh run view <id> --log` for the full log.
-- A failed run emails the repo owner automatically (GitHub's own notification).
-  The digest email is for content changes, not CI health — the two are separate
-  on purpose.
+- A failed run sends a dedicated SMTP alert to `joel@gritautomation.com`, with
+  the branch, commit, trigger, attempt number, and a direct link to the run.
+  GitHub may also email repository watchers according to their personal
+  notification settings. The digest email remains success-only because it
+  reports content that actually shipped.
 
 ### Triggering a run by hand
 ```
@@ -405,6 +410,11 @@ Step by step:
   a `550` naming a recipient means that address in `FINEVINES_NOTIFY_TO` was
   refused. A STARTTLS complaint means the port is wrong — 587 and 465 negotiate
   TLS differently, and the send refuses to fall back to cleartext.
+- **failure alert failed** — the primary run failure is still visible in GitHub
+  Actions, and the alert step's own error identifies the missing setting or SMTP
+  rejection. The alert uses the same relay credentials and
+  `FINEVINES_NOTIFY_FROM` as the digest, but always sends only to
+  `joel@gritautomation.com`.
 
 ### Review action recovery
 Normally there is nothing to do. Check `_review/<environment>/pending/` and the
