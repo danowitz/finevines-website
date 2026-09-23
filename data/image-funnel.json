@@ -15105,12 +15105,12 @@
   "ok": false,
   "failureStage": "download",
   "failureCode": "",
-  "reason": "only 1 of 7 candidates downloaded",
+  "reason": "only 1 of 1 candidates downloaded",
   "funnel": {
    "searchResults": 15,
-   "sourcePolicyBlocked": 8,
-   "permittedCandidates": 7,
-   "downloadAttempted": 7,
+   "sourcePolicyBlocked": 14,
+   "permittedCandidates": 1,
+   "downloadAttempted": 1,
    "downloaded": 1,
    "decodedImages": 0,
    "bottleShapePassed": 0,
@@ -15130,9 +15130,9 @@
    "labelModel": "gpt-4.1-nano",
    "labelReasoningEffort": "",
    "providerResults": [],
-   "initialWindowCandidates": 7,
+   "initialWindowCandidates": 1,
    "extensionWindowCandidates": 0,
-   "downloadHttpFailures": 6,
+   "downloadHttpFailures": 0,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
    "downloadConversionFailures": 0,
@@ -15141,7 +15141,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-09-23T05:15:48.739Z"
+  "updatedAt": "2026-09-23T08:40:32.751Z"
  },
  "elizabeth-rose-chockablock-napa-valley-red-blend-2023": {
   "slug": "elizabeth-rose-chockablock-napa-valley-red-blend-2023",
@@ -102647,7 +102647,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-09-23T05:15:26.085Z"
+  "updatedAt": "2026-09-23T08:40:30.967Z"
  },
  "collotte-domaine-collotte-gevrey-chambertin-les-evocelles-2020": {
   "slug": "collotte-domaine-collotte-gevrey-chambertin-les-evocelles-2020",
@@ -178558,7 +178558,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-09-23T05:15:26.085Z"
+  "updatedAt": "2026-09-23T08:40:30.967Z"
  },
  "domaine-arnoux-lachaux-romanee-saint-vivant-2022": {
   "slug": "domaine-arnoux-lachaux-romanee-saint-vivant-2022",

@@ -4119,7 +4119,7 @@
       "mode": "generated",
       "fingerprint": "8f99ffd5662cb0814382a8b1d62090f3c32587ee2d6830a0b9a059097711cf90",
       "retryFingerprint": "8f99ffd5662cb0814382a8b1d62090f3c32587ee2d6830a0b9a059097711cf90",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/alicante-bouschet\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4139,8 +4139,8 @@
       "mode": "generated",
       "fingerprint": "485e92fd8817d703889ef724f50bcc3d55701914d075a680f617df9ee9efffe4",
       "retryFingerprint": "485e92fd8817d703889ef724f50bcc3d55701914d075a680f617df9ee9efffe4",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/alvarinho\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "research JSON has 213 words; expected 120 to 190"
     },
     {
       "kind": "varietal",
@@ -4148,9 +4148,23 @@
       "name": "Arinto",
       "mode": "generated",
       "fingerprint": "52b8f3925e2fee37c5fec852a41a304037e19d99ec749d442daf2093d9b0ef21",
-      "retryFingerprint": "52b8f3925e2fee37c5fec852a41a304037e19d99ec749d442daf2093d9b0ef21",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/arinto\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Varietal Spotlight",
+      "heading": "Arinto from Alentejo",
+      "paragraphs": [
+        "Arinto, also known as Pedernã, is a white Portuguese grape known for its high natural acidity and adaptability across the country. It is celebrated for producing wines with crisp citrus and green apple notes and a mineral edge. In cooler northern regions like Bucelas and Vinho Verde, Arinto contributes fine, elegant wines with aging potential. In hotter climates such as Alentejo, the variety brings structure, freshness, and longevity, often serving as a balancing component in blends or standing on its own in white bottlings ([winesofportugal.com](https://winesofportugal.com/documents/173/BROCHURA_EN_2022_01_WEB.pdf?utm_source=openai)).",
+        "In Alentejo, Arinto thrives as a versatile partner to richer local grapes. It is one of the most widely planted white varieties across sub‑regions such as Borba, Portalegre, Évora, Moura, Vidigueira, Reguengos, Redondo, and Granja‑Amareleja. There it contributes crisp freshness and balance to blends, leveraging its natural acidity to enliven wines from a warm terroir. Its adaptability makes it friendly to both grower and winemaker looking for consistency and vivacity in warm climates ([diariodoalentejo.pt](https://diariodoalentejo.pt/pt/etc/14530/arinto-frescura-atlantica-no-alentejo.aspx?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Wines of Portugal brochure (Arinto details)",
+          "url": "https://winesofportugal.com/documents/173/BROCHURA_EN_2022_01_WEB.pdf"
+        },
+        {
+          "label": "CVRVV (Vinho Verde official) on Arinto",
+          "url": "https://viticultura.cvrvv.pt/en/1-4-5/history-of-the-region/"
+        }
+      ],
+      "reviewedAt": "2026-09-23"
     },
     {
       "kind": "varietal",
@@ -4203,7 +4217,7 @@
       "mode": "generated",
       "fingerprint": "9176daf9e5d718a551811c820ffbc3a3f6996b989ab807800158742402e4bc85",
       "retryFingerprint": "9176daf9e5d718a551811c820ffbc3a3f6996b989ab807800158742402e4bc85",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/blanc\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4232,9 +4246,35 @@
       "name": "Cabernet Blend",
       "mode": "generated",
       "fingerprint": "5154b500ba53a54bb1d2a86339f7e37e206720b28f2da6ee5464cf88753daf0f",
-      "retryFingerprint": "5154b500ba53a54bb1d2a86339f7e37e206720b28f2da6ee5464cf88753daf0f",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/cabernet-blend\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Varietal Focus",
+      "heading": "Understanding Cabernet Blend in the Context of Pritchard Hill",
+      "paragraphs": [
+        "Cabernet blend is not a single grape variety but a style of red wine built around Cabernet Sauvignon often complemented by other grapes to shape structure, aromatics, and texture. In the United States, wines labeled Cabernet Sauvignon must contain at least 75 percent of that grape, meaning blends carry intention beyond varietal purity. FineVines Cabernet blends typically highlight the backbone of Cabernet with supporting varieties that bring balance and nuance, following practices seen in Meritage and Bordeaux‑style blends ([sequanavineyards.com](https://sequanavineyards.com/cellar/understanding-grape-varieties/?utm_source=openai)).",
+        "Pritchard Hill, though not an officially recognized appellation, is a high‑elevation viticultural zone in Napa Valley renowned for its steep terrain, rocky soils, and consistent winery quality. These conditions favor Cabernet‑based blends marked by depth, structure, and concentrated cherry and cassis fruit. It shares borders with Howell Mountain, Oakville, Stags Leap and Chiles Valley and has a distinctive terroir that producers use to elevate their Cabernet blends both in intensity and aging potential ([ovidnapavalley.com](https://ovidnapavalley.com/pages/place?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Sequana Vineyards on US varietal labeling rules",
+          "url": "https://sequanavineyards.com/cellar/understanding-grape-varieties/"
+        },
+        {
+          "label": "Vinerra on Cabernet Sauvignon blends",
+          "url": "https://www.vinerra.com/education/grapes/cabernet-sauvignon-in-depth-grape-varietal-profile"
+        },
+        {
+          "label": "Decanter explanation of Bordeaux‑style blends",
+          "url": "https://www.decanter.com/learn/advice/what-is-in-a-bordeaux-blend-51789/"
+        },
+        {
+          "label": "OVID Napa Valley on Pritchard Hill terroir",
+          "url": "https://ovidnapavalley.com/pages/place"
+        },
+        {
+          "label": "Wine Enthusiast on Pritchard Hill’s reputation",
+          "url": "https://www.wineenthusiast.com/culture/wine/pinning-down-pritchard-hill/"
+        }
+      ],
+      "reviewedAt": "2026-09-23"
     },
     {
       "kind": "varietal",
@@ -4243,7 +4283,7 @@
       "mode": "generated",
       "fingerprint": "cdd8ca40be0024acf72c2728c306b658c711c502bec8c9aa982a2c926290e9e6",
       "retryFingerprint": "cdd8ca40be0024acf72c2728c306b658c711c502bec8c9aa982a2c926290e9e6",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/cabernet-franc\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4253,7 +4293,7 @@
       "mode": "generated",
       "fingerprint": "0ccda35b6b7c7b185e858e6ef840e9ac4eb8f47c78a644734618e838c2fc14f8",
       "retryFingerprint": "0ccda35b6b7c7b185e858e6ef840e9ac4eb8f47c78a644734618e838c2fc14f8",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/cabernet-malbec\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4293,8 +4333,8 @@
       "mode": "generated",
       "fingerprint": "4c9059e6f51ba3ef6d14601ff61df934bd2c6223712534899c46218c5243ec8b",
       "retryFingerprint": "4c9059e6f51ba3ef6d14601ff61df934bd2c6223712534899c46218c5243ec8b",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/cabernet-syrah\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "collection editorial \"varietal/cabernet-syrah\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4303,7 +4343,7 @@
       "mode": "generated",
       "fingerprint": "eeed02ef0efe73f9750a32c61c569240857312fbf94da1488db4924968a1dfa2",
       "retryFingerprint": "eeed02ef0efe73f9750a32c61c569240857312fbf94da1488db4924968a1dfa2",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/carignane\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4384,8 +4424,8 @@
       "mode": "generated",
       "fingerprint": "b4bea712b8db4f95136dd20fbe45c711bfae033aacc32a1339582720af7245d9",
       "retryFingerprint": "b4bea712b8db4f95136dd20fbe45c711bfae033aacc32a1339582720af7245d9",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/cortese\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "collection editorial \"varietal/cortese\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4394,7 +4434,7 @@
       "mode": "generated",
       "fingerprint": "4fe254cda2d9871678c25e19f55a354e2d6a4ffa5b85fbcfc265471988bec88f",
       "retryFingerprint": "4fe254cda2d9871678c25e19f55a354e2d6a4ffa5b85fbcfc265471988bec88f",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/erbaluce\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4404,8 +4444,8 @@
       "mode": "generated",
       "fingerprint": "ea2dadbd619de78320efa33a99267f78a7f60a80f4109e3b9e41b2fee7ce149e",
       "retryFingerprint": "ea2dadbd619de78320efa33a99267f78a7f60a80f4109e3b9e41b2fee7ce149e",
-      "retryAfter": "2026-09-16",
-      "lastError": "research JSON has 115 words; expected 120 to 190"
+      "retryAfter": "2026-10-23",
+      "lastError": "collection editorial \"varietal/fernao-pires\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4457,9 +4497,23 @@
       "name": "Garnacha",
       "mode": "generated",
       "fingerprint": "335bdf36a0e2337e0b663be3a962eaa2d183d689d9710c46370433b17672d836",
-      "retryFingerprint": "335bdf36a0e2337e0b663be3a962eaa2d183d689d9710c46370433b17672d836",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/garnacha\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Spanish Garnacha from Calatayud and Campo de Borja",
+      "heading": "Exploring Spanish Garnacha in Calatayud and Campo de Borja",
+      "paragraphs": [
+        "Garnacha, known in its French-grown cousin as Grenache, finds one of its most authentic homes in northeastern Spain, especially in Aragón. It almost certainly originates here, and thrives in denominations like Calatayud and Campo de Borja within this region ([wsetglobal.com](https://www.wsetglobal.com/knowledge-centre/blog/2021/september/14/understanding-grapes-spotlight-on-grenache?utm_source=openai)). In Calatayud, Garnacha tinta represents over half the vineyard plantings (about 1,730 hectares) and often comes from old vines, sometimes over 45 or 50 years old ([calatayudwine.com](https://www.calatayudwine.com/calatayud-wine/?utm_source=openai)). These vines flourish on steep slopes with limestone and slate soils at high elevation, giving wines rich concentration, fleshy structure, and mineral complexity ([calatayud.es](https://www.calatayud.es/turismo/ficha_visitar/denominacion-de-origen-calatayud?utm_source=openai)).",
+        "Campo de Borja, often called the ‘Empire of Garnacha,’ covers several thousand hectares dedicated to this variety and benefits from a continental climate with hot summers, cold winters, and breezes that reduce disease pressure ([docampodeborja.com](https://docampodeborja.com/en/?utm_source=openai)). Soils and elevation vary within the area, yielding powerful, aromatic Garnacha wines at lower altitude and more elegant, refined expressions from higher ground ([garnachagrenache.com](https://garnachagrenache.com/wp-content/uploads/2023/11/Press-Dossier-2023-V2.pdf?utm_source=openai)). FineVines’ selection, featuring Acentor from Calatayud and Legado de Moncayo from Campo de Borja, reflects the characteristic terroirs of both regions, giving buyers access to Garnacha of distinct personality and regional expression."
+      ],
+      "sources": [
+        {
+          "label": "Calatayud DO - official DOP description",
+          "url": "https://www.calatayud.es/turismo/ficha_visitar/denominacion-de-origen-calatayud"
+        },
+        {
+          "label": "Campo de Borja DO official site",
+          "url": "https://docampodeborja.com/en/"
+        }
+      ],
+      "reviewedAt": "2026-09-23"
     },
     {
       "kind": "varietal",
@@ -4468,7 +4522,7 @@
       "mode": "generated",
       "fingerprint": "d594b92ff2f1dfeb17a14c367724fcdc03d857b5e8c3f12710ff399ef7bb1b23",
       "retryFingerprint": "d594b92ff2f1dfeb17a14c367724fcdc03d857b5e8c3f12710ff399ef7bb1b23",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/garnacha-blanca\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4478,7 +4532,7 @@
       "mode": "generated",
       "fingerprint": "c3e2bf59cee498ed0153c0ad82f31e4d7c81878e73715b848bbed2edb10ae8a0",
       "retryFingerprint": "c3e2bf59cee498ed0153c0ad82f31e4d7c81878e73715b848bbed2edb10ae8a0",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/garnacha-carinena\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4508,8 +4562,8 @@
       "mode": "generated",
       "fingerprint": "46f3bf585afab82a64437203a150536ff28620eaedce2023803bcedc5cd30feb",
       "retryFingerprint": "46f3bf585afab82a64437203a150536ff28620eaedce2023803bcedc5cd30feb",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/grenache-pur\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "research JSON must contain exactly two paragraphs"
     },
     {
       "kind": "varietal",
@@ -4528,7 +4582,7 @@
       "mode": "generated",
       "fingerprint": "7d96e298c9df4c5799f085545efd68e0dbe1da50ee57adf94545e0c3682721c3",
       "retryFingerprint": "7d96e298c9df4c5799f085545efd68e0dbe1da50ee57adf94545e0c3682721c3",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/macabeo\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4578,7 +4632,7 @@
       "mode": "generated",
       "fingerprint": "d9a17802d62c9499d5b849b6dd7bac5f7aea0e16988d81445912185b2739f0d1",
       "retryFingerprint": "d9a17802d62c9499d5b849b6dd7bac5f7aea0e16988d81445912185b2739f0d1",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/macabeo-xarello\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4598,7 +4652,7 @@
       "mode": "generated",
       "fingerprint": "d6bfaf949333d3b267e4e4f19283b67e16de415c46a5e536b464a69c8c3d45e3",
       "retryFingerprint": "d6bfaf949333d3b267e4e4f19283b67e16de415c46a5e536b464a69c8c3d45e3",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/malvasia-bianca\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4617,9 +4671,23 @@
       "name": "Marsanne",
       "mode": "generated",
       "fingerprint": "7635dd9c5a730919348881b70f210ab7051d5e44361599bfe505f2e7314d7706",
-      "retryFingerprint": "7635dd9c5a730919348881b70f210ab7051d5e44361599bfe505f2e7314d7706",
-      "retryAfter": "2026-09-18",
-      "lastError": "collection editorial \"varietal/marsanne\" source label contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Discover Marsanne",
+      "heading": "Marsanne: Textural Rh ô ne White with Staying Power",
+      "paragraphs": [
+        "Marsanne is a white wine grape most closely identified with France’s Northern Rhône Valley, where it plays a central role in the white wines of Hermitage, Crozes‑Hermitage, Saint‑Joseph, and Saint‑Péray. It is prized for body and texture rather than overt perfume, offering a medium‑to full‑bodied palate with moderate to low acidity. The wines often carry notes of pear, quince, almond, beeswax, and honey, gradually gaining nutty, honeyed and savoury complexity with time in bottle. Marsanne often partners with Roussanne, which brings aromatic lift and freshness to the blend. These characteristics help Marsanne make quietly persuasive wines that carry both weight and graceful evolution. ([en.wikipedia.org](https://en.wikipedia.org/wiki/Marsanne?utm_source=openai))",
+        "If you explore FineVines’ current selections under Marsanne, you will find wines reflecting this grape’s architectural strength and ageing ability. Seek producers whose wines highlight Marsanne’s quietly textural profile and slow‑building flavour depth. These selections serve as excellent introductions to wines that favor harmony of structure, subtle fruit, and the slow transformation that patience rewards."
+      ],
+      "sources": [
+        {
+          "label": "Wikipedia on Marsanne",
+          "url": "https://en.wikipedia.org/wiki/Marsanne"
+        },
+        {
+          "label": "Ampelique Grape Profile: Marsanne",
+          "url": "https://ampelique.com/grape-profile/marsanne"
+        }
+      ],
+      "reviewedAt": "2026-09-23"
     },
     {
       "kind": "varietal",
@@ -4656,8 +4724,8 @@
       "mode": "generated",
       "fingerprint": "cb3b009a4fbdadee1bec471c8b0533a659b91499d99e8311d3bff3f94f5d66eb",
       "retryFingerprint": "cb3b009a4fbdadee1bec471c8b0533a659b91499d99e8311d3bff3f94f5d66eb",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/merlot\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "collection editorial \"varietal/merlot\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4666,8 +4734,8 @@
       "mode": "generated",
       "fingerprint": "24e16484f28256f978b2d2b04e9fa29d24d7f8771fd4394b98187581f5d330fc",
       "retryFingerprint": "24e16484f28256f978b2d2b04e9fa29d24d7f8771fd4394b98187581f5d330fc",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/merlot-cab\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "research JSON has 118 words; expected 120 to 190"
     },
     {
       "kind": "varietal",
@@ -4676,7 +4744,7 @@
       "mode": "generated",
       "fingerprint": "530dd294ad614647fc6d0a3d04ee28b4be9b4dfbfb1e76fdfddf951abb92633e",
       "retryFingerprint": "530dd294ad614647fc6d0a3d04ee28b4be9b4dfbfb1e76fdfddf951abb92633e",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/merlot-cabernet-franc\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4686,8 +4754,8 @@
       "mode": "generated",
       "fingerprint": "9c261f511af9d9ceb67c12ac8490dddc0b0765c284ff80c6f3fc6ab400fc9d51",
       "retryFingerprint": "9c261f511af9d9ceb67c12ac8490dddc0b0765c284ff80c6f3fc6ab400fc9d51",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/merlot-petit-verdot\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "research JSON has 202 words; expected 120 to 190"
     },
     {
       "kind": "varietal",
@@ -4696,7 +4764,7 @@
       "mode": "generated",
       "fingerprint": "0528bb5ad48ad012d5024bc538f35ecbfe622408fc89dce4b10330653eacf05e",
       "retryFingerprint": "0528bb5ad48ad012d5024bc538f35ecbfe622408fc89dce4b10330653eacf05e",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/monastrell\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4706,7 +4774,7 @@
       "mode": "generated",
       "fingerprint": "53af0bf8d24cd5bc9d740c927531a5ea061fb08a17d6700cf818b070973c5274",
       "retryFingerprint": "53af0bf8d24cd5bc9d740c927531a5ea061fb08a17d6700cf818b070973c5274",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/montepulciano-sangiovese\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4726,8 +4794,8 @@
       "mode": "generated",
       "fingerprint": "94e46350f94d35cb4c934f6c066a638a5d0bbf73b9d49315ad92d1f00e65eebd",
       "retryFingerprint": "94e46350f94d35cb4c934f6c066a638a5d0bbf73b9d49315ad92d1f00e65eebd",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/moscatel-galego\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "collection editorial \"varietal/moscatel-galego\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4746,8 +4814,8 @@
       "mode": "generated",
       "fingerprint": "6b2ba08f1f00a17ddf2e3983ebfc038f484c03a12a71c2c913a4c0d235e64594",
       "retryFingerprint": "6b2ba08f1f00a17ddf2e3983ebfc038f484c03a12a71c2c913a4c0d235e64594",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/n-a\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "json: cannot unmarshal string into Go struct field Draft.paragraphs of type []string"
     },
     {
       "kind": "varietal",
@@ -4766,8 +4834,8 @@
       "mode": "generated",
       "fingerprint": "55bc410de29562ecdc07922c518f481aa2197a9076511f8c93e1b550d8f1ccb7",
       "retryFingerprint": "55bc410de29562ecdc07922c518f481aa2197a9076511f8c93e1b550d8f1ccb7",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/pinot-blanc\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "collection editorial \"varietal/pinot-blanc\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4775,9 +4843,27 @@
       "name": "Pinot Gris",
       "mode": "generated",
       "fingerprint": "e22f1d92bcf30a793a9e977c401f5caf3e531a9828e2dc059e195b2770009388",
-      "retryFingerprint": "e22f1d92bcf30a793a9e977c401f5caf3e531a9828e2dc059e195b2770009388",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/pinot-gris\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Varietal Focus",
+      "heading": "Pinot Gris from the Wachau with Hirtzberger",
+      "paragraphs": [
+        "Pinot Gris is a mutation of Pinot Noir, recognized by its grayish to copper-hued berries. The grape has medieval origins in Burgundy and journeyed across Europe, adapting to terroirs from Alsace to Austria. It supports styles ranging from crisp and refreshing to richly textured and even off-dry expressions. It typically offers aromas of pear, apple, peach, and more exotic notes depending on ripeness and vinification. Cooler climates favor bright fruit and acidity, while warmer, late-harvest picking brings depth, oily mouthfeel, and honeyed complexity. This versatility makes Pinot Gris a compelling canvas for regional character.",
+        "Hirtzberger’s single Pinot Gris offering from the Wachau brings that expressive power into an Austrian context. The Wachau region, shaped by steep Danube terraces, stony soils, and a mix of cooling and moderating air currents, is better known for Grüner Veltliner and Riesling, yet when Pinot Gris is cultivated here, the expressive framework of Wachau clarity and minerality meets the grape’s inherent texture and fruit spectrum. Though modest in quantity, Hirtzberger’s expression can reflect the focused precision of Wachau while offering Pinot Gris’s fuller-bodied, aromatic potential."
+      ],
+      "sources": [
+        {
+          "label": "Wikipedia on Pinot Gris origin and styles",
+          "url": "https://en.wikipedia.org/wiki/Pinot_gris"
+        },
+        {
+          "label": "WineFolly on Pinot Gris varietal profile",
+          "url": "https://winefolly.com/grapes/pinot-gris/"
+        },
+        {
+          "label": "Official Wachau region description",
+          "url": "https://www.wachauwines.at/en/regions/wachau"
+        }
+      ],
+      "reviewedAt": "2026-09-23"
     },
     {
       "kind": "varietal",
@@ -4796,8 +4882,8 @@
       "mode": "generated",
       "fingerprint": "ea0e352946dbc440669ca05a3c9653d30abaf64e531516904c64211c9206de0e",
       "retryFingerprint": "ea0e352946dbc440669ca05a3c9653d30abaf64e531516904c64211c9206de0e",
-      "retryAfter": "2026-09-16",
-      "lastError": "research JSON has 199 words; expected 120 to 190"
+      "retryAfter": "2026-10-23",
+      "lastError": "invalid character ':' after array element"
     },
     {
       "kind": "varietal",
@@ -4829,9 +4915,31 @@
       "name": "Red Blend",
       "mode": "generated",
       "fingerprint": "b9f27954703dec5d42bc6c13e46f695f24b6a92d5826dcf8b984a13e96d9e23c",
-      "retryFingerprint": "b9f27954703dec5d42bc6c13e46f695f24b6a92d5826dcf8b984a13e96d9e23c",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/red-blend\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Varietal Insight",
+      "heading": "Understanding Red Blend",
+      "paragraphs": [
+        "Red Blend does not indicate a single grape but rather a thoughtful combination of two or more red varieties, blended to create balance in structure, aroma, acidity, and tannin. Winemakers choose to blend because blending allows them to tailor a wine’s balance and flavor profile in ways a single varietal cannot achieve. In New World regions like Argentina, this freedom fosters creative and expressive wine styles. (A red blend is a wine made from more than one red grape variety)([sooscreekwine.com](https://www.sooscreekwine.com/blogs/news/what-are-red-blends-wine?utm_source=openai))",
+        "In Mendoza, blending is a long‑standing practice rooted in Bordeaux tradition, where Malbec often forms the core of blends, complemented by Cabernet Sauvignon, Cabernet Franc, or Petit Verdot to add structure, depth, and complexity. These blends reflect Mendoza’s high‑altitude vineyards, warm days, and cool nights, which favor ripe fruit with freshness and moderate tannins. In Israel’s Golan Heights, a sub‑region of Galilee at high elevation with basaltic soils, red blends benefit from pronounced diurnal shifts and mineral‑rich soils that lend clarity and tension to the finished wine.([winesaint.com](https://www.winesaint.com/regions/argentina/mendoza?utm_source=openai))"
+      ],
+      "sources": [
+        {
+          "label": "Soos Creek Wine Cellars (what is a red blend)",
+          "url": "https://www.sooscreekwine.com/blogs/news/what-are-red-blends-wine"
+        },
+        {
+          "label": "Bonterra Organic Estates (what is a red blend)",
+          "url": "https://www.bonterra.com/blog/what-is-a-red-blend-wine-understanding-its-unique-characteristics"
+        },
+        {
+          "label": "Mendoza blending practices",
+          "url": "https://www.winesaint.com/regions/argentina/mendoza"
+        },
+        {
+          "label": "Israel wine regions and Golan Heights terroir",
+          "url": "https://en.wikipedia.org/wiki/Israeli_wine"
+        }
+      ],
+      "reviewedAt": "2026-09-23"
     },
     {
       "kind": "varietal",
@@ -4850,8 +4958,8 @@
       "mode": "generated",
       "fingerprint": "237012a3057788b19b75d774ea5010aa70cf612037993d5ba50fb5da30b3ae6a",
       "retryFingerprint": "237012a3057788b19b75d774ea5010aa70cf612037993d5ba50fb5da30b3ae6a",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/riesling-gruner-veltliner\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "invalid character '[' looking for beginning of object key string"
     },
     {
       "kind": "varietal",
@@ -4870,8 +4978,8 @@
       "mode": "generated",
       "fingerprint": "81cec34fdeb96f2436f8de2040f5973594a807087ea6f89faf4465ebbaa86406",
       "retryFingerprint": "81cec34fdeb96f2436f8de2040f5973594a807087ea6f89faf4465ebbaa86406",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/sangiovese-barbera\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "research JSON must contain exactly two paragraphs"
     },
     {
       "kind": "varietal",
@@ -4880,7 +4988,7 @@
       "mode": "generated",
       "fingerprint": "260b26872b231fb7386f47994978bfaf504cf25a586b3c454a84903d511c7abb",
       "retryFingerprint": "260b26872b231fb7386f47994978bfaf504cf25a586b3c454a84903d511c7abb",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/sangiovese-cabernet-merlot\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4910,7 +5018,7 @@
       "mode": "generated",
       "fingerprint": "a0de5f834b69782bda8b72653273f16bbf9a6c2c4adb5441b55f57357eb6342f",
       "retryFingerprint": "a0de5f834b69782bda8b72653273f16bbf9a6c2c4adb5441b55f57357eb6342f",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/savagnin\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4919,9 +5027,23 @@
       "name": "Semillon",
       "mode": "generated",
       "fingerprint": "502cc7ad26d23487c9ec0acc6d3788cf2879e2d4b55f1d8ff52b8a287548d233",
-      "retryFingerprint": "502cc7ad26d23487c9ec0acc6d3788cf2879e2d4b55f1d8ff52b8a287548d233",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/semillon\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Varietal Focus",
+      "heading": "Semillon in FineVines’ Portfolio",
+      "paragraphs": [
+        "Semillon is a historically rooted white grape variety originating in Bordeaux. In France it plays a central role in both rich, botrytised sweet wines from Sauternes, Barsac and Bergerac, and also as a textural component in drier white blends, often partnered with Sauvignon Blanc ([bordeaux.com](https://www.bordeaux.com/en/grape-varieties/semillon/?utm_source=openai)). Its thin skin and early ripening predispose it to noble rot, making it especially suited to concentrated sweet styles, while its naturally low acidity and waxy texture provide ageworthiness even when bottled dry ([somepractice.com](https://www.somepractice.com/learn/wine/varietals/semillon?utm_source=openai)).",
+        "Australia has embraced Semillon as a second homeland, notably in the Hunter Valley and Riverina. The Riverina is known for botrytised dessert styles, while Hunter Valley is celebrated for lean, early-picked dry expressions that transform over time into nutty, honeyed complexity with remarkable longevity ([wineaustralia.com](https://www.wineaustralia.com/market-insights/regions-and-varieties/semillon?utm_source=openai)). In the Bergerac area, including the sample Hecquet wine, Semillon supports both dry and sweet traditions, while De Bortoli’s Riverina expression brings out the vineyard’s botrytised potential, aligning directly with FineVines’ holdings."
+      ],
+      "sources": [
+        {
+          "label": "Bordeaux official grape profile",
+          "url": "https://www.bordeaux.com/en/grape-varieties/semillon"
+        },
+        {
+          "label": "Wine Folly Semillon guide",
+          "url": "https://winefolly.com/grapes/semillon"
+        }
+      ],
+      "reviewedAt": "2026-09-23"
     },
     {
       "kind": "varietal",
@@ -4930,7 +5052,7 @@
       "mode": "generated",
       "fingerprint": "b42c384a12292c0f08d5bf93a88d6fee17be000dbf744e6640bb578d16cdcf17",
       "retryFingerprint": "b42c384a12292c0f08d5bf93a88d6fee17be000dbf744e6640bb578d16cdcf17",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/semillon-sauvignon\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4964,7 +5086,7 @@
       "mode": "generated",
       "fingerprint": "7c9eff15bac29151346e04fb37658b5c45adf097186b2ea390e59a72a84edff0",
       "retryFingerprint": "7c9eff15bac29151346e04fb37658b5c45adf097186b2ea390e59a72a84edff0",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/sercialinho\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4974,7 +5096,7 @@
       "mode": "generated",
       "fingerprint": "d8fa50b548da3c9d42821aa1ceb87937c16c9a121372228d1bb414796b74637a",
       "retryFingerprint": "d8fa50b548da3c9d42821aa1ceb87937c16c9a121372228d1bb414796b74637a",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/shiraz\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5030,8 +5152,8 @@
       "mode": "generated",
       "fingerprint": "7c3b81a0073d4ba00f3cb7beabdaa005f15f1b0abb1c730f5b0ff275322f3d20",
       "retryFingerprint": "7c3b81a0073d4ba00f3cb7beabdaa005f15f1b0abb1c730f5b0ff275322f3d20",
-      "retryAfter": "2026-09-16",
-      "lastError": "research JSON has 203 words; expected 120 to 190"
+      "retryAfter": "2026-10-23",
+      "lastError": "research JSON has 202 words; expected 120 to 190"
     },
     {
       "kind": "varietal",
@@ -5050,7 +5172,7 @@
       "mode": "generated",
       "fingerprint": "1cc66d8ae6d7803e16878ee57425f2d02c11371df6e38ec4c9aeb79b0f285c1e",
       "retryFingerprint": "1cc66d8ae6d7803e16878ee57425f2d02c11371df6e38ec4c9aeb79b0f285c1e",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/tempranillo-cabernet\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5060,8 +5182,8 @@
       "mode": "generated",
       "fingerprint": "2c9da8bd7869c52f3311814826cbfab91f21d77810fb796ea56ac7644c594a27",
       "retryFingerprint": "2c9da8bd7869c52f3311814826cbfab91f21d77810fb796ea56ac7644c594a27",
-      "retryAfter": "2026-09-16",
-      "lastError": "invalid character ':' after array element"
+      "retryAfter": "2026-10-23",
+      "lastError": "collection editorial \"varietal/tempranillo-macabeo\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -5134,7 +5256,7 @@
       "mode": "generated",
       "fingerprint": "a6366e7081a4ce57038474949ab3ad8bef84b16a21e58a35c7bd635b459ba198",
       "retryFingerprint": "a6366e7081a4ce57038474949ab3ad8bef84b16a21e58a35c7bd635b459ba198",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/trincadeira\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5143,9 +5265,35 @@
       "name": "Trousseau Noir",
       "mode": "generated",
       "fingerprint": "e462405475bc641fd9b3648a6ec8dcbe40fd43e33419ce2d5e4bc871fe745134",
-      "retryFingerprint": "e462405475bc641fd9b3648a6ec8dcbe40fd43e33419ce2d5e4bc871fe745134",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/trousseau-noir\" source label contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Discover Trousseau Noir in Jura",
+      "heading": "Trousseau Noir: A Charismatic Jura Red",
+      "paragraphs": [
+        "Trousseau Noir is an historic red grape of eastern France, anchored in the Jura around Arbois. It is thought to descend from Savagnin and is genetically linked to varieties like Portugal’s Bastardo or Spain’s Merenzao. In the Jura it covers a small fraction of vineyard area because it is demanding and needs warm, well‑drained soils to ripen fully. When yields are controlled, Trousseau yields wines that are richly colored, tannic and warm in character, with spicy, forest‑floor complexity and the potential to age gracefully ([terroirsdumondeeducation.com](https://www.terroirsdumondeeducation.com/article-sur-le-pays/trousseau-noir/?utm_source=openai)).",
+        "Domaine Ratte in Arbois is a biodynamically certified estate whose commitment to terroir and minimal intervention yields pure expressions of Trousseau. Their Trousseau bottlings display clarity, fine structure and a restrained naturalism that showcases the grape’s precision and freshness ([domaine-ratte.com](https://www.domaine-ratte.com/accueil/?utm_source=openai)). Within the FineVines selection, your focus on Domaine Ratte’s Trousseau offers a refined introduction to one of Jura’s most distinctive varietals growing slowly in recognition."
+      ],
+      "sources": [
+        {
+          "label": "Terroirs du Monde entry on Trousseau Noir",
+          "url": "https://www.terroirsdumondeeducation.com/article-sur-le-pays/trousseau-noir/"
+        },
+        {
+          "label": "Wikipedia on Trousseau grape",
+          "url": "https://en.wikipedia.org/wiki/Trousseau_%28grape%29"
+        },
+        {
+          "label": "EUR‑Lex Côtes du Jura specification",
+          "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:52022XC1128(01)"
+        },
+        {
+          "label": "Domaine Ratte official site",
+          "url": "https://www.domaine-ratte.com/accueil/"
+        },
+        {
+          "label": "Boucherville profile of Domaine Ratte",
+          "url": "https://www.boucherville.ch/en/producers/domaine-ratte"
+        }
+      ],
+      "reviewedAt": "2026-09-23"
     },
     {
       "kind": "varietal",
@@ -5154,8 +5302,8 @@
       "mode": "generated",
       "fingerprint": "541561a330553dec2d9f98308adeda3adf0301d4ee65ea1d821ad3ab6752a9e5",
       "retryFingerprint": "541561a330553dec2d9f98308adeda3adf0301d4ee65ea1d821ad3ab6752a9e5",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/verdejo\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "collection editorial \"varietal/verdejo\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -5164,8 +5312,8 @@
       "mode": "generated",
       "fingerprint": "a0b34661b86a178c499d5a38801cd6a4455db72d36f001c497ea97ec6645b711",
       "retryFingerprint": "a0b34661b86a178c499d5a38801cd6a4455db72d36f001c497ea97ec6645b711",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/verdelho\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-23",
+      "lastError": "collection editorial \"varietal/verdelho\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -5173,9 +5321,31 @@
       "name": "Vermentino",
       "mode": "generated",
       "fingerprint": "e6b38590cde083b49342a9748babb91ca5695cdee9635ec33cf48eab356ad758",
-      "retryFingerprint": "e6b38590cde083b49342a9748babb91ca5695cdee9635ec33cf48eab356ad758",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"varietal/vermentino\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Italian Coastal White",
+      "heading": "Vermentino from Liguria",
+      "paragraphs": [
+        "Gentle and vivid, Vermentino is a white grape variety with deep roots in Liguria along the Italian Riviera. The variety is most often singled out in the DOC Riviera Ligure di Ponente, where Vermentino (minimum 95 percent varietal) is permitted from coastal zones such as Riviera dei Fiori, Albenganese, and Finalese and produces wines known for straw‑yellow colour with greenish tones, delicate fruit‑driven aromas and a dry, fresh, harmonious palate ([enotecaregionaleliguria.it](https://www.enotecaregionaleliguria.it/?page_id=26068\u0026utm_source=openai)). Vermentino thrives in Liguria’s steep, sun‑bathed, calcareous slopes; its affinity for maritime breezes and dry soils gives wines a pronounced salinity and lifted character ([consorziovinimaremma.it](https://www.consorziovinimaremma.it/en/vines/vermentino/?utm_source=openai)).",
+        "Fontanacota, based near Imperia, is a Ligurian producer whose vineyard soils are calcareous and reach from sea level to higher elevation. They cultivate Vermentino under the regional DOC and express its coastal identity through careful handling ([viniferaforum.it](https://www.viniferaforum.it/wp-content/uploads/2025/03/Vinifera_2025_onlineV2.pdf?utm_source=openai)). Within FineVines, Fontanacota’s Vermentino from the Riviera Ligure di Ponente DOC stands as an authentic expression of this variety: it offers subtle Mediterranean fruit and freshness and makes a refined counterpoint to richer whites, perfect alongside seafood, vegetable‑based first courses, or simply to enjoy on its own by the glass."
+      ],
+      "sources": [
+        {
+          "label": "Enoteca Regionale Liguria on DOC types",
+          "url": "https://www.enotecaregionaleliguria.it/?page_id=26068"
+        },
+        {
+          "label": "Consorzio Vini Maremma on Vermentino origin",
+          "url": "https://www.consorziovinimaremma.it/en/vines/vermentino/"
+        },
+        {
+          "label": "Registro.Wine details DOC subzones",
+          "url": "https://docs.registro.wine/denominazioni/B239.html"
+        },
+        {
+          "label": "Fontanacota entry in Vinifera Forum catalogue",
+          "url": "https://www.viniferaforum.it/wp-content/uploads/2025/03/Vinifera_2025_onlineV2.pdf"
+        }
+      ],
+      "reviewedAt": "2026-09-23"
     },
     {
       "kind": "varietal",
@@ -5184,7 +5354,7 @@
       "mode": "generated",
       "fingerprint": "3a11cd800092356257a44a47126e184178aa9c3dd42fd765e55fcd1925ea6943",
       "retryFingerprint": "3a11cd800092356257a44a47126e184178aa9c3dd42fd765e55fcd1925ea6943",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/vinhao\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5194,7 +5364,7 @@
       "mode": "generated",
       "fingerprint": "86dad4afdb3db79bc4dd2734053866ba3aedcb83a3d9cae008af15f05c8c1508",
       "retryFingerprint": "86dad4afdb3db79bc4dd2734053866ba3aedcb83a3d9cae008af15f05c8c1508",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-23",
       "lastError": "collection editorial \"varietal/viognier-sauvignon-blanc\" contains a prohibited dash or invalid UTF-8"
     },
     {
