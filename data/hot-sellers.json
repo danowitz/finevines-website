@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-23T08:34:52Z",
+  "updated": "2026-09-24T08:35:54Z",
   "windowDays": 30,
   "wines": [
     {
@@ -7,12 +7,12 @@
       "cases": 116.33333
     },
     {
-      "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 104.08333
+      "slug": "domaine-vacheron-sancerre-blanc-2024",
+      "cases": 105.83335
     },
     {
-      "slug": "domaine-vacheron-sancerre-blanc-2024",
-      "cases": 89.66668
+      "slug": "taonga-sauvignon-blanc-marlborough-2025",
+      "cases": 105.08333
     },
     {
       "slug": "mediterranean-soul-life-red-blend-2013",
@@ -24,7 +24,7 @@
     },
     {
       "slug": "henri-bourgeois-pure-sauvignon-blanc-vin-de-pays-2025",
-      "cases": 62.08333
+      "cases": 68.08332999999999
     }
   ]
 }

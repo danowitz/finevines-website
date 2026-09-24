@@ -3463,6 +3463,12 @@
   "outcome": "imported",
   "attempts": 1
  },
+ "500462": {
+  "lastAttempted": "2026-09-24T08:43:00.836Z",
+  "outcome": "miss",
+  "attempts": 1,
+  "matcherVersion": "google-image-consensus-v1"
+ },
  "500578*": {
   "lastAttempted": "2026-08-14T20:37:10.686Z",
   "outcome": "imported",
