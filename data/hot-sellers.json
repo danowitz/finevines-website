@@ -1,30 +1,30 @@
 {
-  "updated": "2026-09-25T08:36:38Z",
+  "updated": "2026-09-26T08:32:24Z",
   "windowDays": 30,
   "wines": [
     {
       "slug": "domaine-vacheron-sancerre-blanc-2024",
-      "cases": 110.83335
+      "cases": 107.83335
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 105.16666000000001
-    },
-    {
-      "slug": "mediterranean-soul-life-red-blend-2013",
-      "cases": 79.5
+      "cases": 99.16666000000001
     },
     {
       "slug": "henri-bourgeois-sancerre-blanc-2025",
-      "cases": 71.33333999999999
+      "cases": 72.33333999999999
     },
     {
       "slug": "henri-bourgeois-pure-sauvignon-blanc-vin-de-pays-2025",
-      "cases": 68.08332999999999
+      "cases": 56.08333
     },
     {
       "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
-      "cases": 55.5
+      "cases": 51.5
+    },
+    {
+      "slug": "vine-hill-ranch-cabernet-sauvignon-napa-valley-vine-hill-ranch-vineyard-2023",
+      "cases": 45
     }
   ]
 }

@@ -28,8 +28,8 @@
       "mode": "generated",
       "fingerprint": "e5b2b1cbf983463063dba1b7f02880f1001f7d5f8e925d4ba591b142302e338e",
       "retryFingerprint": "e5b2b1cbf983463063dba1b7f02880f1001f7d5f8e925d4ba591b142302e338e",
-      "retryAfter": "2026-09-16",
-      "lastError": "research JSON must contain exactly two paragraphs"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/acentor\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -38,8 +38,8 @@
       "mode": "generated",
       "fingerprint": "b1da6fd01e5e3f35542a8fafab9a6e029b0d4efba21777d7a32870bddbf87d2a",
       "retryFingerprint": "b1da6fd01e5e3f35542a8fafab9a6e029b0d4efba21777d7a32870bddbf87d2a",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/acre\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-26",
+      "lastError": "invalid character '\\n' in string literal"
     },
     {
       "kind": "producer",
@@ -184,7 +184,7 @@
       "mode": "generated",
       "fingerprint": "96c56caa58ad6b420d85fe83aeea53169e6baa1bc866a8e23520da10f1a1fa93",
       "retryFingerprint": "96c56caa58ad6b420d85fe83aeea53169e6baa1bc866a8e23520da10f1a1fa93",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/arnoux\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -194,7 +194,7 @@
       "mode": "generated",
       "fingerprint": "ac2a35b20ef2122fbb9763c9f0ad2fc1a8415b5cafe85b49bf14860af0206184",
       "retryFingerprint": "ac2a35b20ef2122fbb9763c9f0ad2fc1a8415b5cafe85b49bf14860af0206184",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/arrocal\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -224,7 +224,7 @@
       "mode": "generated",
       "fingerprint": "e23c0c7cf67a701674064331d2d89507869df5b8bc605af8d1c47bc02e0edbd9",
       "retryFingerprint": "e23c0c7cf67a701674064331d2d89507869df5b8bc605af8d1c47bc02e0edbd9",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/atomique3\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -244,8 +244,8 @@
       "mode": "generated",
       "fingerprint": "8d07a48a0143a7dbe54f07b4c194dcf64588e328609d9c0c54f7436717bd4d1e",
       "retryFingerprint": "8d07a48a0143a7dbe54f07b4c194dcf64588e328609d9c0c54f7436717bd4d1e",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/bachelards\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/bachelards\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -294,8 +294,8 @@
       "mode": "generated",
       "fingerprint": "b65850dc4ab0c7726b22208be8a20087188efe9e3976e7b23bbe4d06e3b74730",
       "retryFingerprint": "b65850dc4ab0c7726b22208be8a20087188efe9e3976e7b23bbe4d06e3b74730",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/bart\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/bart\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -390,8 +390,8 @@
       "mode": "generated",
       "fingerprint": "fd9dd69ad7a9e954eb820d6915ebac0b57a711c93046309f4e5636449a0b6e5f",
       "retryFingerprint": "fd9dd69ad7a9e954eb820d6915ebac0b57a711c93046309f4e5636449a0b6e5f",
-      "retryAfter": "2026-09-16",
-      "lastError": "research did not find enough authoritative information"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/black-cabra\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -400,7 +400,7 @@
       "mode": "generated",
       "fingerprint": "6278893342b06093c1e66adbea7123794425e53f082e2c71c99ab5b01954bab8",
       "retryFingerprint": "6278893342b06093c1e66adbea7123794425e53f082e2c71c99ab5b01954bab8",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/black-ridge\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -480,8 +480,8 @@
       "mode": "generated",
       "fingerprint": "eb205ae514ee81e041065a95ac1e94fe86e2dfd153fce883dfe5fd0191310b21",
       "retryFingerprint": "eb205ae514ee81e041065a95ac1e94fe86e2dfd153fce883dfe5fd0191310b21",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/broadley\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/broadley\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -500,8 +500,8 @@
       "mode": "generated",
       "fingerprint": "9ad9863eb48207a719446a37b32e99b2e1720a70bd2220370dabc47826967bdb",
       "retryFingerprint": "9ad9863eb48207a719446a37b32e99b2e1720a70bd2220370dabc47826967bdb",
-      "retryAfter": "2026-09-17",
-      "lastError": "research did not find enough authoritative information"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/ca-stele\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -520,7 +520,7 @@
       "mode": "generated",
       "fingerprint": "ef13dc946fd9335ccf78a9d294934726d7e1349abfed06db36a53f32b207e01b",
       "retryFingerprint": "ef13dc946fd9335ccf78a9d294934726d7e1349abfed06db36a53f32b207e01b",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/calluna\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -590,7 +590,7 @@
       "mode": "generated",
       "fingerprint": "ace7e37f619528b2c238f59772820fea0e2f884fe3b7ec9b029100bd235b72b4",
       "retryFingerprint": "ace7e37f619528b2c238f59772820fea0e2f884fe3b7ec9b029100bd235b72b4",
-      "retryAfter": "2026-09-26",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/charlopin\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -620,7 +620,7 @@
       "mode": "generated",
       "fingerprint": "20bdae4020ea7f047b6b6747a1a004521aaaf0492b28789e07619c13f923e71d",
       "retryFingerprint": "20bdae4020ea7f047b6b6747a1a004521aaaf0492b28789e07619c13f923e71d",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/chateau-de-marsannay\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -720,8 +720,8 @@
       "mode": "generated",
       "fingerprint": "67b21172bea10750329981a7a17a752d079d5a7e81a8bd0f954be58dee90d2f9",
       "retryFingerprint": "67b21172bea10750329981a7a17a752d079d5a7e81a8bd0f954be58dee90d2f9",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/clos-salomon\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/clos-salomon\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -833,7 +833,7 @@
       "mode": "generated",
       "fingerprint": "2c7dec22649d2973f531dceab6536e87fa86c3b86f18ba7df9ba7b4e26ab917a",
       "retryFingerprint": "2c7dec22649d2973f531dceab6536e87fa86c3b86f18ba7df9ba7b4e26ab917a",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/courbis\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -843,7 +843,7 @@
       "mode": "generated",
       "fingerprint": "58573181cc9b13f1440b53581c81b4e61d13712c7139e052cc24bc494923a379",
       "retryFingerprint": "58573181cc9b13f1440b53581c81b4e61d13712c7139e052cc24bc494923a379",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/cristia\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -971,7 +971,7 @@
       "mode": "generated",
       "fingerprint": "0be7d49c6d3ebc036ee213cf2fbde568afe4fb22b092c4f7b847e52e1f06da6c",
       "retryFingerprint": "0be7d49c6d3ebc036ee213cf2fbde568afe4fb22b092c4f7b847e52e1f06da6c",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/domaine-ratte\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1011,7 +1011,7 @@
       "mode": "generated",
       "fingerprint": "0d963a8c507fcc08a4d11fa6d324c65ccc1d90bb90f26ba0c262e993fb42b03f",
       "retryFingerprint": "0d963a8c507fcc08a4d11fa6d324c65ccc1d90bb90f26ba0c262e993fb42b03f",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/dreambird\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1021,7 +1021,7 @@
       "mode": "generated",
       "fingerprint": "a63f638c54ac503544280ead2bc42bfade02aec911c269cc49f0408f738641dc",
       "retryFingerprint": "a63f638c54ac503544280ead2bc42bfade02aec911c269cc49f0408f738641dc",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/dreamfish\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1041,7 +1041,7 @@
       "mode": "generated",
       "fingerprint": "6f43504049d969161c79421dd19acdd231b9b7eba733ca1d51c868fdc368db8f",
       "retryFingerprint": "6f43504049d969161c79421dd19acdd231b9b7eba733ca1d51c868fdc368db8f",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/dutton\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1061,8 +1061,8 @@
       "mode": "generated",
       "fingerprint": "d0a3fe3ec0a238c2a8a19e4ca6e36873fadb9e03515463b2f20d01a727c9f06d",
       "retryFingerprint": "d0a3fe3ec0a238c2a8a19e4ca6e36873fadb9e03515463b2f20d01a727c9f06d",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/echarderie\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/echarderie\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1091,7 +1091,7 @@
       "mode": "generated",
       "fingerprint": "f0a0c9527b809a84ed6785e7a9aff8f4404a306de394d7f017efa48557fdfe1d",
       "retryFingerprint": "f0a0c9527b809a84ed6785e7a9aff8f4404a306de394d7f017efa48557fdfe1d",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/elias-mora\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1121,7 +1121,7 @@
       "mode": "generated",
       "fingerprint": "d243faf2bf88574fa6415d4d7af48461bb6c02305307306fc7974a00967bf836",
       "retryFingerprint": "d243faf2bf88574fa6415d4d7af48461bb6c02305307306fc7974a00967bf836",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/este\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1251,7 +1251,7 @@
       "mode": "generated",
       "fingerprint": "40b6af67bf16a8a28220b91bcf8ab147c7461dd20df7effa6db19db246d7ad50",
       "retryFingerprint": "40b6af67bf16a8a28220b91bcf8ab147c7461dd20df7effa6db19db246d7ad50",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/frank\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1271,7 +1271,7 @@
       "mode": "generated",
       "fingerprint": "9ce19bdc6a29622a7b5d5569dd930ff73e8dedd0ea6e18b209ebf7e550baf04e",
       "retryFingerprint": "9ce19bdc6a29622a7b5d5569dd930ff73e8dedd0ea6e18b209ebf7e550baf04e",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/gabrielle-ashley\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1459,7 +1459,7 @@
       "mode": "generated",
       "fingerprint": "fce0163e08968b1d7fc966eaea851f8305a808b2663e4a302ed3cafea02a40d0",
       "retryFingerprint": "fce0163e08968b1d7fc966eaea851f8305a808b2663e4a302ed3cafea02a40d0",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/hamel\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1469,8 +1469,8 @@
       "mode": "generated",
       "fingerprint": "cf6912c0ff164cae1ea0d333204ebd9dd64b414d98a2d4fb8fb1cbbb50b25ddc",
       "retryFingerprint": "cf6912c0ff164cae1ea0d333204ebd9dd64b414d98a2d4fb8fb1cbbb50b25ddc",
-      "retryAfter": "2026-09-16",
-      "lastError": "research JSON has 204 words; expected 120 to 190"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/haut-selve\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1499,7 +1499,7 @@
       "mode": "generated",
       "fingerprint": "7a9c2e11f4f97383686fcd6779e0a213b335ba3367510edae8721e511453ae95",
       "retryFingerprint": "7a9c2e11f4f97383686fcd6779e0a213b335ba3367510edae8721e511453ae95",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/herbauges\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1541,8 +1541,8 @@
       "mode": "generated",
       "fingerprint": "8fb247bc5b33f7175f46ffc36ea9583d2df9dda5f2485a15507d50ba7a4d4f63",
       "retryFingerprint": "8fb247bc5b33f7175f46ffc36ea9583d2df9dda5f2485a15507d50ba7a4d4f63",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/hirtzberger\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-26",
+      "lastError": "research JSON has 248 words; expected 120 to 190"
     },
     {
       "kind": "producer",
@@ -1611,7 +1611,7 @@
       "mode": "generated",
       "fingerprint": "f4097ef87335974331d687aa22f5451a6b771e7fb1e3dd07e5f13b5b6ba9dac8",
       "retryFingerprint": "f4097ef87335974331d687aa22f5451a6b771e7fb1e3dd07e5f13b5b6ba9dac8",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/jean-francois\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1631,7 +1631,7 @@
       "mode": "generated",
       "fingerprint": "3a894a2c3bf82d16f7dfd194198c8c5018c173831548209b344eac5dc470cd6f",
       "retryFingerprint": "3a894a2c3bf82d16f7dfd194198c8c5018c173831548209b344eac5dc470cd6f",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/jean-marie-rcl-royer\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1651,7 +1651,7 @@
       "mode": "generated",
       "fingerprint": "3ccedef6e22d26ed9ee12f2edfe8d7539b6281cdccd2309946b23b9eed44b66f",
       "retryFingerprint": "3ccedef6e22d26ed9ee12f2edfe8d7539b6281cdccd2309946b23b9eed44b66f",
-      "retryAfter": "2026-09-18",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/jl-chave-selection\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1691,7 +1691,7 @@
       "mode": "generated",
       "fingerprint": "4390712f3ed80c0cda1bd1d5de94246330632eb298639a3722ae8b0f34efed4b",
       "retryFingerprint": "4390712f3ed80c0cda1bd1d5de94246330632eb298639a3722ae8b0f34efed4b",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/juillot\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1701,8 +1701,8 @@
       "mode": "generated",
       "fingerprint": "e5a1977b7e7bf572fa6db5fc2e00b72829ba74e7e7e9d93720ca683a413fb343",
       "retryFingerprint": "e5a1977b7e7bf572fa6db5fc2e00b72829ba74e7e7e9d93720ca683a413fb343",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/kerr\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-26",
+      "lastError": "research JSON has 205 words; expected 120 to 190"
     },
     {
       "kind": "producer",
@@ -1775,8 +1775,8 @@
       "mode": "generated",
       "fingerprint": "f62943683a9fb5783feed376ab23c42ad353f95a30b377a345231b326d9ae26a",
       "retryFingerprint": "f62943683a9fb5783feed376ab23c42ad353f95a30b377a345231b326d9ae26a",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/ladouys\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/ladouys\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1837,7 +1837,7 @@
       "mode": "generated",
       "fingerprint": "6bc795db32260cb3c903ba025642c3628834ca85055515cd7ca102e3acb38027",
       "retryFingerprint": "6bc795db32260cb3c903ba025642c3628834ca85055515cd7ca102e3acb38027",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/lebreuil\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1877,7 +1877,7 @@
       "mode": "generated",
       "fingerprint": "100d91f6906dac6f0973185322ad493f147fda84f74edf3413fbba76fd5754bc",
       "retryFingerprint": "100d91f6906dac6f0973185322ad493f147fda84f74edf3413fbba76fd5754bc",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/leroy-domaine-collection\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1887,7 +1887,7 @@
       "mode": "generated",
       "fingerprint": "60d4d99356b5695ecef1ca87e024e8ab8acbcd9f46d9ff5bc60da0ba9554c6c3",
       "retryFingerprint": "60d4d99356b5695ecef1ca87e024e8ab8acbcd9f46d9ff5bc60da0ba9554c6c3",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/lestrille\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1917,7 +1917,7 @@
       "mode": "generated",
       "fingerprint": "e12fa9581865279c3d33be23ba5131577215eb2429d9af648ff74cb3b253e75b",
       "retryFingerprint": "e12fa9581865279c3d33be23ba5131577215eb2429d9af648ff74cb3b253e75b",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/loumelat\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1937,7 +1937,7 @@
       "mode": "generated",
       "fingerprint": "5b68b5a4278a4c22e9fb1e92826b1cacf24119579558104f682a60d50784a455",
       "retryFingerprint": "5b68b5a4278a4c22e9fb1e92826b1cacf24119579558104f682a60d50784a455",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/luna-beberide\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1947,7 +1947,7 @@
       "mode": "generated",
       "fingerprint": "88bda54db88f72dfc1b2f30f877ccf2353e604df51e734a3b61d62a60240549f",
       "retryFingerprint": "88bda54db88f72dfc1b2f30f877ccf2353e604df51e734a3b61d62a60240549f",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/machard-de-gramont\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2189,8 +2189,8 @@
       "mode": "generated",
       "fingerprint": "5de8c7f9ddf4056406b7235f18ec24b3ceec0abf3dcc0ca742ab0ba5ed2a9c2e",
       "retryFingerprint": "5de8c7f9ddf4056406b7235f18ec24b3ceec0abf3dcc0ca742ab0ba5ed2a9c2e",
-      "retryAfter": "2026-09-16",
-      "lastError": "research JSON must contain exactly two paragraphs"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/morat\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2229,7 +2229,7 @@
       "mode": "generated",
       "fingerprint": "116e3bc9d1294052f65a815cbd15284cca092c44c43b678c8ad7c665c762f9a8",
       "retryFingerprint": "116e3bc9d1294052f65a815cbd15284cca092c44c43b678c8ad7c665c762f9a8",
-      "retryAfter": "2026-09-26",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/mount-hermon\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2365,7 +2365,7 @@
       "mode": "generated",
       "fingerprint": "ba52a88f5ea2f1e8a81c1607a461bb669d52073d143f6b5b916d73d85bc3c4f7",
       "retryFingerprint": "ba52a88f5ea2f1e8a81c1607a461bb669d52073d143f6b5b916d73d85bc3c4f7",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/otano\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2583,8 +2583,8 @@
       "mode": "generated",
       "fingerprint": "34816fe2db752c366120c06a33fca1fe4622102f0edcb2366dab8f97a4ca19d8",
       "retryFingerprint": "34816fe2db752c366120c06a33fca1fe4622102f0edcb2366dab8f97a4ca19d8",
-      "retryAfter": "2026-09-16",
-      "lastError": "research JSON has 207 words; expected 120 to 190"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/powers\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2719,8 +2719,8 @@
       "mode": "generated",
       "fingerprint": "bc968c6033375dc8c26a012b86f41a55a809e03c82911137b955d8bad81536d4",
       "retryFingerprint": "bc968c6033375dc8c26a012b86f41a55a809e03c82911137b955d8bad81536d4",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/romariz\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-26",
+      "lastError": "collection editorial \"producer/romariz\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -3009,7 +3009,7 @@
       "mode": "generated",
       "fingerprint": "5a97598debbdd3773daa3e25c9d9f66ea0d71b5f08df78f9e11eaf1e271521c9",
       "retryFingerprint": "5a97598debbdd3773daa3e25c9d9f66ea0d71b5f08df78f9e11eaf1e271521c9",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/tara\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3151,7 +3151,7 @@
       "mode": "generated",
       "fingerprint": "95755fd23b285cf1178b992db7d9412ddd160b6654f69957e775a6ec5dfb1a74",
       "retryFingerprint": "95755fd23b285cf1178b992db7d9412ddd160b6654f69957e775a6ec5dfb1a74",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"producer/vacheron\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3595,7 +3595,7 @@
       "mode": "generated",
       "fingerprint": "20d65b41c96f290af9c1bf59f761e5077f9374cbf9c2c8de9a4205e91f62e79e",
       "retryFingerprint": "20d65b41c96f290af9c1bf59f761e5077f9374cbf9c2c8de9a4205e91f62e79e",
-      "retryAfter": "2026-09-26",
+      "retryAfter": "2026-10-26",
       "lastError": "collection editorial \"region/cote-de-beaune\" contains a prohibited dash or invalid UTF-8"
     },
     {
