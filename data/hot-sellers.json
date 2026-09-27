@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-26T08:32:24Z",
+  "updated": "2026-09-27T08:33:05Z",
   "windowDays": 30,
   "wines": [
     {
@@ -8,7 +8,7 @@
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 99.16666000000001
+      "cases": 96.16666000000001
     },
     {
       "slug": "henri-bourgeois-sancerre-blanc-2025",

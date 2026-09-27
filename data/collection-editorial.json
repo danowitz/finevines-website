@@ -8,7 +8,7 @@
       "mode": "generated",
       "fingerprint": "c22f701f46d0ceb12110e0c43663df85fdcb8cf2d014b54e3ab548408649475e",
       "retryFingerprint": "c22f701f46d0ceb12110e0c43663df85fdcb8cf2d014b54e3ab548408649475e",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/1-1-3\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -18,7 +18,7 @@
       "mode": "generated",
       "fingerprint": "184e9a641dfe6aaaee187337691ff2b179e76e476d32c450e77beccc0f7ff1eb",
       "retryFingerprint": "184e9a641dfe6aaaee187337691ff2b179e76e476d32c450e77beccc0f7ff1eb",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "research did not find enough authoritative information"
     },
     {
@@ -48,8 +48,8 @@
       "mode": "generated",
       "fingerprint": "98ef98877a81a4990a44fff4f15632f488d89d22c9d75205af971d9f9cfeb6be",
       "retryFingerprint": "98ef98877a81a4990a44fff4f15632f488d89d22c9d75205af971d9f9cfeb6be",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/adegas\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "research JSON has 227 words; expected 120 to 190"
     },
     {
       "kind": "producer",
@@ -58,7 +58,7 @@
       "mode": "generated",
       "fingerprint": "8685055066542a1c28f4963a6d3be6578e0d9eb395fe4eb3fa6a095b36dbfe49",
       "retryFingerprint": "8685055066542a1c28f4963a6d3be6578e0d9eb395fe4eb3fa6a095b36dbfe49",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/aegerter\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -68,7 +68,7 @@
       "mode": "generated",
       "fingerprint": "4fdae0be9d4a2cb245ac9a72f4d1373cecc9bf26c2944d3897aa9623cb253c0f",
       "retryFingerprint": "4fdae0be9d4a2cb245ac9a72f4d1373cecc9bf26c2944d3897aa9623cb253c0f",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/agostini-bordeaux\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -101,9 +101,23 @@
       "name": "Altruria",
       "mode": "generated",
       "fingerprint": "2ec2db9d811a169dab8e775fe281cea890fc2389b674209b96ce3a1574a6a9a2",
-      "retryFingerprint": "2ec2db9d811a169dab8e775fe281cea890fc2389b674209b96ce3a1574a6a9a2",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/altruria\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Producer Spotlight",
+      "heading": "Altruria: Sonoma‐born Cabernet with Utopian Inspiration",
+      "paragraphs": [
+        "Altruria is a distinctive Sonoma County project grounded in Cabernet Sauvignon and named for the short-lived Altruria utopian settlement in Fountain Grove, an area just east of Sonoma. The name recalls a local community founded in 1894 in pursuit of balance and idealism, an ethos reflected in the producer’s Cabernet, which blends richness with clarity. Crafted under the guidance of winemaker Britt Nichols and Master Sommelier Desmond Echavarrie, the wine captures fruit from eastern Sonoma sites like Alexander Valley and Fountain Grove AVA, where warm days and cooling nights encourage both depth and finesse in Cabernet fruit ([scalewine.com](https://www.scalewine.com/producers/altruria/?utm_source=openai)).",
+        "This Cabernet Sauvignon from Altruria draws on Sonoma County’s strength in expressive, terroir‑driven red wines, particularly from regions such as Alexander Valley known for structure and Suisun‑influenced warmth. By honoring a historical footprint and combining thoughtful sourcing with minimalist winemaking, Altruria delivers a Cabernet that feels rooted in both place and story. For buyers exploring FineVines’ offerings, this is a wine to consider when seeking something that is both thoughtfully crafted and connected to Sonoma’s vinous legacy."
+      ],
+      "sources": [
+        {
+          "label": "Scale Wine wholesale profile on Altruria",
+          "url": "https://www.scalewine.com/producers/altruria/"
+        },
+        {
+          "label": "Wikipedia entry on Altruria, California (former utopian colony)",
+          "url": "https://en.wikipedia.org/wiki/Altruria%2C_California"
+        }
+      ],
+      "reviewedAt": "2026-09-27"
     },
     {
       "kind": "producer",
@@ -112,8 +126,8 @@
       "mode": "generated",
       "fingerprint": "08e74e0b04228fee22d452dbc5add5e47cd0470f0760e8af46b9d6b82717c68a",
       "retryFingerprint": "08e74e0b04228fee22d452dbc5add5e47cd0470f0760e8af46b9d6b82717c68a",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/amirault\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/amirault\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -164,7 +178,7 @@
       "mode": "generated",
       "fingerprint": "e3fee361f5554038e06ebbe3ddba4456e7c40f6d1c43bf5899534615afdec044",
       "retryFingerprint": "e3fee361f5554038e06ebbe3ddba4456e7c40f6d1c43bf5899534615afdec044",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/anthony-dominic\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -204,7 +218,7 @@
       "mode": "generated",
       "fingerprint": "9bfad2e8d5879259e375d5196989eb0ef4b951083e6a149a8383d2328b4e1f3c",
       "retryFingerprint": "9bfad2e8d5879259e375d5196989eb0ef4b951083e6a149a8383d2328b4e1f3c",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/arrow-branch\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -214,7 +228,7 @@
       "mode": "generated",
       "fingerprint": "40504ab72a26ec19b1626424faa33652edbe3ea658bb85822dd68c916244c786",
       "retryFingerprint": "40504ab72a26ec19b1626424faa33652edbe3ea658bb85822dd68c916244c786",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/astrales\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -284,8 +298,8 @@
       "mode": "generated",
       "fingerprint": "36ddf5895fcd99c5218df6239b8706f3df2f40e3c8b5b548c1d00f0f86b2cb10",
       "retryFingerprint": "36ddf5895fcd99c5218df6239b8706f3df2f40e3c8b5b548c1d00f0f86b2cb10",
-      "retryAfter": "2026-09-16",
-      "lastError": "invalid character 'K' after array element"
+      "retryAfter": "2026-10-27",
+      "lastError": "research did not find enough authoritative information"
     },
     {
       "kind": "producer",
@@ -328,7 +342,7 @@
       "mode": "generated",
       "fingerprint": "c63527b34f3b17ceb064e8b1d823f39d629f8357f150c5ae4b13cb206e957428",
       "retryFingerprint": "c63527b34f3b17ceb064e8b1d823f39d629f8357f150c5ae4b13cb206e957428",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/beberide\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -410,7 +424,7 @@
       "mode": "generated",
       "fingerprint": "4ed6dca20d028dfc2f8282d2a3a3dd901d876610daf586700999e57abe087d74",
       "retryFingerprint": "4ed6dca20d028dfc2f8282d2a3a3dd901d876610daf586700999e57abe087d74",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/bodegas-margon\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -460,7 +474,7 @@
       "mode": "generated",
       "fingerprint": "866809a00a796a7bcbd9a3433a97906065577ab2c116c25b129b7b670c12401f",
       "retryFingerprint": "866809a00a796a7bcbd9a3433a97906065577ab2c116c25b129b7b670c12401f",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/breussin\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -550,7 +564,7 @@
       "mode": "generated",
       "fingerprint": "b73b00f65fcf00ac1f379f09f6f09bab837ea46dd6566bee899a60425a1d9a4e",
       "retryFingerprint": "b73b00f65fcf00ac1f379f09f6f09bab837ea46dd6566bee899a60425a1d9a4e",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/canchales\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -570,7 +584,7 @@
       "mode": "generated",
       "fingerprint": "ecdee3686bea5882fe2b3122eb2f71e01085ee35b3f6ee0515fde08be7421285",
       "retryFingerprint": "ecdee3686bea5882fe2b3122eb2f71e01085ee35b3f6ee0515fde08be7421285",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/castello-di-ama\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -640,7 +654,7 @@
       "mode": "generated",
       "fingerprint": "681d9466f061085576da4e59ba557e6309b3a23889baa80b0db401e32831ee28",
       "retryFingerprint": "681d9466f061085576da4e59ba557e6309b3a23889baa80b0db401e32831ee28",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/chateau-deyrem-valentin\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -650,7 +664,7 @@
       "mode": "generated",
       "fingerprint": "3667a08a3f600767cb7f50903b3f9eb61aadba168df834d543e0104b0a67f53e",
       "retryFingerprint": "3667a08a3f600767cb7f50903b3f9eb61aadba168df834d543e0104b0a67f53e",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/chateau-pibran\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -700,8 +714,8 @@
       "mode": "generated",
       "fingerprint": "26405c731f26f087664a244a07c7b085c6b8cde9acb4b76062d5682565aee8b8",
       "retryFingerprint": "26405c731f26f087664a244a07c7b085c6b8cde9acb4b76062d5682565aee8b8",
-      "retryAfter": "2026-09-16",
-      "lastError": "invalid character ':' after array element"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/clarence-dillon\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -907,8 +921,8 @@
       "mode": "generated",
       "fingerprint": "c43b905d259f81c969c35be82e7e0d0bb4f9cff6043643e89ff2ea70f6f5859f",
       "retryFingerprint": "c43b905d259f81c969c35be82e7e0d0bb4f9cff6043643e89ff2ea70f6f5859f",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/de-bortoli\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/de-bortoli\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1051,7 +1065,7 @@
       "mode": "generated",
       "fingerprint": "af4a50a4f9faa4482a4737b5d6d01423f1891bd801cebbd89e0c09bf03a6655f",
       "retryFingerprint": "af4a50a4f9faa4482a4737b5d6d01423f1891bd801cebbd89e0c09bf03a6655f",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/easton\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1081,8 +1095,8 @@
       "mode": "generated",
       "fingerprint": "3fcb2caab67ba0cb392a530e9d32e87dde24376fbe7487c71628dc592cd4ecd0",
       "retryFingerprint": "3fcb2caab67ba0cb392a530e9d32e87dde24376fbe7487c71628dc592cd4ecd0",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/egeo\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/egeo\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1191,8 +1205,8 @@
       "mode": "generated",
       "fingerprint": "6316c1d7b2bdb1852bac3f4625bd8bbaba707ac5509048e0b447359ec8437c50",
       "retryFingerprint": "6316c1d7b2bdb1852bac3f4625bd8bbaba707ac5509048e0b447359ec8437c50",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/finca-bacara\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/finca-bacara\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1201,7 +1215,7 @@
       "mode": "generated",
       "fingerprint": "a9e881986344662a7182cb725fedc9c4a1a6e5dfdb53db45f46b731926570104",
       "retryFingerprint": "a9e881986344662a7182cb725fedc9c4a1a6e5dfdb53db45f46b731926570104",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/finca-la-mata\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1211,7 +1225,7 @@
       "mode": "generated",
       "fingerprint": "d205ea21ce7ae226a99d4e16f413169565fec6ec76ca0399e0faa59c101cf14f",
       "retryFingerprint": "d205ea21ce7ae226a99d4e16f413169565fec6ec76ca0399e0faa59c101cf14f",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/flare\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1221,8 +1235,8 @@
       "mode": "generated",
       "fingerprint": "263a2320a4b22a392645a4470f41703056e078c5ddf8021d7899165e12a6dbda",
       "retryFingerprint": "263a2320a4b22a392645a4470f41703056e078c5ddf8021d7899165e12a6dbda",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/fontanacota\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/fontanacota\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1231,8 +1245,8 @@
       "mode": "generated",
       "fingerprint": "5e73ae8c9d514a4fbff62b41dd470c5360ca46d808e50b3bd3a6e7b45a7eb4d9",
       "retryFingerprint": "5e73ae8c9d514a4fbff62b41dd470c5360ca46d808e50b3bd3a6e7b45a7eb4d9",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/fort-cop-de-ma\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "research did not find enough authoritative information"
     },
     {
       "kind": "producer",
@@ -1241,7 +1255,7 @@
       "mode": "generated",
       "fingerprint": "4988ff0595f01ed3717cf26d40d1940740101afb72000af26125d486df34b418",
       "retryFingerprint": "4988ff0595f01ed3717cf26d40d1940740101afb72000af26125d486df34b418",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/fosse-seche\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1280,9 +1294,23 @@
       "name": "Gagnard",
       "mode": "generated",
       "fingerprint": "4ab045f15e2ec3f449a201ddf67b334c3e3386ede78bf58fef420d0ff8771164",
-      "retryFingerprint": "4ab045f15e2ec3f449a201ddf67b334c3e3386ede78bf58fef420d0ff8771164",
-      "retryAfter": "2026-09-16",
-      "lastError": "research JSON has 195 words; expected 120 to 190"
+      "eyebrow": "Producer Profile",
+      "heading": "Jean‑Noël Gagnard of Santenay’s Clos de Tavannes",
+      "paragraphs": [
+        "Jean‑Noël Gagnard is one of just seven owners of the prestigious Clos de Tavannes, a southeast‑facing Premier Cru vineyard perched at roughly 240 m elevation on marl‑rich Argovian limestone soils on the southern Côte de Beaune, abutting Chassagne‑Montrachet. His parcel covers about 0.30 ha within this emblematic climat where thoughtful vine husbandry and organic or biodynamic farming help express a vibrant, structured Pinot Noir. ([burgundy.travel](https://burgundy.travel/fr/vineyard/clos-de-tavannes-santenay?utm_source=openai))",
+        "Santenay lies at the southern edge of the Côte de Beaune, where red‑wine tradition dominates and the character is richer, more rustic, and often more grounded than the lighter styles farther north. Within this landscape the Clos de Tavannes vineyard stands out for its capacity to produce enduring, finely detailed Premier Cru Pinot Noir. Gagnard’s work here brings clarity and muscle to a site that rewards both patience and precision in the cellar. ([en.wikipedia.org](https://en.wikipedia.org/wiki/C%C3%B4te_de_Beaune?utm_source=openai))"
+      ],
+      "sources": [
+        {
+          "label": "Burgundy Travel on Clos de Tavannes",
+          "url": "https://burgundy.travel/fr/vineyard/clos-de-tavannes-santenay"
+        },
+        {
+          "label": "Becky Wasserman \u0026 Co on Jean‑Noël Gagnard’s Clos de Tavannes",
+          "url": "https://www.beckywasserman.com/domaines/jean-noel-gagnard/santenay-1er-cru-clos-de-tavannes"
+        }
+      ],
+      "reviewedAt": "2026-09-27"
     },
     {
       "kind": "producer",
@@ -1301,8 +1329,8 @@
       "mode": "generated",
       "fingerprint": "d4b7a884e8d7d71da28cc9b2c7c7313eb6997089b23e494f43113511341ed935",
       "retryFingerprint": "d4b7a884e8d7d71da28cc9b2c7c7313eb6997089b23e494f43113511341ed935",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/galil-mountain\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/galil-mountain\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1371,8 +1399,8 @@
       "mode": "generated",
       "fingerprint": "529733c42bfac64de3657946fb10dc58f5a8660d2a001a77befe316962897da9",
       "retryFingerprint": "529733c42bfac64de3657946fb10dc58f5a8660d2a001a77befe316962897da9",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/gobillard\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/gobillard\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1381,8 +1409,8 @@
       "mode": "generated",
       "fingerprint": "ec84892fb5a7d8c6d65a753f820ce89ec317a5a1563c5c666b7a58fd12297cd4",
       "retryFingerprint": "ec84892fb5a7d8c6d65a753f820ce89ec317a5a1563c5c666b7a58fd12297cd4",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/grand-veneur\" has invalid source \"Chateauneuf.dk summary of Grand Veneur holdings\""
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/grand-veneur\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1991,8 +2019,8 @@
       "mode": "generated",
       "fingerprint": "d314b2dc112e8faa00cb49e833828b0174c031e7aa233d6b02636f73ab2ba89d",
       "retryFingerprint": "d314b2dc112e8faa00cb49e833828b0174c031e7aa233d6b02636f73ab2ba89d",
-      "retryAfter": "2026-09-16",
-      "lastError": "research JSON has 115 words; expected 120 to 190"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/maison-roy\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2021,7 +2049,7 @@
       "mode": "generated",
       "fingerprint": "be78642b7cbecb252a2137bc6f6118a7705e18203defaf13e8ad004d3d27f3d8",
       "retryFingerprint": "be78642b7cbecb252a2137bc6f6118a7705e18203defaf13e8ad004d3d27f3d8",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/mas-d-en-gil\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2125,7 +2153,7 @@
       "mode": "generated",
       "fingerprint": "0c9de91ff97978a65a422247ce00f0916fd9397563fad93042888c25d72fe1ba",
       "retryFingerprint": "0c9de91ff97978a65a422247ce00f0916fd9397563fad93042888c25d72fe1ba",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/mitre\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2303,8 +2331,8 @@
       "mode": "generated",
       "fingerprint": "45aab37399a6e17d267892025d7575840430412f5f873d6d8f71b9a5f85700cc",
       "retryFingerprint": "45aab37399a6e17d267892025d7575840430412f5f873d6d8f71b9a5f85700cc",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/nid-tisse\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/nid-tisse\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2313,7 +2341,7 @@
       "mode": "generated",
       "fingerprint": "828590f1711b653aa81513fdff071028a4328c32e3e324b1c4b5125247202211",
       "retryFingerprint": "828590f1711b653aa81513fdff071028a4328c32e3e324b1c4b5125247202211",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/oakville\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2323,7 +2351,7 @@
       "mode": "generated",
       "fingerprint": "caad33e435362628d61e83837aa1c5def9196cfe069789ac923ded883bc18bd1",
       "retryFingerprint": "caad33e435362628d61e83837aa1c5def9196cfe069789ac923ded883bc18bd1",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/ogier-rcl\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2425,8 +2453,8 @@
       "mode": "generated",
       "fingerprint": "401b83f8a82b2990473a6a6c188a58e13ae02de8f8806286e2b9e4b8b290708a",
       "retryFingerprint": "401b83f8a82b2990473a6a6c188a58e13ae02de8f8806286e2b9e4b8b290708a",
-      "retryAfter": "2026-09-16",
-      "lastError": "invalid character '[' looking for beginning of object key string"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/paveil-de-luze\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2435,8 +2463,8 @@
       "mode": "generated",
       "fingerprint": "0645195d12850497821519f47e72b31526f1e00493b551db7c15e09aba534c27",
       "retryFingerprint": "0645195d12850497821519f47e72b31526f1e00493b551db7c15e09aba534c27",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/pazjos\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "research JSON must contain exactly two paragraphs"
     },
     {
       "kind": "producer",
@@ -2444,9 +2472,31 @@
       "name": "Pellet Estate",
       "mode": "generated",
       "fingerprint": "6546bc86b2324fd47ac062ba5f3e962ab20d7522fbda9919c43419d8bfd1e44c",
-      "retryFingerprint": "6546bc86b2324fd47ac062ba5f3e962ab20d7522fbda9919c43419d8bfd1e44c",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/pellet-estate\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Producer Profile",
+      "heading": "Pellet Estate: Historic Napa Roots and Distinctive Petaluma Gap Expression",
+      "paragraphs": [
+        "Pellet Estate remains a boutique Napa Valley producer rooted in history yet expressive of modern terroir. The winery is located in St. Helena and traces its origins back to pioneer Henry Alphonse Pellet, who established one of Napa Valley’s earliest vineyards in the 1860s. That same historic site, known as Pellet Vineyard, continues to yield Cabernet Sauvignon that reflects both heritage and meticulous vineyard care ([pelletestate.com](https://www.pelletestate.com/assets/images/fact_sheets/2012_Reserve_Fact_Sheet.pdf?utm_source=openai)). The estate operates much like a custodian of tradition, reviving old vineyards and preserving their legacy with sustainable practices that honor Napa’s formative years ([phantomales.com](https://phantomales.com/producer.php?id=11916\u0026utm_source=openai)).",
+        "In parallel to its Napa holdings, Pellet Estate sources Chardonnay fruit from the Sunchase Vineyard in the Petaluma Gap AVA, a cool‑climate site perched on Sonoma Mountain. Here, wind and fog sculpt grapes with expressive skins, yielding Chardonnay distinguished by energy, minerality, and vivid acidity ([visitpetaluma.com](https://www.visitpetaluma.com/blog/the-petaluma-gap-ava/?utm_source=openai)). Winemaker Tom Rinaldi, with decades of Napa and Sonoma experience, crafts both oaked and unoaked styles from Sunchase, offering two distinct expressions that marry elegance with textural depth ([napawineproject.com](https://www.napawineproject.com/pellet-estate/?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Pellet Estate official site (history and vineyards)",
+          "url": "https://pelletestate.com/"
+        },
+        {
+          "label": "Pellet Estate history and winemaking details",
+          "url": "https://www.napawineproject.com/pellet-estate/"
+        },
+        {
+          "label": "Petaluma Gap AVA climate and characteristics",
+          "url": "https://www.visitpetaluma.com/blog/the-petaluma-gap-ava/"
+        },
+        {
+          "label": "Details on Sunchase cool‑climate Chardonnay site and winemaker",
+          "url": "https://shop.klwines.com/products/details/1692083"
+        }
+      ],
+      "reviewedAt": "2026-09-27"
     },
     {
       "kind": "producer",
@@ -2505,8 +2555,8 @@
       "mode": "generated",
       "fingerprint": "45617b4f480ac61f6723a6ef6dfa720669ceff736fd057d3fd9b990aeef83a5a",
       "retryFingerprint": "45617b4f480ac61f6723a6ef6dfa720669ceff736fd057d3fd9b990aeef83a5a",
-      "retryAfter": "2026-09-16",
-      "lastError": "research JSON has 198 words; expected 120 to 190"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/piaggia\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2679,7 +2729,7 @@
       "mode": "generated",
       "fingerprint": "47f2e5c503a1609ecd1def8dc63fe301a198ce37591cec5c762edbf83f0369ea",
       "retryFingerprint": "47f2e5c503a1609ecd1def8dc63fe301a198ce37591cec5c762edbf83f0369ea",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/recoltant\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2773,8 +2823,8 @@
       "mode": "generated",
       "fingerprint": "6c917334a2a271f5dad3ca191f01ef38775c65935c584c162fda02a73eeae912",
       "retryFingerprint": "6c917334a2a271f5dad3ca191f01ef38775c65935c584c162fda02a73eeae912",
-      "retryAfter": "2026-09-16",
-      "lastError": "invalid character '[' looking for beginning of object key string"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/rotalier\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2813,8 +2863,8 @@
       "mode": "generated",
       "fingerprint": "918f4baf7082e49b0c2a31e29a4b7951c2a08cad4cdd7f14c16774da60006b42",
       "retryFingerprint": "918f4baf7082e49b0c2a31e29a4b7951c2a08cad4cdd7f14c16774da60006b42",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/sarthes\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "invalid character ':' after array element"
     },
     {
       "kind": "producer",
@@ -2947,8 +2997,8 @@
       "mode": "generated",
       "fingerprint": "7b7c7651977abd9318edb3cd4243b585d6750caf7ebd556f7ba35d2fe68761e7",
       "retryFingerprint": "7b7c7651977abd9318edb3cd4243b585d6750caf7ebd556f7ba35d2fe68761e7",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/subirats\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-27",
+      "lastError": "collection editorial \"producer/subirats\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -3053,7 +3103,7 @@
       "mode": "generated",
       "fingerprint": "36ef6e20c1d62802a14665588eaf095c510c794b3362c1ff62c8df6e9d50187b",
       "retryFingerprint": "36ef6e20c1d62802a14665588eaf095c510c794b3362c1ff62c8df6e9d50187b",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/thomas\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3061,9 +3111,9 @@
       "slug": "tor",
       "name": "Tor",
       "mode": "generated",
-      "fingerprint": "c022a26aefa74c207fc2d6b2376a606826b789410bbb7c72a08a76786fd74c59",
-      "retryFingerprint": "c022a26aefa74c207fc2d6b2376a606826b789410bbb7c72a08a76786fd74c59",
-      "retryAfter": "2026-09-27",
+      "fingerprint": "a041817db00691d5d117d7cb01d1cd88f29e1e92d009467a7def68e4de3cacb5",
+      "retryFingerprint": "a041817db00691d5d117d7cb01d1cd88f29e1e92d009467a7def68e4de3cacb5",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/tor\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3269,7 +3319,7 @@
       "mode": "generated",
       "fingerprint": "d403cdab916f5efe3a2d335e8187c20c619cba67c09e53e90862ca6cabd94967",
       "retryFingerprint": "d403cdab916f5efe3a2d335e8187c20c619cba67c09e53e90862ca6cabd94967",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/weingut-kuhn\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3309,7 +3359,7 @@
       "mode": "generated",
       "fingerprint": "7cfda49ca9b5f14392fd83b84ab6ab0b5e37f7f06244e96d83f108e75e70d50a",
       "retryFingerprint": "7cfda49ca9b5f14392fd83b84ab6ab0b5e37f7f06244e96d83f108e75e70d50a",
-      "retryAfter": "2026-09-16",
+      "retryAfter": "2026-10-27",
       "lastError": "collection editorial \"producer/zolo-zero\" contains a prohibited dash or invalid UTF-8"
     },
     {
