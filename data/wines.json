@@ -16543,8 +16543,8 @@
     "abv": "12.5%",
     "bottleSize": "750 ml",
     "drinkWindow": "2024‑2035",
-    "imagePath": "assets/img/wines/champagne-jose-dhondt-brut-grand-cru-mes-vieilles-vignes-2018.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/champagne-jose-dhondt-brut-grand-cru-mes-vieilles-vignes-2018.jpg",
+    "imageSource": "scraped-web",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -16556,14 +16556,18 @@
       "drinkWindow": "found",
       "finish": "found",
       "foodPairings": "found",
-      "image": "derived",
+      "image": "found",
       "palate": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 77,
+    "metadataScore": 85,
     "matchConfidence": 90,
     "enrichedAt": "2026-08-28T12:08:11Z",
-    "slug": "champagne-jose-dhondt-brut-grand-cru-mes-vieilles-vignes-2018"
+    "slug": "champagne-jose-dhondt-brut-grand-cru-mes-vieilles-vignes-2018",
+    "imageReviewStatus": "",
+    "imageReviewedAt": "",
+    "imageReviewActionId": "",
+    "imageSourceUrl": "https://www.winebid.com/BuyWine/Item/Auction/1717883/2018-Jose-Dhondt-Brut-Grand-Cru-Blanc-De-Blancs-Me~"
   },
   {
     "id": "01tPL00000IJ1cLYAT",
@@ -21251,8 +21255,8 @@
     "abv": "13%",
     "bottleSize": "750 ml",
     "drinkWindow": "now–2029",
-    "imagePath": "assets/img/wines/chateau-de-meursault-terroir-d-exception-2022.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/chateau-de-meursault-terroir-d-exception-2022.jpg",
+    "imageSource": "scraped-web",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -21264,14 +21268,18 @@
       "drinkWindow": "found",
       "finish": "found",
       "foodPairings": "found",
-      "image": "derived",
+      "image": "found",
       "palate": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 77,
+    "metadataScore": 85,
     "matchConfidence": 95,
     "enrichedAt": "2026-08-28T12:08:17Z",
-    "slug": "chateau-de-meursault-terroir-d-exception-2022"
+    "slug": "chateau-de-meursault-terroir-d-exception-2022",
+    "imageReviewStatus": "",
+    "imageReviewedAt": "",
+    "imageReviewActionId": "",
+    "imageSourceUrl": "https://www.millesima.com/domaine-du-chateau-de-meursault-bourgogne-terroir-d-exception-2022.html"
   },
   {
     "id": "01t2I000007pHAIQA2",
