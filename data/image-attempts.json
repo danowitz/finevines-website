@@ -4378,9 +4378,10 @@
   "attempts": 1
  },
  "504322": {
-  "lastAttempted": "2026-08-07T09:05:28.542Z",
-  "outcome": "imported",
-  "attempts": 1
+  "lastAttempted": "2026-09-29T08:39:03.979Z",
+  "outcome": "miss",
+  "attempts": 2,
+  "matcherVersion": "google-image-consensus-v1"
  },
  "504401*": {
   "lastAttempted": "2026-08-12T08:54:41.203Z",

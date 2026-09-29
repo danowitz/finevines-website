@@ -15344,7 +15344,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-09-28T08:51:48.942Z"
+  "updatedAt": "2026-09-29T08:39:06.088Z"
  },
  "elizabeth-rose-chockablock-napa-valley-red-blend-2023": {
   "slug": "elizabeth-rose-chockablock-napa-valley-red-blend-2023",
@@ -102850,7 +102850,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-09-28T08:51:32.197Z"
+  "updatedAt": "2026-09-29T08:39:03.988Z"
  },
  "collotte-domaine-collotte-gevrey-chambertin-les-evocelles-2020": {
   "slug": "collotte-domaine-collotte-gevrey-chambertin-les-evocelles-2020",
@@ -178600,7 +178600,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-09-28T08:51:32.197Z"
+  "updatedAt": "2026-09-29T08:39:06.088Z"
  },
  "domaine-arnoux-lachaux-romanee-saint-vivant-2022": {
   "slug": "domaine-arnoux-lachaux-romanee-saint-vivant-2022",
@@ -198406,5 +198406,320 @@
    }
   ],
   "updatedAt": "2026-09-28T08:51:31.031Z"
+ },
+ "champagne-paul-launois-contraste-3": {
+  "slug": "champagne-paul-launois-contraste-3",
+  "sku": "504322",
+  "name": "Champagne Paul Launois Contraste #3",
+  "ok": false,
+  "failureStage": "reader-response",
+  "failureCode": "READER_RESPONSE_INVALID",
+  "reason": "identity reader returned invalid results for 1 candidate(s)",
+  "funnel": {
+   "searchResults": 15,
+   "sourcePolicyBlocked": 0,
+   "permittedCandidates": 15,
+   "downloadAttempted": 15,
+   "downloaded": 13,
+   "decodedImages": 13,
+   "bottleShapePassed": 12,
+   "cleanBackgrounds": 12,
+   "similarPairs": 26,
+   "repeatedGroups": 25,
+   "strongestGroupImages": 8,
+   "labelImagesRead": 10,
+   "identityAnchors": 0,
+   "explicitConflicts": 5,
+   "publishableAnchors": 0,
+   "outcome": "failed",
+   "recoveryScope": "",
+   "queryVintageOmitted": false,
+   "searched": true,
+   "searchProvider": "brave",
+   "labelModel": "gpt-4.1-nano",
+   "labelReasoningEffort": "",
+   "providerResults": [],
+   "initialWindowCandidates": 10,
+   "extensionWindowCandidates": 5,
+   "downloadHttpFailures": 2,
+   "downloadTooSmall": 0,
+   "downloadUnsupported": 0,
+   "downloadConversionFailures": 0,
+   "downloadTransportFailures": 0,
+   "downloadExcluded": 0,
+   "selectorReceived": 13,
+   "decodeFailures": 0,
+   "comparedPairs": 78,
+   "productIdentityAnchors": 0,
+   "wrongVisibleVintages": 0,
+   "sourceIdentityAnchors": 0,
+   "plannedIdentityCandidates": 10,
+   "readerCalls": 9,
+   "readerRetries": 1,
+   "invalidReaderResults": 1,
+   "anchorShapeFailures": 0,
+   "anchorResolutionFailures": 0
+  },
+  "evidence": [
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "SIBLING_CUVEE_CONFLICT",
+    "conflict": "candidate label names a different cuvee: decomposition",
+    "label": "PAUL LAUNOIS decomposition",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "SIBLING_CUVEE_CONFLICT",
+    "conflict": "candidate label names a different cuvee: composition",
+    "label": "PAUL LAUNOIS composition",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "SIBLING_CUVEE_CONFLICT",
+    "conflict": "candidate label names a different cuvee: morochaume",
+    "label": "PAUL LAUNOIS morochaume",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-15",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "SIBLING_CUVEE_CONFLICT",
+    "conflict": "candidate label names a different cuvee: composition",
+    "label": "PAUL LAUNOIS composition",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-9",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": false,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "NUMERIC_DESIGNATION_UNREADABLE",
+    "label": "PAUL LAUNOIS contraste",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": false,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "NUMERIC_DESIGNATION_UNREADABLE",
+    "label": "PAUL LAUNOIS champagne",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": false,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "NUMERIC_DESIGNATION_UNREADABLE",
+    "label": "Domaine Paul Launois",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": false,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "NUMERIC_DESIGNATION_UNREADABLE",
+    "label": "CHAMPAGNE PAUL LAUNOIS",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "SIBLING_CUVEE_CONFLICT",
+    "conflict": "candidate label names a different cuvee: composition",
+    "label": "PAUL LAUNOIS composition",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-10",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": false,
+    "readStatus": "invalid",
+    "vintageStatus": "",
+    "reasonCode": "READER_RESPONSE_INVALID",
+    "conflict": "identity reader returned no valid result for this candidate",
+    "label": "",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   }
+  ],
+  "candidates": [
+   {
+    "image": "https://sml-uncorked.com/cdn/shop/files/4c754d605aaed672b8de9786471bc09e_345x@2x.png?v=1729887102",
+    "page": "https://sml-uncorked.com/products/champagne-paul-launois-composition-6-extra-brut-750ml",
+    "size": "690x920",
+    "why": "identity not proven automatically",
+    "label": "PAUL LAUNOIS champagne",
+    "strongestGroup": true,
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "image": "https://assets.tyndrumwhisky.com/media/catalog/product/a/u/aug24-paullaunoiscomposition6.jpg?q=80&canvas.width=408&canvas.height=408&canvas.color=ffffff&w=408&h=408",
+    "page": "https://www.tyndrumwhisky.com/paul-launois-champagne-monochrome-6.html",
+    "size": "1200x1200",
+    "why": "candidate label names a different cuvee: decomposition",
+    "label": "PAUL LAUNOIS decomposition",
+    "strongestGroup": true,
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "image": "https://www.royalmilewhiskies.com/media/catalog/product/cache/10e6905b752ea4a438fa289a54c3891d/a/m/am001678_.jpg",
+    "page": "https://www.royalmilewhiskies.com/champagne-paul-launois-composition-6-75cl/",
+    "size": "700x700",
+    "why": "candidate label names a different cuvee: composition",
+    "label": "PAUL LAUNOIS composition",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "image": "https://www.grandibottiglie.com/27502-large_default/champagne-contraste-2-paul-launois.jpg",
+    "page": "https://www.grandibottiglie.com/en/champagne-contraste-2-paul-launois.html",
+    "size": "500x500",
+    "why": "identity not proven automatically",
+    "label": "Domaine Paul Launois",
+    "strongestGroup": true,
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "image": "https://assets.tyndrumwhisky.com/media/catalog/product/a/u/aug24-paullaunoismonochrome6.jpg?q=80&canvas.width=608&canvas.height=608&canvas.color=ffffff&w=608&h=608",
+    "page": "https://www.tyndrumwhisky.com/paul-launois-champagne-monochrome-6.html",
+    "size": "1200x1200",
+    "why": "candidate label names a different cuvee: morochaume",
+    "label": "PAUL LAUNOIS morochaume",
+    "strongestGroup": true,
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "image": "https://www.bourbonery.com/wp-content/uploads/2026/5/1777676260/champagne-paul-launois-monochrome-blanc-de-blancs-grand-cru-extra-brut-champagne-france-nv-1777676267.webp",
+    "page": "https://bourbonery.com/product/champagne-paul-launois-monochrome-blanc-de-blancs-grand-cru-extra-brut-champagne-france-nv",
+    "size": "800x800",
+    "why": "no clean background — a photographed scene, not a product shot",
+    "label": "",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "image": "https://cdn.shoplightspeed.com/shops/640383/files/55535377/700x1000x1/champagne-paul-launois-composition-brut-nv.jpg",
+    "page": "https://www.petitphilippe.com/copy-of-champagne-paul-launois-composition-3-brut.html",
+    "size": "700x1000",
+    "why": "candidate label names a different cuvee: composition",
+    "label": "PAUL LAUNOIS composition",
+    "strongestGroup": true,
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "image": "https://assets.tyndrumwhisky.com/media/catalog/product/a/u/aug24-paulaunoisillustration4.jpg?q=80&canvas.width=408&canvas.height=408&canvas.color=ffffff&w=408&h=408",
+    "page": "https://www.tyndrumwhisky.com/paul-launois-champagne-monochrome-6.html",
+    "size": "1200x1200",
+    "why": "identity not proven automatically",
+    "label": "CHAMPAGNE PAUL LAUNOIS",
+    "strongestGroup": true,
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "image": "https://www.grandibottiglie.com/27502-thickbox_default/champagne-contraste-2-paul-launois.jpg",
+    "page": "https://www.grandibottiglie.com/en/champagne-contraste-2-paul-launois.html",
+    "size": "1100x1422",
+    "why": "not in strongest repeated bottle group",
+    "label": "PAUL LAUNOIS contraste",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "image": "https://www.grandibottiglie.com/27503-home_default/champagne-grand-cru-illustration-4-paul-launois-launois-paul-launois-paul-launois.jpg",
+    "page": "https://www.grandibottiglie.com/en/champagne-contraste-2-paul-launois.html",
+    "size": "236x305",
+    "why": "identity reader returned no valid result for this candidate",
+    "label": "",
+    "strongestGroup": true,
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "image": "https://www.grandibottiglie.com/27504-home_default/champagne-monochrome-5-paul-launois.jpg",
+    "page": "https://www.grandibottiglie.com/en/champagne-contraste-2-paul-launois.html",
+    "size": "236x305",
+    "why": "identity not proven automatically",
+    "label": "",
+    "strongestGroup": true,
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "image": "https://www.royalmilewhiskies.com/media/catalog/product/cache/10e6905b752ea4a438fa289a54c3891d/a/m/am001676_.jpg",
+    "page": "https://www.royalmilewhiskies.com/champagne-paul-launois-monochrome-6-75cl/",
+    "size": "700x700",
+    "why": "not in strongest repeated bottle group",
+    "label": "",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "image": "https://cdn.shoplightspeed.com/shops/640383/files/65658059/700x1000x1/champagne-paul-launois-composition-brut-nv.jpg",
+    "page": "https://www.petitphilippe.com/copy-of-champagne-paul-launois-composition-3-brut.html",
+    "size": "700x1000",
+    "why": "candidate label names a different cuvee: composition",
+    "label": "PAUL LAUNOIS composition",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": true
+   }
+  ],
+  "updatedAt": "2026-09-29T08:39:03.979Z"
  }
 }

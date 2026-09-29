@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-28T08:45:01Z",
+  "updated": "2026-09-29T08:37:58Z",
   "windowDays": 30,
   "wines": [
     {
@@ -8,7 +8,7 @@
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 95.08333
+      "cases": 99.08333
     },
     {
       "slug": "henri-bourgeois-sancerre-blanc-2025",
@@ -16,7 +16,7 @@
     },
     {
       "slug": "henri-bourgeois-pure-sauvignon-blanc-vin-de-pays-2025",
-      "cases": 54.08333
+      "cases": 56.08333
     },
     {
       "slug": "vine-hill-ranch-cabernet-sauvignon-napa-valley-vine-hill-ranch-vineyard-2023",

@@ -26,9 +26,9 @@
       "slug": "acentor",
       "name": "Acentor",
       "mode": "generated",
-      "fingerprint": "e5b2b1cbf983463063dba1b7f02880f1001f7d5f8e925d4ba591b142302e338e",
-      "retryFingerprint": "e5b2b1cbf983463063dba1b7f02880f1001f7d5f8e925d4ba591b142302e338e",
-      "retryAfter": "2026-10-26",
+      "fingerprint": "112fbb43b878fb351c07f5576865e0cebea571092e29ed8bc67d9f751e54e10e",
+      "retryFingerprint": "112fbb43b878fb351c07f5576865e0cebea571092e29ed8bc67d9f751e54e10e",
+      "retryAfter": "2026-10-29",
       "lastError": "collection editorial \"producer/acentor\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3329,8 +3329,8 @@
       "mode": "generated",
       "fingerprint": "63f3e641ace9aae70daa20daab560e3649f7dae5956b4647bd051589aa5f0f5e",
       "retryFingerprint": "63f3e641ace9aae70daa20daab560e3649f7dae5956b4647bd051589aa5f0f5e",
-      "retryAfter": "2026-09-16",
-      "lastError": "collection editorial \"producer/wolfberger\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-10-29",
+      "lastError": "collection editorial \"producer/wolfberger\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
