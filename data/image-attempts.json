@@ -8243,9 +8243,10 @@
   "attempts": 1
  },
  "620201*": {
-  "lastAttempted": "2026-08-04T08:04:58.433Z",
-  "outcome": "imported",
-  "attempts": 1
+  "lastAttempted": "2026-09-30T08:39:04.918Z",
+  "outcome": "miss",
+  "attempts": 2,
+  "matcherVersion": "google-image-consensus-v1"
  },
  "620203": {
   "lastAttempted": "2026-09-23T04:25:22.479Z",

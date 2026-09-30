@@ -15308,12 +15308,12 @@
   "ok": false,
   "failureStage": "download",
   "failureCode": "",
-  "reason": "only 1 of 7 candidates downloaded",
+  "reason": "only 1 of 5 candidates downloaded",
   "funnel": {
    "searchResults": 15,
-   "sourcePolicyBlocked": 8,
-   "permittedCandidates": 7,
-   "downloadAttempted": 7,
+   "sourcePolicyBlocked": 10,
+   "permittedCandidates": 5,
+   "downloadAttempted": 5,
    "downloaded": 1,
    "decodedImages": 0,
    "bottleShapePassed": 0,
@@ -15333,9 +15333,9 @@
    "labelModel": "gpt-4.1-nano",
    "labelReasoningEffort": "",
    "providerResults": [],
-   "initialWindowCandidates": 7,
+   "initialWindowCandidates": 5,
    "extensionWindowCandidates": 0,
-   "downloadHttpFailures": 6,
+   "downloadHttpFailures": 4,
    "downloadTooSmall": 0,
    "downloadUnsupported": 0,
    "downloadConversionFailures": 0,
@@ -15344,7 +15344,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-09-29T08:39:06.088Z"
+  "updatedAt": "2026-09-30T08:39:06.985Z"
  },
  "elizabeth-rose-chockablock-napa-valley-red-blend-2023": {
   "slug": "elizabeth-rose-chockablock-napa-valley-red-blend-2023",
@@ -102850,7 +102850,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-09-29T08:39:03.988Z"
+  "updatedAt": "2026-09-30T08:39:04.928Z"
  },
  "collotte-domaine-collotte-gevrey-chambertin-les-evocelles-2020": {
   "slug": "collotte-domaine-collotte-gevrey-chambertin-les-evocelles-2020",
@@ -178600,7 +178600,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-09-29T08:39:06.088Z"
+  "updatedAt": "2026-09-30T08:39:06.985Z"
  },
  "domaine-arnoux-lachaux-romanee-saint-vivant-2022": {
   "slug": "domaine-arnoux-lachaux-romanee-saint-vivant-2022",
@@ -198721,5 +198721,302 @@
    }
   ],
   "updatedAt": "2026-09-29T08:39:03.979Z"
+ },
+ "acentor-isaac-fernandez-seleccion-acentor-garnacha-do-calatayud-2021": {
+  "slug": "acentor-isaac-fernandez-seleccion-acentor-garnacha-do-calatayud-2021",
+  "sku": "620201*",
+  "name": "Acentor Isaac Fernandez Seleccion Acentor Garnacha Do Calatayud",
+  "ok": false,
+  "failureStage": "identity-anchor",
+  "failureCode": "SIBLING_CUVEE_CONFLICT",
+  "reason": "identity unresolved: SIBLING_CUVEE_CONFLICT, PRODUCER_CONFLICT, VISIBLE_WRONG_VINTAGE, PRODUCT_FACET_UNREADABLE",
+  "funnel": {
+   "searchResults": 15,
+   "sourcePolicyBlocked": 5,
+   "permittedCandidates": 10,
+   "downloadAttempted": 10,
+   "downloaded": 10,
+   "decodedImages": 10,
+   "bottleShapePassed": 7,
+   "cleanBackgrounds": 8,
+   "similarPairs": 3,
+   "repeatedGroups": 3,
+   "strongestGroupImages": 2,
+   "labelImagesRead": 10,
+   "identityAnchors": 0,
+   "explicitConflicts": 8,
+   "publishableAnchors": 0,
+   "outcome": "failed",
+   "recoveryScope": "",
+   "queryVintageOmitted": false,
+   "searched": true,
+   "searchProvider": "brave",
+   "labelModel": "gpt-4.1-nano",
+   "labelReasoningEffort": "",
+   "providerResults": [],
+   "initialWindowCandidates": 10,
+   "extensionWindowCandidates": 0,
+   "downloadHttpFailures": 0,
+   "downloadTooSmall": 0,
+   "downloadUnsupported": 0,
+   "downloadConversionFailures": 0,
+   "downloadTransportFailures": 0,
+   "downloadExcluded": 0,
+   "selectorReceived": 10,
+   "decodeFailures": 0,
+   "comparedPairs": 45,
+   "productIdentityAnchors": 0,
+   "wrongVisibleVintages": 3,
+   "sourceIdentityAnchors": 0,
+   "plannedIdentityCandidates": 10,
+   "readerCalls": 8,
+   "readerRetries": 0,
+   "invalidReaderResults": 0,
+   "anchorShapeFailures": 0,
+   "anchorResolutionFailures": 0
+  },
+  "evidence": [
+   {
+    "id": "candidate-1",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "SIBLING_CUVEE_CONFLICT",
+    "conflict": "label does not tell this apart from another Acentor wine (looked for: calatayud, do, garnacha)",
+    "label": "ACENTOR",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-3",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "SIBLING_CUVEE_CONFLICT",
+    "conflict": "label does not tell this apart from another Acentor wine (looked for: calatayud, do, garnacha)",
+    "label": "ACENTOR",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-7",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "PRODUCER_CONFLICT",
+    "conflict": "candidate producer is AGENTOR; request is Acentor",
+    "sourceVintageMismatch": "candidate source title says 2020; request is 2021",
+    "label": "AGENTOR RIOJA",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-4",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "wrong-visible",
+    "reasonCode": "VISIBLE_WRONG_VINTAGE",
+    "conflict": {
+     "expected": "2021",
+     "visible": "2018"
+    },
+    "label": "RIOJA 2018",
+    "visibleVintage": "2018",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-8",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "PRODUCER_CONFLICT",
+    "conflict": "candidate producer is ASTRALES; request is Acentor",
+    "sourceVintageMismatch": "candidate source title says 2003; request is 2021",
+    "label": "ASTRALES Rotoro del Duoro",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-9",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "wrong-visible",
+    "reasonCode": "VISIBLE_WRONG_VINTAGE",
+    "conflict": {
+     "expected": "2021",
+     "visible": "2018"
+    },
+    "sourceVintageMismatch": "candidate source title says 2024; request is 2021",
+    "label": "VILLUMETTE VALLEY 2018",
+    "visibleVintage": "2018",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-5",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "wrong-visible",
+    "reasonCode": "VISIBLE_WRONG_VINTAGE",
+    "conflict": "candidate producer is Bodegas y Vinedos Ponce, S.L.; request is Acentor",
+    "label": "Bodegas y Vinedos Ponce, S.L. Monastrell MANCHUELA 2013",
+    "visibleVintage": "2013",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-10",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": true,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "PRODUCER_CONFLICT",
+    "conflict": "candidate producer is Sordo; request is Acentor",
+    "sourceVintageMismatch": "candidate source title says 2023; request is 2021",
+    "label": "Sordo Nebbiolo d'Alba",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-2",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": false,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "PRODUCT_FACET_UNREADABLE",
+    "label": "ACENTOR GARNACHA",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   },
+   {
+    "id": "candidate-6",
+    "anchor": false,
+    "productAnchor": false,
+    "explicitConflict": false,
+    "readStatus": "ok",
+    "vintageStatus": "neutral",
+    "reasonCode": "PRODUCT_FACET_UNREADABLE",
+    "label": "ACENTOR GARNACHA",
+    "visibleVintage": "",
+    "localVisibleVintage": ""
+   }
+  ],
+  "candidates": [
+   {
+    "image": "https://finevines.com/assets/img/wines/acentor-isaac-fernandez-seleccion-acentor-garnacha-do-calatayud-2021.jpg",
+    "page": "https://finevines.com/portfolio/?producer=Domaine+Des+Corbilli%C3%A8res",
+    "size": "600x900",
+    "why": "label does not tell this apart from another Acentor wine (looked for: calatayud, do, garnacha)",
+    "label": "ACENTOR",
+    "strongestGroup": true,
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "image": "https://cdn.ct-static.com/labels/67125898-6c35-4e15-b54e-cc29edbd739f.jpg",
+    "page": "https://www.cellartracker.com/wine.asp?iWine=2637015",
+    "size": "620x620",
+    "why": "subject too wide for a single bottle — carton, magnum or pair",
+    "label": "ACENTOR GARNACHA",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "image": "https://www.totalwine.com/dynamic/x1000,sq/images/171003750/171003750-1-fr.png",
+    "page": "https://www.totalwine.com/p/171003750-1",
+    "size": "1000x1000",
+    "why": "label does not tell this apart from another Acentor wine (looked for: calatayud, do, garnacha)",
+    "label": "ACENTOR",
+    "strongestGroup": true,
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "image": "https://static.wineaccess.com/optimized/images/products/2020/01/IF_bottle/fbf62fa3dbab204009711ca804b8d532.jpg",
+    "page": "https://www.wineaccess.com/catalog/2018-acentor-isaac-fernandez-seleccion_a568d53b-13f8-4d55-b12f-80a0e7abf8da/",
+    "size": "500x781",
+    "why": "visible vintage 2018; catalog vintage 2021",
+    "label": "RIOJA 2018",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "image": "https://bachner.com/wp-content/uploads/2024/02/IMG_3378.jpg",
+    "page": "https://bachner.com/2023/09/01/2019-isaac-fernandez-acentor-garnacha/",
+    "size": "960x665",
+    "why": "candidate producer is Bodegas y Vinedos Ponce, S.L.; request is Acentor",
+    "label": "Bodegas y Vinedos Ponce, S.L. Monastrell MANCHUELA 2013",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "image": "https://cdn.ct-static.com/labels/42fef33c-6500-416f-a309-2662f84c048d.jpg",
+    "page": "https://www.cellartracker.com/wine.asp?iWine=3985457",
+    "size": "768x1024",
+    "why": "no clean background — a photographed scene, not a product shot",
+    "label": "ACENTOR GARNACHA",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": false
+   },
+   {
+    "image": "https://finevines.com/assets/img/wines/acentor-isaac-fernandez-seleccion-acentor-rioja-2020.jpg",
+    "page": "https://finevines.com/portfolio/?producer=Domaine+Des+Corbilli%C3%A8res",
+    "size": "600x900",
+    "why": "candidate producer is AGENTOR; request is Acentor",
+    "label": "AGENTOR RIOJA",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "image": "https://finevines.com/assets/img/wines/astrales-bodegas-los-astrales-astrales-do-ribera-del-duero-2003.jpg",
+    "page": "https://finevines.com/portfolio/?producer=Domaine+Des+Corbilli%C3%A8res",
+    "size": "600x900",
+    "why": "candidate producer is ASTRALES; request is Acentor",
+    "label": "ASTRALES Rotoro del Duoro",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "image": "https://finevines.com/assets/img/wines/autre-monde-pinot-noir-willamette-valley-2024.jpg",
+    "page": "https://finevines.com/portfolio/?producer=Domaine+Des+Corbilli%C3%A8res",
+    "size": "600x900",
+    "why": "visible vintage 2018; catalog vintage 2021",
+    "label": "VILLUMETTE VALLEY 2018",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": true
+   },
+   {
+    "image": "https://finevines.com/assets/img/wines/az-arg-sordo-langhe-nebbiolo-doc-2023.jpg",
+    "page": "https://finevines.com/portfolio/?page=11",
+    "size": "600x900",
+    "why": "candidate producer is Sordo; request is Acentor",
+    "label": "Sordo Nebbiolo d'Alba",
+    "strongestGroup": false,
+    "anchor": false,
+    "explicitConflict": true
+   }
+  ],
+  "updatedAt": "2026-09-30T08:39:04.917Z"
  }
 }

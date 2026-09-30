@@ -26,9 +26,9 @@
       "slug": "acentor",
       "name": "Acentor",
       "mode": "generated",
-      "fingerprint": "112fbb43b878fb351c07f5576865e0cebea571092e29ed8bc67d9f751e54e10e",
-      "retryFingerprint": "112fbb43b878fb351c07f5576865e0cebea571092e29ed8bc67d9f751e54e10e",
-      "retryAfter": "2026-10-29",
+      "fingerprint": "e5b2b1cbf983463063dba1b7f02880f1001f7d5f8e925d4ba591b142302e338e",
+      "retryFingerprint": "e5b2b1cbf983463063dba1b7f02880f1001f7d5f8e925d4ba591b142302e338e",
+      "retryAfter": "2026-10-30",
       "lastError": "collection editorial \"producer/acentor\" contains a prohibited dash or invalid UTF-8"
     },
     {
