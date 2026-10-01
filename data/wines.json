@@ -135,8 +135,11 @@
     "abv": "14.5%",
     "bottleSize": "750ml",
     "drinkWindow": "2024‑2030",
-    "imagePath": "assets/img/wines/acentor-isaac-fernandez-seleccion-acentor-garnacha-do-calatayud-2021.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/acentor-isaac-fernandez-seleccion-acentor-garnacha-do-calatayud-2021.jpg",
+    "imageSource": "scraped-web",
+    "imageSourceUrl": "https://finevines.com/portfolio/?producer=Domaine+Des+Corbilli%C3%A8res",
+    "imageReviewedAt": "2026-10-01T02:56:50Z",
+    "imageReviewActionId": "06a22f6a-9d91-4083-b9d8-59c547c58bf5",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -148,11 +151,11 @@
       "drinkWindow": "found",
       "finish": "found",
       "foodPairings": "found",
-      "image": "derived",
+      "image": "found",
       "palate": "found",
       "sommelierNotes": "found"
     },
-    "metadataScore": 85,
+    "metadataScore": 92,
     "matchConfidence": 95,
     "enrichedAt": "2026-09-30T08:38:33Z",
     "slug": "acentor-isaac-fernandez-seleccion-acentor-garnacha-do-calatayud-2021"
