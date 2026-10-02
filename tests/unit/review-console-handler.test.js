@@ -18,11 +18,11 @@ function fixture({ dispatch = async () => {}, identity = REVIEWER_IDENTITY, queu
       catalogWines: [{ sku: 'PHOTO-1', skus: ['PHOTO-1', 'PHOTO-1*'], slug: 'pictured-wine-2021', displayIdentity: 'Producer · Pictured Wine · 2021', currentImage: 'assets/img/wines/pictured-wine-2021.jpg', currentImages: ['assets/img/wines/pictured-wine-2021.jpg'], imageSource: 'scraped-web', wineRevision: 'c'.repeat(64), wineRevisions: [{ sku: 'PHOTO-1', wineRevision: 'c'.repeat(64) }, { sku: 'PHOTO-1*', wineRevision: 'd'.repeat(64) }] }],
       wines: [
         { sku: '500740*', slug: 'producer-wine-2022', displayIdentity: 'Producer Wine 2022', searchQuery: 'Producer Wine 2022 exact query', wineRevision: 'a'.repeat(64), candidates: [{ candidateId: 'c1', storageName: 'c1.png', sha256: '1'.repeat(64), mime: 'image/png', bytes: candidate.length, width: 400, height: 800, sourceUrl: 'https://producer.example/wine', sourceImageUrl: 'https://producer.example/wine.png' }] },
-        { sku: '500741*', slug: 'producer-other-wine-2021', displayIdentity: 'Producer Other Wine 2021', searchQuery: 'Producer Other Wine 2021', wineRevision: 'b'.repeat(64), candidates: [{ candidateId: 'c2', storageName: 'c2.png', sha256: '2'.repeat(64), mime: 'image/png', bytes: candidate.length, width: 400, height: 800, sourceUrl: 'https://producer.example/other', sourceImageUrl: 'https://producer.example/other.png' }] },
+        { sku: '500741*', slug: 'producer-other-wine-2021', displayIdentity: 'Producer Other Wine 2021', searchQuery: 'Producer Other Wine 2021', wineRevision: 'b'.repeat(64), candidates: [{ candidateId: 'c2', storageName: 'c2.png', storagePackageId: 'pkg-0', sha256: '2'.repeat(64), mime: 'image/png', bytes: candidate.length, width: 400, height: 800, sourceUrl: 'https://producer.example/other', sourceImageUrl: 'https://producer.example/other.png' }] },
       ],
     })],
     ['_review/test/packages/pkg-1/images/c1.png', candidate],
-    ['_review/test/packages/pkg-1/images/c2.png', candidate],
+    ['_review/test/packages/pkg-0/images/c2.png', candidate],
   ]);
   const writes = [];
   const activeWines = new Map();
@@ -327,6 +327,14 @@ describe('review console handler', () => {
     assert.equal(image.headers.get('content-type'), 'image/png');
     assert.deepEqual([...new Uint8Array(await image.arrayBuffer())], [1, 2, 3, 4]);
     assert.match(image.headers.get('x-robots-tag'), /noimageindex/);
+  });
+
+  it('serves a carried-forward candidate from the package that stored its bytes', async () => {
+    const { handle } = fixture();
+    const cookie = await login(handle);
+    const image = await handle(new Request('https://review.finevines.biz/api/packages/pkg-1/images/c2', { headers: { cookie } }));
+    assert.equal(image.status, 200);
+    assert.deepEqual([...new Uint8Array(await image.arrayBuffer())], [1, 2, 3, 4]);
   });
 
   it('does not serve candidate bytes before login', async () => {

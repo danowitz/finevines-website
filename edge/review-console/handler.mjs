@@ -315,7 +315,11 @@ export function createReviewConsole({ config, storage, state, accounts, dispatch
         const manifest = await loadPackage(storage, prefix, packageId);
         const candidate = manifest.wines.flatMap((wine) => wine.candidates || []).find((item) => item.candidateId === candidateId);
         if (!candidate || !safeSegment(candidate.storageName)) throw new Error('candidate not found');
-        const bytes = await storage.getBytes(`${prefix}/packages/${packageId}/images/${candidate.storageName}`);
+        // A carried-forward candidate's bytes live in the package that first
+        // stored them; the publisher no longer copies them into each successor.
+        const storagePackageId = candidate.storagePackageId || packageId;
+        if (!safeSegment(storagePackageId) || storagePackageId.includes('..')) throw new Error('candidate not found');
+        const bytes = await storage.getBytes(`${prefix}/packages/${storagePackageId}/images/${candidate.storageName}`);
         if (!bytes || bytes.byteLength !== candidate.bytes) throw new Error('candidate not found');
         return response(bytes, { headers: { 'Content-Type': candidate.mime, 'Content-Length': String(bytes.byteLength) } });
       } catch {

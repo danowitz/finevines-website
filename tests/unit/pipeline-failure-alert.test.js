@@ -20,7 +20,8 @@ describe('production pipeline failure alerts', () => {
       encoding: 'utf8',
       env: {
         ...process.env,
-        FINEVINES_NOTIFY_FROM: '"FineVines Pipeline <catalog@finevines.com>"',
+        // A leading byte-order mark crashed formataddr in production.
+        FINEVINES_NOTIFY_FROM: '\uFEFF"FineVines Pipeline <catalog@finevines.com>"',
         FINEVINES_FAILURE_NOTIFY_TO: 'joel@gritautomation.com',
         GITHUB_REPOSITORY: 'danowitz/finevines-website',
         GITHUB_RUN_ID: '12345',

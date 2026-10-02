@@ -9,6 +9,15 @@ import { createReviewerAccounts } from '../../edge/review-console/reviewer-accou
 import { buildReviewerRoster } from '../labelfetch/review-package.mjs';
 import { createBunnyStorage } from '../../edge/review-console/bunny-storage.mjs';
 
+// Secrets pasted through a shell or saved from a Windows editor arrive with
+// outer quotes or an invisible byte-order mark; either makes the relay reject
+// MAIL FROM with 501 5.1.7. Mirrors internal/notify normalizedAddress.
+export function normalizeSender(value) {
+  let sender = String(value || '').replace(/\p{Cf}/gu, '').trim();
+  if (sender.length >= 2 && sender[0] === sender.at(-1) && (sender[0] === '"' || sender[0] === "'")) sender = sender.slice(1, -1).trim();
+  return sender;
+}
+
 function options(args) {
   const values = { command: args[0] || '' };
   for (let index = 1; index < args.length; index += 2) {
@@ -124,14 +133,15 @@ export async function runQueueCommand({ args, state, now = () => new Date(), mai
   }
 
   if (value.command === 'notify') {
-    if (!value.recipient || !value.from) throw new Error('notify requires --recipient and --from');
+    const from = normalizeSender(value.from);
+    if (!value.recipient || !from) throw new Error('notify requires --recipient and --from');
     const incidents = await state.scanIncidents(environment, value.recipient);
     if (mailer?.disabled) return { command: 'notify', incidents: incidents.length, sent: 0, delivery: 'disabled' };
     if (!mailer?.send) throw new Error('notify requires a mail transport');
     const messages = await state.claimNotifications({ limit: 25 });
     let sent = 0;
     for (const message of messages) {
-      await mailer.send({ from: value.from, ...message });
+      await mailer.send({ from, ...message });
       await state.completeNotification(message.id);
       sent += 1;
     }

@@ -100,6 +100,11 @@ type Candidate struct {
 	Reason         string   `json:"reason"`
 	LabelRead      string   `json:"labelRead"`
 	Badges         []string `json:"badges"`
+
+	// StoragePackageID names the immutable package holding the bytes when a
+	// candidate was carried forward from an earlier package; empty means the
+	// manifest's own package.
+	StoragePackageID string `json:"storagePackageId,omitempty"`
 }
 
 type PackageWine struct {
@@ -419,6 +424,7 @@ func validateManifest(manifest Manifest, action Action) (PackageWine, Candidate,
 				source, sourceErr := url.Parse(candidate.SourceURL)
 				validMIME := candidate.MIME == "image/png" || candidate.MIME == "image/jpeg" || candidate.MIME == "image/webp"
 				if !validSegment(candidate.CandidateID) || !validSegment(candidate.StorageName) || !strings.HasPrefix(candidate.StorageName, candidate.CandidateID+".") ||
+					(candidate.StoragePackageID != "" && (!validSegment(candidate.StoragePackageID) || len(candidate.StoragePackageID) > 160)) ||
 					sourceErr != nil || (source.Scheme != "https" && source.Scheme != "http") || source.Hostname() == "" ||
 					candidate.Bytes <= 0 || !validMIME || !hashPattern.MatchString(candidate.SHA256) {
 					return PackageWine{}, Candidate{}, fmt.Errorf("invalid package candidate")
@@ -705,7 +711,11 @@ func Prepare(ctx context.Context, input PrepareInput) (PrepareResult, error) {
 			result.Decisions = append(result.Decisions, decision)
 			continue
 		}
-		candidatePath := path.Join(prefix, "packages", action.PackageID, "images", candidate.StorageName)
+		storagePackageID := action.PackageID
+		if candidate.StoragePackageID != "" {
+			storagePackageID = candidate.StoragePackageID
+		}
+		candidatePath := path.Join(prefix, "packages", storagePackageID, "images", candidate.StorageName)
 		imageSource := model.ImageScrapedWeb
 		if action.Kind == "reviewer-image" {
 			candidate = Candidate{StorageName: action.ImageStorageName, SHA256: action.ImageSHA256, Bytes: action.ImageBytes, MIME: action.ImageMIME}
