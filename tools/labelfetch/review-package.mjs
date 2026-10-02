@@ -111,8 +111,10 @@ export async function buildReviewDraft({ catalog, manifest, fileExists, readByte
   return { schemaVersion: 1, searchQueries, wines };
 }
 
+// storagePackageId stays public: it names the immutable package holding the
+// candidate's bytes when that is not the manifest's own package.
 function publicCandidate(candidate) {
-  const { localFile, storagePackageId, ...publicValue } = candidate;
+  const { localFile, ...publicValue } = candidate;
   return publicValue;
 }
 
@@ -180,7 +182,12 @@ export async function publishReviewPackage({ environment, catalogCommit, catalog
     incoming.set(wine.sku, {
       ...wine,
       searchQuery: clean(wine.searchQuery) || clean(draft.searchQueries?.[wine.sku]) || legacySearchQuery(wine),
-      candidates: wine.candidates.map((candidate) => ({ ...candidate, storagePackageId: previous.packageId })),
+      // A carried candidate's bytes stay in the package that first stored
+      // them. Copying every carried image into each successor made a publish
+      // cost one download and one upload per pending candidate — 25 minutes
+      // for ~350 wines — and a run killed partway left nothing a retry could
+      // reuse, because each attempt mints a new package id.
+      candidates: wine.candidates.map((candidate) => ({ ...candidate, storagePackageId: candidate.storagePackageId || previous.packageId })),
     });
     carried++;
   }
@@ -205,11 +212,12 @@ export async function publishReviewPackage({ environment, catalogCommit, catalog
   const packageId = `${catalogCommit.slice(0, 12)}-${digest.slice(0, 20)}`;
   const manifest = { ...base, packageId };
 
+  // Only newly discovered candidates are uploaded; carried ones are read in
+  // place by the console and the Go processor through storagePackageId.
   for (const wine of wines) {
     for (const candidate of wine.candidates) {
-      const bytes = candidate.localFile
-        ? new Uint8Array(await readBytes(candidate.localFile))
-        : new Uint8Array(await storage.getBytes(`${prefix}/packages/${candidate.storagePackageId}/images/${candidate.storageName}`));
+      if (!candidate.localFile) continue;
+      const bytes = new Uint8Array(await readBytes(candidate.localFile));
       if (!bytes.length || hash(bytes) !== candidate.sha256 || bytes.length !== candidate.bytes) throw new Error(`candidate integrity failed for ${wine.sku}/${candidate.candidateId}`);
       await storage.putImmutable(`${prefix}/packages/${packageId}/images/${candidate.storageName}`, bytes, candidate.mime);
     }

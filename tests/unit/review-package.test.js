@@ -153,6 +153,25 @@ describe('hosted review package', () => {
     const current = JSON.parse(storage.files.get('_review/test/current.json'));
     const manifest = JSON.parse(storage.files.get(`_review/test/packages/${current.packageId}/manifest.json`));
     assert.equal(manifest.wines[0].searchQuery, 'Producer Wine 2022 original query');
+    assert.equal(manifest.wines[0].candidates[0].storagePackageId, 'old-package');
+    assert.equal(storage.files.has(`_review/test/packages/${current.packageId}/images/old.png`), false, 'carried bytes are not copied');
+  });
+
+  it('keeps a carried candidate pointed at its original package across successive publishes', async () => {
+    const reads = [];
+    const priorCandidate = { candidateId: 'old', storageName: 'old.png', storagePackageId: 'first-package', sha256: 'a'.repeat(64), bytes: 3, mime: 'image/png', width: 1, height: 1 };
+    const previous = { schemaVersion: 1, packageId: 'second-package', environment: 'test', catalogCommit: 'b'.repeat(40), wines: [{ sku: wine.sku, displayIdentity: 'Old', searchQuery: 'Producer Wine 2022', wineRevision: wineRevision(wine), candidates: [priorCandidate] }] };
+    const storage = memoryStorage({
+      '_review/test/current.json': JSON.stringify({ packageId: 'second-package' }),
+      '_review/test/packages/second-package/manifest.json': JSON.stringify(previous),
+    });
+    const getBytes = storage.getBytes;
+    storage.getBytes = async (path) => { reads.push(path); return getBytes(path); };
+    await publishReviewPackage({ environment: 'test', catalogCommit: 'c'.repeat(40), catalog: [wine], draft: { schemaVersion: 1, wines: [] }, reviewers, storage, readBytes: async () => { throw new Error('not local'); } });
+    const current = JSON.parse(storage.files.get('_review/test/current.json'));
+    const manifest = JSON.parse(storage.files.get(`_review/test/packages/${current.packageId}/manifest.json`));
+    assert.equal(manifest.wines[0].candidates[0].storagePackageId, 'first-package');
+    assert.deepEqual(reads, [], 'publishing never downloads carried image bytes');
   });
 
   it('migrates a legacy carried card to a producer-name-year Google query', async () => {
