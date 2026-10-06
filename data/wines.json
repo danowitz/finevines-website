@@ -5082,6 +5082,7 @@
     "drinkWindow": "Drink now to 2028",
     "imagePath": "assets/img/wines/benjamin-leroux-bourgogne-aligote-2024.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.vinsprecieux.com/products/benjamin-leroux-bourgogne-aligote-2021/",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -5100,11 +5101,7 @@
     "metadataScore": 85,
     "matchConfidence": 95,
     "enrichedAt": "2026-10-06T08:37:26Z",
-    "slug": "benjamin-leroux-bourgogne-aligote-2024",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://www.vinsprecieux.com/products/benjamin-leroux-bourgogne-aligote-2021/"
+    "slug": "benjamin-leroux-bourgogne-aligote-2024"
   },
   {
     "id": "01tPL00000HpCzpYAF",
@@ -5242,6 +5239,7 @@
     "drinkWindow": "2027–2029",
     "imagePath": "assets/img/wines/benjamin-leroux-bourgogne-rouge-2024.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://denverwinemerchant.com/products/benjamin-leroux-bourgogne-blanc-2024a",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -5260,11 +5258,7 @@
     "metadataScore": 85,
     "matchConfidence": 95,
     "enrichedAt": "2026-10-06T08:37:34Z",
-    "slug": "benjamin-leroux-bourgogne-rouge-2024",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://denverwinemerchant.com/products/benjamin-leroux-bourgogne-blanc-2024a"
+    "slug": "benjamin-leroux-bourgogne-rouge-2024"
   },
   {
     "id": "01t2I0000083dbjQAA",
@@ -6645,6 +6639,7 @@
     "drinkWindow": "2030–2040",
     "imagePath": "assets/img/wines/benjamin-leroux-echezeaux-grand-cru-2024.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.sommpicks.com/products/2024-benjamin-leroux-echezeaux-grand-cru-750ml-1-eu",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -6663,11 +6658,7 @@
     "metadataScore": 46,
     "matchConfidence": 95,
     "enrichedAt": "2026-10-06T08:37:48Z",
-    "slug": "benjamin-leroux-echezeaux-grand-cru-2024",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://www.sommpicks.com/products/2024-benjamin-leroux-echezeaux-grand-cru-750ml-1-eu"
+    "slug": "benjamin-leroux-echezeaux-grand-cru-2024"
   },
   {
     "id": "01tPL00000IVEcDYAX",
@@ -7067,6 +7058,7 @@
     "drinkWindow": "2027–2034",
     "imagePath": "assets/img/wines/benjamin-leroux-gevrey-chambertin-2024.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.bbr.com/producer-1443-benjamin-leroux",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -7085,11 +7077,7 @@
     "metadataScore": 69,
     "matchConfidence": 95,
     "enrichedAt": "2026-10-06T08:37:37Z",
-    "slug": "benjamin-leroux-gevrey-chambertin-2024",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://www.bbr.com/producer-1443-benjamin-leroux"
+    "slug": "benjamin-leroux-gevrey-chambertin-2024"
   },
   {
     "id": "01tF00000035tm8IAA",
@@ -7701,6 +7689,7 @@
     "drinkWindow": "2028‑2032",
     "imagePath": "assets/img/wines/benjamin-leroux-meursault-2024.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://nyc.flatiron-wines.com/products/benjamin-leroux-meursault-2023-750ml",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -7719,11 +7708,7 @@
     "metadataScore": 54,
     "matchConfidence": 95,
     "enrichedAt": "2026-10-06T08:37:27Z",
-    "slug": "benjamin-leroux-meursault-2024",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://nyc.flatiron-wines.com/products/benjamin-leroux-meursault-2023-750ml"
+    "slug": "benjamin-leroux-meursault-2024"
   },
   {
     "id": "01tPL000004fWMbYAM",
@@ -8910,6 +8895,7 @@
     "drinkWindow": "2029–2034",
     "imagePath": "assets/img/wines/benjamin-leroux-volnay-1er-cru-clos-de-la-cave-des-ducs-2024.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://kentstreetcellars.com.au/products/benjamin-leroux-volnay-1er-cru-clos-de-la-cave-des-ducs-2018",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -8928,11 +8914,7 @@
     "metadataScore": 85,
     "matchConfidence": 95,
     "enrichedAt": "2026-10-06T08:37:43Z",
-    "slug": "benjamin-leroux-volnay-1er-cru-clos-de-la-cave-des-ducs-2024",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://kentstreetcellars.com.au/products/benjamin-leroux-volnay-1er-cru-clos-de-la-cave-des-ducs-2018"
+    "slug": "benjamin-leroux-volnay-1er-cru-clos-de-la-cave-des-ducs-2024"
   },
   {
     "id": "01tPL00000ANrp3YAD",
@@ -9274,6 +9256,7 @@
     "drinkWindow": "2028‑2033",
     "imagePath": "assets/img/wines/benjamin-leroux-volnay-1er-cru-les-mitans-2024.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://www.martinet-finewines.com/product/2019-benjamin-leroux-1er-cru-les-mitans-volnay/",
     "sources": {
       "abv": "missing",
       "appellation": "found",
@@ -9292,11 +9275,7 @@
     "metadataScore": 77,
     "matchConfidence": 90,
     "enrichedAt": "2026-10-06T08:37:40Z",
-    "slug": "benjamin-leroux-volnay-1er-cru-les-mitans-2024",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://www.martinet-finewines.com/product/2019-benjamin-leroux-1er-cru-les-mitans-volnay/"
+    "slug": "benjamin-leroux-volnay-1er-cru-les-mitans-2024"
   },
   {
     "id": "01tPL0000073vybYAA",
@@ -9381,6 +9360,7 @@
     "drinkWindow": "2028–2040",
     "imagePath": "assets/img/wines/benjamin-leroux-volnay-1er-cru-les-santenots-2024.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://perrineswine.com/products/2022-benjamin-leroux-volnay-1er-cru-les-santenots-burgundy-france",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -9399,11 +9379,7 @@
     "metadataScore": 62,
     "matchConfidence": 95,
     "enrichedAt": "2026-10-06T08:37:44Z",
-    "slug": "benjamin-leroux-volnay-1er-cru-les-santenots-2024",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://perrineswine.com/products/2022-benjamin-leroux-volnay-1er-cru-les-santenots-burgundy-france"
+    "slug": "benjamin-leroux-volnay-1er-cru-les-santenots-2024"
   },
   {
     "id": "01tPL00000AO5wrYAD",
@@ -75971,6 +75947,7 @@
     "drinkWindow": "2026–2032",
     "imagePath": "assets/img/wines/domaine-paul-prieur-sancerre-monts-damnes-2024.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://winelibrary.com/wines/sauvignon-blanc/2019-paul-prieur-sancerre-kes-monts-damnes-129001",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -75989,11 +75966,7 @@
     "metadataScore": 31,
     "matchConfidence": 85,
     "enrichedAt": "2026-10-06T08:37:55Z",
-    "slug": "domaine-paul-prieur-sancerre-monts-damnes-2024",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://winelibrary.com/wines/sauvignon-blanc/2019-paul-prieur-sancerre-kes-monts-damnes-129001"
+    "slug": "domaine-paul-prieur-sancerre-monts-damnes-2024"
   },
   {
     "id": "01tPL00000IZNU1YAP",
@@ -93329,6 +93302,7 @@
     "drinkWindow": "2026–2038",
     "imagePath": "assets/img/wines/ghost-block-estate-cabernet-sauvignon-napa-valley-2023.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://ludwigsfinewine.com/products/ghost-block-estate-cabernet-sauvignon-2021-750-ml",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -93347,11 +93321,7 @@
     "metadataScore": 85,
     "matchConfidence": 95,
     "enrichedAt": "2026-10-06T08:37:17Z",
-    "slug": "ghost-block-estate-cabernet-sauvignon-napa-valley-2023",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://ludwigsfinewine.com/products/ghost-block-estate-cabernet-sauvignon-2021-750-ml"
+    "slug": "ghost-block-estate-cabernet-sauvignon-napa-valley-2023"
   },
   {
     "id": "01tPL00000GYWSVYA5",
@@ -93403,10 +93373,7 @@
     "metadataScore": 38,
     "matchConfidence": 85,
     "enrichedAt": "2026-08-04T22:44:59Z",
-    "slug": "ghost-block-estate-cabernet-sauvignon-napa-valley-2023",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": ""
+    "slug": "ghost-block-estate-cabernet-sauvignon-napa-valley-2023"
   },
   {
     "id": "01tPL000008iMGLYA2",
