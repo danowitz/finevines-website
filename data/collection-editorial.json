@@ -3771,10 +3771,10 @@
       "slug": "loire-valley",
       "name": "Loire Valley",
       "mode": "generated",
-      "fingerprint": "2ddea2e962226fd020320c20b8c8d6653838c45b28b10ab36b974bc545cd9b92",
-      "retryFingerprint": "2ddea2e962226fd020320c20b8c8d6653838c45b28b10ab36b974bc545cd9b92",
-      "retryAfter": "2026-10-23",
-      "lastError": "collection editorial \"region/loire-valley\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "ec7036d017ef63a0e9faa03c93117007100d235fe1de9386810bd058e299d2c1",
+      "retryFingerprint": "ec7036d017ef63a0e9faa03c93117007100d235fe1de9386810bd058e299d2c1",
+      "retryAfter": "2026-11-05",
+      "lastError": "research JSON has 195 words; expected 120 to 190"
     },
     {
       "kind": "region",
@@ -4526,10 +4526,10 @@
       "slug": "chenin-blanc",
       "name": "Chenin Blanc",
       "mode": "generated",
-      "fingerprint": "ff36e4430b79e668886cc20b42c166e4e27bd04b69edc9e758d4687da3f98623",
-      "retryFingerprint": "ff36e4430b79e668886cc20b42c166e4e27bd04b69edc9e758d4687da3f98623",
-      "retryAfter": "2026-10-23",
-      "lastError": "research JSON has 192 words; expected 120 to 190"
+      "fingerprint": "916d4fb3ab976525cedd310e31768a9014cba920c0a73dc5386ff4cc31631834",
+      "retryFingerprint": "916d4fb3ab976525cedd310e31768a9014cba920c0a73dc5386ff4cc31631834",
+      "retryAfter": "2026-11-05",
+      "lastError": "collection editorial \"varietal/chenin-blanc\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",

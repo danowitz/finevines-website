@@ -33,6 +33,11 @@
     "territory": "Chicago"
   },
   {
+    "name": "Sam Klingberg",
+    "role": "Sales Rep",
+    "email": "sam@finevines.com"
+  },
+  {
     "name": "Tim Freehan",
     "role": "Sales Rep",
     "email": "tim@finevines.com",
