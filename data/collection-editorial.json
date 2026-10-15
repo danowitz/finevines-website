@@ -3121,9 +3121,9 @@
       "slug": "torii-mor",
       "name": "Torii Mor",
       "mode": "generated",
-      "fingerprint": "4009410c257fe121bc801784920d3137016a01185620593c689ffe995fdf2668",
-      "retryFingerprint": "4009410c257fe121bc801784920d3137016a01185620593c689ffe995fdf2668",
-      "retryAfter": "2026-10-28",
+      "fingerprint": "d7802a0b4a8e1bfca2614684c60d2f3862308bcf34185ceb071f5cd49b33ead8",
+      "retryFingerprint": "d7802a0b4a8e1bfca2614684c60d2f3862308bcf34185ceb071f5cd49b33ead8",
+      "retryAfter": "2026-11-14",
       "lastError": "collection editorial \"producer/torii-mor\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3287,9 +3287,9 @@
       "slug": "vine-hill-ranch",
       "name": "Vine Hill Ranch",
       "mode": "generated",
-      "fingerprint": "64a8f3282989fdee6b548316e9b5f9d1a1f277a45c8e5d23ff8598a210f02e24",
-      "retryFingerprint": "64a8f3282989fdee6b548316e9b5f9d1a1f277a45c8e5d23ff8598a210f02e24",
-      "retryAfter": "2026-10-25",
+      "fingerprint": "1ede2bb60bcc53945dd39769a3bb914ea4f5f6273f27e0e3f06d3a2e89396e45",
+      "retryFingerprint": "1ede2bb60bcc53945dd39769a3bb914ea4f5f6273f27e0e3f06d3a2e89396e45",
+      "retryAfter": "2026-11-14",
       "lastError": "collection editorial \"producer/vine-hill-ranch\" contains a prohibited dash or invalid UTF-8"
     },
     {

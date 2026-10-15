@@ -1,30 +1,30 @@
 {
-  "updated": "2026-10-06T08:38:01Z",
+  "updated": "2026-10-15T05:30:15Z",
   "windowDays": 30,
   "wines": [
     {
       "slug": "domaine-vacheron-sancerre-blanc-2024",
-      "cases": 121.41669
-    },
-    {
-      "slug": "henri-bourgeois-sancerre-blanc-2025",
-      "cases": 80.33333999999999
+      "cases": 131.50002999999998
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 69.16666
+      "cases": 71.66666
     },
     {
       "slug": "henri-bourgeois-pure-sauvignon-blanc-vin-de-pays-2025",
-      "cases": 52.16666
+      "cases": 71.16666000000001
     },
     {
       "slug": "vine-hill-ranch-cabernet-sauvignon-napa-valley-vine-hill-ranch-vineyard-2023",
-      "cases": 46
+      "cases": 56
     },
     {
-      "slug": "gen5-ancestral-red-2024",
-      "cases": 39.5
+      "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
+      "cases": 51
+    },
+    {
+      "slug": "cave-de-saumur-saumur-blanc-les-plantagenets-2024",
+      "cases": 48
     }
   ]
 }
