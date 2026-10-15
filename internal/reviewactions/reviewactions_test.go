@@ -132,6 +132,54 @@ func TestPrepareAppliesExactCandidateButKeepsPendingUntilFinalize(t *testing.T) 
 	}
 }
 
+func TestPrepareReadsACarriedCandidateFromThePackageThatStoredIt(t *testing.T) {
+	store, wines, id := fixture(t)
+	var manifest Manifest
+	if err := json.Unmarshal(store.files["_review/test/packages/pkg-1/manifest.json"], &manifest); err != nil {
+		t.Fatal(err)
+	}
+	manifest.Wines[0].Candidates[0].StoragePackageID = "pkg-0"
+	data, err := json.Marshal(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	store.files["_review/test/packages/pkg-1/manifest.json"] = data
+	store.files["_review/test/packages/pkg-0/images/candidate-1.png"] = store.files["_review/test/packages/pkg-1/images/candidate-1.png"]
+	delete(store.files, "_review/test/packages/pkg-1/images/candidate-1.png")
+	result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Decisions) != 1 || result.Decisions[0].Status != "prepared" || result.Wines[0].ImageReviewActionID != id {
+		t.Fatalf("decisions = %#v", result.Decisions)
+	}
+}
+
+func TestPrepareRejectsCarriedPackagePathTraversal(t *testing.T) {
+	for _, packageID := range []string{"../production", "other/package", `other\package`, ".."} {
+		t.Run(packageID, func(t *testing.T) {
+			store, wines, _ := fixture(t)
+			var manifest Manifest
+			if err := json.Unmarshal(store.files["_review/test/packages/pkg-1/manifest.json"], &manifest); err != nil {
+				t.Fatal(err)
+			}
+			manifest.Wines[0].Candidates[0].StoragePackageID = packageID
+			data, err := json.Marshal(manifest)
+			if err != nil {
+				t.Fatal(err)
+			}
+			store.files["_review/test/packages/pkg-1/manifest.json"] = data
+			result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC)})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result.Decisions[0].Status != "rejected" || !strings.Contains(result.Decisions[0].Reason, "invalid package candidate") {
+				t.Fatalf("decision = %#v", result.Decisions[0])
+			}
+		})
+	}
+}
+
 func TestPrepareAppliesAnAcceptedImageToEveryRowForThePublicWine(t *testing.T) {
 	store, wines, id := fixture(t)
 	sibling := wines[0]

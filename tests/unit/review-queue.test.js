@@ -131,9 +131,12 @@ describe('review queue command', () => {
     const stalled = action('00000000-0000-4000-8000-000000000081', 'f'.repeat(64));
     await state.queue(stalled);
     const sent = [];
-    const args = ['notify', '--environment', 'test', '--recipient', 'joel@gritautomation.com', '--from', 'catalog@finevines.com'];
+    // The production secret once began with a UTF-8 byte-order mark and the
+    // relay rejected every send with 501 5.1.7 Bad sender address syntax.
+    const args = ['notify', '--environment', 'test', '--recipient', 'joel@gritautomation.com', '--from', '\uFEFF"FineVines <catalog@finevines.com>"'];
     const first = await runQueueCommand({ args, state, mailer: { send: async (message) => { sent.push(message); } } });
     assert.equal(first.sent, 1);
+    assert.equal(sent[0].from, 'FineVines <catalog@finevines.com>');
     assert.equal(sent[0].to, 'joel@gritautomation.com');
     assert.match(sent[0].subject, /needs attention/);
     const second = await runQueueCommand({ args, state, mailer: { send: async (message) => { sent.push(message); } } });

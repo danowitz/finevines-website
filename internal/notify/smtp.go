@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 // Sender is the send side of the digest, one method wide. It exists so the
@@ -276,13 +277,21 @@ func envelopeAddress(addr string) string {
 	return envelope
 }
 
-// normalizedAddress removes one pair of outer shell quotes before parsing.
+// normalizedAddress drops invisible format characters and removes one pair of
+// outer shell quotes before parsing. A secret saved from a Windows editor or
+// PowerShell can begin with a UTF-8 byte-order mark; it is invisible in every
+// log and smtp.com rejects the resulting MAIL FROM with 501 5.1.7.
 // Quotes around a display name are valid RFC 5322; quotes around the entire
 // "Name <address>" value are a common secret-pasting mistake and make smtp.com
 // reject MAIL FROM with 501 5.1.7. Returning a normalized header at the same
 // time prevents the malformed value from surviving in the message itself.
 func normalizedAddress(addr string) (header, envelope string) {
-	trimmed := strings.TrimSpace(addr)
+	trimmed := strings.TrimSpace(strings.Map(func(r rune) rune {
+		if unicode.Is(unicode.Cf, r) {
+			return -1
+		}
+		return r
+	}, addr))
 	if len(trimmed) >= 2 && ((trimmed[0] == '"' && trimmed[len(trimmed)-1] == '"') ||
 		(trimmed[0] == '\'' && trimmed[len(trimmed)-1] == '\'')) {
 		trimmed = strings.TrimSpace(trimmed[1 : len(trimmed)-1])

@@ -7,6 +7,7 @@ import argparse
 import os
 import smtplib
 import ssl
+import unicodedata
 from email.message import EmailMessage
 from email.utils import formataddr, parseaddr
 
@@ -24,7 +25,9 @@ def required(name: str) -> str:
 
 
 def address(name: str) -> tuple[str, str]:
-    value = required(name)
+    # A secret saved from a Windows editor or PowerShell can begin with an
+    # invisible UTF-8 byte-order mark, which formataddr refuses to encode.
+    value = "".join(char for char in required(name) if unicodedata.category(char) != "Cf").strip()
     if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
         value = value[1:-1].strip()
     display, envelope = parseaddr(value)
