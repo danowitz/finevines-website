@@ -472,21 +472,53 @@ describe('filter rail — without JavaScript', () => {
     await page.setJavaScriptEnabled(false);
     await page.goto(server.origin + '/portfolio/', { waitUntil: 'domcontentloaded' });
 
-    // Exactly the seed: 12 per big group, all values for the small ones.
-    const total = await page.$$eval('input[data-facet]', (e) => e.length);
-    assert.ok(total <= 90, `no-JS page should ship a seeded rail, got ${total} inputs`);
-    for (const facet of ['producer', 'region', 'varietal']) {
-      assert.equal(
-        await page.$$eval(`[data-facet-values="${facet}"] .facet-row`, (e) => e.length),
-        TOP_N
-      );
-    }
+    // The cap belongs to each big group, not to the whole rail: country and
+    // vintage render in full and their cardinality changes with the catalog.
+    const facets = ['producer', 'region', 'varietal', 'vintage', 'country'];
+    assert.deepEqual(
+      await page.$$eval('[data-facet-group]', (els) => els.map((e) => e.dataset.facetGroup)),
+      facets
+    );
+    let expectedInputs = 0;
+    for (const facet of facets) {
+      const big = ['producer', 'region', 'varietal'].includes(facet);
+      const available = await groupTotal(page, facet);
+      assert.ok(Number.isInteger(available) && available >= 0, `${facet} needs a real total`);
+      const expected = big ? Math.min(TOP_N, available) : available;
+      expectedInputs += expected;
+      const seeded = await rows(page, facet);
+      assert.equal(seeded.length, expected, `${facet} seed must cover ${expected} of ${available} values`);
+      assert.equal(new Set(seeded.map(([value]) => value)).size, expected, `${facet} has duplicate rows`);
+      for (const [value, n] of seeded) {
+        assert.ok(value.trim(), `${facet} rendered a blank value`);
+        assert.ok(Number.isInteger(n) && n > 0, `${facet}: "${value}" rendered without a real count`);
+      }
 
-    // Every group body must be populated and every count real — no empty
-    // groups, no blank counts waiting on JS that will never run.
-    for (const [value, n] of await rows(page, 'producer')) {
-      assert.ok(n > 0, `"${value}" rendered without a count`);
+      // Controls must target their own populated group; an expander only
+      // makes sense when that big group has values beyond the seed.
+      const controls = await page.$eval(`[data-facet-group="${facet}"]`, (group) => ({
+        big: group.dataset.big === '1',
+        total: Number(group.dataset.total),
+        filters: [...group.querySelectorAll('[data-facet-filter]')].map((e) => e.dataset.facetFilter),
+        sorts: [...group.querySelectorAll('[data-facet-sort]')].map((e) => e.dataset.facetSort),
+        expanders: [...group.querySelectorAll('[data-facet-expand]')].map((e) => e.dataset.facetExpand),
+        inputs: [...group.querySelectorAll('input[data-facet]')].map((e) => [e.dataset.facet, e.value]),
+      }));
+      assert.equal(controls.big, big, `${facet} has the wrong seed policy`);
+      assert.equal(controls.total, available, `${facet} header and data-total disagree`);
+      assert.deepEqual(controls.filters, big ? [facet] : [], `${facet} filter is dangling`);
+      assert.deepEqual(controls.sorts, big ? [facet] : [], `${facet} sort is dangling`);
+      assert.deepEqual(controls.expanders, big && available > TOP_N ? [facet] : [], `${facet} expander is dangling`);
+      assert.deepEqual(controls.inputs, seeded.map(([value]) => [facet, value]), `${facet} checkbox/label mismatch`);
     }
+    assert.equal(
+      await page.$$eval('input[data-facet]', (e) => e.length),
+      expectedInputs,
+      'every facet input must belong to the seed of a known group'
+    );
+
+    // Every count is already rendered above; no empty state may depend on
+    // JavaScript to become coherent.
     assert.equal(
       await page.$$eval('.facet-empty:not([hidden])', (e) => e.length),
       0,
