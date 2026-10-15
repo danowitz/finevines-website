@@ -55,7 +55,7 @@ const rows = (page, facet) =>
   page.$$eval(`[data-facet-values="${facet}"] .facet-row`, (els) =>
     els.map((el) => [
       el.querySelector('.facet-label').textContent,
-      parseInt(el.querySelector('.facet-count').textContent, 10),
+      Number(el.querySelector('.facet-count').textContent),
     ])
   );
 

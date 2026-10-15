@@ -6,13 +6,13 @@
 
 **Owned scope/deliverables:** tests/e2e/filter-rail.test.js, facet boundary coverage in internal/build/build_test.go, and this evidence record.
 
-**Preserved/out of scope:** all production source, templates, assets, catalog data, timeout recovery, deployment, and review processing. This issue corrects tests only.
+**Preserved/out of scope within this PR:** all production source, templates, assets, catalog data, timeout recovery, deployment code/configuration, and review processing. This issue corrects tests only. The subsequently authorized merge and existing publisher are described below.
 
 **Constraints/design assurance:** buildFacets owns the server seed: min(12, distinct values) for producer/region/varietal; all distinct vintage/country values. Values carry positive counts; vintage is newest-first and other groups rank by count. The template supplies header totals and facet-keyed controls. No identity, clock, persistence, retry, migration, security, or failure-policy change; no ADR needed.
 
 **Acceptance:** reproduce the original failure; assert each group's seed size, populated coherent rows/counts, and correctly keyed controls; exercise empty, below-cap, at-cap, above-cap, and over-90 catalogs; pass the full browser suite.
 
-**Production boundary:** none, repository change only.
+**Production boundary:** the PR contains repository tests/documents only. Following independent review, the user explicitly authorized merging PR #50 to the default branch and getting it into production; the existing master-push publisher may run its normal catalog publication cycle. No domain cutover or deployment configuration change is authorized or needed.
 
 **Validation:** isolated real-Chrome no-JS repro on the historical catalog, corrected test on historical and current builds, Go facet boundary tests, full npm browser suite, and diff review. No live-site, Salesforce, enrichment, deployment, or hardware tests are needed for test-only changes.
 
@@ -78,3 +78,22 @@ Only the stale evidence paragraph was corrected; no implementation or test chang
 Re-read the complete diff against origin/master, including this record, after the documentation correction. No code finding or unresolved Minor remains. Seven broken-rendering experiments demonstrate retained rejection behavior; five real-build boundary experiments demonstrate that valid catalog sizes are accepted. The diff remains confined to two test files and this evidence record, with no whitespace errors.
 
 **Outcome:** READY FOR INDEPENDENT REVIEW. Author review and Linux CI are complete; independent human review is not claimed. The PR remains a draft. No merge, deployment, new product restriction, or new workflow gate is part of this work.
+
+## Independent expert review and authorized publication
+
+The user requested expert subagents in the functional and technical areas, followed by merge to the default branch and production publication once the work passes. Three separate agents reviewed the full diff at 51a91a4: functional contract, technical test correctness, and release operations. All reported no must-fix findings. These are independent agent reviews; no human review is claimed.
+
+The technical reviewer demonstrated one Minor: inherited `parseInt` in `rows()` accepted malformed raw count text such as `1invalid`. Remediation changes that test helper to `Number`, consistent with the template's integer output and the client's `String(row.count)`. The isolated malformed-count mutation now fails as intended. This changes no product rendering behavior.
+
+Revalidation after that correction: eight scratch HTML mutations were rejected. The first full browser run was 30 passed/1 failed/1 skipped: the existing mobile Apply click raised Puppeteer's `Node is either not clickable or not an Element` at line 571. Its focused rerun passed, then the full unchanged suite passed 31/0/1 (21.023s). The count-parser change is not called by that mobile Apply path; no mobile assertion or click was changed to obtain the passing rerun. The original failure remains recorded in `.run/issue49-independent-browser.log`.
+
+The functional reviewer independently reproduced the historical original failure and corrected pass, tested the current page and empty/100-input fixtures, and ran the Go facet tests. The technical reviewer independently rejected eight malformed DOM cases and checked historical/source/CI provenance. The operations reviewer observed HTTP 200 and manifest-matching bytes for `https://finevines.com/`, `/portfolio/`, `/about/`, and `/sitemap.xml`; the `.biz` and CDN aliases returned the same homepage. The previous publisher run 38686973892 succeeded, including `uploaded 148, deleted 45, purged`. No domain cutover is needed.
+
+### Authorized execution plan
+
+- **Target and bounds:** this repository's default branch `master` and its existing configured Bunny website publication path, currently serving finevines.com. One ordinary PR merge and its automatically triggered publisher; no duplicate manual dispatch, image-recovery option, domain change, or direct data edit.
+- **Revision:** the final independently reviewed PR #50 head, recorded by GitHub and pinned when merging; record the resulting merge and publisher head SHAs from their receipts.
+- **Expected effects:** tests and evidence become part of master; the existing push workflow runs its normal enrich/build/deploy/commit-back/review-package/digest sequence. Routine catalog changes may be produced by that existing workflow. A no-op site deployment is valid because this PR changes no runtime files.
+- **Procedure/evidence:** confirm both reviewers' full corrected-diff results and final-head CI; mark the PR ready and merge; identify the resulting master-push CI and pipeline by merge SHA; inspect Deploy separately from subsequent workflow stages; after commit-back, compare representative public route response hashes with that committed manifest.
+- **Failure handling:** preserve any failed or partial step and report its actual state. Do not rerun a publisher after commit-back or manually alter data to manufacture a successful result. An ordinary test-only PR can be reversed by a standard revert; any catalog changes from the publisher require their own evidence-based reconciliation.
+- **Authority:** the user's current instruction authorizes this ordinary merge/publication path. No additional approval, pause, exclusivity, rollback mechanism, or domain-cutover gate is introduced.
