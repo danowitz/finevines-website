@@ -1449,6 +1449,32 @@ func TestBuildFacetsRanksAndSeeds(t *testing.T) {
 	}
 }
 
+// Country/vintage cardinality is not bounded by the three big groups' seed.
+// In particular, a correct rail can exceed the former browser ceiling of 90.
+func TestBuildFacetsSeedCardinality(t *testing.T) {
+	for _, size := range []int{0, 5, facetSeedSize, facetSeedSize + 1, 32} {
+		t.Run(fmt.Sprintf("distinct-%d", size), func(t *testing.T) {
+			var wines []model.Wine
+			for i := 0; i < size; i++ {
+				value := fmt.Sprintf("Value%02d", i)
+				wines = append(wines, wineWith(value, value, value, value, value, value))
+			}
+			for _, group := range buildFacets(wines) {
+				want := size
+				if group.Facet == "producer" || group.Facet == "region" || group.Facet == "varietal" {
+					want = min(facetSeedSize, size)
+				}
+				if group.Total != size || len(group.Values) != want {
+					t.Errorf("%s: seed/total = %d/%d, want %d/%d", group.Facet, len(group.Values), group.Total, want, size)
+				}
+				if group.HasMore() != (size > want) {
+					t.Errorf("%s: HasMore = %v, want %v", group.Facet, group.HasMore(), size > want)
+				}
+			}
+		})
+	}
+}
+
 // TestBuildFacetsGroupFlags pins the first-paint behaviour: the big groups
 // arrive collapsed (the whole point of the change) and vintage reads as a
 // newest-first grid rather than a popularity ranking.
