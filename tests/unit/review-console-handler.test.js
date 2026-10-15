@@ -337,6 +337,19 @@ describe('review console handler', () => {
     assert.deepEqual([...new Uint8Array(await image.arrayBuffer())], [1, 2, 3, 4]);
   });
 
+  it('refuses carried storage paths that escape their package segment', async () => {
+    for (const storagePackageId of ['../production', 'other/package', 'other\\package', '..']) {
+      const { handle, files } = fixture();
+      const manifestPath = '_review/test/packages/pkg-1/manifest.json';
+      const manifest = JSON.parse(files.get(manifestPath));
+      manifest.wines[1].candidates[0].storagePackageId = storagePackageId;
+      files.set(manifestPath, JSON.stringify(manifest));
+      const cookie = await login(handle);
+      const image = await handle(new Request('https://review.finevines.biz/api/packages/pkg-1/images/c2', { headers: { cookie } }));
+      assert.equal(image.status, 404);
+    }
+  });
+
   it('does not serve candidate bytes before login', async () => {
     const { handle } = fixture();
     const image = await handle(new Request('https://review.finevines.biz/api/packages/pkg-1/images/c1'));

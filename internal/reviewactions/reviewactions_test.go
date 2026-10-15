@@ -155,6 +155,31 @@ func TestPrepareReadsACarriedCandidateFromThePackageThatStoredIt(t *testing.T) {
 	}
 }
 
+func TestPrepareRejectsCarriedPackagePathTraversal(t *testing.T) {
+	for _, packageID := range []string{"../production", "other/package", `other\package`, ".."} {
+		t.Run(packageID, func(t *testing.T) {
+			store, wines, _ := fixture(t)
+			var manifest Manifest
+			if err := json.Unmarshal(store.files["_review/test/packages/pkg-1/manifest.json"], &manifest); err != nil {
+				t.Fatal(err)
+			}
+			manifest.Wines[0].Candidates[0].StoragePackageID = packageID
+			data, err := json.Marshal(manifest)
+			if err != nil {
+				t.Fatal(err)
+			}
+			store.files["_review/test/packages/pkg-1/manifest.json"] = data
+			result, err := Prepare(context.Background(), PrepareInput{Store: store, Normalizer: copyNormalizer{}, Environment: "test", Wines: wines, ImageDir: t.TempDir(), Now: time.Date(2026, 8, 15, 2, 0, 0, 0, time.UTC)})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result.Decisions[0].Status != "rejected" || !strings.Contains(result.Decisions[0].Reason, "invalid package candidate") {
+				t.Fatalf("decision = %#v", result.Decisions[0])
+			}
+		})
+	}
+}
+
 func TestPrepareAppliesAnAcceptedImageToEveryRowForThePublicWine(t *testing.T) {
 	store, wines, id := fixture(t)
 	sibling := wines[0]

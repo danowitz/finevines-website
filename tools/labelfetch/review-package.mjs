@@ -216,7 +216,8 @@ export async function publishReviewPackage({ environment, catalogCommit, catalog
   // place by the console and the Go processor through storagePackageId.
   for (const wine of wines) {
     for (const candidate of wine.candidates) {
-      if (!candidate.localFile) continue;
+      if (!candidate.localFile && candidate.storagePackageId) continue;
+      if (!candidate.localFile) throw new Error(`candidate has no image location for ${wine.sku}/${candidate.candidateId}`);
       const bytes = new Uint8Array(await readBytes(candidate.localFile));
       if (!bytes.length || hash(bytes) !== candidate.sha256 || bytes.length !== candidate.bytes) throw new Error(`candidate integrity failed for ${wine.sku}/${candidate.candidateId}`);
       await storage.putImmutable(`${prefix}/packages/${packageId}/images/${candidate.storageName}`, bytes, candidate.mime);
