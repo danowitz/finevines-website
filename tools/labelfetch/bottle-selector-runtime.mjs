@@ -5,6 +5,7 @@ import { parseVisionFields } from './vision-label.mjs';
 import { vintageConflict } from './vintage.mjs';
 import { normalize, tokens } from './match.mjs';
 import { namedVarieties, sourceIdentityEvidence } from './identity-reading-plan.mjs';
+import { DEFAULT_VISION_MODEL, defaultVisionReasoningEffort, visionModelOptions } from './vision-model.mjs';
 
 const run = promisify(execFile);
 
@@ -331,12 +332,13 @@ function styleConflict(wine, candidate, identity) {
 export function createBoundedLabelReader({
   apiKey,
   verifyIdentity,
-  model = 'gpt-4.1-nano',
-  reasoningEffort = '',
+  model = DEFAULT_VISION_MODEL,
+  reasoningEffort = defaultVisionReasoningEffort(model),
   fetchImpl = globalThis.fetch,
   readFileImpl = readFile,
   prepareImage,
 } = {}) {
+  const usesReasoning = reasoningEffort && reasoningEffort !== 'none';
   return async function readLabels(wine, candidates) {
     if (!apiKey) throw new ReaderUnavailableError('OPENAI_API_KEY is missing');
     const bounded = candidates.slice(0, 3);
@@ -368,11 +370,11 @@ export function createBoundedLabelReader({
       response = await fetchImpl('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(reasoningEffort ? 90_000 : 45_000),
+        signal: AbortSignal.timeout(usesReasoning ? 90_000 : 45_000),
         body: JSON.stringify({
-          model,
+          ...visionModelOptions(model, reasoningEffort),
           messages: [{ role: 'user', content }],
-          max_completion_tokens: reasoningEffort ? 4000 : 1200,
+          max_completion_tokens: usesReasoning ? 4000 : 1200,
           response_format: {
             type: 'json_schema',
             json_schema: {
@@ -409,7 +411,6 @@ export function createBoundedLabelReader({
               },
             },
           },
-          ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
         }),
       });
     } catch (error) {

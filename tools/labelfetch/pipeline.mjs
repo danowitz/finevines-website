@@ -10,6 +10,7 @@
 import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { openBrowser } from '../../tests/helpers/browser.js';
+import { DEFAULT_VISION_MODEL, defaultVisionReasoningEffort } from './vision-model.mjs';
 import { binPath, envOrFile, openaiKey } from './env.mjs';
 import { loadAttempts, isDue, recordAttempt, saveAttempts, shouldRecordAttempt } from './attempts.mjs';
 import { IMAGE_REVIEW_NO_MATCH, IMAGE_REVIEW_REQUIRED } from './image-review-status.mjs';
@@ -63,16 +64,17 @@ const CATALOG_REUSE = !has('no-catalog-reuse');
 const TRACE = has('trace');
 const TRACE_DIR = opt('trace-dir', 'out-bottle/image-traces');
 const SEARCH_PROVIDER = opt('search-provider', 'brave');
-const MODEL = opt('label-model', process.env.FINEVINES_LABEL_MODEL || 'gpt-4.1-nano');
+const MODEL = opt('label-model', process.env.FINEVINES_LABEL_MODEL || DEFAULT_VISION_MODEL);
 const EXCLUDE_PASSED_REPORT = opt('exclude-passed-report', '');
 const REPLAY_REPORT = opt('replay-report', '');
 if (EXCLUDE_PASSED_REPORT && REPLAY_REPORT) {
   console.error('choose only one prior report mode');
   process.exit(2);
 }
-const SUPPORTED_LABEL_MODELS = new Set(['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-5.6-sol']);
+const SUPPORTED_LABEL_MODELS = new Set(['gpt-5.6-luna', 'gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-5.6-sol']);
 const REASONING_EFFORTS = new Set(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
-const LABEL_REASONING_EFFORT = MODEL === 'gpt-5.6-sol' ? opt('label-reasoning-effort', 'medium') : '';
+const DEFAULT_REASONING_EFFORT = defaultVisionReasoningEffort(MODEL);
+const LABEL_REASONING_EFFORT = DEFAULT_REASONING_EFFORT ? opt('label-reasoning-effort', DEFAULT_REASONING_EFFORT) : '';
 if (OMIT_QUERY_VINTAGE && !QUALITY_RECOVERY && !CANDIDATE_RECOVERY && !REVIEW_RECOVERY) {
   console.error('--omit-query-vintage is recovery-only');
   process.exit(2);

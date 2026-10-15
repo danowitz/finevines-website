@@ -21,7 +21,7 @@ test('visual comparison failures preserve the useful stderr detail', async () =>
   );
 });
 
-test('bounded reader sends one nano request containing at most three images', async () => {
+test('bounded reader sends one non-reasoning Luna request containing at most three images', async () => {
   let body;
   const reader = createBoundedLabelReader({
     apiKey: 'test',
@@ -42,7 +42,11 @@ test('bounded reader sends one nano request containing at most three images', as
   });
 
   const evidence = await reader({ name: 'Exact Wine', vintage: '2022' }, candidates);
-  assert.equal(body.model, 'gpt-4.1-nano');
+  assert.equal(body.model, 'gpt-5.6-luna');
+  assert.equal(body.reasoning_effort, 'none');
+  assert.equal(body.max_completion_tokens, 1200);
+  assert.equal(body.response_format.type, 'json_schema');
+  assert.equal(body.response_format.json_schema.strict, true);
   assert.equal(body.messages[0].content.filter((item) => item.type === 'image_url').length, 3);
   assert.equal(evidence.length, 3);
   assert.equal(evidence[0].anchor, true);
