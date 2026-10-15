@@ -764,9 +764,9 @@
           "url": "https://en.wikipedia.org/wiki/California_wine"
         }
       ],
-      "retryAfter": "2026-09-21",
+      "retryAfter": "2026-11-14",
       "reviewedAt": "2026-08-17",
-      "lastError": "collection editorial \"producer/coastal-ridge\" source label contains a prohibited dash or invalid UTF-8"
+      "lastError": "collection editorial \"producer/coastal-ridge\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2934,6 +2934,7 @@
       "name": "Shibumi Knoll",
       "mode": "generated",
       "fingerprint": "c62dd9a3da85902da3f40ba18b8309de503c37bc6cbbc4cf0008f661543bf1e7",
+      "retryFingerprint": "f80b3bafdf7787ba9abfbbaca78d73388af5bfcd69d5ade40051e9688023e326",
       "eyebrow": "Producer Spotlight",
       "heading": "Discover Shibumi Knoll Vineyards",
       "paragraphs": [
@@ -2954,7 +2955,9 @@
           "url": "https://www.winerelease.com/WineryInfo/Shibumi_Knoll_Winery_wine_releases.html"
         }
       ],
-      "reviewedAt": "2026-08-17"
+      "retryAfter": "2026-11-14",
+      "reviewedAt": "2026-08-17",
+      "lastError": "collection editorial \"producer/shibumi-knoll\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -4465,27 +4468,28 @@
       "slug": "chardonnay",
       "name": "Chardonnay",
       "mode": "generated",
-      "fingerprint": "9ec9bf13659fab3c4ecf2cf8ba593b4801ed107a3de4fa87aa212e189b8e32da",
-      "retryFingerprint": "2a543d61382a9e14737c671b024c126ef76c5fd520553fd3cb0e8be5c822af06",
-      "eyebrow": "Varietal Spotlight",
-      "heading": "Understanding Chardonnay: Versatile and Terroir‑Driven",
+      "fingerprint": "8985e8e140bca60a9f85f27040479478892767f6c9c64c3b639352a36921735d",
+      "eyebrow": "Varietal Focus",
+      "heading": "Chardonnay: A Global Benchmark in White Wine",
       "paragraphs": [
-        "Chardonnay originated in Burgundy, France, where it remains the flagship white varietal. Its neutral flavor profile allows terroir and winemaking to shape every bottle, resulting in expressions ranging from the steely, mineral‑driven wines of Chablis to the richer, subtly oaked whites of the Côte de Beaune. In cooler Burgundian sites, Chardonnay often exhibits bright citrus, green apple, and flinty notes with elegant acidity; in warmer locales or through oak influence, expect layered stone fruit, hazelnut, and cream‑accented nuance. These stylistic shifts emerge from its sensitivity to soil, exposure, climate, and technique, making Chardonnay a superb interpreter of place. ([bourgogne-wines.com](https://www.bourgogne-wines.com/wine-and-terroir/our-grape-varietals-our-colors/chardonnay/chardonnay-a-bourgogne-original-that-has-travelled-the-world%2C2797%2C10602.html?utm_source=openai))",
-        "Beyond France, Chardonnay’s adaptability has made it a fixture in winemaking regions worldwide. In California it is the most planted white variety, where winemakers have historically favored fuller‑bodied, oak‑influenced styles featuring ripe fruit, vanilla, and creamy textures. More recently, many producers have pivoted toward leaner, fresher expressions with subtler oak to preserve fruit brightness. This tempering of the once‑ubiquitous buttery style reflects broader shifts toward balance and site expression. ([wineinstitute.org](https://wineinstitute.org/our-industry/statistics/wine-fact-sheets/chardonnay/?utm_source=openai))"
+        "Chardonnay is one of the world’s most expressive white grapes, valued for its ability to reflect both site and winemaker intent. Originating in Burgundy, it remains central to the region’s identity, showing remarkable range from the bright, mineral-driven wines of Chablis to the layered and textural expressions of the Côte de Beaune. Here, climate and soils create distinctive profiles: lively citrus, orchard fruit, and stony precision in cooler vineyards, while warmer zones yield richer wines touched by oak, evoking stone fruit, nuts, and subtle cream. This transparency to place explains why Chardonnay excels both as a single-vineyard focus and across celebrated appellations.",
+        "Chardonnay’s global journey has made it equally influential beyond France. In California and Oregon, the grape has shifted over time, moving from robust, oak-forward interpretations toward fresher, more restrained styles that foreground purity and acidity. Compelling examples also come from regions as diverse as Israel’s Golan Heights, Argentina’s Mendoza, and Piedmont in Italy, each capturing unique aspects of site and climate. Producers partnered with FineVines demonstrate Chardonnay’s versatility, offering both classic and contemporary expressions from an impressive spectrum of terroirs."
       ],
       "sources": [
         {
-          "label": "Bourgogne‑Wines.com on Chardonnay’s Burgundy terroir",
-          "url": "https://www.bourgogne‑wines.com/wine‑and‑terroir/our‑grape‑varietals‑our‑colors/chardonnay/chardonnay‑a‑bourgogne‑original‑that‑has‑travelled‑the‑world%2C2797%2C10602.html"
+          "label": "Bourgogne Wines official: Chardonnay in Burgundy",
+          "url": "https://www.bourgogne-wines.com/wine-and-terroir/our-grape-varietals-our-colors/chardonnay/chardonnay-a-bourgogne-original-that-has-travelled-the-world,2797,10602.html"
         },
         {
-          "label": "Wine Institute fact sheet on California Chardonnay",
-          "url": "https://wineinstitute.org/our‑industry/statistics/wine‑fact‑sheets/chardonnay/"
+          "label": "Wine Institute: Chardonnay fact sheet",
+          "url": "https://wineinstitute.org/our-industry/statistics/wine-fact-sheets/chardonnay/"
+        },
+        {
+          "label": "Wine Folly: Chardonnay Wine Guide",
+          "url": "https://winefolly.com/grapes/chardonnay/"
         }
       ],
-      "retryAfter": "2026-09-19",
-      "reviewedAt": "2026-08-17",
-      "lastError": "collection editorial \"varietal/chardonnay\" contains a prohibited dash or invalid UTF-8"
+      "reviewedAt": "2026-10-15"
     },
     {
       "kind": "varietal",

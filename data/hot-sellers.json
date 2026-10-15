@@ -1,10 +1,10 @@
 {
-  "updated": "2026-10-15T05:30:15Z",
+  "updated": "2026-10-15T06:09:54Z",
   "windowDays": 30,
   "wines": [
     {
       "slug": "domaine-vacheron-sancerre-blanc-2024",
-      "cases": 131.50002999999998
+      "cases": 132.50002999999998
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
@@ -24,7 +24,7 @@
     },
     {
       "slug": "cave-de-saumur-saumur-blanc-les-plantagenets-2024",
-      "cases": 48
+      "cases": 49
     }
   ]
 }
