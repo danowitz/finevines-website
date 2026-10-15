@@ -68,7 +68,7 @@ its October 23, 2026 shutdown. GPT-4.1 wine/collection enrichment is separate an
 needs migration before January 14, 2027. Product-image generation stays disabled.
 
 Offline tests verify request shape and failure handling, not image-reading quality
-or production acceptance. Before publishing a model change, evaluate representative
+or production acceptance. To assess live behavior, evaluate representative
 labels, watermarks, and review images and compare correctness, latency, token usage,
 and cost. That evaluation makes paid requests and requires authorization.
 
