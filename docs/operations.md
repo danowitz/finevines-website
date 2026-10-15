@@ -57,6 +57,21 @@ The hosted image-review click path is local and deterministic; it makes no AI ca
 - `OPENAI_API_KEY` — an API key from OpenAI's platform console. GRIT can help set up the account.
 - `FINEVINES_OPENAI_MODEL` — optional; leave blank and the tool picks a sensible default.
 
+Image selection, watermark detection, and review-candidate screening default to
+`gpt-5.6-luna` with reasoning disabled. Selection alone can be overridden with
+`--label-model` (first priority) or `FINEVINES_LABEL_MODEL`; manual recovery still
+explicitly chooses `gpt-4.1-mini`. The shared default is in
+`tools/labelfetch/vision-model.mjs`. For a temporary rollback across all three
+callers, change that default and the manual comparison workflow default to mini;
+the request policy omits reasoning parameters for mini. Do not restore nano after
+its October 23, 2026 shutdown. GPT-4.1 wine/collection enrichment is separate and
+needs migration before January 14, 2027. Product-image generation stays disabled.
+
+Offline tests verify request shape and failure handling, not image-reading quality
+or production acceptance. Before publishing a model change, evaluate representative
+labels, watermarks, and review images and compare correctness, latency, token usage,
+and cost. That evaluation makes paid requests and requires authorization.
+
 **Bottle-image search** — used by the automated image-discovery stage:
 - `FINEVINES_BRAVE_SEARCH_KEY` — Brave Image Search API key for the independent image index.
 

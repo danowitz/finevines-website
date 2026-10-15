@@ -18,13 +18,13 @@ on:
       label_model:
         description: Vision label reader used for this comparison
         required: true
-        default: 'gpt-4.1-nano'
+        default: 'gpt-5.6-luna'
         type: choice
-        options: ['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-5.6-sol']
+        options: ['gpt-5.6-luna', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-5.6-sol']
       label_reasoning_effort:
         description: Reasoning effort for GPT-5.6 comparisons
         required: true
-        default: 'medium'
+        default: 'none'
         type: choice
         options: ['none', 'low', 'medium', 'high', 'xhigh', 'max']
       previous_run_id:

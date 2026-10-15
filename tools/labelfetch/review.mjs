@@ -107,6 +107,7 @@ for (const r of all) {
 // Worst case here is hiding a rescuable bottle, bounded and recoverable via
 // the search links. Verdicts cache on the alternate (displayOk).
 import { openaiKey } from './env.mjs';
+import { visionModelOptions } from './vision-model.mjs';
 const VISION_KEY = await openaiKey();
 async function displayOk(a) {
   if (a.displayOk !== undefined) return a.displayOk;
@@ -117,7 +118,7 @@ async function displayOk(a) {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: 'Bearer ' + VISION_KEY },
       body: JSON.stringify({
-        model: 'gpt-4.1-nano',
+        ...visionModelOptions(),
         messages: [{
           role: 'user',
           content: [

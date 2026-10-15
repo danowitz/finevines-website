@@ -4,7 +4,7 @@
 // The host gate cannot catch a re-hosted copy — the Adamvs Quintvs and
 // Château d'Aiguilhe images arrived from clean retailer hosts with Vivino's
 // mark in the pixels — and local OCR is a documented-weak backstop. This is
-// the check that runs before any import. ~$0.001/image with gpt-4.1-nano at
+// the check that runs before any import. Keep the image at
 // detail:high (the mark is small and low-contrast; detail:low can erase it).
 //
 // Incremental: with --apply, every verdict is recorded on the manifest record
@@ -34,11 +34,12 @@ import { readFile, writeFile, access } from 'node:fs/promises';
 import { parseVerdict, flagWatermark, isWatermarked } from './watermark.mjs';
 import { hasSelectionIdentityVerdict } from './importrules.mjs';
 import { openaiKey } from './env.mjs';
+import { DEFAULT_VISION_MODEL, visionModelOptions } from './vision-model.mjs';
 import { loadFunnelStore, recordFunnel, saveFunnelStore } from './funnel-store.mjs';
 import { markWatermarkClean, markWatermarkRejected, markWatermarkUnresolved } from './funnel-gates.mjs';
 
 const MANIFEST = 'data/fetched-images/manifest.json';
-const MODEL = 'gpt-4.1-nano';
+const MODEL = DEFAULT_VISION_MODEL;
 const CONCURRENCY = 4;
 const MAX_ATTEMPTS = 5;
 const apply = process.argv.includes('--apply');
@@ -101,7 +102,7 @@ async function check(rec) {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: 'Bearer ' + KEY },
       body: JSON.stringify({
-        model: MODEL,
+        ...visionModelOptions(MODEL),
         messages: [
           {
             role: 'user',
