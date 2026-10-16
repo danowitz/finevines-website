@@ -1263,9 +1263,9 @@
       "slug": "frank",
       "name": "Frank",
       "mode": "generated",
-      "fingerprint": "40b6af67bf16a8a28220b91bcf8ab147c7461dd20df7effa6db19db246d7ad50",
-      "retryFingerprint": "40b6af67bf16a8a28220b91bcf8ab147c7461dd20df7effa6db19db246d7ad50",
-      "retryAfter": "2026-10-26",
+      "fingerprint": "9de1f720b4f26e90156f0fcce6548cd16c7e1ac097be821439806967a5b0bcb8",
+      "retryFingerprint": "9de1f720b4f26e90156f0fcce6548cd16c7e1ac097be821439806967a5b0bcb8",
+      "retryAfter": "2026-11-15",
       "lastError": "collection editorial \"producer/frank\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2573,10 +2573,10 @@
       "slug": "pierre-morey",
       "name": "Pierre Morey",
       "mode": "generated",
-      "fingerprint": "0d8c6b67f7d76aea36581ffd1ea13024b6b36abf2b1d5686ce1b4dea883d96bd",
-      "retryFingerprint": "0d8c6b67f7d76aea36581ffd1ea13024b6b36abf2b1d5686ce1b4dea883d96bd",
-      "retryAfter": "2026-10-24",
-      "lastError": "research JSON has 196 words; expected 120 to 190"
+      "fingerprint": "8d1f53a9bc1137450edb4fce434cee630006a2a05e6dc4868febd63bcda16eb0",
+      "retryFingerprint": "8d1f53a9bc1137450edb4fce434cee630006a2a05e6dc4868febd63bcda16eb0",
+      "retryAfter": "2026-11-15",
+      "lastError": "collection editorial \"producer/pierre-morey\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -3646,10 +3646,10 @@
       "slug": "cote-de-beaune",
       "name": "Côte de Beaune",
       "mode": "generated",
-      "fingerprint": "20d65b41c96f290af9c1bf59f761e5077f9374cbf9c2c8de9a4205e91f62e79e",
-      "retryFingerprint": "20d65b41c96f290af9c1bf59f761e5077f9374cbf9c2c8de9a4205e91f62e79e",
-      "retryAfter": "2026-10-26",
-      "lastError": "collection editorial \"region/cote-de-beaune\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "2a95367122fc6f8044ae4269c69402294994599d9e62d427193fea1fcf65002f",
+      "retryFingerprint": "2a95367122fc6f8044ae4269c69402294994599d9e62d427193fea1fcf65002f",
+      "retryAfter": "2026-11-15",
+      "lastError": "invalid character '[' looking for beginning of object key string"
     },
     {
       "kind": "region",
@@ -4244,9 +4244,9 @@
       "slug": "aligote",
       "name": "Aligote",
       "mode": "generated",
-      "fingerprint": "903cbdbf52f87c0f1fef14ee66ae9cd858b1527cd5109f9bf26aeb13dd786382",
-      "retryFingerprint": "903cbdbf52f87c0f1fef14ee66ae9cd858b1527cd5109f9bf26aeb13dd786382",
-      "retryAfter": "2026-10-23",
+      "fingerprint": "05b43c7cc0ed977532c841c1af6c7370e173e0c3fe6ebfa0b3901857939ccb95",
+      "retryFingerprint": "05b43c7cc0ed977532c841c1af6c7370e173e0c3fe6ebfa0b3901857939ccb95",
+      "retryAfter": "2026-11-15",
       "lastError": "collection editorial \"varietal/aligote\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5212,9 +5212,9 @@
       "slug": "shiraz",
       "name": "Shiraz",
       "mode": "generated",
-      "fingerprint": "d8fa50b548da3c9d42821aa1ceb87937c16c9a121372228d1bb414796b74637a",
-      "retryFingerprint": "d8fa50b548da3c9d42821aa1ceb87937c16c9a121372228d1bb414796b74637a",
-      "retryAfter": "2026-10-23",
+      "fingerprint": "050c054061a3f6deffb53129b2add9d69559f0d882f3811689b737580f32580e",
+      "retryFingerprint": "050c054061a3f6deffb53129b2add9d69559f0d882f3811689b737580f32580e",
+      "retryAfter": "2026-11-15",
       "lastError": "collection editorial \"varietal/shiraz\" contains a prohibited dash or invalid UTF-8"
     },
     {

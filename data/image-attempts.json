@@ -227,6 +227,12 @@
   "attempts": 1,
   "matcherVersion": "google-image-consensus-v1"
  },
+ "188210*": {
+  "lastAttempted": "2026-10-16T08:35:40.395Z",
+  "outcome": "miss",
+  "attempts": 1,
+  "matcherVersion": "google-image-consensus-v1"
+ },
  "188211": {
   "lastAttempted": "2026-09-25T08:44:07.700Z",
   "outcome": "imported",
