@@ -1647,10 +1647,10 @@
       "slug": "jean-louis-chave",
       "name": "Jean-Louis Chave",
       "mode": "generated",
-      "fingerprint": "f998a986ed4378a5d1124e429d2f825eae59cedfdd117728051b23615cbfaf21",
-      "retryFingerprint": "f998a986ed4378a5d1124e429d2f825eae59cedfdd117728051b23615cbfaf21",
-      "retryAfter": "2026-10-24",
-      "lastError": "collection editorial \"producer/jean-louis-chave\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "79cabd42cf31022c8c942c3f502b5f670e9c7acef9ce5aa5e8cf7d3520b1fc1b",
+      "retryFingerprint": "79cabd42cf31022c8c942c3f502b5f670e9c7acef9ce5aa5e8cf7d3520b1fc1b",
+      "retryAfter": "2026-11-20",
+      "lastError": "research JSON has 201 words; expected 120 to 190"
     },
     {
       "kind": "producer",
@@ -2411,10 +2411,10 @@
       "slug": "pato",
       "name": "Pato",
       "mode": "generated",
-      "fingerprint": "238a790ce3cb9596f9ee049a834bc9beaca8383a21819e26fd02749ed8293af2",
-      "retryFingerprint": "238a790ce3cb9596f9ee049a834bc9beaca8383a21819e26fd02749ed8293af2",
-      "retryAfter": "2026-10-24",
-      "lastError": "invalid character ':' after array element"
+      "fingerprint": "fa1b52d0a8a044b252ecf70bf6e7439fcde97f1bb78e648fe650d2932a8b8b02",
+      "retryFingerprint": "fa1b52d0a8a044b252ecf70bf6e7439fcde97f1bb78e648fe650d2932a8b8b02",
+      "retryAfter": "2026-11-20",
+      "lastError": "collection editorial \"producer/pato\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -3340,10 +3340,10 @@
       "slug": "yarden",
       "name": "Yarden",
       "mode": "generated",
-      "fingerprint": "f32124643afc2593c4bbc6f41d5f47a6fb30ba7c424c18220f2981b17881e103",
-      "retryFingerprint": "f32124643afc2593c4bbc6f41d5f47a6fb30ba7c424c18220f2981b17881e103",
-      "retryAfter": "2026-10-25",
-      "lastError": "invalid character ':' after array element"
+      "fingerprint": "bf7bc7f4e87a3a2487403c0a2dae9afe76c4cced2b1f49bd905e58fd49a00afd",
+      "retryFingerprint": "bf7bc7f4e87a3a2487403c0a2dae9afe76c4cced2b1f49bd905e58fd49a00afd",
+      "retryAfter": "2026-11-20",
+      "lastError": "collection editorial \"producer/yarden\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -3696,10 +3696,10 @@
       "slug": "galilee",
       "name": "Galilee",
       "mode": "generated",
-      "fingerprint": "cbb469df7ea922db590d85416ab1b382ab60c56a4ad4c658a0777782ca8ad0d1",
-      "retryFingerprint": "cbb469df7ea922db590d85416ab1b382ab60c56a4ad4c658a0777782ca8ad0d1",
-      "retryAfter": "2026-10-23",
-      "lastError": "invalid character ':' after array element"
+      "fingerprint": "81f668a6f66175879492f3e265f0a894d1b2e790172be5ea485fa33deff2b410",
+      "retryFingerprint": "81f668a6f66175879492f3e265f0a894d1b2e790172be5ea485fa33deff2b410",
+      "retryAfter": "2026-11-20",
+      "lastError": "collection editorial \"region/galilee\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "region",
@@ -3992,9 +3992,9 @@
       "slug": "rhone-valley",
       "name": "Rhône Valley",
       "mode": "generated",
-      "fingerprint": "229720b876e94e01dcda23e172368c73c43dac1874ceaabc9a2cdc500f17465c",
-      "retryFingerprint": "229720b876e94e01dcda23e172368c73c43dac1874ceaabc9a2cdc500f17465c",
-      "retryAfter": "2026-10-23",
+      "fingerprint": "4ea4d520df5873b76c6a2365d1546af35aa877897b4302697471c21fb6cfdcbd",
+      "retryFingerprint": "4ea4d520df5873b76c6a2365d1546af35aa877897b4302697471c21fb6cfdcbd",
+      "retryAfter": "2026-11-20",
       "lastError": "collection editorial \"region/rhone-valley\" contains a prohibited dash or invalid UTF-8"
     },
     {
