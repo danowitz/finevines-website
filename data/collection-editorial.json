@@ -3411,6 +3411,7 @@
       "name": "Bairrada",
       "mode": "generated",
       "fingerprint": "adc14b0f1eadb93c4e3b83c3db30de453b0904ad342188bc6bad7e7e45d71f99",
+      "retryFingerprint": "0ed36de42bc1ac004ef82ecf01e547b088a7a66198f04cd9763f485e43b89a98",
       "eyebrow": "Spotlight on Bairrada, Portugal",
       "heading": "Exploring Bairrada: a cool‑climate Atlantic Portuguese gem",
       "paragraphs": [
@@ -3435,7 +3436,9 @@
           "url": "https://www.grapeguru.de/en/knowledge/wine-regions/bairrada"
         }
       ],
-      "reviewedAt": "2026-09-23"
+      "retryAfter": "2026-11-21",
+      "reviewedAt": "2026-09-23",
+      "lastError": "collection editorial \"region/bairrada\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "region",
@@ -4469,6 +4472,7 @@
       "name": "Chardonnay",
       "mode": "generated",
       "fingerprint": "8985e8e140bca60a9f85f27040479478892767f6c9c64c3b639352a36921735d",
+      "retryFingerprint": "7fdc6c6486e1a9fbb1b19c945b2306620f6e632dc9e4ea51c75afc17c713252c",
       "eyebrow": "Varietal Focus",
       "heading": "Chardonnay: A Global Benchmark in White Wine",
       "paragraphs": [
@@ -4489,7 +4493,9 @@
           "url": "https://winefolly.com/grapes/chardonnay/"
         }
       ],
-      "reviewedAt": "2026-10-15"
+      "retryAfter": "2026-11-21",
+      "reviewedAt": "2026-10-15",
+      "lastError": "collection editorial \"varietal/chardonnay\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
