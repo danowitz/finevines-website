@@ -1,10 +1,10 @@
 {
-  "updated": "2026-10-23T08:35:00Z",
+  "updated": "2026-10-24T08:31:39Z",
   "windowDays": 30,
   "wines": [
     {
       "slug": "domaine-vacheron-sancerre-blanc-2024",
-      "cases": 122.00001999999999
+      "cases": 113.00001999999999
     },
     {
       "slug": "henri-bourgeois-sancerre-blanc-2025",
@@ -15,16 +15,16 @@
       "cases": 71
     },
     {
-      "slug": "henri-bourgeois-pure-sauvignon-blanc-vin-de-pays-2025",
-      "cases": 60.083330000000004
+      "slug": "taonga-sauvignon-blanc-marlborough-2025",
+      "cases": 53.83331999999999
     },
     {
-      "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 58.83331999999999
+      "slug": "henri-bourgeois-pure-sauvignon-blanc-vin-de-pays-2025",
+      "cases": 53.083330000000004
     },
     {
       "slug": "jl-chave-selection-cotes-du-rhone-mon-coeur-2024",
-      "cases": 52.83001
+      "cases": 50.83334
     }
   ]
 }

@@ -44236,7 +44236,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-10-23T09:35:03.848Z"
+  "updatedAt": "2026-10-24T08:37:31.447Z"
  },
  "paul-lato-wines-chardonnay-ma-jolie-peake-ranch-vineyard-santa-rita-hills-2023": {
   "slug": "paul-lato-wines-chardonnay-ma-jolie-peake-ranch-vineyard-santa-rita-hills-2023",
@@ -53199,7 +53199,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-10-23T08:55:50.433Z"
+  "updatedAt": "2026-10-24T08:37:27.805Z"
  },
  "domaine-denis-b-achelet-bourgogne-pinot-noir-2018": {
   "slug": "domaine-denis-b-achelet-bourgogne-pinot-noir-2018",
@@ -129773,13 +129773,13 @@
   "ok": false,
   "failureStage": "download",
   "failureCode": "",
-  "reason": "only 0 of 1 candidates downloaded",
+  "reason": "only 1 of 3 candidates downloaded",
   "funnel": {
-   "searchResults": 1,
-   "sourcePolicyBlocked": 0,
-   "permittedCandidates": 1,
-   "downloadAttempted": 1,
-   "downloaded": 0,
+   "searchResults": 5,
+   "sourcePolicyBlocked": 2,
+   "permittedCandidates": 3,
+   "downloadAttempted": 3,
+   "downloaded": 1,
    "decodedImages": 0,
    "bottleShapePassed": 0,
    "cleanBackgrounds": 0,
@@ -129798,10 +129798,10 @@
    "labelModel": "gpt-5.6-luna",
    "labelReasoningEffort": "none",
    "providerResults": [],
-   "initialWindowCandidates": 1,
+   "initialWindowCandidates": 3,
    "extensionWindowCandidates": 0,
    "downloadHttpFailures": 0,
-   "downloadTooSmall": 1,
+   "downloadTooSmall": 2,
    "downloadUnsupported": 0,
    "downloadConversionFailures": 0,
    "downloadTransportFailures": 0,
@@ -129809,7 +129809,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-10-23T09:18:29.961Z"
+  "updatedAt": "2026-10-24T08:37:27.806Z"
  },
  "haut-selve-chateau-haut-selve-graves-blanc-2023": {
   "slug": "haut-selve-chateau-haut-selve-graves-blanc-2023",
@@ -132207,8 +132207,8 @@
   "failureCode": "",
   "reason": "only 1 of 3 candidates downloaded",
   "funnel": {
-   "searchResults": 5,
-   "sourcePolicyBlocked": 2,
+   "searchResults": 4,
+   "sourcePolicyBlocked": 1,
    "permittedCandidates": 3,
    "downloadAttempted": 3,
    "downloaded": 1,
@@ -132241,7 +132241,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-10-23T09:21:34.034Z"
+  "updatedAt": "2026-10-24T08:37:29.664Z"
  },
  "jean-marie-rcl-royer-j-m-royer-chateauneuf-du-pape-sables-de-la-crau-2013": {
   "slug": "jean-marie-rcl-royer-j-m-royer-chateauneuf-du-pape-sables-de-la-crau-2013",
@@ -141498,12 +141498,12 @@
   "ok": false,
   "failureStage": "download",
   "failureCode": "",
-  "reason": "only 1 of 2 candidates downloaded",
+  "reason": "only 1 of 1 candidates downloaded",
   "funnel": {
    "searchResults": 15,
-   "sourcePolicyBlocked": 13,
-   "permittedCandidates": 2,
-   "downloadAttempted": 2,
+   "sourcePolicyBlocked": 14,
+   "permittedCandidates": 1,
+   "downloadAttempted": 1,
    "downloaded": 1,
    "decodedImages": 0,
    "bottleShapePassed": 0,
@@ -141523,10 +141523,10 @@
    "labelModel": "gpt-5.6-luna",
    "labelReasoningEffort": "none",
    "providerResults": [],
-   "initialWindowCandidates": 2,
+   "initialWindowCandidates": 1,
    "extensionWindowCandidates": 0,
    "downloadHttpFailures": 0,
-   "downloadTooSmall": 1,
+   "downloadTooSmall": 0,
    "downloadUnsupported": 0,
    "downloadConversionFailures": 0,
    "downloadTransportFailures": 0,
@@ -141534,7 +141534,7 @@
   },
   "evidence": [],
   "candidates": [],
-  "updatedAt": "2026-10-23T09:32:24.697Z"
+  "updatedAt": "2026-10-24T08:37:29.664Z"
  },
  "mediterranean-soul-life-red-blend-2013": {
   "slug": "mediterranean-soul-life-red-blend-2013",
