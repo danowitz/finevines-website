@@ -278,8 +278,8 @@
       "mode": "generated",
       "fingerprint": "798f22ac348a3895a07b9a25656b8742e39bde74be57e6ea519063bb4af12de0",
       "retryFingerprint": "798f22ac348a3895a07b9a25656b8742e39bde74be57e6ea519063bb4af12de0",
-      "retryAfter": "2026-10-24",
-      "lastError": "invalid character ':' after array element"
+      "retryAfter": "2026-11-24",
+      "lastError": "collection editorial \"producer/bachey-legros\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -352,7 +352,7 @@
       "mode": "generated",
       "fingerprint": "43b3bceb2925994c401aaff209e2f8f262bd89cd963efbbad82dd780e4b2c9d1",
       "retryFingerprint": "43b3bceb2925994c401aaff209e2f8f262bd89cd963efbbad82dd780e4b2c9d1",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/benjamin-leroux\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -504,7 +504,7 @@
       "mode": "generated",
       "fingerprint": "9984d7570a95ebf2b8664595530f578d4bcae65681823648777ae28b3d5dcd55",
       "retryFingerprint": "9984d7570a95ebf2b8664595530f578d4bcae65681823648777ae28b3d5dcd55",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/bruno-clair\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -544,7 +544,7 @@
       "mode": "generated",
       "fingerprint": "b48fb61a36d37dc1b7ad9db664542d4d291bb926d4cee8fe123db21201bdd763",
       "retryFingerprint": "b48fb61a36d37dc1b7ad9db664542d4d291bb926d4cee8fe123db21201bdd763",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/camille-giroud\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -574,8 +574,8 @@
       "mode": "generated",
       "fingerprint": "c5fe90ccb0632e90f4e55bc2c9be1eb5f7cf6ddf9c6b7876c7dcf83721aa0032",
       "retryFingerprint": "c5fe90ccb0632e90f4e55bc2c9be1eb5f7cf6ddf9c6b7876c7dcf83721aa0032",
-      "retryAfter": "2026-10-24",
-      "lastError": "collection editorial \"producer/castagnier\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-24",
+      "lastError": "invalid character '[' looking for beginning of object key string"
     },
     {
       "kind": "producer",
@@ -837,7 +837,7 @@
       "mode": "generated",
       "fingerprint": "802363e9d57e05141b8a58770bf4b01193f91750bb58147ec9c6f9631f3f9b4f",
       "retryFingerprint": "802363e9d57e05141b8a58770bf4b01193f91750bb58147ec9c6f9631f3f9b4f",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/confuron-gindre\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -867,7 +867,7 @@
       "mode": "generated",
       "fingerprint": "9b57476c0cb7f9f421bf419fb1c5aa9fad9a8e367414df18d40f4f652e194ee3",
       "retryFingerprint": "9b57476c0cb7f9f421bf419fb1c5aa9fad9a8e367414df18d40f4f652e194ee3",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/damoy\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -877,7 +877,7 @@
       "mode": "generated",
       "fingerprint": "647713d3f4723910bffcbeb1640416641d740cc9c3c9d9b0b2af5d75b69a6a57",
       "retryFingerprint": "647713d3f4723910bffcbeb1640416641d740cc9c3c9d9b0b2af5d75b69a6a57",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/daniel-bouland\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -975,7 +975,7 @@
       "mode": "generated",
       "fingerprint": "5c3a7f6504335b1e128f9d958e3ccb75020fc67489259650e7472a630f2d51e3",
       "retryFingerprint": "5c3a7f6504335b1e128f9d958e3ccb75020fc67489259650e7472a630f2d51e3",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/domaine-georges-noellat\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1185,8 +1185,8 @@
       "mode": "generated",
       "fingerprint": "0d7ac4d16e1487dcb52b47780034b3a070bae7450187f539946a384e6c1cd7c5",
       "retryFingerprint": "0d7ac4d16e1487dcb52b47780034b3a070bae7450187f539946a384e6c1cd7c5",
-      "retryAfter": "2026-10-24",
-      "lastError": "collection editorial \"producer/felton-road\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-24",
+      "lastError": "research JSON has 192 words; expected 120 to 190"
     },
     {
       "kind": "producer",
@@ -1359,7 +1359,7 @@
       "mode": "generated",
       "fingerprint": "42e4dacb4bbb0f66382955243bd24d4775a0bdd99aaf68fd40e16198b6609d83",
       "retryFingerprint": "42e4dacb4bbb0f66382955243bd24d4775a0bdd99aaf68fd40e16198b6609d83",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/gerard-mugneret\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1438,9 +1438,27 @@
       "name": "Groffier",
       "mode": "generated",
       "fingerprint": "b2e5f9a239cd5e54e02c78c65ba268b2e50cd4b79b09ff5dc5748ba34b38ffa9",
-      "retryFingerprint": "b2e5f9a239cd5e54e02c78c65ba268b2e50cd4b79b09ff5dc5748ba34b38ffa9",
-      "retryAfter": "2026-10-24",
-      "lastError": "collection editorial \"producer/groffier\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Producer Spotlight",
+      "heading": "Domaine Robert Groffier: Burgundy’s Terroir Interpreter",
+      "paragraphs": [
+        "In the heart of Côte de Nuits, in Morey‑Saint‑Denis, stands Domaine Robert Groffier, a family estate founded in the 19th century by Frédéric Groffier ([domaine-groffier.com](https://domaine-groffier.com/?utm_source=openai)). Covering roughly eight hectares of Pinot Noir, the domaine holds prime parcels in Chambolle‑Musigny (including Les Amoureuses, Les Hauts‑Doix, Les Sentiers), along with holdings in Grand Crus such as Bonnes‑Mares and Chambertin‑Clos de Bèze ([domaine-groffier.com](https://domaine-groffier.com/?utm_source=openai)). Since 2005, Nicolas Groffier has led the domaine, blending a modern sensibility with long‑standing family tradition, striving to let each terroir speak without overt stylistic imposition ([rarite.wine](https://rarite.wine/en/producers/groffier/?utm_source=openai)).",
+        "FineVines buyers exploring our catalog will appreciate that all Groffier wines are pure Pinot Noir and deeply rooted in Côte de Nuits’ finest sites ([domaine-groffier.com](https://domaine-groffier.com/?utm_source=openai)). Whether you encounter regional Bourgogne, Passetoutgrain, or Grand Cru Bonnes‑Mares, each expression reflects the domaine’s philosophy: concentration drawn from the vineyard, not cellar trickery; minimal intervention; precise élevage; and, ultimately, long‑distance aging potential ([domaine-groffier.com](https://domaine-groffier.com/?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Domaine Robert Groffier official (history \u0026 holdings)",
+          "url": "https://domaine-groffier.com/"
+        },
+        {
+          "label": "Parcelles.wine profile of Domaine Robert Groffier",
+          "url": "https://parcelles.wine/domaine/domaine-robert-groffier"
+        },
+        {
+          "label": "Rarité on Nicolas Groffier’s winemaking philosophy",
+          "url": "https://rarite.wine/en/producers/groffier/"
+        }
+      ],
+      "reviewedAt": "2026-10-25"
     },
     {
       "kind": "producer",
@@ -1589,7 +1607,7 @@
       "mode": "generated",
       "fingerprint": "af3ed58731aa22f95c2dfa65a066b53469c57e47c73ed1d0494b0088e6563931",
       "retryFingerprint": "af3ed58731aa22f95c2dfa65a066b53469c57e47c73ed1d0494b0088e6563931",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/hubert-lamy\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1935,7 +1953,7 @@
       "mode": "generated",
       "fingerprint": "9a5a5961a84cf1b4a13cc2fb6661a6960d068a0035e9bb9b7f216af017b41bdb",
       "retryFingerprint": "9a5a5961a84cf1b4a13cc2fb6661a6960d068a0035e9bb9b7f216af017b41bdb",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/lignier-michelot\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2039,7 +2057,7 @@
       "mode": "generated",
       "fingerprint": "fde9d2fd6f9d09c8957484935638a9b539ccd085b32dfa342d0dd77b52b7b7c2",
       "retryFingerprint": "fde9d2fd6f9d09c8957484935638a9b539ccd085b32dfa342d0dd77b52b7b7c2",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/marcel-deiss\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2673,8 +2691,8 @@
       "mode": "generated",
       "fingerprint": "8834de03803fb5b75124b6a3550352be75b71a2282827671a002afadda9b3fa8",
       "retryFingerprint": "8834de03803fb5b75124b6a3550352be75b71a2282827671a002afadda9b3fa8",
-      "retryAfter": "2026-10-24",
-      "lastError": "research JSON has 193 words; expected 120 to 190"
+      "retryAfter": "2026-11-24",
+      "lastError": "collection editorial \"producer/rapet\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2759,7 +2777,7 @@
       "mode": "generated",
       "fingerprint": "e0f612c1a101062d88b6c1175fcfa5ba6ad56b3dae3fed124c59dcc909468e02",
       "retryFingerprint": "e0f612c1a101062d88b6c1175fcfa5ba6ad56b3dae3fed124c59dcc909468e02",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/rocca-di-montegrossi\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3312,7 +3330,7 @@
       "mode": "generated",
       "fingerprint": "fd3dde32e10601c89fb233ed76192b214720df77e16a84cf0145793e3d399017",
       "retryFingerprint": "fd3dde32e10601c89fb233ed76192b214720df77e16a84cf0145793e3d399017",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"producer/weingut-fx-pichler\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4289,7 +4307,7 @@
       "mode": "generated",
       "fingerprint": "8f99ffd5662cb0814382a8b1d62090f3c32587ee2d6830a0b9a059097711cf90",
       "retryFingerprint": "8f99ffd5662cb0814382a8b1d62090f3c32587ee2d6830a0b9a059097711cf90",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/alicante-bouschet\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4309,8 +4327,8 @@
       "mode": "generated",
       "fingerprint": "485e92fd8817d703889ef724f50bcc3d55701914d075a680f617df9ee9efffe4",
       "retryFingerprint": "485e92fd8817d703889ef724f50bcc3d55701914d075a680f617df9ee9efffe4",
-      "retryAfter": "2026-10-23",
-      "lastError": "research JSON has 213 words; expected 120 to 190"
+      "retryAfter": "2026-11-24",
+      "lastError": "collection editorial \"varietal/alvarinho\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4387,7 +4405,7 @@
       "mode": "generated",
       "fingerprint": "9176daf9e5d718a551811c820ffbc3a3f6996b989ab807800158742402e4bc85",
       "retryFingerprint": "9176daf9e5d718a551811c820ffbc3a3f6996b989ab807800158742402e4bc85",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/blanc\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4481,7 +4499,7 @@
       "mode": "generated",
       "fingerprint": "0ccda35b6b7c7b185e858e6ef840e9ac4eb8f47c78a644734618e838c2fc14f8",
       "retryFingerprint": "0ccda35b6b7c7b185e858e6ef840e9ac4eb8f47c78a644734618e838c2fc14f8",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/cabernet-malbec\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4521,8 +4539,8 @@
       "mode": "generated",
       "fingerprint": "4c9059e6f51ba3ef6d14601ff61df934bd2c6223712534899c46218c5243ec8b",
       "retryFingerprint": "4c9059e6f51ba3ef6d14601ff61df934bd2c6223712534899c46218c5243ec8b",
-      "retryAfter": "2026-10-23",
-      "lastError": "collection editorial \"varietal/cabernet-syrah\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-24",
+      "lastError": "collection editorial \"varietal/cabernet-syrah\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4531,8 +4549,8 @@
       "mode": "generated",
       "fingerprint": "eeed02ef0efe73f9750a32c61c569240857312fbf94da1488db4924968a1dfa2",
       "retryFingerprint": "eeed02ef0efe73f9750a32c61c569240857312fbf94da1488db4924968a1dfa2",
-      "retryAfter": "2026-10-23",
-      "lastError": "collection editorial \"varietal/carignane\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-24",
+      "lastError": "research JSON must contain exactly two paragraphs"
     },
     {
       "kind": "varietal",
@@ -4616,7 +4634,7 @@
       "mode": "generated",
       "fingerprint": "b4bea712b8db4f95136dd20fbe45c711bfae033aacc32a1339582720af7245d9",
       "retryFingerprint": "b4bea712b8db4f95136dd20fbe45c711bfae033aacc32a1339582720af7245d9",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/cortese\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4626,8 +4644,8 @@
       "mode": "generated",
       "fingerprint": "4fe254cda2d9871678c25e19f55a354e2d6a4ffa5b85fbcfc265471988bec88f",
       "retryFingerprint": "4fe254cda2d9871678c25e19f55a354e2d6a4ffa5b85fbcfc265471988bec88f",
-      "retryAfter": "2026-10-23",
-      "lastError": "collection editorial \"varietal/erbaluce\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-24",
+      "lastError": "collection editorial \"varietal/erbaluce\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4636,8 +4654,8 @@
       "mode": "generated",
       "fingerprint": "ea2dadbd619de78320efa33a99267f78a7f60a80f4109e3b9e41b2fee7ce149e",
       "retryFingerprint": "ea2dadbd619de78320efa33a99267f78a7f60a80f4109e3b9e41b2fee7ce149e",
-      "retryAfter": "2026-10-23",
-      "lastError": "collection editorial \"varietal/fernao-pires\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-24",
+      "lastError": "research JSON must contain exactly two paragraphs"
     },
     {
       "kind": "varietal",
@@ -4713,9 +4731,35 @@
       "name": "Garnacha Blanca",
       "mode": "generated",
       "fingerprint": "d594b92ff2f1dfeb17a14c367724fcdc03d857b5e8c3f12710ff399ef7bb1b23",
-      "retryFingerprint": "d594b92ff2f1dfeb17a14c367724fcdc03d857b5e8c3f12710ff399ef7bb1b23",
-      "retryAfter": "2026-10-23",
-      "lastError": "collection editorial \"varietal/garnacha-blanca\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Gorgeous white under the slate",
+      "heading": "Garnacha Blanca in Priorat at Mas d’en Gil",
+      "paragraphs": [
+        "Garnacha Blanca is an ancient mutation of red Grenache widely planted in Catalonia, including the rugged hills of Priorat, where it’s one of the few permitted white grapes alongside Macabeo, Pedro Ximénez and Chenin ([en.wikipedia.org](https://en.wikipedia.org/wiki/Priorat_DOQ?utm_source=openai)). In Priorat, the grape thrives in steep vineyards over llicorella soils, low-yielding sites that deliver vibrant and concentrated wines ([turismepriorat.org](https://www.turismepriorat.org/es/la-doc-priorat?utm_source=openai)).",
+        "At Mas d’en Gil in Bellmunt del Priorat, Garnacha Blanca is key in their barrel‑fermented whites. Old vines planted before 1945 contribute nuance and depth, with vinification in large oak barrels and extended bottle ageing common in their estate whites ([regalwine.com](https://www.regalwine.com/wp-content/uploads/2017/07/Mas-den-Gil-Coma-Blanca-Vinyes-Velles.pdf?utm_source=openai)). The estate is biodynamic and organic, nestled among pine, olive, and almond groves, and exemplifies the layered complexity Garnacha Blanca can express when grown on Priorat’s diverse terroirs ([regalwine.com](https://www.regalwine.com/wp-content/uploads/2017/07/Mas-den-Gil-Coma-Blanca-Vinyes-Velles.pdf?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Priorat DOQ official varietals",
+          "url": "https://www.doqpriorat.org/varietats/"
+        },
+        {
+          "label": "Grenache blanc (Garnacha Blanca) Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Grenache_blanc"
+        },
+        {
+          "label": "Turisme Priorat profile of DOC Priorat",
+          "url": "https://www.turismepriorat.org/es/la-doc-priorat"
+        },
+        {
+          "label": "Mas d’en Gil estate details (Regal Wine Imports)",
+          "url": "https://www.regalwine.com/wp-content/uploads/2017/07/Mas-den-Gil-Coma-Blanca-Vinyes-Velles.pdf"
+        },
+        {
+          "label": "Mas d’en Gil biodynamic estate description",
+          "url": "https://www.turismepriorat.org/ca/organitzat/productors-locals/mas-den-gil"
+        }
+      ],
+      "reviewedAt": "2026-10-25"
     },
     {
       "kind": "varietal",
@@ -4754,8 +4798,8 @@
       "mode": "generated",
       "fingerprint": "46f3bf585afab82a64437203a150536ff28620eaedce2023803bcedc5cd30feb",
       "retryFingerprint": "46f3bf585afab82a64437203a150536ff28620eaedce2023803bcedc5cd30feb",
-      "retryAfter": "2026-10-23",
-      "lastError": "research JSON must contain exactly two paragraphs"
+      "retryAfter": "2026-11-24",
+      "lastError": "collection editorial \"varietal/grenache-pur\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4774,7 +4818,7 @@
       "mode": "generated",
       "fingerprint": "7d96e298c9df4c5799f085545efd68e0dbe1da50ee57adf94545e0c3682721c3",
       "retryFingerprint": "7d96e298c9df4c5799f085545efd68e0dbe1da50ee57adf94545e0c3682721c3",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/macabeo\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4844,7 +4888,7 @@
       "mode": "generated",
       "fingerprint": "d6bfaf949333d3b267e4e4f19283b67e16de415c46a5e536b464a69c8c3d45e3",
       "retryFingerprint": "d6bfaf949333d3b267e4e4f19283b67e16de415c46a5e536b464a69c8c3d45e3",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/malvasia-bianca\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4926,8 +4970,8 @@
       "mode": "generated",
       "fingerprint": "24e16484f28256f978b2d2b04e9fa29d24d7f8771fd4394b98187581f5d330fc",
       "retryFingerprint": "24e16484f28256f978b2d2b04e9fa29d24d7f8771fd4394b98187581f5d330fc",
-      "retryAfter": "2026-10-23",
-      "lastError": "research JSON has 118 words; expected 120 to 190"
+      "retryAfter": "2026-11-24",
+      "lastError": "collection editorial \"varietal/merlot-cab\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4936,7 +4980,7 @@
       "mode": "generated",
       "fingerprint": "530dd294ad614647fc6d0a3d04ee28b4be9b4dfbfb1e76fdfddf951abb92633e",
       "retryFingerprint": "530dd294ad614647fc6d0a3d04ee28b4be9b4dfbfb1e76fdfddf951abb92633e",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/merlot-cabernet-franc\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4946,8 +4990,8 @@
       "mode": "generated",
       "fingerprint": "9c261f511af9d9ceb67c12ac8490dddc0b0765c284ff80c6f3fc6ab400fc9d51",
       "retryFingerprint": "9c261f511af9d9ceb67c12ac8490dddc0b0765c284ff80c6f3fc6ab400fc9d51",
-      "retryAfter": "2026-10-23",
-      "lastError": "research JSON has 202 words; expected 120 to 190"
+      "retryAfter": "2026-11-24",
+      "lastError": "collection editorial \"varietal/merlot-petit-verdot\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4956,8 +5000,8 @@
       "mode": "generated",
       "fingerprint": "0528bb5ad48ad012d5024bc538f35ecbfe622408fc89dce4b10330653eacf05e",
       "retryFingerprint": "0528bb5ad48ad012d5024bc538f35ecbfe622408fc89dce4b10330653eacf05e",
-      "retryAfter": "2026-10-23",
-      "lastError": "collection editorial \"varietal/monastrell\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-24",
+      "lastError": "invalid character '[' looking for beginning of object key string"
     },
     {
       "kind": "varietal",
@@ -4966,7 +5010,7 @@
       "mode": "generated",
       "fingerprint": "53af0bf8d24cd5bc9d740c927531a5ea061fb08a17d6700cf818b070973c5274",
       "retryFingerprint": "53af0bf8d24cd5bc9d740c927531a5ea061fb08a17d6700cf818b070973c5274",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/montepulciano-sangiovese\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5006,8 +5050,8 @@
       "mode": "generated",
       "fingerprint": "6b2ba08f1f00a17ddf2e3983ebfc038f484c03a12a71c2c913a4c0d235e64594",
       "retryFingerprint": "6b2ba08f1f00a17ddf2e3983ebfc038f484c03a12a71c2c913a4c0d235e64594",
-      "retryAfter": "2026-10-23",
-      "lastError": "json: cannot unmarshal string into Go struct field Draft.paragraphs of type []string"
+      "retryAfter": "2026-11-24",
+      "lastError": "research did not find enough authoritative information"
     },
     {
       "kind": "varietal",
@@ -5074,8 +5118,8 @@
       "mode": "generated",
       "fingerprint": "ea0e352946dbc440669ca05a3c9653d30abaf64e531516904c64211c9206de0e",
       "retryFingerprint": "ea0e352946dbc440669ca05a3c9653d30abaf64e531516904c64211c9206de0e",
-      "retryAfter": "2026-10-23",
-      "lastError": "invalid character ':' after array element"
+      "retryAfter": "2026-11-24",
+      "lastError": "research JSON must contain exactly two paragraphs"
     },
     {
       "kind": "varietal",
@@ -5170,7 +5214,7 @@
       "mode": "generated",
       "fingerprint": "81cec34fdeb96f2436f8de2040f5973594a807087ea6f89faf4465ebbaa86406",
       "retryFingerprint": "81cec34fdeb96f2436f8de2040f5973594a807087ea6f89faf4465ebbaa86406",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "research JSON must contain exactly two paragraphs"
     },
     {
@@ -5210,7 +5254,7 @@
       "mode": "generated",
       "fingerprint": "a0de5f834b69782bda8b72653273f16bbf9a6c2c4adb5441b55f57357eb6342f",
       "retryFingerprint": "a0de5f834b69782bda8b72653273f16bbf9a6c2c4adb5441b55f57357eb6342f",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/savagnin\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5244,7 +5288,7 @@
       "mode": "generated",
       "fingerprint": "b42c384a12292c0f08d5bf93a88d6fee17be000dbf744e6640bb578d16cdcf17",
       "retryFingerprint": "b42c384a12292c0f08d5bf93a88d6fee17be000dbf744e6640bb578d16cdcf17",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/semillon-sauvignon\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5366,8 +5410,8 @@
       "mode": "generated",
       "fingerprint": "7c3b81a0073d4ba00f3cb7beabdaa005f15f1b0abb1c730f5b0ff275322f3d20",
       "retryFingerprint": "7c3b81a0073d4ba00f3cb7beabdaa005f15f1b0abb1c730f5b0ff275322f3d20",
-      "retryAfter": "2026-10-23",
-      "lastError": "research JSON has 202 words; expected 120 to 190"
+      "retryAfter": "2026-11-24",
+      "lastError": "collection editorial \"varietal/syrah-tempranillo\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -5396,7 +5440,7 @@
       "mode": "generated",
       "fingerprint": "2c9da8bd7869c52f3311814826cbfab91f21d77810fb796ea56ac7644c594a27",
       "retryFingerprint": "2c9da8bd7869c52f3311814826cbfab91f21d77810fb796ea56ac7644c594a27",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/tempranillo-macabeo\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5516,8 +5560,8 @@
       "mode": "generated",
       "fingerprint": "541561a330553dec2d9f98308adeda3adf0301d4ee65ea1d821ad3ab6752a9e5",
       "retryFingerprint": "541561a330553dec2d9f98308adeda3adf0301d4ee65ea1d821ad3ab6752a9e5",
-      "retryAfter": "2026-10-23",
-      "lastError": "collection editorial \"varietal/verdejo\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-24",
+      "lastError": "collection editorial \"varietal/verdejo\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -5525,9 +5569,23 @@
       "name": "Verdelho",
       "mode": "generated",
       "fingerprint": "a0b34661b86a178c499d5a38801cd6a4455db72d36f001c497ea97ec6645b711",
-      "retryFingerprint": "a0b34661b86a178c499d5a38801cd6a4455db72d36f001c497ea97ec6645b711",
-      "retryAfter": "2026-10-23",
-      "lastError": "collection editorial \"varietal/verdelho\" source label contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "A versatile Portuguese white grape",
+      "heading": "Verdelho in Alentejo: fresh structure meets Madeiran heritage",
+      "paragraphs": [
+        "Verdelho is a historic white grape variety rooted in Portugal, famed as one of the four noble grapes of Madeira where it yields medium‑dry fortified wines with vibrant acidity and smoky, nutty depth ([wineenthusiast.com](https://www.wineenthusiast.com/varietals/verdelho/?utm_source=openai)). On the mainland, it lends itself to bright, dry wines, particularly in warm climates like Australia, where it delivers citrus, tropical fruit, and honeyed notes in a medium‑bodied, aromatic palate ([wineenthusiast.com](https://www.wineenthusiast.com/varietals/verdelho/?utm_source=openai)). Importantly, Verdelho maintains freshness even under heat, making it well suited for Alentejo’s sun‑driven landscape, and the variety is distinct from similarly named grapes such as Verdejo or Godello ([wineenthusiast.com](https://www.wineenthusiast.com/varietals/verdelho/?utm_source=openai)).",
+        "In Alentejo, producers such as Mouro harness Verdelho’s natural brightness to craft wines that balance expressive aromatics with texture and structure; the focus is on a refreshing, food‑friendly style framed by warm‑climate ripeness rather than Madeira’s oxidative legacy. While still dry and upright, Alentejo Verdelho may nod to the grape’s exotic fruit and citrus core with a touch of herbal nuance, yet remains anchored by its bright acidity. As with any Verdelho, attentive ripeness at harvest is key to preserving balance and vitality without veering into flabbiness or excess alcohol ([thatusefulwinesite.com](https://thatusefulwinesite.com/varietals/whites/Verdelho.php?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Wine Enthusiast on Verdelho",
+          "url": "https://www.wineenthusiast.com/varietals/verdelho/"
+        },
+        {
+          "label": "Grape Guru profile of Verdelho",
+          "url": "https://www.grapeguru.de/en/knowledge/grape-varieties/verdelho"
+        }
+      ],
+      "reviewedAt": "2026-10-25"
     },
     {
       "kind": "varietal",
@@ -5568,7 +5626,7 @@
       "mode": "generated",
       "fingerprint": "3a11cd800092356257a44a47126e184178aa9c3dd42fd765e55fcd1925ea6943",
       "retryFingerprint": "3a11cd800092356257a44a47126e184178aa9c3dd42fd765e55fcd1925ea6943",
-      "retryAfter": "2026-10-23",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/vinhao\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5578,8 +5636,8 @@
       "mode": "generated",
       "fingerprint": "86dad4afdb3db79bc4dd2734053866ba3aedcb83a3d9cae008af15f05c8c1508",
       "retryFingerprint": "86dad4afdb3db79bc4dd2734053866ba3aedcb83a3d9cae008af15f05c8c1508",
-      "retryAfter": "2026-10-23",
-      "lastError": "collection editorial \"varietal/viognier-sauvignon-blanc\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-24",
+      "lastError": "research JSON has 106 words; expected 120 to 190"
     },
     {
       "kind": "varietal",
@@ -5588,7 +5646,7 @@
       "mode": "generated",
       "fingerprint": "142f60874b8e4b705e9637fe0b014487e8fe1c82a9eb7f4b070857e7a57b2265",
       "retryFingerprint": "142f60874b8e4b705e9637fe0b014487e8fe1c82a9eb7f4b070857e7a57b2265",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/white-blend\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5598,7 +5656,7 @@
       "mode": "generated",
       "fingerprint": "2ba83409b78db3c9a9188ad2bba6aa089e72a09bdc4a05fc842bf1cee89ccd71",
       "retryFingerprint": "2ba83409b78db3c9a9188ad2bba6aa089e72a09bdc4a05fc842bf1cee89ccd71",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/white-zinfandel\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5608,7 +5666,7 @@
       "mode": "generated",
       "fingerprint": "aad79444bb7ea1ecf2294b523e35e4417ca8fef7d8fc64ba691e72a349b65293",
       "retryFingerprint": "aad79444bb7ea1ecf2294b523e35e4417ca8fef7d8fc64ba691e72a349b65293",
-      "retryAfter": "2026-10-24",
+      "retryAfter": "2026-11-24",
       "lastError": "collection editorial \"varietal/zinfandel\" contains a prohibited dash or invalid UTF-8"
     }
   ]
