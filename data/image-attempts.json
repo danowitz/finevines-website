@@ -222,9 +222,9 @@
   "matcherVersion": "google-image-consensus-v1"
  },
  "188106": {
-  "lastAttempted": "2026-09-25T08:42:30.643Z",
-  "outcome": "miss",
-  "attempts": 1,
+  "lastAttempted": "2026-10-26T08:51:03.521Z",
+  "outcome": "imported",
+  "attempts": 3,
   "matcherVersion": "google-image-consensus-v1"
  },
  "188210": {
@@ -264,9 +264,9 @@
   "matcherVersion": "google-image-consensus-v1"
  },
  "188301": {
-  "lastAttempted": "2026-09-25T08:43:35.447Z",
-  "outcome": "miss",
-  "attempts": 1,
+  "lastAttempted": "2026-10-26T08:51:03.578Z",
+  "outcome": "imported",
+  "attempts": 3,
   "matcherVersion": "google-image-consensus-v1"
  },
  "210220": {
