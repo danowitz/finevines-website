@@ -127,6 +127,55 @@ func (f *fakeImages) callCount() int {
 	return f.calls
 }
 
+func TestRun_FallbackPreservesPhotoReferencedByAnotherSKUWithSameSlug(t *testing.T) {
+	dir := t.TempDir()
+	dataPath := filepath.Join(dir, "wines.json")
+	imgDir := filepath.Join(dir, "img")
+	if err := os.MkdirAll(imgDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	rawA := salesforce.WineRaw{ID: "SF-A", SKU: "640001", Producer: "Cider Farm", Name: "Oak Aged Cider", StockQty: 2, ReadyToSell: true}
+	rawB := salesforce.WineRaw{ID: "SF-B", SKU: "640009", Producer: "Cider Farm", Name: "Oak Aged Cider", StockQty: 2, ReadyToSell: true}
+	rawNew := salesforce.WineRaw{ID: "SF-NEW", SKU: "640021", Producer: "Cider Farm", Name: "Oak Aged Cider", StockQty: 2, ReadyToSell: true}
+	slug := model.Slugify(rawA.Producer, rawA.Name, rawA.Vintage)
+	photo := filepath.Join(imgDir, slug+".jpg")
+	if err := os.WriteFile(photo, []byte("verified bottle"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	seed := []model.Wine{
+		{ID: rawA.ID, SKU: rawA.SKU, SourceHash: SourceHash(rawA), Slug: slug, ImagePath: filepath.ToSlash(photo), ImageSource: model.ImageScrapedWeb},
+		{ID: rawB.ID, SKU: rawB.SKU, SourceHash: SourceHash(rawB), Slug: slug, ImagePath: filepath.ToSlash(photo), ImageSource: model.ImageScrapedWeb},
+	}
+	if err := model.SaveWines(dataPath, seed); err != nil {
+		t.Fatal(err)
+	}
+	if err := Run(context.Background(), &fakeSource{roster: []salesforce.WineRaw{rawA, rawB, rawNew}}, &fakeTexts{}, &fakeImages{}, nil, dataPath, imgDir, t.Logf); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(photo); err != nil {
+		t.Fatalf("shared photo was removed by new SKU's fallback: %v", err)
+	}
+	wines, err := model.LoadWines(dataPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(wines) != 3 {
+		t.Fatalf("got %d wines, want 3", len(wines))
+	}
+	for _, wine := range wines {
+		if wine.ID == rawNew.ID {
+			if wine.ImageSource != model.ImageGeneratedLabel {
+				t.Fatalf("new SKU image source = %q, want fallback", wine.ImageSource)
+			}
+			if _, err := os.Stat(filepath.FromSlash(wine.ImagePath)); err != nil {
+				t.Fatalf("new SKU fallback missing: %v", err)
+			}
+		} else if wine.ImagePath != filepath.ToSlash(photo) {
+			t.Fatalf("existing SKU %s lost its photo reference: %q", wine.SKU, wine.ImagePath)
+		}
+	}
+}
+
 // TestRun_FullPipeline exercises Run end to end against fakes: eligibility
 // filtering (ineligible SKU and out-of-stock roster rows must never reach
 // output), an unchanged wine carried over verbatim (untouched Description a

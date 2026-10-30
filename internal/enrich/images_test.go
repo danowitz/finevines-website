@@ -60,20 +60,28 @@ func TestResolveImageNeverInvokesImageGeneration(t *testing.T) {
 	}
 }
 
-func TestResolveImageReplacesGeneratedPhotoAndRemovesJPEG(t *testing.T) {
+func TestResolveImageDefersStaleJPEGRemovalUntilCatalogIsKnown(t *testing.T) {
 	imgDir := t.TempDir()
 	stale := filepath.Join(imgDir, resolveImageBase+".jpg")
 	if err := os.WriteFile(stale, []byte("invented bottle"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	prev := &model.Wine{ImagePath: filepath.ToSlash(stale), ImageSource: model.ImageGeneratedPhoto}
-	if _, source, err := ResolveImage(context.Background(), &countingImageProvider{}, resolveImageWine, resolveImageBase, "", imgDir, prev, nil); err != nil {
+	path, source, err := ResolveImage(context.Background(), &countingImageProvider{}, resolveImageWine, resolveImageBase, "", imgDir, prev, nil)
+	if err != nil {
 		t.Fatal(err)
 	} else if source != model.ImageGeneratedLabel {
 		t.Fatalf("source = %q, want neutral fallback", source)
 	}
+	if _, err := os.Stat(stale); err != nil {
+		t.Fatalf("JPEG removed before other catalog references were checked: %v", err)
+	}
+	wine := model.Wine{Slug: resolveImageBase, ImagePath: path, ImageSource: source}
+	if err := removeUnreferencedImageSiblings([]model.Wine{wine}, []model.Wine{wine}, imgDir); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := os.Stat(stale); !os.IsNotExist(err) {
-		t.Fatalf("generated JPEG was not removed: %v", err)
+		t.Fatalf("unreferenced generated JPEG was not removed: %v", err)
 	}
 }
 

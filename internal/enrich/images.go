@@ -141,10 +141,9 @@ func imageCandidate(sku, foundURL string, oldImages map[string]string) (url, sou
 // page URL — slug is the caller's already-computed page slug (from run.go,
 // derived from NORMALIZED producer/name/vintage), not re-derived here from
 // raw Salesforce fields, so the fallback filename can never drift from the
-// page it's meant to illustrate. Whichever branch writes a file also deletes
-// the sibling extension for that slug (<slug>.svg when a .jpg is written, and
-// vice versa), so a wine that flips photo<->label between runs never leaves a
-// stale file behind next to the new one.
+// page it's meant to illustrate. Run removes unreferenced sibling files only
+// after assembling the full catalog: different SKUs can share one slug while
+// referring to different image extensions.
 //
 // The returned imagePath is always forward-slash form with no leading slash
 // (e.g. "assets/img/wines/hubert-lamy-puligny-montrachet-2019.jpg"), regardless of host OS path
@@ -174,26 +173,19 @@ func ResolveImage(ctx context.Context, provider ImageProvider, w salesforce.Wine
 	// the same string as its page URL /wines/<slug>/ — descriptive, keyword-
 	// rich filenames are what image search ranks on, far better than an opaque
 	// SKU. The slug is deterministic, so re-running enrich reuses the same name.
-	p, err := writeImageFile(imgDir, slug, "svg", "jpg", label.Generate(w))
+	p, err := writeImageFile(imgDir, slug, "svg", label.Generate(w))
 	if err != nil {
 		return "", "", err
 	}
 	return p, model.ImageGeneratedLabel, nil
 }
 
-// writeImageFile writes data to <imgDir>/<base>.<ext> and removes the sibling
-// <imgDir>/<base>.<siblingExt> if present (a no-op, not an error, if that
-// file doesn't exist). base is the wine's SEO slug. It returns the forward-
-// slash, no-leading-slash site-relative path for the written file.
-func writeImageFile(imgDir, base, ext, siblingExt string, data []byte) (string, error) {
+// writeImageFile writes data to <imgDir>/<base>.<ext>. Sibling cleanup waits
+// until Run has the complete catalog, so another SKU's image is not removed.
+func writeImageFile(imgDir, base, ext string, data []byte) (string, error) {
 	diskPath := filepath.Join(imgDir, base+"."+ext)
 	if err := os.WriteFile(diskPath, data, 0o644); err != nil {
 		return "", fmt.Errorf("resolve image: write %s: %w", diskPath, err)
-	}
-
-	sibling := filepath.Join(imgDir, base+"."+siblingExt)
-	if err := os.Remove(sibling); err != nil && !os.IsNotExist(err) {
-		return "", fmt.Errorf("resolve image: remove stale %s: %w", sibling, err)
 	}
 
 	return path.Join(filepath.ToSlash(imgDir), base+"."+ext), nil

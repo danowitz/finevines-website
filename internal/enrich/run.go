@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -55,8 +56,8 @@ type enrichResult struct {
 
 // resolveImageError marks a ResolveImage failure as distinct from a
 // texts.Enrich failure so Run's result loop can tell them apart. ResolveImage
-// returns a non-nil error only for filesystem failures (MkdirAll/WriteFile/
-// Remove — see its doc comment): unlike a flaky text-generation call, a
+// returns a non-nil error only for filesystem failures (MkdirAll/WriteFile —
+// see its doc comment): unlike a flaky text-generation call, a
 // broken image directory will fail identically for every remaining wine, so
 // Run treats it as fatal instead of logging-and-skipping just that one wine.
 type resolveImageError struct{ err error }
@@ -257,12 +258,59 @@ func Run(ctx context.Context, src salesforce.Source, enr Enricher, imgs ImagePro
 	if err := save(finalWines); err != nil {
 		return fmt.Errorf("enrich: final save: %w", err)
 	}
+	if err := removeUnreferencedImageSiblings(finalWines, enriched, imgDir); err != nil {
+		return fmt.Errorf("enrich: remove stale image: %w", err)
+	}
 
 	log("enrich: complete — enriched %d, kept %d, unavailable %d, delisted %d, dropped %d, label-fallbacks %d",
 		enrichedCount, len(diff.Keep), len(unavailable), len(drops), droppedCount, labelFallbacks)
 
 	if fatalErr != nil {
 		return fmt.Errorf("enrich: aborted after filesystem error (partial progress saved to %s): %w", dataPath, fatalErr)
+	}
+	return nil
+}
+
+// removeUnreferencedImageSiblings runs after the final catalog is saved. A
+// fallback SVG for one SKU must not delete a JPG still used by another SKU
+// with the same slug. Only siblings of this pass's enriched slugs are
+// candidates, and every row in the final catalog participates in retention.
+func removeUnreferencedImageSiblings(wines, enriched []model.Wine, imgDir string) error {
+	referenced := make(map[string]bool, len(wines))
+	for _, wine := range wines {
+		if wine.ImagePath == "" {
+			continue
+		}
+		absolute, err := filepath.Abs(filepath.FromSlash(wine.ImagePath))
+		if err != nil {
+			return err
+		}
+		referenced[absolute] = true
+	}
+	removed := make(map[string]bool)
+	for _, wine := range enriched {
+		var sibling string
+		jpg := filepath.Join(imgDir, wine.Slug+".jpg")
+		svg := filepath.Join(imgDir, wine.Slug+".svg")
+		switch filepath.Clean(filepath.FromSlash(wine.ImagePath)) {
+		case filepath.Clean(jpg):
+			sibling = svg
+		case filepath.Clean(svg):
+			sibling = jpg
+		default:
+			continue
+		}
+		absolute, err := filepath.Abs(sibling)
+		if err != nil {
+			return err
+		}
+		if referenced[absolute] || removed[absolute] {
+			continue
+		}
+		if err := os.Remove(absolute); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		removed[absolute] = true
 	}
 	return nil
 }
@@ -329,7 +377,7 @@ func enrichOne(ctx context.Context, enr Enricher, imgs ImageProvider, raw salesf
 	default:
 		if url, src := imageCandidate(raw.SKU, res.ImageURL, oldImages); url != "" {
 			if data, derr := downloadImage(ctx, url); derr == nil {
-				p, werr := writeImageFile(imgDir, slug, "jpg", "svg", data)
+				p, werr := writeImageFile(imgDir, slug, "jpg", data)
 				if werr != nil {
 					return model.Wine{}, &resolveImageError{err: werr}
 				}
