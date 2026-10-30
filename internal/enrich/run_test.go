@@ -176,6 +176,41 @@ func TestRun_FallbackPreservesPhotoReferencedByAnotherSKUWithSameSlug(t *testing
 	}
 }
 
+func TestRun_FallbackRemovesPhotoWithNoRemainingReference(t *testing.T) {
+	dir := t.TempDir()
+	dataPath := filepath.Join(dir, "wines.json")
+	imgDir := filepath.Join(dir, "img")
+	if err := os.MkdirAll(imgDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	raw := salesforce.WineRaw{ID: "SF-OLD", SKU: "640100", Producer: "Cider Farm", Name: "Old Cider", StockQty: 2, ReadyToSell: true}
+	slug := model.Slugify(raw.Producer, raw.Name, raw.Vintage)
+	photo := filepath.Join(imgDir, slug+".jpg")
+	if err := os.WriteFile(photo, []byte("obsolete generated photo"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	seed := model.Wine{ID: raw.ID, SKU: raw.SKU, SourceHash: "stale", Slug: slug, ImagePath: filepath.ToSlash(photo), ImageSource: model.ImageGeneratedPhoto}
+	if err := model.SaveWines(dataPath, []model.Wine{seed}); err != nil {
+		t.Fatal(err)
+	}
+	if err := Run(context.Background(), &fakeSource{roster: []salesforce.WineRaw{raw}}, &fakeTexts{}, &fakeImages{}, nil, dataPath, imgDir, t.Logf); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(photo); !os.IsNotExist(err) {
+		t.Fatalf("unreferenced photo was not removed: %v", err)
+	}
+	wines, err := model.LoadWines(dataPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(wines) != 1 || wines[0].ImageSource != model.ImageGeneratedLabel {
+		t.Fatalf("fallback was not recorded: %+v", wines)
+	}
+	if _, err := os.Stat(filepath.FromSlash(wines[0].ImagePath)); err != nil {
+		t.Fatalf("fallback file missing: %v", err)
+	}
+}
+
 // TestRun_FullPipeline exercises Run end to end against fakes: eligibility
 // filtering (ineligible SKU and out-of-stock roster rows must never reach
 // output), an unchanged wine carried over verbatim (untouched Description a
