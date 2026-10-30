@@ -28,7 +28,7 @@
       "mode": "generated",
       "fingerprint": "e5b2b1cbf983463063dba1b7f02880f1001f7d5f8e925d4ba591b142302e338e",
       "retryFingerprint": "e5b2b1cbf983463063dba1b7f02880f1001f7d5f8e925d4ba591b142302e338e",
-      "retryAfter": "2026-10-30",
+      "retryAfter": "2026-11-29",
       "lastError": "collection editorial \"producer/acentor\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2939,8 +2939,8 @@
       "mode": "generated",
       "fingerprint": "f048ba036ab9acc6f5e5cc939695a4e09aa0acea96a2e0f29a9053b80852ea2b",
       "retryFingerprint": "f048ba036ab9acc6f5e5cc939695a4e09aa0acea96a2e0f29a9053b80852ea2b",
-      "retryAfter": "2026-10-28",
-      "lastError": "collection editorial \"producer/reynier\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-29",
+      "lastError": "research JSON has 199 words; expected 120 to 190"
     },
     {
       "kind": "producer",
@@ -2949,8 +2949,8 @@
       "mode": "generated",
       "fingerprint": "a7d099b325a6fe354662cf81ada8490f0e45d8d2f8c8bee58386245f8a3ecd4e",
       "retryFingerprint": "a7d099b325a6fe354662cf81ada8490f0e45d8d2f8c8bee58386245f8a3ecd4e",
-      "retryAfter": "2026-10-28",
-      "lastError": "collection editorial \"producer/rios-de-tinta\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-29",
+      "lastError": "research JSON has 260 words; expected 120 to 190"
     },
     {
       "kind": "producer",
@@ -3013,7 +3013,7 @@
       "mode": "generated",
       "fingerprint": "66da00f1430c98a7e65e3ec471a9a7906cbf11b359f1fd200c65805eea924437",
       "retryFingerprint": "66da00f1430c98a7e65e3ec471a9a7906cbf11b359f1fd200c65805eea924437",
-      "retryAfter": "2026-10-28",
+      "retryAfter": "2026-11-29",
       "lastError": "collection editorial \"producer/roseline\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3033,7 +3033,7 @@
       "mode": "generated",
       "fingerprint": "a306edb0a494b4dca08887cad89b0e2c8b5d6d57f4670f6272b16b44af11bb2d",
       "retryFingerprint": "a306edb0a494b4dca08887cad89b0e2c8b5d6d57f4670f6272b16b44af11bb2d",
-      "retryAfter": "2026-10-28",
+      "retryAfter": "2026-11-29",
       "lastError": "collection editorial \"producer/royer\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3043,7 +3043,7 @@
       "mode": "generated",
       "fingerprint": "0266b2b08d6268b064d987635fcab0a8929f70362d0e94f7b3e256fc95ded596",
       "retryFingerprint": "0266b2b08d6268b064d987635fcab0a8929f70362d0e94f7b3e256fc95ded596",
-      "retryAfter": "2026-10-28",
+      "retryAfter": "2026-11-29",
       "lastError": "collection editorial \"producer/russian-river-vineyards\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3073,7 +3073,7 @@
       "mode": "generated",
       "fingerprint": "7c1eaeaeb74c2ad5f72cdd6bbb7c4aeb002623e4e2264ab9aea0ec3cb721964a",
       "retryFingerprint": "7c1eaeaeb74c2ad5f72cdd6bbb7c4aeb002623e4e2264ab9aea0ec3cb721964a",
-      "retryAfter": "2026-10-28",
+      "retryAfter": "2026-11-29",
       "lastError": "collection editorial \"producer/school-house-vineyard\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3083,8 +3083,8 @@
       "mode": "generated",
       "fingerprint": "028b7d451e68a9fca8e182e063b45e2c86268e6b7ef589f54c49168abcc9551c",
       "retryFingerprint": "028b7d451e68a9fca8e182e063b45e2c86268e6b7ef589f54c49168abcc9551c",
-      "retryAfter": "2026-10-28",
-      "lastError": "research JSON has 201 words; expected 120 to 190"
+      "retryAfter": "2026-11-29",
+      "lastError": "collection editorial \"producer/sem-igual\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -3242,7 +3242,7 @@
       "mode": "generated",
       "fingerprint": "a50935fbbf78b0e995e87f4bdd849cf47c421555ee9186ffc8a0130360cea079",
       "retryFingerprint": "a50935fbbf78b0e995e87f4bdd849cf47c421555ee9186ffc8a0130360cea079",
-      "retryAfter": "2026-10-28",
+      "retryAfter": "2026-11-29",
       "lastError": "collection editorial \"producer/taonga\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3336,7 +3336,7 @@
       "mode": "generated",
       "fingerprint": "d8d6bbb64e881a120559124e6966629366946d51c725fe88a864b5562e0ddb12",
       "retryFingerprint": "d8d6bbb64e881a120559124e6966629366946d51c725fe88a864b5562e0ddb12",
-      "retryAfter": "2026-10-28",
+      "retryAfter": "2026-11-29",
       "lastError": "collection editorial \"producer/torre-oria\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3356,7 +3356,7 @@
       "mode": "generated",
       "fingerprint": "11ddada582d1dcb39b15b924f24fd15eb7f32a7b3c30fda0588f54c822d0005c",
       "retryFingerprint": "11ddada582d1dcb39b15b924f24fd15eb7f32a7b3c30fda0588f54c822d0005c",
-      "retryAfter": "2026-10-28",
+      "retryAfter": "2026-11-29",
       "lastError": "collection editorial \"producer/twins\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3394,7 +3394,7 @@
       "mode": "generated",
       "fingerprint": "bcbd6d5a9f3ff94df93af801e0e1d369532c08ace0cb31cbd89f4e6a4474c846",
       "retryFingerprint": "bcbd6d5a9f3ff94df93af801e0e1d369532c08ace0cb31cbd89f4e6a4474c846",
-      "retryAfter": "2026-10-28",
+      "retryAfter": "2026-11-29",
       "lastError": "collection editorial \"producer/uvaguilera\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3424,8 +3424,8 @@
       "mode": "generated",
       "fingerprint": "f3799e0654da9c7856c39ebacf2a2d039fdd8abc8a7df1f670b80025146bc38d",
       "retryFingerprint": "f3799e0654da9c7856c39ebacf2a2d039fdd8abc8a7df1f670b80025146bc38d",
-      "retryAfter": "2026-10-28",
-      "lastError": "collection editorial \"producer/veiga-naum\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-29",
+      "lastError": "collection editorial \"producer/veiga-naum\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -3433,9 +3433,31 @@
       "name": "Ventura",
       "mode": "generated",
       "fingerprint": "e265988d2e78b88f6f459ca0cf09fb5435b14cc5922af87f31e1ea085cfab2e1",
-      "retryFingerprint": "e265988d2e78b88f6f459ca0cf09fb5435b14cc5922af87f31e1ea085cfab2e1",
-      "retryAfter": "2026-10-28",
-      "lastError": "invalid character ':' after array element"
+      "eyebrow": "Heritage of Ventura Cavas",
+      "heading": "Ventura in Penedès: A Tradition Rooted in Cava",
+      "paragraphs": [
+        "Ventura represents a distinguished lineage in Penedès, a region considered one of the oldest continuous winemaking landscapes in Europe. The family’s roots in traditional sparkling wine production date back to the nineteenth century. The current winery reflects a modern expression of that legacy, where Cava is made in contrast to both historical cellars and contemporary facilities in Sant Sadurní d'Anoia ([catalunya.com](https://www.catalunya.com/es/continguts/productors/caves-pere-ventura-17-14002-1343?utm_source=openai)).",
+        "As a producer working within the DO Penedès and DO Cava frameworks, Ventura draws on indigenous white varieties such as Macabeo and Xarel·lo, alongside others traditional to the region, to craft structured, long‑aged sparkling wines. These grape varieties are central to the identity of both the Penedès appellation and Cava in general, which often features Macabeo, Xarel·lo and Parellada in the traditional method of produção ([dopenedes.cat](https://dopenedes.cat/en/dopenedes/?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Caves Pere Ventura historical and varietal context",
+          "url": "https://www.catalunya.com/es/continguts/productors/caves-pere-ventura-17-14002-1343"
+        },
+        {
+          "label": "DO Penedès varietals and sparkling wine context",
+          "url": "https://dopenedes.cat/en/dopenedes/"
+        },
+        {
+          "label": "Pere Ventura family history and modern winery environment",
+          "url": "https://www.pereventuracava.com/our-story.html"
+        },
+        {
+          "label": "Common Macabeo, Xarel‑lo, Parellada usage in Cava",
+          "url": "https://www.decanter.com/decanter-world-wine-awards/international-cava-day-15-award-winning-wines-to-try-474115"
+        }
+      ],
+      "reviewedAt": "2026-10-30"
     },
     {
       "kind": "producer",
@@ -3532,8 +3554,8 @@
       "mode": "generated",
       "fingerprint": "63f3e641ace9aae70daa20daab560e3649f7dae5956b4647bd051589aa5f0f5e",
       "retryFingerprint": "63f3e641ace9aae70daa20daab560e3649f7dae5956b4647bd051589aa5f0f5e",
-      "retryAfter": "2026-10-29",
-      "lastError": "collection editorial \"producer/wolfberger\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-11-29",
+      "lastError": "collection editorial \"producer/wolfberger\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
