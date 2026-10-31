@@ -4772,7 +4772,7 @@
       "name": "Chardonnay",
       "mode": "generated",
       "fingerprint": "8985e8e140bca60a9f85f27040479478892767f6c9c64c3b639352a36921735d",
-      "retryFingerprint": "7fdc6c6486e1a9fbb1b19c945b2306620f6e632dc9e4ea51c75afc17c713252c",
+      "retryFingerprint": "628159e3b7dd49fdecdcae6c62e5dfa9a58fcc075095595fcc1d26a520c07384",
       "eyebrow": "Varietal Focus",
       "heading": "Chardonnay: A Global Benchmark in White Wine",
       "paragraphs": [
@@ -4793,7 +4793,7 @@
           "url": "https://winefolly.com/grapes/chardonnay/"
         }
       ],
-      "retryAfter": "2026-11-21",
+      "retryAfter": "2026-11-30",
       "reviewedAt": "2026-10-15",
       "lastError": "collection editorial \"varietal/chardonnay\" contains a prohibited dash or invalid UTF-8"
     },
