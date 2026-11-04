@@ -4277,9 +4277,9 @@
       "slug": "rhone-valley",
       "name": "Rhône Valley",
       "mode": "generated",
-      "fingerprint": "4ea4d520df5873b76c6a2365d1546af35aa877897b4302697471c21fb6cfdcbd",
-      "retryFingerprint": "4ea4d520df5873b76c6a2365d1546af35aa877897b4302697471c21fb6cfdcbd",
-      "retryAfter": "2026-11-20",
+      "fingerprint": "92becf309fdc0743a5a7f7795d0f47c92b4fa1c0b624432eb274d9b446ea521b",
+      "retryFingerprint": "92becf309fdc0743a5a7f7795d0f47c92b4fa1c0b624432eb274d9b446ea521b",
+      "retryAfter": "2026-12-04",
       "lastError": "collection editorial \"region/rhone-valley\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5020,10 +5020,10 @@
       "slug": "grenache-syrah",
       "name": "Grenache / Syrah",
       "mode": "generated",
-      "fingerprint": "531f24e87cca4a084882bcb50421b2c5bf81df2237867f4e1e97c67dc592b4f9",
-      "retryFingerprint": "531f24e87cca4a084882bcb50421b2c5bf81df2237867f4e1e97c67dc592b4f9",
-      "retryAfter": "2026-11-23",
-      "lastError": "collection editorial \"varietal/grenache-syrah\" source label contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "25a421a27f9ad434a399bec161452bc5f975ccf4804c9bcd6a3729b238fa3104",
+      "retryFingerprint": "25a421a27f9ad434a399bec161452bc5f975ccf4804c9bcd6a3729b238fa3104",
+      "retryAfter": "2026-12-04",
+      "lastError": "collection editorial \"varietal/grenache-syrah\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
