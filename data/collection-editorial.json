@@ -4043,8 +4043,8 @@
       "mode": "generated",
       "fingerprint": "ec7036d017ef63a0e9faa03c93117007100d235fe1de9386810bd058e299d2c1",
       "retryFingerprint": "ec7036d017ef63a0e9faa03c93117007100d235fe1de9386810bd058e299d2c1",
-      "retryAfter": "2026-11-05",
-      "lastError": "research JSON has 195 words; expected 120 to 190"
+      "retryAfter": "2026-12-05",
+      "lastError": "collection editorial \"region/loire-valley\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "region",
@@ -4838,7 +4838,7 @@
       "mode": "generated",
       "fingerprint": "916d4fb3ab976525cedd310e31768a9014cba920c0a73dc5386ff4cc31631834",
       "retryFingerprint": "916d4fb3ab976525cedd310e31768a9014cba920c0a73dc5386ff4cc31631834",
-      "retryAfter": "2026-11-05",
+      "retryAfter": "2026-12-05",
       "lastError": "collection editorial \"varietal/chenin-blanc\" contains a prohibited dash or invalid UTF-8"
     },
     {
