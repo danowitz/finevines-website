@@ -3719,10 +3719,10 @@
       "slug": "bierzo",
       "name": "Bierzo",
       "mode": "generated",
-      "fingerprint": "c6ed873f3b6c394cb36bb649abd7ad811d77399a4df8c481938eaeb3b49facf2",
-      "retryFingerprint": "c6ed873f3b6c394cb36bb649abd7ad811d77399a4df8c481938eaeb3b49facf2",
-      "retryAfter": "2026-11-22",
-      "lastError": "collection editorial \"region/bierzo\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "068c9ba4fc4c3d351fbae0199bf36967ac0c47fa00ba22a8b46d33528e952799",
+      "retryFingerprint": "068c9ba4fc4c3d351fbae0199bf36967ac0c47fa00ba22a8b46d33528e952799",
+      "retryAfter": "2026-12-06",
+      "lastError": "invalid character '[' looking for beginning of object key string"
     },
     {
       "kind": "region",
