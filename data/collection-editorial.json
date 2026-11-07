@@ -5144,12 +5144,12 @@
       "slug": "mencia",
       "name": "Mencia",
       "mode": "generated",
-      "fingerprint": "fecc87f58d2221c89fb5b12dd0c1af06668bfff1c1b3f03ce61696c7b8c1edba",
+      "fingerprint": "28fc33ce88d095bf3593f75d31d30b3e0aa1995a3d52e985c7578735b3c88f4d",
       "eyebrow": "Spanish varietal spotlight",
       "heading": "Mencía from Bierzo: A growing star",
       "paragraphs": [
-        "Mencía is a red grape variety native to the northwest Iberian Peninsula, with deep roots in Galicia and increasingly celebrated in the Bierzo region of Castilla y León. It is notably early-ripening and sensitive to late frosts, producing small, compact clusters of medium‑sized, thick‑skinned berries. These traits contribute to wines whose character ranges from delicate and fruity to more structured and mineral‑driven when grown on older, hillside vines.([museovinogalicia.xunta.gal](https://museovinogalicia.xunta.gal/en/the-wine/grapes-and-wines-of-galicia/mencia?utm_source=openai))",
-        "In Bierzo, Mencía reigns as the dominant red grape, accounting for approximately 70 percent of plantings. The region’s continental‑Atlantic climate, coupled with slate, clay, and limestone soils, and a strong tradition of family‑run vineyards, yields wines known for fresh acidity, red fruit aromas, floral notes such as violet, and a distinct mineral edge.([crdobierzo.es](https://www.crdobierzo.es/en/the-bierzo-designation-of-origin/varieties-grapes/?utm_source=openai))"
+        "Mencía is a red grape variety native to the northwest Iberian Peninsula, with deep roots in Galicia and increasingly celebrated in the Bierzo region of Castilla y León. It is notably early-ripening and sensitive to late frosts, producing small, compact clusters of medium‑sized, thick‑skinned berries. These traits contribute to wines whose character ranges from delicate and fruity to more structured and mineral‑driven when grown on older, hillside vines.",
+        "In Bierzo, Mencía reigns as the dominant red grape, accounting for approximately 70 percent of plantings. The region’s continental‑Atlantic climate, coupled with slate, clay, and limestone soils, and a strong tradition of family‑run vineyards, yields wines known for fresh acidity, red fruit aromas, floral notes such as violet, and a distinct mineral edge."
       ],
       "sources": [
         {
@@ -5165,7 +5165,7 @@
           "url": "https://www.spain.info/en/oenology/wine-route-bierzo/"
         }
       ],
-      "reviewedAt": "2026-09-23"
+      "reviewedAt": "2026-11-07"
     },
     {
       "kind": "varietal",
