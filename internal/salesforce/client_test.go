@@ -3,6 +3,7 @@ package salesforce
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -365,6 +366,60 @@ func TestTeamRosterUsesGeorgeConfirmedPublicEmail(t *testing.T) {
 	}
 	if len(got) != 1 || got[0].Email != "george@finevines.com" {
 		t.Fatalf("TeamRoster() = %#v, want George's confirmed public email", got)
+	}
+}
+
+func TestTeamRosterReauthenticatesAfterInvalidSession(t *testing.T) {
+	tokens, queries := 0, 0
+	mux := http.NewServeMux()
+	mux.HandleFunc("/services/oauth2/token", func(w http.ResponseWriter, r *http.Request) {
+		tokens++
+		_ = json.NewEncoder(w).Encode(map[string]string{"access_token": fmt.Sprintf("token-%d", tokens)})
+	})
+	mux.HandleFunc("/services/data/v61.0/query", func(w http.ResponseWriter, r *http.Request) {
+		queries++
+		if queries == 1 {
+			if got := r.Header.Get("Authorization"); got != "Bearer token-1" {
+				t.Errorf("first authorization = %q", got)
+			}
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = w.Write([]byte(`[{"message":"Session expired or invalid","errorCode":"INVALID_SESSION_ID"}]`))
+			return
+		}
+		if got := r.Header.Get("Authorization"); got != "Bearer token-2" {
+			t.Errorf("second authorization = %q", got)
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{"done": true, "records": []map[string]any{
+			{"Id": "1", "Name": "Connie Molitor", "Email": "connie@finevines.com", "UserRole": map[string]any{"Name": "Executive"}},
+		}})
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := NewClient(Config{BaseURL: server.URL, ClientID: "id", ClientSecret: "secret", APIVersion: "v61.0"}, server.Client())
+	users, err := client.TeamRoster(context.Background())
+	if err != nil || len(users) != 1 || tokens != 2 || queries != 2 {
+		t.Fatalf("users=%v err=%v tokens=%d queries=%d", users, err, tokens, queries)
+	}
+}
+
+func TestTeamRosterDoesNotLoopOnPersistentInvalidSession(t *testing.T) {
+	tokens, queries := 0, 0
+	mux := http.NewServeMux()
+	mux.HandleFunc("/services/oauth2/token", func(w http.ResponseWriter, r *http.Request) {
+		tokens++
+		_ = json.NewEncoder(w).Encode(map[string]string{"access_token": fmt.Sprintf("token-%d", tokens)})
+	})
+	mux.HandleFunc("/services/data/v61.0/query", func(w http.ResponseWriter, r *http.Request) {
+		queries++
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`[{"message":"Session expired or invalid","errorCode":"INVALID_SESSION_ID"}]`))
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := NewClient(Config{BaseURL: server.URL, ClientID: "id", ClientSecret: "secret", APIVersion: "v61.0"}, server.Client())
+	_, err := client.TeamRoster(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "INVALID_SESSION_ID") || tokens != 2 || queries != 2 {
+		t.Fatalf("err=%v tokens=%d queries=%d", err, tokens, queries)
 	}
 }
 
