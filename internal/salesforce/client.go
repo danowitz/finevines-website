@@ -363,26 +363,51 @@ func (c *Client) authenticate(ctx context.Context) error {
 // getJSON issues an authenticated GET against path (relative to BaseURL)
 // and decodes the JSON response into v.
 func (c *Client) getJSON(ctx context.Context, path string, v any) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.cfg.BaseURL+path, nil)
-	if err != nil {
-		return fmt.Errorf("salesforce query %s: build request: %w", path, err)
-	}
-	req.Header.Set("Authorization", "Bearer "+c.tok)
+	for attempt := 0; attempt < 2; attempt++ {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.cfg.BaseURL+path, nil)
+		if err != nil {
+			return fmt.Errorf("salesforce query %s: build request: %w", path, err)
+		}
+		req.Header.Set("Authorization", "Bearer "+c.tok)
 
-	resp, err := c.http.Do(req)
-	if err != nil {
-		return fmt.Errorf("salesforce query %s: %w", path, err)
+		resp, err := c.http.Do(req)
+		if err != nil {
+			return fmt.Errorf("salesforce query %s: %w", path, err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(io.LimitReader(resp.Body, 2000))
+			resp.Body.Close()
+			if attempt == 0 && resp.StatusCode == http.StatusUnauthorized && invalidSession(body) {
+				if err := c.authenticate(ctx); err != nil {
+					return fmt.Errorf("salesforce query %s: reauthenticate: %w", path, err)
+				}
+				continue
+			}
+			return fmt.Errorf("salesforce query %s: HTTP %d: %s", path, resp.StatusCode, strings.TrimSpace(string(body)))
+		}
+		err = json.NewDecoder(resp.Body).Decode(v)
+		resp.Body.Close()
+		if err != nil {
+			return fmt.Errorf("salesforce query %s: decode response: %w", path, err)
+		}
+		return nil
 	}
-	defer resp.Body.Close()
+	return fmt.Errorf("salesforce query %s: invalid session after reauthentication", path)
+}
 
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2000))
-		return fmt.Errorf("salesforce query %s: HTTP %d: %s", path, resp.StatusCode, strings.TrimSpace(string(body)))
+func invalidSession(body []byte) bool {
+	var errors []struct {
+		Code string `json:"errorCode"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(v); err != nil {
-		return fmt.Errorf("salesforce query %s: decode response: %w", path, err)
+	if json.Unmarshal(body, &errors) != nil {
+		return false
 	}
-	return nil
+	for _, e := range errors {
+		if e.Code == "INVALID_SESSION_ID" {
+			return true
+		}
+	}
+	return false
 }
 
 func str(v any) string {
