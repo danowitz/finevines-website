@@ -1,18 +1,18 @@
 {
-  "updated": "2026-11-08T23:05:01Z",
+  "updated": "2026-11-09T08:26:04Z",
   "windowDays": 30,
   "wines": [
     {
       "slug": "henri-bourgeois-sancerre-blanc-2025",
-      "cases": 104.5
+      "cases": 92.5
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 87.83332
+      "cases": 87.74999000000001
     },
     {
       "slug": "domaine-vacheron-sancerre-blanc-2024",
-      "cases": 83.83336999999999
+      "cases": 80.66669999999999
     },
     {
       "slug": "domaine-de-la-villaudiere-sancerre-la-villaudiere-2025",
@@ -20,11 +20,11 @@
     },
     {
       "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
-      "cases": 59.75
+      "cases": 51.75
     },
     {
       "slug": "henri-bourgeois-pure-sauvignon-blanc-vin-de-pays-2025",
-      "cases": 47.16665999999999
+      "cases": 45.16666
     }
   ]
 }
