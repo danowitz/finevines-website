@@ -2861,10 +2861,10 @@
       "slug": "ramonet",
       "name": "Ramonet",
       "mode": "generated",
-      "fingerprint": "5bccd9cd36bf850f9a039886bb6c0c93ac2ed04904d513a81833ba18e7355f14",
-      "retryFingerprint": "5bccd9cd36bf850f9a039886bb6c0c93ac2ed04904d513a81833ba18e7355f14",
-      "retryAfter": "2026-11-27",
-      "lastError": "collection editorial \"producer/ramonet\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "42a87a90c26f168567481ad0dc7cd9f41fd329c48248f08aaac7a87f96616671",
+      "retryFingerprint": "42a87a90c26f168567481ad0dc7cd9f41fd329c48248f08aaac7a87f96616671",
+      "retryAfter": "2026-12-12",
+      "lastError": "research JSON has 219 words; expected 120 to 190"
     },
     {
       "kind": "producer",
@@ -4399,9 +4399,9 @@
       "slug": "southern-rhone",
       "name": "Southern Rhône",
       "mode": "generated",
-      "fingerprint": "6b779c1b5717cf77951bb0c02c1b688518005e8f95f03750c8aec63e5223f4d5",
-      "retryFingerprint": "6b779c1b5717cf77951bb0c02c1b688518005e8f95f03750c8aec63e5223f4d5",
-      "retryAfter": "2026-11-22",
+      "fingerprint": "1b608ee9951c53cad2478db3c0b0bb1108f2ad759204f3c2308cdd227359b3ff",
+      "retryFingerprint": "1b608ee9951c53cad2478db3c0b0bb1108f2ad759204f3c2308cdd227359b3ff",
+      "retryAfter": "2026-12-12",
       "lastError": "collection editorial \"region/southern-rhone\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5020,9 +5020,9 @@
       "slug": "grenache-syrah",
       "name": "Grenache / Syrah",
       "mode": "generated",
-      "fingerprint": "25a421a27f9ad434a399bec161452bc5f975ccf4804c9bcd6a3729b238fa3104",
-      "retryFingerprint": "25a421a27f9ad434a399bec161452bc5f975ccf4804c9bcd6a3729b238fa3104",
-      "retryAfter": "2026-12-04",
+      "fingerprint": "df995dbef1d9ded5b099de3d08eefe422845cabe1d20a5709a8b113014536a20",
+      "retryFingerprint": "df995dbef1d9ded5b099de3d08eefe422845cabe1d20a5709a8b113014536a20",
+      "retryAfter": "2026-12-12",
       "lastError": "collection editorial \"varietal/grenache-syrah\" contains a prohibited dash or invalid UTF-8"
     },
     {
