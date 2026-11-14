@@ -3326,8 +3326,8 @@
       "mode": "generated",
       "fingerprint": "d7802a0b4a8e1bfca2614684c60d2f3862308bcf34185ceb071f5cd49b33ead8",
       "retryFingerprint": "d7802a0b4a8e1bfca2614684c60d2f3862308bcf34185ceb071f5cd49b33ead8",
-      "retryAfter": "2026-11-14",
-      "lastError": "collection editorial \"producer/torii-mor\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-14",
+      "lastError": "research JSON must contain exactly two paragraphs"
     },
     {
       "kind": "producer",
@@ -3514,8 +3514,8 @@
       "mode": "generated",
       "fingerprint": "1ede2bb60bcc53945dd39769a3bb914ea4f5f6273f27e0e3f06d3a2e89396e45",
       "retryFingerprint": "1ede2bb60bcc53945dd39769a3bb914ea4f5f6273f27e0e3f06d3a2e89396e45",
-      "retryAfter": "2026-11-14",
-      "lastError": "collection editorial \"producer/vine-hill-ranch\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-14",
+      "lastError": "research JSON has 204 words; expected 120 to 190"
     },
     {
       "kind": "producer",
