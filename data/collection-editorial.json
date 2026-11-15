@@ -1359,7 +1359,7 @@
       "mode": "generated",
       "fingerprint": "9de1f720b4f26e90156f0fcce6548cd16c7e1ac097be821439806967a5b0bcb8",
       "retryFingerprint": "9de1f720b4f26e90156f0fcce6548cd16c7e1ac097be821439806967a5b0bcb8",
-      "retryAfter": "2026-11-15",
+      "retryAfter": "2026-12-15",
       "lastError": "collection editorial \"producer/frank\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2765,8 +2765,8 @@
       "mode": "generated",
       "fingerprint": "8d1f53a9bc1137450edb4fce434cee630006a2a05e6dc4868febd63bcda16eb0",
       "retryFingerprint": "8d1f53a9bc1137450edb4fce434cee630006a2a05e6dc4868febd63bcda16eb0",
-      "retryAfter": "2026-11-15",
-      "lastError": "collection editorial \"producer/pierre-morey\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-15",
+      "lastError": "collection editorial \"producer/pierre-morey\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -3905,8 +3905,8 @@
       "mode": "generated",
       "fingerprint": "2a95367122fc6f8044ae4269c69402294994599d9e62d427193fea1fcf65002f",
       "retryFingerprint": "2a95367122fc6f8044ae4269c69402294994599d9e62d427193fea1fcf65002f",
-      "retryAfter": "2026-11-15",
-      "lastError": "invalid character '[' looking for beginning of object key string"
+      "retryAfter": "2026-12-15",
+      "lastError": "collection editorial \"region/cote-de-beaune\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "region",
@@ -4531,8 +4531,8 @@
       "mode": "generated",
       "fingerprint": "05b43c7cc0ed977532c841c1af6c7370e173e0c3fe6ebfa0b3901857939ccb95",
       "retryFingerprint": "05b43c7cc0ed977532c841c1af6c7370e173e0c3fe6ebfa0b3901857939ccb95",
-      "retryAfter": "2026-11-15",
-      "lastError": "collection editorial \"varietal/aligote\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-15",
+      "lastError": "research JSON must contain exactly two paragraphs"
     },
     {
       "kind": "varietal",
@@ -5568,7 +5568,7 @@
       "mode": "generated",
       "fingerprint": "050c054061a3f6deffb53129b2add9d69559f0d882f3811689b737580f32580e",
       "retryFingerprint": "050c054061a3f6deffb53129b2add9d69559f0d882f3811689b737580f32580e",
-      "retryAfter": "2026-11-15",
+      "retryAfter": "2026-12-15",
       "lastError": "collection editorial \"varietal/shiraz\" contains a prohibited dash or invalid UTF-8"
     },
     {
