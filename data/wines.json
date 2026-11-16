@@ -102354,8 +102354,8 @@
     "producer": "Laffay",
     "name": "Domaine Thierry Laffay Chablis",
     "vintage": "2022",
-    "stockQty": 66,
-    "stockCases": 65.50007,
+    "stockQty": 61,
+    "stockCases": 60.50007,
     "casePack": 12,
     "varietal": "",
     "region": "",
@@ -120112,8 +120112,8 @@
     "abv": "unknown",
     "bottleSize": "750ml",
     "drinkWindow": "2026–2032",
-    "imagePath": "assets/img/wines/porcelina-wines-willamette-valley-chardonnay-2024.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/porcelina-wines-willamette-valley-chardonnay-2024.jpg",
+    "imageSource": "scraped-web",
     "sources": {
       "abv": "missing",
       "appellation": "found",
@@ -120125,14 +120125,18 @@
       "drinkWindow": "derived",
       "finish": "derived",
       "foodPairings": "derived",
-      "image": "derived",
+      "image": "found",
       "palate": "found",
       "sommelierNotes": "derived"
     },
-    "metadataScore": 31,
+    "metadataScore": 38,
     "matchConfidence": 80,
     "enrichedAt": "2026-10-17T08:30:28Z",
-    "slug": "porcelina-wines-willamette-valley-chardonnay-2024"
+    "slug": "porcelina-wines-willamette-valley-chardonnay-2024",
+    "imageReviewStatus": "",
+    "imageReviewedAt": "",
+    "imageReviewActionId": "",
+    "imageSourceUrl": "http://www.porcelinawines.com/"
   },
   {
     "id": "01tF00000035g6AIAQ",

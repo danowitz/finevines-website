@@ -844,7 +844,7 @@
           "url": "https://en.wikipedia.org/wiki/California_wine"
         }
       ],
-      "retryAfter": "2026-11-14",
+      "retryAfter": "2026-12-16",
       "reviewedAt": "2026-08-17",
       "lastError": "collection editorial \"producer/coastal-ridge\" contains a prohibited dash or invalid UTF-8"
     },
@@ -3155,9 +3155,9 @@
           "url": "https://www.winerelease.com/WineryInfo/Shibumi_Knoll_Winery_wine_releases.html"
         }
       ],
-      "retryAfter": "2026-11-14",
+      "retryAfter": "2026-12-16",
       "reviewedAt": "2026-08-17",
-      "lastError": "collection editorial \"producer/shibumi-knoll\" contains a prohibited dash or invalid UTF-8"
+      "lastError": "research JSON has 192 words; expected 120 to 190"
     },
     {
       "kind": "producer",
