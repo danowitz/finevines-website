@@ -989,9 +989,9 @@
       "slug": "david-paige",
       "name": "David Paige",
       "mode": "generated",
-      "fingerprint": "a0447760e68515ec8945188278d3da8d97fca557c85604779af356f65ff13fae",
-      "retryFingerprint": "a0447760e68515ec8945188278d3da8d97fca557c85604779af356f65ff13fae",
-      "retryAfter": "2026-11-26",
+      "fingerprint": "1237229d7e4694bbd2a095e6bcc20127ffd130c1b60cb38ff4447e948deb9b89",
+      "retryFingerprint": "1237229d7e4694bbd2a095e6bcc20127ffd130c1b60cb38ff4447e948deb9b89",
+      "retryAfter": "2026-12-17",
       "lastError": "collection editorial \"producer/david-paige\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4141,10 +4141,10 @@
       "slug": "napa-valley",
       "name": "Napa Valley",
       "mode": "generated",
-      "fingerprint": "c0623a2dcfb064cc70c1c2d6145c8d9d5d1dfa444d3062adb9f34c3d9c41f991",
-      "retryFingerprint": "c0623a2dcfb064cc70c1c2d6145c8d9d5d1dfa444d3062adb9f34c3d9c41f991",
-      "retryAfter": "2026-11-22",
-      "lastError": "research JSON has 212 words; expected 120 to 190"
+      "fingerprint": "66e2eadb1101a39699c26adaca61207d4e45dee1a120446402b6bfa9f0612802",
+      "retryFingerprint": "66e2eadb1101a39699c26adaca61207d4e45dee1a120446402b6bfa9f0612802",
+      "retryAfter": "2026-12-17",
+      "lastError": "collection editorial \"region/napa-valley\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "region",
@@ -4627,10 +4627,10 @@
       "slug": "blend",
       "name": "Blend",
       "mode": "generated",
-      "fingerprint": "ace4d404a17f7156361183e37e70cbc6be5aea5fe4add27578ffc0deb50f4c9c",
-      "retryFingerprint": "ace4d404a17f7156361183e37e70cbc6be5aea5fe4add27578ffc0deb50f4c9c",
-      "retryAfter": "2026-11-23",
-      "lastError": "invalid character '[' looking for beginning of object key string"
+      "fingerprint": "5beb9cb5ba7a58af1f1ecdeed5a42844cfbf3acf22ae64446b74ed0d586a57f2",
+      "retryFingerprint": "5beb9cb5ba7a58af1f1ecdeed5a42844cfbf3acf22ae64446b74ed0d586a57f2",
+      "retryAfter": "2026-12-17",
+      "lastError": "collection editorial \"varietal/blend\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
