@@ -2105,9 +2105,9 @@
       "slug": "loumelat",
       "name": "Loumelat",
       "mode": "generated",
-      "fingerprint": "e12fa9581865279c3d33be23ba5131577215eb2429d9af648ff74cb3b253e75b",
-      "retryFingerprint": "e12fa9581865279c3d33be23ba5131577215eb2429d9af648ff74cb3b253e75b",
-      "retryAfter": "2026-11-27",
+      "fingerprint": "9eb0dee2b4d9a73e20eba9420d337e93dd0f6b5825f967d0916d08005e698813",
+      "retryFingerprint": "9eb0dee2b4d9a73e20eba9420d337e93dd0f6b5825f967d0916d08005e698813",
+      "retryAfter": "2026-12-18",
       "lastError": "collection editorial \"producer/loumelat\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -3729,10 +3729,10 @@
       "slug": "bordeaux",
       "name": "Bordeaux",
       "mode": "generated",
-      "fingerprint": "28c4a2e0932222c1bab198b400f7e1d57cd461c72a65b90d284f4f96fd1f208b",
-      "retryFingerprint": "28c4a2e0932222c1bab198b400f7e1d57cd461c72a65b90d284f4f96fd1f208b",
-      "retryAfter": "2026-11-22",
-      "lastError": "collection editorial \"region/bordeaux\" contains a prohibited dash or invalid UTF-8"
+      "fingerprint": "f871fe3587b3cd37b906872e0a20747e0e4d1051ee6e874a5f7311de490cbb02",
+      "retryFingerprint": "f871fe3587b3cd37b906872e0a20747e0e4d1051ee6e874a5f7311de490cbb02",
+      "retryAfter": "2026-12-18",
+      "lastError": "collection editorial \"region/bordeaux\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "region",
