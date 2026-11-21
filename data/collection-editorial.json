@@ -3672,9 +3672,9 @@
           "url": "https://www.grapeguru.de/en/knowledge/wine-regions/bairrada"
         }
       ],
-      "retryAfter": "2026-11-21",
+      "retryAfter": "2026-12-21",
       "reviewedAt": "2026-09-23",
-      "lastError": "collection editorial \"region/bairrada\" source label contains a prohibited dash or invalid UTF-8"
+      "lastError": "collection editorial \"region/bairrada\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "region",

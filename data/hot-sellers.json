@@ -1,14 +1,14 @@
 {
-  "updated": "2026-11-20T08:23:56Z",
+  "updated": "2026-11-21T08:21:59Z",
   "windowDays": 30,
   "wines": [
     {
       "slug": "henri-bourgeois-sancerre-blanc-2025",
-      "cases": 153.58333
+      "cases": 149.58333
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 99.16666000000001
+      "cases": 92.16666000000001
     },
     {
       "slug": "domaine-de-la-villaudiere-sancerre-la-villaudiere-2025",
@@ -16,11 +16,11 @@
     },
     {
       "slug": "huteau-boulanger-sancere-laetitia-ducroux-2025",
-      "cases": 87
+      "cases": 91
     },
     {
       "slug": "eden-rift-vineyards-valliant-pinot-noir-2023",
-      "cases": 60.33334
+      "cases": 57.33334
     },
     {
       "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
