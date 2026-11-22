@@ -252,9 +252,9 @@
   "matcherVersion": "google-image-consensus-v1"
  },
  "188105*": {
-  "lastAttempted": "2026-10-22T08:37:59.614Z",
-  "outcome": "miss",
-  "attempts": 1,
+  "lastAttempted": "2026-11-22T08:27:59.977Z",
+  "outcome": "imported",
+  "attempts": 3,
   "matcherVersion": "google-image-consensus-v1"
  },
  "188106": {
@@ -7250,9 +7250,9 @@
   "matcherVersion": "google-image-consensus-v1"
  },
  "530177": {
-  "lastAttempted": "2026-10-22T08:39:41.478Z",
-  "outcome": "miss",
-  "attempts": 1,
+  "lastAttempted": "2026-11-22T08:28:00.042Z",
+  "outcome": "imported",
+  "attempts": 3,
   "matcherVersion": "google-image-consensus-v1"
  },
  "530178": {
@@ -7268,9 +7268,9 @@
   "matcherVersion": "google-image-consensus-v1"
  },
  "530180": {
-  "lastAttempted": "2026-10-22T08:39:14.949Z",
+  "lastAttempted": "2026-11-22T08:27:58.198Z",
   "outcome": "miss",
-  "attempts": 1,
+  "attempts": 2,
   "matcherVersion": "google-image-consensus-v1"
  },
  "530318": {
@@ -7392,9 +7392,9 @@
   "matcherVersion": "google-image-consensus-v1"
  },
  "531040": {
-  "lastAttempted": "2026-10-22T08:37:59.625Z",
+  "lastAttempted": "2026-11-22T08:27:19.732Z",
   "outcome": "miss",
-  "attempts": 3,
+  "attempts": 4,
   "matcherVersion": "google-image-consensus-v1"
  },
  "531041": {
@@ -7410,15 +7410,15 @@
   "matcherVersion": "google-image-consensus-v1"
  },
  "531043": {
-  "lastAttempted": "2026-10-22T08:38:37.176Z",
+  "lastAttempted": "2026-11-22T08:27:39.059Z",
   "outcome": "miss",
-  "attempts": 1,
+  "attempts": 2,
   "matcherVersion": "google-image-consensus-v1"
  },
  "531044": {
-  "lastAttempted": "2026-10-22T08:38:37.188Z",
+  "lastAttempted": "2026-11-22T08:27:39.065Z",
   "outcome": "miss",
-  "attempts": 1,
+  "attempts": 2,
   "matcherVersion": "google-image-consensus-v1"
  },
  "531238": {
