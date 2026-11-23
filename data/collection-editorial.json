@@ -4161,9 +4161,9 @@
       "slug": "northern-rhone",
       "name": "Northern Rhône",
       "mode": "generated",
-      "fingerprint": "c0da3e98ccace87766b4433e902a89dd09400325b0a34bcfd863aa439bb4d9df",
-      "retryFingerprint": "c0da3e98ccace87766b4433e902a89dd09400325b0a34bcfd863aa439bb4d9df",
-      "retryAfter": "2026-12-22",
+      "fingerprint": "1aa9eb66c5c0e46e3926831c216185d2b62a74a7ae72eada4a9b736b907ffd37",
+      "retryFingerprint": "1aa9eb66c5c0e46e3926831c216185d2b62a74a7ae72eada4a9b736b907ffd37",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"region/northern-rhone\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4341,7 +4341,7 @@
       "mode": "generated",
       "fingerprint": "a1ed6bd805edf6ae8c12aa67b3a4780487bf061cf6b428bd203a108ededd4ef2",
       "retryFingerprint": "a1ed6bd805edf6ae8c12aa67b3a4780487bf061cf6b428bd203a108ededd4ef2",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"region/rueda\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4351,8 +4351,8 @@
       "mode": "generated",
       "fingerprint": "93104d7a3e963df0d5910f883d1ada406e99926c88a83e4b49285b8306084c45",
       "retryFingerprint": "93104d7a3e963df0d5910f883d1ada406e99926c88a83e4b49285b8306084c45",
-      "retryAfter": "2026-11-23",
-      "lastError": "research JSON must contain exactly two paragraphs"
+      "retryAfter": "2026-12-23",
+      "lastError": "collection editorial \"region/russian-river\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "region",
@@ -4361,7 +4361,7 @@
       "mode": "generated",
       "fingerprint": "e38d16175f2a2059f05eb85960f0fd9a62603f84b6348dd2b2a99bd07e9fc175",
       "retryFingerprint": "e38d16175f2a2059f05eb85960f0fd9a62603f84b6348dd2b2a99bd07e9fc175",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"region/setubal\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4371,8 +4371,8 @@
       "mode": "generated",
       "fingerprint": "30ee7607e41119578d2fac076028af2c8de42f09428327662c8522cfaa9a8646",
       "retryFingerprint": "30ee7607e41119578d2fac076028af2c8de42f09428327662c8522cfaa9a8646",
-      "retryAfter": "2026-11-23",
-      "lastError": "research JSON has 194 words; expected 120 to 190"
+      "retryAfter": "2026-12-23",
+      "lastError": "collection editorial \"region/sonoma-coast\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "region",
@@ -4381,7 +4381,7 @@
       "mode": "generated",
       "fingerprint": "bd915b1cecb0e02fba7b9eea2f4233ca4bd056724d631beda0c943a043ad96a2",
       "retryFingerprint": "bd915b1cecb0e02fba7b9eea2f4233ca4bd056724d631beda0c943a043ad96a2",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"region/sonoma-county\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4391,7 +4391,7 @@
       "mode": "generated",
       "fingerprint": "5d2b4884a86b4e38a221e61b66c33800833a7efb0d08e8b4663684dceced26ce",
       "retryFingerprint": "5d2b4884a86b4e38a221e61b66c33800833a7efb0d08e8b4663684dceced26ce",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"region/south-east-australia\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4411,7 +4411,7 @@
       "mode": "generated",
       "fingerprint": "83e80cd4ce22cff6dc7717fa39f80748e3b32f1f56264a8aaa23bd2c08d69fee",
       "retryFingerprint": "83e80cd4ce22cff6dc7717fa39f80748e3b32f1f56264a8aaa23bd2c08d69fee",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"region/spain\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4421,8 +4421,8 @@
       "mode": "generated",
       "fingerprint": "655c20d8adb53118afaf896913cc9377744d1a02870a1168124221516a050619",
       "retryFingerprint": "655c20d8adb53118afaf896913cc9377744d1a02870a1168124221516a050619",
-      "retryAfter": "2026-11-23",
-      "lastError": "collection editorial \"region/spring-mountain\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-23",
+      "lastError": "invalid character '[' looking for beginning of object key string"
     },
     {
       "kind": "region",
@@ -4441,8 +4441,8 @@
       "mode": "generated",
       "fingerprint": "d38e218a990bf0a8068cc68d0627446d2a22221457c7c00d589713eade285bf7",
       "retryFingerprint": "d38e218a990bf0a8068cc68d0627446d2a22221457c7c00d589713eade285bf7",
-      "retryAfter": "2026-11-23",
-      "lastError": "collection editorial \"region/tierra-de-leon\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-23",
+      "lastError": "collection editorial \"region/tierra-de-leon\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "region",
@@ -4501,7 +4501,7 @@
       "mode": "generated",
       "fingerprint": "2d1e3cdf6730deffffd111d51c68ab89b08196bd1596ce40dd30e75733b06c26",
       "retryFingerprint": "2d1e3cdf6730deffffd111d51c68ab89b08196bd1596ce40dd30e75733b06c26",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"region/willamette-valley\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4511,7 +4511,7 @@
       "mode": "generated",
       "fingerprint": "a6bcdbf1c9802490305a6bb03237a974ec0c48a9d9ce0da083ffa50f115c7e82",
       "retryFingerprint": "a6bcdbf1c9802490305a6bb03237a974ec0c48a9d9ce0da083ffa50f115c7e82",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/albarino\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4599,7 +4599,7 @@
       "mode": "generated",
       "fingerprint": "7637a06e3258264c303bb456ac5d6da815a6085823fbde7736e05b5d86821165",
       "retryFingerprint": "7637a06e3258264c303bb456ac5d6da815a6085823fbde7736e05b5d86821165",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/barbera\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4609,7 +4609,7 @@
       "mode": "generated",
       "fingerprint": "17090d635629225f3d5595766711c4a00b0cf76c48265396bc427c3e1d4f2e88",
       "retryFingerprint": "17090d635629225f3d5595766711c4a00b0cf76c48265396bc427c3e1d4f2e88",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/bical\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4639,8 +4639,8 @@
       "mode": "generated",
       "fingerprint": "52fc78e98c2954e724d6881faa35d2a5b6c45a318e5b77267ec8579073e315f1",
       "retryFingerprint": "52fc78e98c2954e724d6881faa35d2a5b6c45a318e5b77267ec8579073e315f1",
-      "retryAfter": "2026-11-23",
-      "lastError": "research JSON must contain exactly two paragraphs"
+      "retryAfter": "2026-12-23",
+      "lastError": "collection editorial \"varietal/cabernet\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4723,7 +4723,7 @@
       "mode": "generated",
       "fingerprint": "7d45ac31f5b5ead1c502328db6c52eebb9c686650154c51cbf25decbf9a1fd8e",
       "retryFingerprint": "7d45ac31f5b5ead1c502328db6c52eebb9c686650154c51cbf25decbf9a1fd8e",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/cabernet-merlot\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4733,7 +4733,7 @@
       "mode": "generated",
       "fingerprint": "5526ecce411e7936bbd68ba80a9cb90af8729b21d19db4143858b1a87979fc31",
       "retryFingerprint": "5526ecce411e7936bbd68ba80a9cb90af8729b21d19db4143858b1a87979fc31",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/cabernet-pugnitello\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4743,7 +4743,7 @@
       "mode": "generated",
       "fingerprint": "9f2c975d999c062c3827069dadd7df8ccfc9c5d049b1b18f1dd61869c54b3ea7",
       "retryFingerprint": "9f2c975d999c062c3827069dadd7df8ccfc9c5d049b1b18f1dd61869c54b3ea7",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/cabernet-sauvignon\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4804,7 +4804,7 @@
       "mode": "generated",
       "fingerprint": "b4d86e64e2511c32a73f3f117fb266b51fe1e82456ee93bd46a8d39d6f2fb5f3",
       "retryFingerprint": "b4d86e64e2511c32a73f3f117fb266b51fe1e82456ee93bd46a8d39d6f2fb5f3",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/chardonnay-pinot-noir\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4902,7 +4902,7 @@
       "mode": "generated",
       "fingerprint": "43b8d3941ce6618926f2384c3471e72333024e70cf2657faeab520d1848ae79c",
       "retryFingerprint": "43b8d3941ce6618926f2384c3471e72333024e70cf2657faeab520d1848ae79c",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/gamay\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -4912,8 +4912,8 @@
       "mode": "generated",
       "fingerprint": "22dfecd0dff86bf846da5bd21fb490d384bf488fa7a014229e757a1851b7426a",
       "retryFingerprint": "22dfecd0dff86bf846da5bd21fb490d384bf488fa7a014229e757a1851b7426a",
-      "retryAfter": "2026-11-23",
-      "lastError": "collection editorial \"varietal/gamay-saint-romain\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-23",
+      "lastError": "collection editorial \"varietal/gamay-saint-romain\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -4982,7 +4982,7 @@
       "mode": "generated",
       "fingerprint": "c3e2bf59cee498ed0153c0ad82f31e4d7c81878e73715b848bbed2edb10ae8a0",
       "retryFingerprint": "c3e2bf59cee498ed0153c0ad82f31e4d7c81878e73715b848bbed2edb10ae8a0",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/garnacha-carinena\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5002,8 +5002,8 @@
       "mode": "generated",
       "fingerprint": "46c5bfde9f70a3a413bbffae1e896064627efe27297ad4bb3410081ad819d0cb",
       "retryFingerprint": "46c5bfde9f70a3a413bbffae1e896064627efe27297ad4bb3410081ad819d0cb",
-      "retryAfter": "2026-11-23",
-      "lastError": "collection editorial \"varietal/grenache\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-23",
+      "lastError": "research JSON has 194 words; expected 120 to 190"
     },
     {
       "kind": "varietal",
@@ -5082,7 +5082,7 @@
       "mode": "generated",
       "fingerprint": "d9a17802d62c9499d5b849b6dd7bac5f7aea0e16988d81445912185b2739f0d1",
       "retryFingerprint": "d9a17802d62c9499d5b849b6dd7bac5f7aea0e16988d81445912185b2739f0d1",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/macabeo-xarello\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5092,7 +5092,7 @@
       "mode": "generated",
       "fingerprint": "e963a9f60d6862245db4c924a413192c99c7e8ee42d3c59c216831733a019765",
       "retryFingerprint": "e963a9f60d6862245db4c924a413192c99c7e8ee42d3c59c216831733a019765",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/malbec\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5112,7 +5112,7 @@
       "mode": "generated",
       "fingerprint": "ac920419605e6cddf3a2c441785911bc85963d8595d48c8d0f3d3554b70d7c63",
       "retryFingerprint": "ac920419605e6cddf3a2c441785911bc85963d8595d48c8d0f3d3554b70d7c63",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/maria-gomes\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5174,8 +5174,8 @@
       "mode": "generated",
       "fingerprint": "cb3b009a4fbdadee1bec471c8b0533a659b91499d99e8311d3bff3f94f5d66eb",
       "retryFingerprint": "cb3b009a4fbdadee1bec471c8b0533a659b91499d99e8311d3bff3f94f5d66eb",
-      "retryAfter": "2026-11-23",
-      "lastError": "collection editorial \"varietal/merlot\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-23",
+      "lastError": "research JSON has 213 words; expected 120 to 190"
     },
     {
       "kind": "varietal",
@@ -5234,7 +5234,7 @@
       "mode": "generated",
       "fingerprint": "0bc8784063295bffa2a78fcdfe6376b746dbfdc832285bf54e30f702830c7ca4",
       "retryFingerprint": "0bc8784063295bffa2a78fcdfe6376b746dbfdc832285bf54e30f702830c7ca4",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/moscatel\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5243,9 +5243,23 @@
       "name": "Moscatel Galego",
       "mode": "generated",
       "fingerprint": "94e46350f94d35cb4c934f6c066a638a5d0bbf73b9d49315ad92d1f00e65eebd",
-      "retryFingerprint": "94e46350f94d35cb4c934f6c066a638a5d0bbf73b9d49315ad92d1f00e65eebd",
-      "retryAfter": "2026-11-23",
-      "lastError": "research JSON has 201 words; expected 120 to 190"
+      "eyebrow": "Douro’s Aromatic Enigma",
+      "heading": "Understanding Moscatel Galego in the Douro",
+      "paragraphs": [
+        "Moscatel Galego Branco, or Muscat à Petits Grains, is a small‑berried, intensely aromatic white grape that thrives in the high‑altitude zones of Favaios, Alijó and Cima‑Corgo in the Douro Valley of Portugal. Revered for its expressive floral, citrus and stone‑fruit character, it is a key grape in producing Moscatel do Douro fortified wines, which must include at least 85% Moscatel and reach a minimum 16.5% alcohol content, marrying freshness and sweetness through balanced acidity and complex dried‑fruit nuances ([winesofportugal.com](https://www.winesofportugal.com/en/portuguese-wines/wine-styles/vinho-moscatel/?utm_source=openai)). In addition to its prestige in sweet wines, growers today vinify Moscatel Galego as pure white table wines, often capturing its delicate floral essence and brisk acidity in dry or lightly fortified styles ([winesofportugal.com](https://www.winesofportugal.com/en/portuguese-wines/wine-styles/vinho-moscatel/?utm_source=openai)).",
+        "At FineVines, Moscatel Galego is represented by offerings from Uivo, drawn from the Cima‑Corgo of the Douro. These wines showcase the varietal’s vivid aromatic profile and crystalline freshness, achieved through careful vineyard placement in schist soils and altitude‑influenced ripening. Expect perfumes of white flowers, lime, and tropical fruit wrapped in a racy, mineral‑tinged frame that reflects the Douro’s dramatic terroir and the varietal purity Uivo seeks to express."
+      ],
+      "sources": [
+        {
+          "label": "Wines of Portugal on Moscatel in Douro",
+          "url": "https://www.winesofportugal.com/en/portuguese-wines/wine-styles/vinho-moscatel/"
+        },
+        {
+          "label": "IVV description and Portuguese grape registry",
+          "url": "https://www.ivv.gov.pt/casta/moscatel-galego-tinto/"
+        }
+      ],
+      "reviewedAt": "2026-11-23"
     },
     {
       "kind": "varietal",
@@ -5254,8 +5268,8 @@
       "mode": "generated",
       "fingerprint": "4bc09d1fab8b1159c432848d8e9db62225bd0b729e38b3853b3d32f1790f6aca",
       "retryFingerprint": "4bc09d1fab8b1159c432848d8e9db62225bd0b729e38b3853b3d32f1790f6aca",
-      "retryAfter": "2026-11-23",
-      "lastError": "collection editorial \"varietal/moscato\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-23",
+      "lastError": "invalid character '[' looking for beginning of object key string"
     },
     {
       "kind": "varietal",
@@ -5274,7 +5288,7 @@
       "mode": "generated",
       "fingerprint": "eb1af10922a80031615f9d179a7683b56728ee12ef2c3b128be08d13f32d38f0",
       "retryFingerprint": "eb1af10922a80031615f9d179a7683b56728ee12ef2c3b128be08d13f32d38f0",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/nebbiolo\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5284,7 +5298,7 @@
       "mode": "generated",
       "fingerprint": "55bc410de29562ecdc07922c518f481aa2197a9076511f8c93e1b550d8f1ccb7",
       "retryFingerprint": "55bc410de29562ecdc07922c518f481aa2197a9076511f8c93e1b550d8f1ccb7",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/pinot-blanc\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5398,7 +5412,7 @@
       "mode": "generated",
       "fingerprint": "aaf48e9af924339bb219698164b4abedd93ab93998ffd90ef31b9f4b064a208d",
       "retryFingerprint": "aaf48e9af924339bb219698164b4abedd93ab93998ffd90ef31b9f4b064a208d",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/riesling\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5408,7 +5422,7 @@
       "mode": "generated",
       "fingerprint": "237012a3057788b19b75d774ea5010aa70cf612037993d5ba50fb5da30b3ae6a",
       "retryFingerprint": "237012a3057788b19b75d774ea5010aa70cf612037993d5ba50fb5da30b3ae6a",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/riesling-gruner-veltliner\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5418,8 +5432,8 @@
       "mode": "generated",
       "fingerprint": "966d9e092a6a8b8f1d41b0463ca5433731d09608d216146e3f58da5ebffd264b",
       "retryFingerprint": "966d9e092a6a8b8f1d41b0463ca5433731d09608d216146e3f58da5ebffd264b",
-      "retryAfter": "2026-11-23",
-      "lastError": "invalid character '[' looking for beginning of object key string"
+      "retryAfter": "2026-12-23",
+      "lastError": "collection editorial \"varietal/sangiovese\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -5438,8 +5452,8 @@
       "mode": "generated",
       "fingerprint": "260b26872b231fb7386f47994978bfaf504cf25a586b3c454a84903d511c7abb",
       "retryFingerprint": "260b26872b231fb7386f47994978bfaf504cf25a586b3c454a84903d511c7abb",
-      "retryAfter": "2026-11-23",
-      "lastError": "invalid character '[' looking for beginning of object key string"
+      "retryAfter": "2026-12-23",
+      "lastError": "collection editorial \"varietal/sangiovese-cabernet-merlot\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -5448,8 +5462,8 @@
       "mode": "generated",
       "fingerprint": "11b726038def4a696da493d1ec7bc36e4c871d504b8b14c5f4828bd538e1de43",
       "retryFingerprint": "11b726038def4a696da493d1ec7bc36e4c871d504b8b14c5f4828bd538e1de43",
-      "retryAfter": "2026-11-23",
-      "lastError": "collection editorial \"varietal/sangiovese-grosso\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-23",
+      "lastError": "collection editorial \"varietal/sangiovese-grosso\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -5458,8 +5472,8 @@
       "mode": "generated",
       "fingerprint": "6b0bd78de228f46e8df6c2f6ea1b0f54d5c0c34c908a871bbd77454c462b4830",
       "retryFingerprint": "6b0bd78de228f46e8df6c2f6ea1b0f54d5c0c34c908a871bbd77454c462b4830",
-      "retryAfter": "2026-11-23",
-      "lastError": "research JSON has 228 words; expected 120 to 190"
+      "retryAfter": "2026-12-23",
+      "lastError": "collection editorial \"varietal/sauvignon-blanc\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "varietal",
@@ -5576,10 +5590,10 @@
       "slug": "syrah",
       "name": "Syrah",
       "mode": "generated",
-      "fingerprint": "cb7e935d2b72e3acdde5f5a4f72e895016acb615f21352d51c3f84bba47b1929",
-      "retryFingerprint": "cb7e935d2b72e3acdde5f5a4f72e895016acb615f21352d51c3f84bba47b1929",
-      "retryAfter": "2026-11-23",
-      "lastError": "research JSON has 204 words; expected 120 to 190"
+      "fingerprint": "6f1bb00acf7dbfd72b984a9317a56e8046f572cc733cdeb6062efc9d974e5a98",
+      "retryFingerprint": "6f1bb00acf7dbfd72b984a9317a56e8046f572cc733cdeb6062efc9d974e5a98",
+      "retryAfter": "2026-12-23",
+      "lastError": "research JSON has 191 words; expected 120 to 190"
     },
     {
       "kind": "varietal",
@@ -5634,7 +5648,7 @@
       "mode": "generated",
       "fingerprint": "a68f61a5f8d29f6aaa8f89c4360b85e729f6b87039e31ff40bbdb276973292fc",
       "retryFingerprint": "a68f61a5f8d29f6aaa8f89c4360b85e729f6b87039e31ff40bbdb276973292fc",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/tempranillo\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5644,7 +5658,7 @@
       "mode": "generated",
       "fingerprint": "1cc66d8ae6d7803e16878ee57425f2d02c11371df6e38ec4c9aeb79b0f285c1e",
       "retryFingerprint": "1cc66d8ae6d7803e16878ee57425f2d02c11371df6e38ec4c9aeb79b0f285c1e",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/tempranillo-cabernet\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5664,7 +5678,7 @@
       "mode": "generated",
       "fingerprint": "d0378e2335f45bad93819762038e1818225f0d6ae0418fb24c361385d82c0b1a",
       "retryFingerprint": "d0378e2335f45bad93819762038e1818225f0d6ae0418fb24c361385d82c0b1a",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/tinta-de-toro\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5674,7 +5688,7 @@
       "mode": "generated",
       "fingerprint": "9da467ff3bf85f98a32fb16d0b4f77107104f926ebb99d386aa5134177d22986",
       "retryFingerprint": "9da467ff3bf85f98a32fb16d0b4f77107104f926ebb99d386aa5134177d22986",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/tinto-fino\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5684,7 +5698,7 @@
       "mode": "generated",
       "fingerprint": "e2be68339564454749c12e82451000cbd5de8f4f006018c648392dd6e5ba7479",
       "retryFingerprint": "e2be68339564454749c12e82451000cbd5de8f4f006018c648392dd6e5ba7479",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/torrontes\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -5717,9 +5731,27 @@
       "name": "Touriga Nacional",
       "mode": "generated",
       "fingerprint": "9e290fac0d7dc61cc318fed48ed111a64df81df21c6a0dbff678f4f62125b30b",
-      "retryFingerprint": "9e290fac0d7dc61cc318fed48ed111a64df81df21c6a0dbff678f4f62125b30b",
-      "retryAfter": "2026-11-23",
-      "lastError": "collection editorial \"varietal/touriga-nacional\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Portugal’s Premier Red Grape",
+      "heading": "Touriga Nacional: A Portuguese Native with Standing",
+      "paragraphs": [
+        "Touriga Nacional is widely acknowledged as Portugal’s finest red grape variety.  It likely originated in the Dão region and was historically dominant there and in the Douro before phylloxera.  Today it thrives across the Dão, Douro, and Alentejo, gaining recognition beyond Portuguese borders for its contribution to intensely colored, aromatic wines with strong structure. ([apenologia.pt](https://www.apenologia.pt/images/uploads/enologia_miolo2020_final_baixa.pdf?utm_source=openai))",
+        "The grape is notable for its small, thick-skinned berries that yield deep-coloured, concentrated wines with firm tannic grip and pronounced aromas.  Flower notes such as violet, orange blossom, and bergamot often intermingle with dark berries, herbs, and spice.  In Dão its expression is often more refined and floral, while in Alentejo it brings perfume and structure, adding richness to blends or standing well on its own when yields are managed. ([vinhosdoalentejo.pt](https://www.vinhosdoalentejo.pt/media/Documentos/Descub_V_Alentejo_2020_UK_lowres.pdf?utm_source=openai))"
+      ],
+      "sources": [
+        {
+          "label": "ViniPortugal / Alentejo official wine region notes",
+          "url": "https://www.vinhosdoalentejo.pt/media/Documentos/Descub_V_Alentejo_2020_UK_lowres.pdf"
+        },
+        {
+          "label": "Dão wine board Facts \u0026 Figures",
+          "url": "https://www.cvrdao.pt/media/1/documentos/1709/6500352088601z.pdf"
+        },
+        {
+          "label": "Portugal by Wine educational profile",
+          "url": "https://www.portugalbywine.com/conteudos/blog/info.aspx?id=7328\u0026idioma=en\u0026idioma=es"
+        }
+      ],
+      "reviewedAt": "2026-11-23"
     },
     {
       "kind": "varietal",
@@ -5728,7 +5760,7 @@
       "mode": "generated",
       "fingerprint": "a6366e7081a4ce57038474949ab3ad8bef84b16a21e58a35c7bd635b459ba198",
       "retryFingerprint": "a6366e7081a4ce57038474949ab3ad8bef84b16a21e58a35c7bd635b459ba198",
-      "retryAfter": "2026-11-23",
+      "retryAfter": "2026-12-23",
       "lastError": "collection editorial \"varietal/trincadeira\" contains a prohibited dash or invalid UTF-8"
     },
     {

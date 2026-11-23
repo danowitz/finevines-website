@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-22T08:22:39Z",
+  "updated": "2026-11-23T08:27:01Z",
   "windowDays": 30,
   "wines": [
     {
@@ -8,23 +8,23 @@
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 92.08332999999999
+      "cases": 105.08332999999999
     },
     {
       "slug": "huteau-boulanger-sancere-laetitia-ducroux-2025",
-      "cases": 91
+      "cases": 86
     },
     {
       "slug": "eden-rift-vineyards-valliant-pinot-noir-2023",
-      "cases": 54.33334
+      "cases": 53.33334
     },
     {
       "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
-      "cases": 53
+      "cases": 50.75
     },
     {
       "slug": "david-paige-wines-same-paige-pinot-noir-willamette-valley-2024",
-      "cases": 52.916669999999996
+      "cases": 49.916669999999996
     }
   ]
 }
