@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-25T08:25:24Z",
+  "updated": "2026-11-26T08:24:38Z",
   "windowDays": 30,
   "wines": [
     {
@@ -8,15 +8,15 @@
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 111.24999999999999
+      "cases": 110.24999999999999
     },
     {
       "slug": "eden-rift-vineyards-valliant-pinot-noir-2023",
-      "cases": 61.25001
+      "cases": 61.41667
     },
     {
       "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
-      "cases": 59.58334
+      "cases": 60.58334
     },
     {
       "slug": "domaine-de-la-villaudiere-sauvignon-blanc-igp-val-de-loire-2025",
