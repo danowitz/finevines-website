@@ -644,7 +644,7 @@
       "mode": "generated",
       "fingerprint": "ecdee3686bea5882fe2b3122eb2f71e01085ee35b3f6ee0515fde08be7421285",
       "retryFingerprint": "ecdee3686bea5882fe2b3122eb2f71e01085ee35b3f6ee0515fde08be7421285",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/castello-di-ama\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -736,8 +736,8 @@
       "mode": "generated",
       "fingerprint": "681d9466f061085576da4e59ba557e6309b3a23889baa80b0db401e32831ee28",
       "retryFingerprint": "681d9466f061085576da4e59ba557e6309b3a23889baa80b0db401e32831ee28",
-      "retryAfter": "2026-11-28",
-      "lastError": "research JSON has 193 words; expected 120 to 190"
+      "retryAfter": "2026-12-28",
+      "lastError": "collection editorial \"producer/chateau-deyrem-valentin\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -745,9 +745,23 @@
       "name": "Château Pibran",
       "mode": "generated",
       "fingerprint": "3667a08a3f600767cb7f50903b3f9eb61aadba168df834d543e0104b0a67f53e",
-      "retryFingerprint": "3667a08a3f600767cb7f50903b3f9eb61aadba168df834d543e0104b0a67f53e",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/chateau-pibran\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "From the heart of Pauillac",
+      "heading": "Discover Château Pibran",
+      "paragraphs": [
+        "Resting on one of Pauillac’s highest gravel rises, Château Pibran has grown into a thoughtful expression of the Médoc. Purchased in 1987 by AXA Millésimes, the estate expanded in 2001 with the acquisition of Château Tour Pibran and today spans 17 hectares of Garonne gravel soils, certified High Environmental Value (HVE) ([cazebonne.fr](https://cazebonne.fr/en/bordeaux-wine-estates/chateau-pibran?utm_source=openai)). Its vineyards, planted with approximately equal parts Merlot and Cabernet Sauvignon, benefit from the guidance of the Pichon Baron technical team and are recognised within the Cru Bourgeois framework ([vinum.swiss](https://www.vinum.swiss/fr/chateau/pibran?utm_source=openai)).",
+        "The style of Château Pibran reflects Pauillac’s firmness blended with Merlot’s suppleness. Tasting notes across vintages include gently structured black fruit, cedar and graphite tones, along with a long savoury finish, marrying Pauillac’s signature gravel-driven freshness with refined accessibility ([ruepinard.com](https://ruepinard.com/en/wine/producer.chateau-pibran?utm_source=openai)). This balance makes Château Pibran a compelling choice for FineVines buyers seeking serious Bordeaux character with approachability."
+      ],
+      "sources": [
+        {
+          "label": "Château Pibran identity and terroir",
+          "url": "https://cazebonne.fr/en/bordeaux-wine-estates/chateau-pibran"
+        },
+        {
+          "label": "Technical and classification details",
+          "url": "https://www.vinum.swiss/fr/chateau/pibran"
+        }
+      ],
+      "reviewedAt": "2026-11-28"
     },
     {
       "kind": "producer",
@@ -796,8 +810,8 @@
       "mode": "generated",
       "fingerprint": "26405c731f26f087664a244a07c7b085c6b8cde9acb4b76062d5682565aee8b8",
       "retryFingerprint": "26405c731f26f087664a244a07c7b085c6b8cde9acb4b76062d5682565aee8b8",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/clarence-dillon\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "collection editorial \"producer/clarence-dillon\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1025,8 +1039,8 @@
       "mode": "generated",
       "fingerprint": "c43b905d259f81c969c35be82e7e0d0bb4f9cff6043643e89ff2ea70f6f5859f",
       "retryFingerprint": "c43b905d259f81c969c35be82e7e0d0bb4f9cff6043643e89ff2ea70f6f5859f",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/de-bortoli\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "invalid character ',' after top-level value"
     },
     {
       "kind": "producer",
@@ -1197,7 +1211,7 @@
       "mode": "generated",
       "fingerprint": "af4a50a4f9faa4482a4737b5d6d01423f1891bd801cebbd89e0c09bf03a6655f",
       "retryFingerprint": "af4a50a4f9faa4482a4737b5d6d01423f1891bd801cebbd89e0c09bf03a6655f",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/easton\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1227,7 +1241,7 @@
       "mode": "generated",
       "fingerprint": "3fcb2caab67ba0cb392a530e9d32e87dde24376fbe7487c71628dc592cd4ecd0",
       "retryFingerprint": "3fcb2caab67ba0cb392a530e9d32e87dde24376fbe7487c71628dc592cd4ecd0",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/egeo\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1337,7 +1351,7 @@
       "mode": "generated",
       "fingerprint": "6316c1d7b2bdb1852bac3f4625bd8bbaba707ac5509048e0b447359ec8437c50",
       "retryFingerprint": "6316c1d7b2bdb1852bac3f4625bd8bbaba707ac5509048e0b447359ec8437c50",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/finca-bacara\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1357,8 +1371,8 @@
       "mode": "generated",
       "fingerprint": "d205ea21ce7ae226a99d4e16f413169565fec6ec76ca0399e0faa59c101cf14f",
       "retryFingerprint": "d205ea21ce7ae226a99d4e16f413169565fec6ec76ca0399e0faa59c101cf14f",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/flare\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "invalid character '[' looking for beginning of object key string"
     },
     {
       "kind": "producer",
@@ -1367,8 +1381,8 @@
       "mode": "generated",
       "fingerprint": "263a2320a4b22a392645a4470f41703056e078c5ddf8021d7899165e12a6dbda",
       "retryFingerprint": "263a2320a4b22a392645a4470f41703056e078c5ddf8021d7899165e12a6dbda",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/fontanacota\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "invalid character ':' after array element"
     },
     {
       "kind": "producer",
@@ -1377,8 +1391,8 @@
       "mode": "generated",
       "fingerprint": "5e73ae8c9d514a4fbff62b41dd470c5360ca46d808e50b3bd3a6e7b45a7eb4d9",
       "retryFingerprint": "5e73ae8c9d514a4fbff62b41dd470c5360ca46d808e50b3bd3a6e7b45a7eb4d9",
-      "retryAfter": "2026-11-28",
-      "lastError": "research did not find enough authoritative information"
+      "retryAfter": "2026-12-28",
+      "lastError": "invalid character ':' after array element"
     },
     {
       "kind": "producer",
@@ -1461,7 +1475,7 @@
       "mode": "generated",
       "fingerprint": "d4b7a884e8d7d71da28cc9b2c7c7313eb6997089b23e494f43113511341ed935",
       "retryFingerprint": "d4b7a884e8d7d71da28cc9b2c7c7313eb6997089b23e494f43113511341ed935",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/galil-mountain\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1531,8 +1545,8 @@
       "mode": "generated",
       "fingerprint": "529733c42bfac64de3657946fb10dc58f5a8660d2a001a77befe316962897da9",
       "retryFingerprint": "529733c42bfac64de3657946fb10dc58f5a8660d2a001a77befe316962897da9",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/gobillard\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "invalid character ':' after array element"
     },
     {
       "kind": "producer",
@@ -1649,7 +1663,7 @@
       "mode": "generated",
       "fingerprint": "79b836f9ae4fcd77bcb74c0b90a2230dc5d7da23f152c5c5d63ffb3f6ab70b96",
       "retryFingerprint": "79b836f9ae4fcd77bcb74c0b90a2230dc5d7da23f152c5c5d63ffb3f6ab70b96",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/guzman-aldazabal\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1679,7 +1693,7 @@
       "mode": "generated",
       "fingerprint": "d8f5c6aec9106f099285b9b6ae12ff8873fed60d4e8d6b29184ed184451dbf9c",
       "retryFingerprint": "d8f5c6aec9106f099285b9b6ae12ff8873fed60d4e8d6b29184ed184451dbf9c",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/headline\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1689,8 +1703,8 @@
       "mode": "generated",
       "fingerprint": "e3b6078d2a0914101603bc5e58f04880824675d6a75295918fb7caca47ebf0ec",
       "retryFingerprint": "e3b6078d2a0914101603bc5e58f04880824675d6a75295918fb7caca47ebf0ec",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/hecquet\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "collection editorial \"producer/hecquet\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -1761,7 +1775,7 @@
       "mode": "generated",
       "fingerprint": "cd196d7ecef38bfa9dd604bb427b717c198da6d093caa1c0f653c2cb359783ca",
       "retryFingerprint": "cd196d7ecef38bfa9dd604bb427b717c198da6d093caa1c0f653c2cb359783ca",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/horacio\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1801,7 +1815,7 @@
       "mode": "generated",
       "fingerprint": "2cfd244ab8000268541ff98194f01b1cf17d032ebb057c19bbc2716d74e48346",
       "retryFingerprint": "2cfd244ab8000268541ff98194f01b1cf17d032ebb057c19bbc2716d74e48346",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/jack-tar\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -1811,8 +1825,8 @@
       "mode": "generated",
       "fingerprint": "71352c838778c9a8bfaf1805ff197a9df51b9bbb3ee810c128bde811e7a5d5ff",
       "retryFingerprint": "71352c838778c9a8bfaf1805ff197a9df51b9bbb3ee810c128bde811e7a5d5ff",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/jaraba\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "invalid character ':' after array element"
     },
     {
       "kind": "producer",
@@ -1977,7 +1991,7 @@
       "mode": "generated",
       "fingerprint": "4a947e64f0a0a9e9d36de53669a05a534cd0ded2ce70797873ea01e567230a7b",
       "retryFingerprint": "4a947e64f0a0a9e9d36de53669a05a534cd0ded2ce70797873ea01e567230a7b",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/kraft\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2077,8 +2091,8 @@
       "mode": "generated",
       "fingerprint": "f6b17f25be614a1d9ca9f4c351e01903e45509882ce4bc198c50912afb39b040",
       "retryFingerprint": "f6b17f25be614a1d9ca9f4c351e01903e45509882ce4bc198c50912afb39b040",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/lamarche\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "research JSON has 232 words; expected 120 to 190"
     },
     {
       "kind": "producer",
@@ -2153,7 +2167,7 @@
       "mode": "generated",
       "fingerprint": "b5a81e95a182d9f6c4bd9180bf3f1d8b5b0f2927ed2784884dd0eaa4a39205c9",
       "retryFingerprint": "b5a81e95a182d9f6c4bd9180bf3f1d8b5b0f2927ed2784884dd0eaa4a39205c9",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/legado-de-moncayo\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2163,8 +2177,8 @@
       "mode": "generated",
       "fingerprint": "3280b9a3273385a4fdf3b045ba97c18704a01c48d5e9a272628d8e27c43c01fa",
       "retryFingerprint": "3280b9a3273385a4fdf3b045ba97c18704a01c48d5e9a272628d8e27c43c01fa",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/leroy\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "collection editorial \"producer/leroy\" source label contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2193,7 +2207,7 @@
       "mode": "generated",
       "fingerprint": "6c9970e83f37946e24774b4f0013094ee13e355e2422a19296f021cde8f928db",
       "retryFingerprint": "6c9970e83f37946e24774b4f0013094ee13e355e2422a19296f021cde8f928db",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/libenzi\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2385,8 +2399,8 @@
       "mode": "generated",
       "fingerprint": "4b14187f57f0c85dd12d8c9cb44befd2e7771519d1df6bab46008810e3d1eb9e",
       "retryFingerprint": "4b14187f57f0c85dd12d8c9cb44befd2e7771519d1df6bab46008810e3d1eb9e",
-      "retryAfter": "2026-11-28",
-      "lastError": "json: cannot unmarshal string into Go struct field Draft.paragraphs of type []string"
+      "retryAfter": "2026-12-28",
+      "lastError": "collection editorial \"producer/mediterranean-soul\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2425,7 +2439,7 @@
       "mode": "generated",
       "fingerprint": "1b636cac170d06d575afe89a2cbfa2ff5465d36ac51938b3e58e68691dcce612",
       "retryFingerprint": "1b636cac170d06d575afe89a2cbfa2ff5465d36ac51938b3e58e68691dcce612",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/milcent\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2455,7 +2469,7 @@
       "mode": "generated",
       "fingerprint": "12195b288cc085e53fdcca6aabe963860d743b43fa35a3b555286f1a9cc1bd79",
       "retryFingerprint": "12195b288cc085e53fdcca6aabe963860d743b43fa35a3b555286f1a9cc1bd79",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "research did not find enough authoritative information"
     },
     {
@@ -2489,7 +2503,7 @@
       "mode": "generated",
       "fingerprint": "cb4c88740719d163d3eda3ebe1d134cdd537fb3638e4f39c76f2870699953f7c",
       "retryFingerprint": "cb4c88740719d163d3eda3ebe1d134cdd537fb3638e4f39c76f2870699953f7c",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/monte-real\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2519,7 +2533,7 @@
       "mode": "generated",
       "fingerprint": "c44050ea5492e87ea9372189a61a18e6e2ee1b60ed16d8a4698c61b1cc2d70fc",
       "retryFingerprint": "c44050ea5492e87ea9372189a61a18e6e2ee1b60ed16d8a4698c61b1cc2d70fc",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/morin\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2529,7 +2543,7 @@
       "mode": "generated",
       "fingerprint": "d8361a3080e2f263586e699248ebf378c5bef9f591c090f6cb5cbf58af02dc6e",
       "retryFingerprint": "d8361a3080e2f263586e699248ebf378c5bef9f591c090f6cb5cbf58af02dc6e",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/mouliniere\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2637,8 +2651,8 @@
       "mode": "generated",
       "fingerprint": "828590f1711b653aa81513fdff071028a4328c32e3e324b1c4b5125247202211",
       "retryFingerprint": "828590f1711b653aa81513fdff071028a4328c32e3e324b1c4b5125247202211",
-      "retryAfter": "2026-11-28",
-      "lastError": "research JSON has 225 words; expected 120 to 190"
+      "retryAfter": "2026-12-28",
+      "lastError": "research JSON must contain exactly two paragraphs"
     },
     {
       "kind": "producer",
@@ -2709,7 +2723,7 @@
       "mode": "generated",
       "fingerprint": "de58c8e19b135555ce4c5c27c53f270aecfaa96435ab5bc5c2882c035c1e6c11",
       "retryFingerprint": "de58c8e19b135555ce4c5c27c53f270aecfaa96435ab5bc5c2882c035c1e6c11",
-      "retryAfter": "2026-11-28",
+      "retryAfter": "2026-12-28",
       "lastError": "collection editorial \"producer/pago-de-la-jaraba\" contains a prohibited dash or invalid UTF-8"
     },
     {
@@ -2729,8 +2743,8 @@
       "mode": "generated",
       "fingerprint": "e0590843c6abc466b761dc442a6cfbd5c522b390f45a89a8d67ef28dcbefcf09",
       "retryFingerprint": "e0590843c6abc466b761dc442a6cfbd5c522b390f45a89a8d67ef28dcbefcf09",
-      "retryAfter": "2026-11-28",
-      "lastError": "research JSON has 198 words; expected 120 to 190"
+      "retryAfter": "2026-12-28",
+      "lastError": "collection editorial \"producer/patrice-rion\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2830,9 +2844,27 @@
       "name": "Petirrojo",
       "mode": "generated",
       "fingerprint": "f49efce0a28bfbb5125f3a52961f202f850622b2a7d1bc246b386a8076597268",
-      "retryFingerprint": "f49efce0a28bfbb5125f3a52961f202f850622b2a7d1bc246b386a8076597268",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/petirrojo\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Producer Spotlight",
+      "heading": "Petirrojo of Toro: A distinctive voice in Tinta de Toro",
+      "paragraphs": [
+        "Petirrojo is one of the select producers featured in FineVines’ Toro portfolio, bringing an intriguing expression of Tinta de Toro, the local name for Tempranillo. While detailed public information on the winery itself remains limited, its inclusion alongside other notable Toro producers within the FineVines selection confirms its relevance and authenticity. The FineVines site highlights Petirrojo’s representation of both the region and varietal through its availability in their catalog ([finevines.com](https://finevines.com/regions/toro/?utm_source=openai)).",
+        "Toro is a compact but powerful Denominación de Origen in northwest Spain’s Castilla y León, spanning southeast Zamora and parts of Valladolid. The region’s harsh continental climate, long sunshine hours, extreme temperature swings, and poor, often iron-rich soils shape wines with intense colour, ripe tannins, reduced acidity and elevated alcohol, hallmarks of Tinta de Toro’s adaptation here ([itacyl.es](https://www.itacyl.es/es/-/marcas-d-o-toro-?utm_source=openai)). As a local clone of Tempranillo, Tinta de Toro offers robust and concentrated wines with unique regional character ([vinotop.es](https://vinotop.es/do-regiones/denominaciondeorigen/denominacion-de-origen-toro/?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "FineVines Toro portfolio",
+          "url": "https://finevines.com/regions/toro/"
+        },
+        {
+          "label": "Denominación de Origen Toro (ITACyL)",
+          "url": "https://www.itacyl.es/es/-/marcas-d-o-toro-"
+        },
+        {
+          "label": "FineVines Toro appellation description",
+          "url": "https://shop.finevines.com/regions/toro"
+        }
+      ],
+      "reviewedAt": "2026-11-28"
     },
     {
       "kind": "producer",
@@ -2840,9 +2872,23 @@
       "name": "Petroni",
       "mode": "generated",
       "fingerprint": "8c385f5cb5da77755e46275389d46fb9f44e9f949373b227ba6d7283eb22c04a",
-      "retryFingerprint": "8c385f5cb5da77755e46275389d46fb9f44e9f949373b227ba6d7283eb22c04a",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/petroni\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Corsican heritage producer",
+      "heading": "Domaine Petroni of Corsica and its AOP Corse roots",
+      "paragraphs": [
+        "Nestled on the eastern coast of Corsica beside the tranquil Étang de Diana, Domaine Petroni has been in the hands of the Ramazotti brothers and producing wine since the late 1800s. The estate is committed to environmental responsibility, using FSC‑certified corks, recycled glass, Imprim’Vert‑labelled labels, and recycled packaging. The vineyards are planted on Miocene‑era clay and sand sediments and benefit from Mediterranean sun and sea breezes that inform the wine’s profile. ([catalogue.estandon-vignerons.com](https://catalogue.estandon-vignerons.com/L2DP1F/get/print?utm_source=openai))",
+        "Domaine Petroni’s wine bears the regional AOP Corse designation, part of Corsica’s five main appellations and the only one that spans the eastern coastal vineyards from Bastia to Solenzara. AOP Corse is one of nine Protected Designations of Origin on the island and reflects the island’s varied terroir, characterized by pale, bright, balanced wines with supple textures and vibrant aromatics, often featuring Vermentinu, Niellucciu, or Sciaccarellu depending on producer style. ([inao.gouv.fr](https://www.inao.gouv.fr/node/5643/printable/pdf?utm_source=openai))"
+      ],
+      "sources": [
+        {
+          "label": "ODARC / Estandon producer facts on Domaine Petroni",
+          "url": "https://catalogue.estandon‑vignerons.com/L2DP1F/get/print"
+        },
+        {
+          "label": "GIAC / INAO on AOP Corse regional characteristics",
+          "url": "https://www.inao.gouv.fr/node/5643/printable/pdf"
+        }
+      ],
+      "reviewedAt": "2026-11-28"
     },
     {
       "kind": "producer",
@@ -2851,8 +2897,8 @@
       "mode": "generated",
       "fingerprint": "13124c3cf985ecd3171463bc343bdc008fd075999a86bf1330100c9ebb12ac68",
       "retryFingerprint": "13124c3cf985ecd3171463bc343bdc008fd075999a86bf1330100c9ebb12ac68",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/peyros\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "research JSON has 217 words; expected 120 to 190"
     },
     {
       "kind": "producer",
@@ -2900,9 +2946,27 @@
       "name": "Pithon",
       "mode": "generated",
       "fingerprint": "dc002a906d0f450ce7b2ecfb1678aecdaf3c1c1f39d08538a2ff5617c64511fc",
-      "retryFingerprint": "dc002a906d0f450ce7b2ecfb1678aecdaf3c1c1f39d08538a2ff5617c64511fc",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/pithon\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "Loire Chenin Blanc by Pithon‑Paillé",
+      "heading": "Pithon‑Paillé and Quarts de Chaume Chenin Blanc",
+      "paragraphs": [
+        "Pithon‑Paillé is the project founded in 2008 by Jo Pithon, his wife Isabelle, along with Joseph Paillé and his wife Wendy. The estate totals thirteen hectares, eleven planted with Chenin Blanc and two devoted to red varieties, and is certified organic under the Qualité France scheme. The domaine encompasses several Loire appellations, including Anjou Blanc, Savennières, Coteaux du Layon, and the sweet‑wine Grand Cru of Quarts de Chaume, among others ([pithon-paille.com](https://pithon-paille.com/Us-Pithon-Paille.html?utm_source=openai)). Jo Pithon was already a respected figure in Anjou for pioneering dry whites and organic viticulture, and with Pithon‑Paillé he expanded his reach with a négociant‑style approach while staying rooted in Loire traditions ([vintus.com](https://vintus.com/wp-content/uploads/2020/06/July-Price-Book_FINAL_VNY.pdf?utm_source=openai)).",
+        "Quarts de Chaume, the appellation for your sample wine, is a tiny, elite enclave within the Coteaux du Layon area in the Loire Valley, granted AOC status in 1954. It is celebrated for its botrytized sweet Chenin Blancs produced on steep slopes above the Layon River ([fr.wikipedia.org](https://fr.wikipedia.org/wiki/Quarts-de-chaume?utm_source=openai)). Pithon‑Paillé’s dedication to organic viticulture, varied soils, and expressive terroir mean that their Quarts de Chaume is likely to articulate both the lush sweetness and crystalline freshness that this appellation can deliver, indicative of their thoughtful craftsmanship."
+      ],
+      "sources": [
+        {
+          "label": "Pithon‑Paillé official (About Us)",
+          "url": "https://pithon-paille.com/Us-Pithon-Paille.html"
+        },
+        {
+          "label": "Pithon‑Paillé official (Estate Grown)",
+          "url": "https://pithon-paille.com/The-Vines.html"
+        },
+        {
+          "label": "Loire Valley wine (Quarts de Chaume)",
+          "url": "https://fr.wikipedia.org/wiki/Quarts-de-chaume"
+        }
+      ],
+      "reviewedAt": "2026-11-28"
     },
     {
       "kind": "producer",
@@ -2948,9 +3012,23 @@
       "name": "Proscotto",
       "mode": "generated",
       "fingerprint": "6c30756bf3391595664ee97eaeb20cf9491ea85e51dfa455b2a652e111580709",
-      "retryFingerprint": "6c30756bf3391595664ee97eaeb20cf9491ea85e51dfa455b2a652e111580709",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/proscotto\" contains a prohibited dash or invalid UTF-8"
+      "eyebrow": "California-style Bubbly Sparkling",
+      "heading": "Proscotto Sparkling Wine by Scotto Family Cellars",
+      "paragraphs": [
+        "Proscotto is a California sparkling wine produced by Scotto Family Cellars, a fifth‑generation family winemaker based in Lodi, California. The brand draws on the Scotto family's Italian heritage and the winemaking experience of Paul Scotto and Craig Roemer, both trained in California enology and recognized for sparkling craftsmanship across U.S. and international wineries ([scottofamilycellars.com](https://www.scottofamilycellars.com/?utm_source=openai)). Proscotto is made using the Martinotti or \"Italian Method,\" where fermentation occurs in a single stainless‑steel vessel, followed by carbonation in closed tanks under around 78 psi ([proscottowines.com](https://www.proscottowines.com/the-wine.html?utm_source=openai)).",
+        "This style is crafted to echo the crisp, refreshing character commonly associated with Prosecco, showcasing aromas of honeysuckle, golden apple and tropical white fruits, with a semi‑sweet, balanced finish ([proscottowines.com](https://www.proscottowines.com/?utm_source=openai)). The wine is crafted as a ready‑to‑drink bubbly, appealing for occasions that call for easy refreshment rather than extended aging ([howdenmarket.com](https://howdenmarket.com/products/sparkling-wine-prosecco?utm_source=openai))."
+      ],
+      "sources": [
+        {
+          "label": "Proscotto Wines official “THE WINE” page",
+          "url": "https://www.proscottowines.com/the-wine.html"
+        },
+        {
+          "label": "Scotto Family Cellars home and winemaking methods",
+          "url": "https://www.scottofamilycellars.com/"
+        }
+      ],
+      "reviewedAt": "2026-11-28"
     },
     {
       "kind": "producer",
@@ -2959,8 +3037,8 @@
       "mode": "generated",
       "fingerprint": "a724ee990c8b8af9349e82c06e96ec5b1b9c6b085b55e50a7f2fbae6e57e2194",
       "retryFingerprint": "a724ee990c8b8af9349e82c06e96ec5b1b9c6b085b55e50a7f2fbae6e57e2194",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/puynormand\" source label contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "collection editorial \"producer/puynormand\" contains a prohibited dash or invalid UTF-8"
     },
     {
       "kind": "producer",
@@ -2969,8 +3047,8 @@
       "mode": "generated",
       "fingerprint": "3e562838ec5c1d027be9001c317c156ba9b654f304258f289f77a67398a3ee1c",
       "retryFingerprint": "3e562838ec5c1d027be9001c317c156ba9b654f304258f289f77a67398a3ee1c",
-      "retryAfter": "2026-11-28",
-      "lastError": "collection editorial \"producer/rainer-wess\" contains a prohibited dash or invalid UTF-8"
+      "retryAfter": "2026-12-28",
+      "lastError": "research JSON has 117 words; expected 120 to 190"
     },
     {
       "kind": "producer",

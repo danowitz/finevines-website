@@ -1,30 +1,30 @@
 {
-  "updated": "2026-11-27T08:24:30Z",
+  "updated": "2026-11-28T08:22:12Z",
   "windowDays": 30,
   "wines": [
     {
       "slug": "huteau-boulanger-sancere-laetitia-ducroux-2025",
-      "cases": 127
+      "cases": 121
     },
     {
       "slug": "taonga-sauvignon-blanc-marlborough-2025",
-      "cases": 95.24999999999999
+      "cases": 94.24999999999999
     },
     {
       "slug": "eden-rift-vineyards-valliant-pinot-noir-2023",
-      "cases": 61.41667
+      "cases": 60.41667
     },
     {
       "slug": "domaine-de-la-villaudiere-sauvignon-blanc-igp-val-de-loire-2025",
-      "cases": 58.16666
+      "cases": 57.16666
     },
     {
       "slug": "jl-chave-selection-cotes-du-rhone-mon-coeur-2024",
-      "cases": 53.66673
+      "cases": 51.66673
     },
     {
       "slug": "domaine-romain-reverdy-sancerre-florilege-2025",
-      "cases": 52.08334
+      "cases": 50.08334
     }
   ]
 }

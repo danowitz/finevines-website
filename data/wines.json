@@ -131196,8 +131196,8 @@
     ],
     "bottleSize": "750ml",
     "drinkWindow": "Drink 2030–2055",
-    "imagePath": "assets/img/wines/vine-hill-ranch-cabernet-sauvignon-napa-valley-vine-hill-ranch-vineyard-2023.svg",
-    "imageSource": "generated-label",
+    "imagePath": "assets/img/wines/vine-hill-ranch-cabernet-sauvignon-napa-valley-vine-hill-ranch-vineyard-2023.jpg",
+    "imageSource": "scraped-web",
     "sources": {
       "abv": "missing",
       "appellation": "found",
@@ -131209,14 +131209,18 @@
       "drinkWindow": "found",
       "finish": "found",
       "foodPairings": "found",
-      "image": "derived",
+      "image": "found",
       "palate": "found",
       "sommelierNotes": "found"
     },
-    "metadataScore": 77,
+    "metadataScore": 85,
     "matchConfidence": 95,
     "enrichedAt": "2026-10-28T08:27:08Z",
-    "slug": "vine-hill-ranch-cabernet-sauvignon-napa-valley-vine-hill-ranch-vineyard-2023"
+    "slug": "vine-hill-ranch-cabernet-sauvignon-napa-valley-vine-hill-ranch-vineyard-2023",
+    "imageReviewStatus": "",
+    "imageReviewedAt": "",
+    "imageReviewActionId": "",
+    "imageSourceUrl": "https://www.fallingbrightwinemerchants.com/Vine-Hill-Ranch-Cabernet-Sauvignon-2023-p/vhr2023cab.htm"
   },
   {
     "id": "01tPL0000032zP3YAI",
@@ -135731,6 +135735,7 @@
     "drinkWindow": "will improve with bottle age over 10 years from vintage",
     "imagePath": "assets/img/wines/yarden-syrah-allone-habasham-vineyard-2017.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://sklep-wina.pl/product-pol-1875-Yarden-Syrah-Allone-Habashan-w-eleganckim-pudelku.html",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -135749,11 +135754,7 @@
     "metadataScore": 85,
     "matchConfidence": 95,
     "enrichedAt": "2026-08-27T11:41:34Z",
-    "slug": "yarden-syrah-allone-habasham-vineyard-2017",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://sklep-wina.pl/product-pol-1875-Yarden-Syrah-Allone-Habashan-w-eleganckim-pudelku.html"
+    "slug": "yarden-syrah-allone-habasham-vineyard-2017"
   },
   {
     "id": "01tPL00000GwabNYAR",
@@ -136153,6 +136154,7 @@
     "drinkWindow": "Now–2026",
     "imagePath": "assets/img/wines/yarden-wines-galilee-rose-2021.jpg",
     "imageSource": "scraped-web",
+    "imageSourceUrl": "https://yardenwines.com/wine_asset/yarden-rose",
     "sources": {
       "abv": "found",
       "appellation": "found",
@@ -136171,11 +136173,7 @@
     "metadataScore": 54,
     "matchConfidence": 90,
     "enrichedAt": "2026-08-27T11:41:32Z",
-    "slug": "yarden-wines-galilee-rose-2021",
-    "imageReviewStatus": "",
-    "imageReviewedAt": "",
-    "imageReviewActionId": "",
-    "imageSourceUrl": "https://yardenwines.com/wine_asset/yarden-rose"
+    "slug": "yarden-wines-galilee-rose-2021"
   },
   {
     "id": "01tjr000000WoJRAA0",
